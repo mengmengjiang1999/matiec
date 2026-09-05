@@ -14,6 +14,7 @@ TESTS_ENVIRONMENT = \
 TESTS = \
 	sequential_compilation_test \
 	in_memory_generator_test \
+	tests/generated_c/runtests \
 	tests/initialization/runtests \
 	tests/cli/runtests \
 	tests/syntax/identifier/runtests \
@@ -23,6 +24,7 @@ EXTRA_DIST = \
 	$(TESTS) \
 	tests/characterization/expected.sha256 \
 	tests/characterization/instruction_list.il \
+	tests/generated_c/runtests \
 	tests/initialization/ok_array_scalar.st \
 	tests/syntax/sfc/sfc.txt \
 	tests/sanitizers/runtests \

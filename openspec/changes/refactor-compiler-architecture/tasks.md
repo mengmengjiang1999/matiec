@@ -49,7 +49,7 @@
 - [x] 6.3 Extract shared generator declarations into private headers
 - [x] 6.4 Convert declaration, configuration, ST, IL, and SFC generator implementations from textual `.cc` inclusion to normal compilation units in validated batches
 - [x] 6.5 Add in-memory generator tests and compare characterized output after every extraction batch
-- [ ] 6.6 Verify generated C ABI and representative compiled behavior remain unchanged
+- [x] 6.6 Verify generated C ABI and representative compiled behavior remain unchanged
 
 ## 7. Completion and Documentation
 

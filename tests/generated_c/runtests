@@ -1,0 +1,62 @@
+#!/bin/bash
+
+# Verify the generated C compilation boundary, stable external symbols, and
+# representative runtime behavior.
+
+set -u
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+PROJECT_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
+IEC2C=${IEC2C:-"$PROJECT_ROOT/iec2c"}
+MATIEC_LIBDIR=${MATIEC_LIBDIR:-"$PROJECT_ROOT/lib"}
+CC=${CC:-cc}
+
+TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/matiec-generated-c.XXXXXX") || exit 1
+trap 'rm -rf "$TMP_ROOT"' EXIT
+
+"$IEC2C" -f -l -p -I "$MATIEC_LIBDIR" -T "$TMP_ROOT" \
+  "$PROJECT_ROOT/tests/initialization/ok_array_scalar.st" >/dev/null || exit 1
+
+"$CC" -std=c11 -I "$TMP_ROOT" -I "$MATIEC_LIBDIR/C" \
+  -c "$TMP_ROOT/config.c" -o "$TMP_ROOT/config.o" || exit 1
+"$CC" -std=c11 -I "$TMP_ROOT" -I "$MATIEC_LIBDIR/C" \
+  -c "$TMP_ROOT/resource1.c" -o "$TMP_ROOT/resource1.o" || exit 1
+
+for symbol in config_init__ config_run__ common_ticktime__ greatest_tick_count__; do
+  nm -g "$TMP_ROOT/config.o" | awk '{print $3}' | grep -qx "$symbol" || {
+    echo "FAILURE -> Missing generated configuration ABI symbol: $symbol"
+    exit 1
+  }
+done
+
+for symbol in RESOURCE1__INSTANCE0 RESOURCE1_init__ RESOURCE1_run__; do
+  nm -g "$TMP_ROOT/resource1.o" | awk '{print $3}' | grep -qx "$symbol" || {
+    echo "FAILURE -> Missing generated resource ABI symbol: $symbol"
+    exit 1
+  }
+done
+
+cat >"$TMP_ROOT/driver.c" <<'EOF'
+#include <assert.h>
+#include "POUS.h"
+
+extern PROGRAM0_data__ RESOURCE1__INSTANCE0;
+TIME __CURRENT_TIME = {0, 0};
+void config_init__(void);
+void config_run__(unsigned long tick);
+
+int main(void) {
+  config_init__();
+  assert(__GET_VAR(RESOURCE1__INSTANCE0.COUNT,) == 0);
+  config_run__(0);
+  assert(__GET_VAR(RESOURCE1__INSTANCE0.COUNT,) == 1);
+  return 0;
+}
+EOF
+
+"$CC" -std=c11 -I "$TMP_ROOT" -I "$MATIEC_LIBDIR/C" \
+  "$TMP_ROOT/driver.c" "$TMP_ROOT/config.o" "$TMP_ROOT/resource1.o" \
+  -o "$TMP_ROOT/generated_c_behavior" || exit 1
+"$TMP_ROOT/generated_c_behavior" || exit 1
+
+echo "SUCCESS -> Generated C ABI and runtime behavior match the baseline."
