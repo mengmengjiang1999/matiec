@@ -66,7 +66,7 @@ class remove_forward_dependencies_c: public search_visitor_c {
     /* The level of detail that the user wants us to display error messages. */
     #define error_level_default (1)
     #define error_level_nagging (4)
-    unsigned int    current_display_error_level;
+    int             current_display_error_level;
     int             error_count;
     bool            warning_found;
     library_c      *new_tree;
@@ -109,6 +109,5 @@ class remove_forward_dependencies_c: public search_visitor_c {
     void *visit(pragma_c *symbol);
 
 };   /* class remove_forward_dependencies_c */
-
 
 

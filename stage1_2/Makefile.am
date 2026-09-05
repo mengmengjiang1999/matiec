@@ -25,7 +25,7 @@ libstage1_2_generated_a_SOURCES = \
 	iec_bison.yy
 
 libstage1_2_generated_a_CPPFLAGS = -DDEFAULT_LIBDIR='"lib"' -I../../absyntax -DYY_BUF_SIZE=65536
-libstage1_2_generated_a_CXXFLAGS = -g -w -fpermissive
+libstage1_2_generated_a_CXXFLAGS = -std=gnu++17 -g -w -fpermissive
 
 libstage1_2_parser_support_a_SOURCES = create_enumtype_conversion_functions.cc
 libstage1_2_parser_support_a_CPPFLAGS = -DDEFAULT_LIBDIR='"lib"' -I../../absyntax -DYY_BUF_SIZE=65536

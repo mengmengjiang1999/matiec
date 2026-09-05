@@ -55,7 +55,7 @@ class print_datatypes_error_c: public iterator_visitor_c {
 //     #define error_level_default (1)
     #define error_level_default (1)
     #define error_level_nagging (4)
-    unsigned int current_display_error_level;
+    int current_display_error_level;
     
     search_varfb_instance_type_c *search_varfb_instance_type;
     /* When calling a function block, we must first find it's type,
@@ -342,7 +342,6 @@ class print_datatypes_error_c: public iterator_visitor_c {
     void *visit(repeat_statement_c *symbol);
 
 }; // print_datatypes_error_c
-
 
 
 

@@ -283,7 +283,7 @@ int64_t extract_int64_value(symbol_c *sym, bool *overflow) {
   std::string  str = "";
   char        *endptr;
   const char  *value = NULL;
-  int          base;
+  int          base = 10;
   integer_c         *integer;
   hex_integer_c     *hex_integer;
   octal_integer_c   *octal_integer;
@@ -315,7 +315,7 @@ uint64_t extract_uint64_value(symbol_c *sym, bool *overflow) {
   std::string  str = "";
   char        *endptr;
   const char  *value = NULL;
-  int          base;
+  int          base = 10;
   integer_c         *integer;
   hex_integer_c     *hex_integer;
   octal_integer_c   *octal_integer;
@@ -2107,7 +2107,6 @@ void *constant_propagation_c::visit(repeat_statement_c *symbol) {
 }
 
 #endif  // DO_CONSTANT_PROPAGATION__
-
 
 
 

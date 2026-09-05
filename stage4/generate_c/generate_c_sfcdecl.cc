@@ -255,6 +255,7 @@ class generate_c_sfcdecl_c: protected generate_c_base_and_typeid_c {
           break;
         case sfcdecl_sd:
           symbol->action_association_list->accept(*this);
+          [[fallthrough]];
         case stepcount_sd:
           step_number++;
           break;
@@ -306,6 +307,7 @@ class generate_c_sfcdecl_c: protected generate_c_base_and_typeid_c {
           break;
         case sfcdecl_sd:
           symbol->action_association_list->accept(*this);
+          [[fallthrough]];
         case stepcount_sd:
         case sfcinit_sd:
           step_number++;
@@ -407,4 +409,3 @@ class generate_c_sfcdecl_c: protected generate_c_base_and_typeid_c {
     }
 
 }; /* generate_c_sfcdecl_c */
-
