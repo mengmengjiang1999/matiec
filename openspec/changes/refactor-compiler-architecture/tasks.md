@@ -14,7 +14,7 @@
 - [x] 2.2 Remove duplicate source entries and separate handwritten warning policy from generated parser warnings
 - [x] 2.3 Declare the initial GNU++17 compatibility mode and resolve high-confidence handwritten compiler warnings
 - [x] 2.4 Replace Mercurial revision discovery with Git metadata and an archive-safe fallback
-- [ ] 2.5 Decide whether a parity-tested CMake frontend belongs in this change and record the outcome
+- [x] 2.5 Decide whether a parity-tested CMake frontend belongs in this change and record the outcome
 
 ## 3. Compilation Context and Diagnostics
 

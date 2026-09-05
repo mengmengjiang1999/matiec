@@ -58,6 +58,8 @@ Stage 3 will use a pass descriptor and runner that make ordering and prerequisit
 
 Autotools will gain real test integration, refreshed helper scripts, explicit language standards, sanitizer targets, and Git-based version metadata. A CMake build may be added later as a parallel frontend, but Autotools stays authoritative until both produce and test equivalent binaries.
 
+After stabilizing the Autotools baseline and CI matrix, CMake was explicitly deferred to a separate OpenSpec change. The parity criteria and rationale are recorded in `docs/decisions/0001-defer-cmake-frontend.md`; duplicating rapidly changing compiler source boundaries in this change would increase risk without improving compiler behavior.
+
 ## Risks / Trade-offs
 
 - **Behavioral drift in semantic checks or generated C** → Add characterization and golden tests before each affected extraction and compare outputs byte-for-byte where stable.
@@ -81,5 +83,4 @@ Each phase can be rolled back independently to the preceding passing commit. No 
 
 ## Open Questions
 
-- Whether CMake should become authoritative after parity or remain a secondary developer build will be decided after the Autotools baseline and CI matrix are stable.
 - Moving semantic annotations completely out of AST nodes may be split into a follow-up change if performance or churn exceeds the risk budget of this change.
