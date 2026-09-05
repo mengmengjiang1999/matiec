@@ -41,22 +41,7 @@
 #include "../stage4.hh"
 #include "../../compiler/ast_arena.hh"
 #include "../../compiler/compilation_abort.hh"
-
-//#define DEBUG
-#ifdef DEBUG
-#define TRACE(classname) printf("\n____%s____\n",classname);
-#else
-#define TRACE(classname)
-#endif
-
-
-
-#define STAGE4_ERROR(symbol1, symbol2, ...) {stage4err("while generating C code", symbol1, symbol2, __VA_ARGS__); throw matiec::CompilationAbort("C code generation failed", true);}
-
-
-/* Macros to access the constant value of each expression (if it exists) from the annotation introduced to the symbol_c object by constant_folding_c in stage3! */
-#define VALID_CVALUE(dtype, symbol)           ((symbol)->const_value._##dtype.is_valid())
-#define GET_CVALUE(dtype, symbol)             ((symbol)->const_value._##dtype.get()) 
+#include "generate_c_internal.hh"
 
 
 
@@ -83,16 +68,6 @@
  * is mapped onto a TEST data structure, and a TEST_body__ function.
  */
 
-#define FB_FUNCTION_SUFFIX "_body__"
-
-/* Idem as body, but for initializer FB function */
-#define FB_INIT_SUFFIX "_init__"
-
-/* Idem as body, but for run CONFIG and RESOURCE function */
-#define FB_RUN_SUFFIX "_run__"
-
-/* Idem as body, but for data structure */
-#define FB_DATASTRUCTURE_SUFFIX "_data__"
 
 
 
@@ -107,75 +82,6 @@
  *  TEST_body__(TEST *data__)
  */
 
-#define FB_FUNCTION_PARAM "data__"
-
-
-#define SFC_STEP_ACTION_PREFIX "__SFC_"
-
-
-/* Variable declaration symbol for accessor macros */
-#define DECLARE_VAR "__DECLARE_VAR"
-#define DECLARE_GLOBAL "__DECLARE_GLOBAL"
-#define DECLARE_GLOBAL_FB "__DECLARE_GLOBAL_FB"
-#define DECLARE_GLOBAL_LOCATION "__DECLARE_GLOBAL_LOCATION"
-#define DECLARE_GLOBAL_LOCATED "__DECLARE_GLOBAL_LOCATED"
-#define DECLARE_EXTERNAL "__DECLARE_EXTERNAL"
-#define DECLARE_EXTERNAL_FB "__DECLARE_EXTERNAL_FB"
-#define DECLARE_LOCATED "__DECLARE_LOCATED"
-#define DECLARE_GLOBAL_PROTOTYPE "__DECLARE_GLOBAL_PROTOTYPE"
-#define DECLARE_GLOBAL_PROTOTYPE_FB "__DECLARE_GLOBAL_PROTOTYPE_FB"
-
-/* Variable declaration symbol for accessor macros */
-#define INIT_VAR "__INIT_VAR"
-#define INIT_GLOBAL "__INIT_GLOBAL"
-#define INIT_GLOBAL_FB "__INIT_GLOBAL_FB"
-#define INIT_GLOBAL_LOCATED "__INIT_GLOBAL_LOCATED"
-#define INIT_EXTERNAL "__INIT_EXTERNAL"
-#define INIT_EXTERNAL_FB "__INIT_EXTERNAL_FB"
-#define INIT_LOCATED "__INIT_LOCATED"
-#define INIT_LOCATED_VALUE "__INIT_LOCATED_VALUE"
-
-/* Variable getter symbol for accessor macros */
-#define GET_VAR "__GET_VAR"
-#define GET_EXTERNAL "__GET_EXTERNAL"
-#define GET_EXTERNAL_FB "__GET_EXTERNAL_FB"
-#define GET_LOCATED "__GET_LOCATED"
-
-#define GET_VAR_REF "__GET_VAR_REF"
-#define GET_EXTERNAL_REF "__GET_EXTERNAL_REF"
-#define GET_EXTERNAL_FB_REF "__GET_EXTERNAL_FB_REF"
-#define GET_LOCATED_REF "__GET_LOCATED_REF"
-
-#define GET_VAR_DREF "__GET_VAR_DREF"
-#define GET_EXTERNAL_DREF "__GET_EXTERNAL_DREF"
-#define GET_EXTERNAL_FB_DREF "__GET_EXTERNAL_FB_DREF"
-#define GET_LOCATED_DREF "__GET_LOCATED_DREF"
-
-#define GET_VAR_BY_REF "__GET_VAR_BY_REF"
-#define GET_EXTERNAL_BY_REF "__GET_EXTERNAL_BY_REF"
-#define GET_EXTERNAL_FB_BY_REF "__GET_EXTERNAL_FB_BY_REF"
-#define GET_LOCATED_BY_REF "__GET_LOCATED_BY_REF"
-
-/* Variable setter symbol for accessor macros */
-#define SET_VAR "__SET_VAR"
-#define SET_EXTERNAL "__SET_EXTERNAL"
-#define SET_EXTERNAL_FB "__SET_EXTERNAL_FB"
-#define SET_LOCATED "__SET_LOCATED"
-
-/* Variable initial value symbol for accessor macros */
-#define INITIAL_VALUE "__INITIAL_VALUE"
-
-/* Generate a name for a temporary variable.
- * Each new name generated is appended a different number,
- * starting off from 0.
- * After calling reset(), the names will start off again from 0.
- */
-#define VAR_LEADER "__"
-#define TEMP_VAR VAR_LEADER "TMP_"
-#define SOURCE_VAR VAR_LEADER "SRC_"
-
-/* please see the comment before the RET_operator_c visitor for details... */
-#define END_LABEL VAR_LEADER "end"
 
 
 /***********************************************************************/
@@ -184,7 +90,7 @@
 /***********************************************************************/
 
 
-static int generate_line_directives__ = 0;
+int generate_line_directives__ = 0;
 static int generate_pou_filepairs__   = 0;
 static int generate_plc_state_backup_fuctions__ = 0;
 
