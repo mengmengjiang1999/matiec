@@ -10,6 +10,7 @@ PROJECT_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 IEC2C=${IEC2C:-"$PROJECT_ROOT/iec2c"}
 MATIEC_LIBDIR=${MATIEC_LIBDIR:-"$PROJECT_ROOT/lib"}
 CC=${CC:-cc}
+read -r -a CC_COMMAND <<<"$CC"
 
 TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/matiec-generated-c.XXXXXX") || exit 1
 trap 'rm -rf "$TMP_ROOT"' EXIT
@@ -17,9 +18,9 @@ trap 'rm -rf "$TMP_ROOT"' EXIT
 "$IEC2C" -f -l -p -I "$MATIEC_LIBDIR" -T "$TMP_ROOT" \
   "$PROJECT_ROOT/tests/initialization/ok_array_scalar.st" >/dev/null || exit 1
 
-"$CC" -std=c11 -I "$TMP_ROOT" -I "$MATIEC_LIBDIR/C" \
+"${CC_COMMAND[@]}" -std=c11 -I "$TMP_ROOT" -I "$MATIEC_LIBDIR/C" \
   -c "$TMP_ROOT/config.c" -o "$TMP_ROOT/config.o" || exit 1
-"$CC" -std=c11 -I "$TMP_ROOT" -I "$MATIEC_LIBDIR/C" \
+"${CC_COMMAND[@]}" -std=c11 -I "$TMP_ROOT" -I "$MATIEC_LIBDIR/C" \
   -c "$TMP_ROOT/resource1.c" -o "$TMP_ROOT/resource1.o" || exit 1
 
 has_global_symbol() {
@@ -58,7 +59,7 @@ int main(void) {
 }
 EOF
 
-"$CC" -std=c11 -I "$TMP_ROOT" -I "$MATIEC_LIBDIR/C" \
+"${CC_COMMAND[@]}" -std=c11 -I "$TMP_ROOT" -I "$MATIEC_LIBDIR/C" \
   "$TMP_ROOT/driver.c" "$TMP_ROOT/config.o" "$TMP_ROOT/resource1.o" \
   -o "$TMP_ROOT/generated_c_behavior" || exit 1
 "$TMP_ROOT/generated_c_behavior" || exit 1
