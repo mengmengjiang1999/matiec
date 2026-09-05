@@ -37,7 +37,7 @@
 ## 5. Semantic Pass Pipeline
 
 - [x] 5.1 Define semantic pass identifiers, prerequisites, and structured pass results
-- [ ] 5.2 Wrap the existing Stage 3 order in a `SemanticPassManager` without changing individual visitors
+- [x] 5.2 Wrap the existing Stage 3 order in a `SemanticPassManager` without changing individual visitors
 - [ ] 5.3 Route Stage 3 diagnostics through `DiagnosticEngine` and remove duplicated diagnostic macros
 - [ ] 5.4 Add focused tests for pass order, failure short-circuiting, and independently invocable passes
 - [ ] 5.5 Evaluate moving semantic annotations to a context-owned analysis store and either implement it or record a scoped follow-up

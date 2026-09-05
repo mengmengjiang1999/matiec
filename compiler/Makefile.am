@@ -10,7 +10,8 @@ libcompiler_a_SOURCES = \
 	compiler_types.cc \
 	diagnostic_engine.cc \
 	legacy_global_state_adapter.cc \
-	semantic_pass.cc
+	semantic_pass.cc \
+	semantic_pass_manager.cc
 
 check_PROGRAMS = ast_arena_test compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test semantic_pass_test
 TESTS = $(check_PROGRAMS)

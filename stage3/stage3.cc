@@ -34,6 +34,8 @@
 
 #include "stage3.hh"
 
+#include "../compiler/semantic_pass_manager.hh"
+
 #include "flow_control_analysis.hh"
 #include "fill_candidate_datatypes.hh"
 #include "narrow_candidate_datatypes.hh"
@@ -156,19 +158,58 @@ static int remove_forward_dependencies(symbol_c *tree_root, symbol_c **ordered_t
 
 
 int stage3(symbol_c *tree_root, symbol_c **ordered_tree_root) {
-	int error_count = 0;
-	error_count += enum_declaration_check(tree_root);
-	error_count += flow_control_analysis(tree_root);
-	error_count += constant_propagation(tree_root);
-	error_count += declaration_safety(tree_root);
-	error_count += type_safety(tree_root);
-	error_count += lvalue_check(tree_root);
-	error_count += array_range_check(tree_root);
-	error_count += case_elements_check(tree_root);
-	error_count += remove_forward_dependencies(tree_root, ordered_tree_root);
+	matiec::SemanticPassManager passes;
+	passes.register_pass(matiec::SemanticPassId::enum_declaration, [tree_root]() {
+		return matiec::SemanticPassResult::failure(
+			matiec::SemanticPassId::enum_declaration,
+			enum_declaration_check(tree_root));
+	});
+	passes.register_pass(matiec::SemanticPassId::flow_control, [tree_root]() {
+		return matiec::SemanticPassResult::failure(
+			matiec::SemanticPassId::flow_control,
+			flow_control_analysis(tree_root));
+	});
+	passes.register_pass(matiec::SemanticPassId::constant_propagation, [tree_root]() {
+		return matiec::SemanticPassResult::failure(
+			matiec::SemanticPassId::constant_propagation,
+			constant_propagation(tree_root));
+	});
+	passes.register_pass(matiec::SemanticPassId::declaration_safety, [tree_root]() {
+		return matiec::SemanticPassResult::failure(
+			matiec::SemanticPassId::declaration_safety,
+			declaration_safety(tree_root));
+	});
+	passes.register_pass(matiec::SemanticPassId::type_safety, [tree_root]() {
+		return matiec::SemanticPassResult::failure(
+			matiec::SemanticPassId::type_safety,
+			type_safety(tree_root));
+	});
+	passes.register_pass(matiec::SemanticPassId::lvalue, [tree_root]() {
+		return matiec::SemanticPassResult::failure(
+			matiec::SemanticPassId::lvalue,
+			lvalue_check(tree_root));
+	});
+	passes.register_pass(matiec::SemanticPassId::array_range, [tree_root]() {
+		return matiec::SemanticPassResult::failure(
+			matiec::SemanticPassId::array_range,
+			array_range_check(tree_root));
+	});
+	passes.register_pass(matiec::SemanticPassId::case_elements, [tree_root]() {
+		return matiec::SemanticPassResult::failure(
+			matiec::SemanticPassId::case_elements,
+			case_elements_check(tree_root));
+	});
+	passes.register_pass(matiec::SemanticPassId::dependency_ordering,
+		[tree_root, ordered_tree_root]() {
+			return matiec::SemanticPassResult::failure(
+				matiec::SemanticPassId::dependency_ordering,
+				remove_forward_dependencies(tree_root, ordered_tree_root));
+		});
+
+	const matiec::SemanticPipelineResult result = passes.run();
 	
-	if (error_count > 0) {
-		fprintf(stderr, "%d error(s) found. Bailing out!\n", error_count); 
+	if (!result.succeeded()) {
+		fprintf(stderr, "%zu error(s) found. Bailing out!\n", result.error_count);
 		return -1;
 	}
 	return 0;
