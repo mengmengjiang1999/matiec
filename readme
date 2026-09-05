@@ -91,6 +91,11 @@ $./configure; make
 
  Stage 5    - Binary code generator - gcc, javac, etc... (Not integrated into matiec compiler. Must be called explicitly by the user.)
 
+ The current implementation wraps these historical stages in a per-compilation
+ CompilationContext, an explicit semantic-pass pipeline, and context-owned
+ diagnostics, AST storage, and output management. Maintainer and embedding
+ documentation is available in docs/architecture/compiler-boundaries.md.
+
 
 
  Data structures passed between stages, in global variables:

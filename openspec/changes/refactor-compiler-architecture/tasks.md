@@ -53,7 +53,7 @@
 
 ## 7. Completion and Documentation
 
-- [ ] 7.1 Update architecture, build, testing, and embedding documentation for the new boundaries
+- [x] 7.1 Update architecture, build, testing, and embedding documentation for the new boundaries
 - [ ] 7.2 Run clean GCC and Clang builds, all regressions, generated-C compilation, sequential compilation, and sanitizer checks
 - [ ] 7.3 Confirm no new mutable process-wide compilation state or deep process exits remain outside documented adapters
 - [ ] 7.4 Sync the completed delta specifications to main OpenSpec specs and archive the change

@@ -39,8 +39,17 @@ requested sanitizer, build it, and run the same regression entry point:
     make check-asan
     make check-ubsan
 
-AddressSanitizer leak detection is disabled until AST ownership is migrated to
-the per-compilation arena; invalid memory access detection remains enabled.
+AddressSanitizer runs with leak detection enabled. Both sanitizer targets use
+an isolated source copy and execute the complete regression suite.
+
+Test coverage
+-------------
+
+`make check` runs focused compiler tests plus sequential in-process compilation,
+in-memory generator output assertions, generated-C ABI and runtime checks, CLI
+tests, syntax and initialization suites, and byte-for-byte output
+characterization. See `docs/architecture/compiler-boundaries.md` for the
+corresponding architecture and embedding contracts.
 
 Cross-compiling for Windows from Linux
 --------------------------------------
