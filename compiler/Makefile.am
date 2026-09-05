@@ -7,7 +7,8 @@ libcompiler_a_SOURCES = \
 	compilation_context.cc \
 	compiler.cc \
 	compiler_types.cc \
-	diagnostic_engine.cc
+	diagnostic_engine.cc \
+	legacy_global_state_adapter.cc
 
 check_PROGRAMS = compilation_context_test compiler_types_test diagnostic_engine_test
 TESTS = $(check_PROGRAMS)
