@@ -10,28 +10,43 @@
 #                  Reported as [XFAIL], and as [XPASS] once it starts working,
 #                  in which case it should be renamed to ok_*.st.
 
-IEC2C="../../iec2c"
-IEC2C_FLAGS="-f -l -p -I ../../lib"
-OUTDIR="./output"
+set -u
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+PROJECT_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
+IEC2C=${IEC2C:-"$PROJECT_ROOT/iec2c"}
+MATIEC_LIBDIR=${MATIEC_LIBDIR:-"$PROJECT_ROOT/lib"}
+
+TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/matiec-initialization.XXXXXX") || exit 1
+trap 'rm -rf "$TMP_ROOT"' EXIT
 
 # assume no error to start with...
 error=0
 
-rm -rf $OUTDIR
-mkdir -p $OUTDIR
-
 shopt -s nullglob
-for ff in ok_*.st bad_*.st xfail_*.st
+test_files=("$SCRIPT_DIR"/ok_*.st "$SCRIPT_DIR"/bad_*.st "$SCRIPT_DIR"/xfail_*.st)
+if test "${#test_files[@]}" -eq 0; then
+  echo "FAILURE -> No initialization tests found!"
+  exit 1
+fi
+
+for ff in "${test_files[@]}"
 do
-  rm -rf $OUTDIR/*
-  $IEC2C $IEC2C_FLAGS -T $OUTDIR $ff > $ff.out 2> $ff.err
+  test_name=$(basename "$ff")
+  case_dir="$TMP_ROOT/${test_name%.st}"
+  stdout_file="$case_dir/stdout"
+  stderr_file="$case_dir/stderr"
+  output_dir="$case_dir/output"
+  mkdir -p "$output_dir"
+
+  "$IEC2C" -f -l -p -I "$MATIEC_LIBDIR" -T "$output_dir" "$ff" >"$stdout_file" 2>"$stderr_file"
   status=$?
 
-  case $ff in
+  case $test_name in
     xfail_*)
       if test $status = 0
-        then echo "[XPASS]   " $ff "-> now accepted, please rename it to ok_"${ff#xfail_}
-        else echo "[XFAIL]   " $ff "-> known failure"
+        then echo "[XPASS]    $test_name -> now accepted, please rename it to ok_${test_name#xfail_}"; error=1
+        else echo "[XFAIL]    $test_name -> known failure"
       fi
       continue
       ;;
@@ -39,18 +54,20 @@ do
     *)     expected_status=0 ;;
   esac
 
-  if grep -q "Internal compiler error" $ff.err
-    then echo "[ERROR]   " $ff "-> internal compiler error"; error=1
-  elif test $expected_status = 0 -a $status != 0
-    then echo "[ERROR]   " $ff "-> should have been accepted"; error=1
-  elif test $expected_status = 1 -a $status = 0
-    then echo "[ERROR]   " $ff "-> should have been rejected"; error=1
-  else echo "[ O K ]   " $ff
+  if grep -q "Internal compiler error" "$stderr_file"
+    then echo "[ERROR]    $test_name -> internal compiler error"; error=1
+  elif test "$expected_status" = 0 && test "$status" != 0
+    then echo "[ERROR]    $test_name -> should have been accepted"; error=1
+  elif test "$expected_status" = 1 && test "$status" = 0
+    then echo "[ERROR]    $test_name -> should have been rejected"; error=1
+  elif test "$expected_status" = 1 && find "$output_dir" -type f -print -quit | grep -q .
+    then echo "[ERROR]    $test_name -> generated output for invalid input"; error=1
+  else echo "[ O K ]    $test_name"
   fi
 done
 
 echo
-if `test $error = 1`
+if test $error = 1
   then echo "FAILURE -> At least one of the tests failed!"
   else echo "SUCCESS -> All tests passed!"
 fi

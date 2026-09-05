@@ -20,3 +20,8 @@ stage1_2/Makefile
 stage3/Makefile
 stage4/Makefile
 /Makefile
+tests/**/*.st.err
+tests/**/*.st.out
+tests/**/output/
+tests/**/*.log
+tests/**/*.trs

@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# Exercise command-line validation and the two compiler frontends without
+# leaving generated output in the source tree.
+
+set -u
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+PROJECT_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
+IEC2C=${IEC2C:-"$PROJECT_ROOT/iec2c"}
+IEC2IEC=${IEC2IEC:-"$PROJECT_ROOT/iec2iec"}
+MATIEC_LIBDIR=${MATIEC_LIBDIR:-"$PROJECT_ROOT/lib"}
+INPUT_FILE="$PROJECT_ROOT/tests/initialization/ok_array_scalar.st"
+
+TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/matiec-cli.XXXXXX") || exit 1
+trap 'rm -rf "$TMP_ROOT"' EXIT
+
+error=0
+
+expect_failure() {
+  test_name=$1
+  expected_message=$2
+  shift 2
+
+  stdout_file="$TMP_ROOT/$test_name.stdout"
+  stderr_file="$TMP_ROOT/$test_name.stderr"
+  "$@" >"$stdout_file" 2>"$stderr_file"
+  status=$?
+
+  if test $status = 0; then
+    echo "[ERROR]    $test_name -> command unexpectedly succeeded"
+    error=1
+  elif ! grep -q "$expected_message" "$stderr_file"; then
+    echo "[ERROR]    $test_name -> expected diagnostic was not emitted"
+    error=1
+  else
+    echo "[ O K ]    $test_name"
+  fi
+}
+
+expect_failure missing-input "Missing input file" \
+  "$IEC2C" -I "$MATIEC_LIBDIR"
+expect_failure multiple-inputs "Too many input files" \
+  "$IEC2C" -I "$MATIEC_LIBDIR" "$INPUT_FILE" "$INPUT_FILE"
+expect_failure empty-include-directory "Option -I requires a non-empty directory" \
+  "$IEC2C" -I "" "$INPUT_FILE"
+expect_failure empty-target-directory "Option -T requires a non-empty directory" \
+  "$IEC2C" -T "" "$INPUT_FILE"
+
+generated_dir="$TMP_ROOT/generated"
+mkdir -p "$generated_dir"
+if "$IEC2C" -f -l -p -I "$MATIEC_LIBDIR" -T "$generated_dir" "$INPUT_FILE" \
+     >"$TMP_ROOT/iec2c.stdout" 2>"$TMP_ROOT/iec2c.stderr" \
+   && test -s "$generated_dir/POUS.c" \
+   && test -s "$generated_dir/POUS.h"; then
+  echo "[ O K ]    iec2c-smoke"
+else
+  echo "[ERROR]    iec2c-smoke -> C output was not generated"
+  error=1
+fi
+
+if "$IEC2IEC" -f -l -p -I "$MATIEC_LIBDIR" "$INPUT_FILE" \
+     >"$TMP_ROOT/iec2iec.stdout" 2>"$TMP_ROOT/iec2iec.stderr" \
+   && test -s "$TMP_ROOT/iec2iec.stdout"; then
+  echo "[ O K ]    iec2iec-smoke"
+else
+  echo "[ERROR]    iec2iec-smoke -> IEC output was not generated"
+  error=1
+fi
+
+if test -e /dev/full; then
+  "$IEC2IEC" -f -l -p -I "$MATIEC_LIBDIR" "$INPUT_FILE" \
+    >/dev/full 2>"$TMP_ROOT/write-failure.stderr"
+  status=$?
+  if test $status != 0 && grep -q "Error writing generated output" "$TMP_ROOT/write-failure.stderr"; then
+    echo "[ O K ]    output-write-failure"
+  else
+    echo "[ERROR]    output-write-failure -> write error was not reported"
+    error=1
+  fi
+else
+  echo "[SKIP]     output-write-failure -> /dev/full is unavailable"
+fi
+
+echo
+if test $error = 1; then
+  echo "FAILURE -> At least one CLI test failed!"
+else
+  echo "SUCCESS -> All CLI tests passed!"
+fi
+
+exit $error

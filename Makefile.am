@@ -4,6 +4,17 @@ bin_PROGRAMS = iec2c iec2iec
 
 SUBDIRS = absyntax absyntax_utils stage1_2 stage3 stage4 
 
+TESTS_ENVIRONMENT = \
+	IEC2C='$(abs_top_builddir)/iec2c' \
+	IEC2IEC='$(abs_top_builddir)/iec2iec' \
+	MATIEC_LIBDIR='$(abs_top_srcdir)/lib'
+
+TESTS = \
+	tests/initialization/runtests \
+	tests/cli/runtests
+
+EXTRA_DIST = $(TESTS)
+
 ACLOCAL_AMFLAGS=-I config
 
 HGVERSION= $(shell hg -R $(top_srcdir) parents --template '{node|short}' 2> /dev/null || grep node $(top_srcdir)/.hg_archival.txt 2> /dev/null || true )
@@ -24,4 +35,3 @@ iec2iec_LDADD = stage1_2/libstage1_2.a \
 iec2c_SOURCES = main.cc
 
 iec2iec_SOURCES = main.cc
-
