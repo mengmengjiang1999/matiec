@@ -5,6 +5,7 @@ bin_PROGRAMS = iec2c iec2iec
 SUBDIRS = absyntax absyntax_utils stage1_2 stage3 stage4 
 
 TESTS_ENVIRONMENT = \
+	CC='$(CC)' \
 	IEC2C='$(abs_top_builddir)/iec2c' \
 	IEC2IEC='$(abs_top_builddir)/iec2iec' \
 	MATIEC_LIBDIR='$(abs_top_srcdir)/lib'

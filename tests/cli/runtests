@@ -10,6 +10,7 @@ PROJECT_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 IEC2C=${IEC2C:-"$PROJECT_ROOT/iec2c"}
 IEC2IEC=${IEC2IEC:-"$PROJECT_ROOT/iec2iec"}
 MATIEC_LIBDIR=${MATIEC_LIBDIR:-"$PROJECT_ROOT/lib"}
+CC=${CC:-cc}
 INPUT_FILE="$PROJECT_ROOT/tests/initialization/ok_array_scalar.st"
 
 TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/matiec-cli.XXXXXX") || exit 1
@@ -56,6 +57,25 @@ if "$IEC2C" -f -l -p -I "$MATIEC_LIBDIR" -T "$generated_dir" "$INPUT_FILE" \
   echo "[ O K ]    iec2c-smoke"
 else
   echo "[ERROR]    iec2c-smoke -> C output was not generated"
+  error=1
+fi
+
+generated_c_error=0
+for source in config.c resource1.c; do
+  object_file="$generated_dir/${source%.c}.o"
+  if ! "$CC" -std=c99 -I "$MATIEC_LIBDIR/C" -I "$generated_dir" \
+       -c "$generated_dir/$source" -o "$object_file" \
+       >"$TMP_ROOT/$source.stdout" 2>"$TMP_ROOT/$source.stderr" \
+     || test ! -s "$object_file"; then
+    echo "[ERROR]    generated-c-$source -> generated C did not compile"
+    sed -n '1,12p' "$TMP_ROOT/$source.stderr"
+    generated_c_error=1
+  fi
+done
+
+if test "$generated_c_error" = 0; then
+  echo "[ O K ]    generated-c-compile"
+else
   error=1
 fi
 
