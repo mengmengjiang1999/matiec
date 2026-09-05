@@ -261,6 +261,7 @@ openspec/changes/      Archived change records
 
 ## Documentation
 
+- [中文用户手册：支持的 IEC 61131-3 语法](docs/user-manual.zh-CN.md)
 - [Compiler boundaries](docs/architecture/compiler-boundaries.md)
 - [Legacy global-state adapters](docs/architecture/legacy-global-state-adapters.md)
 - [AST ownership inventory](docs/architecture/ast-ownership-inventory.md)
