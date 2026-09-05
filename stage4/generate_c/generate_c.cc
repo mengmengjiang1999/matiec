@@ -144,11 +144,10 @@ int  stage4_parse_options(char *options) {return 0;}
 /***********************************************************************/
 /***********************************************************************/
 
-#include "generate_c_base.cc"
+#include "generate_c_base.hh"
 #include "generate_c_typedecl.cc"
 #include "generate_c_sfcdecl.cc"
 #include "generate_c_vardecl.cc"
-#include "generate_c_configbody.cc"
 #include "generate_location_list.cc"
 #include "generate_var_list.cc"
 

@@ -1,3 +1,8 @@
+#ifndef MATIEC_STAGE4_GENERATE_C_BASE_HH
+#define MATIEC_STAGE4_GENERATE_C_BASE_HH
+
+#include "generate_c_internal.hh"
+
 /*
  *  matiec - a compiler for the programming languages defined in IEC 61131-3
  *
@@ -1111,6 +1116,7 @@ void *visit(ref_type_decl_c *symbol) {
 
 }; /* class generate_c_base_and_typeid_c */
 
+#endif
 
 
 

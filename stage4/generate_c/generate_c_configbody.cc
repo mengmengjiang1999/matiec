@@ -1,3 +1,5 @@
+#include "generate_c_base.hh"
+
 /*
  *  matiec - a compiler for the programming languages defined in IEC 61131-3
  *
@@ -178,5 +180,4 @@ void *visit(program_configuration_c *symbol) {
 
 
 }; /* generate_c_configbody_c */
-
 

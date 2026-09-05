@@ -2,7 +2,21 @@
 #define MATIEC_STAGE4_GENERATE_C_INTERNAL_HH
 
 #include "../stage4.hh"
+#include "../../absyntax/visitor.hh"
+#include "../../absyntax_utils/absyntax_utils.hh"
 #include "../../compiler/compilation_abort.hh"
+#include "../../main.hh"
+#include "../../util/dsymtable.hh"
+#include "../../util/symtable.hh"
+
+#include <iostream>
+#include <list>
+#include <map>
+#include <sstream>
+#include <string>
+#include <string.h>
+#include <strings.h>
+#include <typeinfo>
 
 class generate_c_base_c;
 class generate_c_base_and_typeid_c;
