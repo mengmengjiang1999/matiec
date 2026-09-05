@@ -2,7 +2,7 @@
 
 - [x] 1.1 Integrate initialization and CLI regression suites with `make check`
 - [x] 1.2 Isolate regression outputs in temporary directories and keep the source worktree clean
-- [ ] 1.3 Modernize and integrate the existing syntax/identifier suite
+- [x] 1.3 Modernize and integrate the existing syntax/identifier suite
 - [ ] 1.4 Compile representative generated C artifacts as part of regression testing
 - [ ] 1.5 Add stable generated-output characterization fixtures for representative ST, IL, and SFC inputs
 - [ ] 1.6 Add sanitizer build and test entry points for address and undefined-behavior checks

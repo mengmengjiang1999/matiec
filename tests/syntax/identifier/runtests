@@ -1,30 +1,87 @@
 #!/bin/bash
 
-# assume no error to start with...
-error=0
+# Verify that context-sensitive IEC keywords accepted as identifiers continue
+# to parse in every supported declaration and use site.
 
-for ff in `ls *.test`
-do
-  for id in `cat $ff | grep "^#" | sed "s/#[^ ]*//g"`
-  do
-	sed s/XXXX/$id/g $ff > $ff"_"$id.iec
-	if `../../../iec2iec $ff"_"$id.iec -I ../../../lib > $ff"_"$id.out 2>$ff"_"$id.err`
-	#if `../../../iec2c $ff"_"$id.iec -I ../../../lib > $ff"_"$id.out 2>$ff"_"$id.err`
-		# TODO before deciding test is success [OK]
-		#       - test whether xxx.out has size <> 0
-		#       - test whether xxx.err has size == 0
-		#       - (?) test whether xxx.out2 is identical to xxx.out
-		#       - (?) test whether xxx.err2 has size == 0
-		#       - perhaps produce a [WARN] instead of [ERROR] in cases of (?)
-	  then echo "[ O K ]   " $ff "->" $id
-	  else echo "[ERROR]   " $ff "->" $id; error=1
-	fi
-#	../../../iec2iec $ff"_"$id.out -I ../../../lib > $ff"_"$id.out2 2>$ff"_"$id.err2
+set -u
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+PROJECT_ROOT=$(cd "$SCRIPT_DIR/../../.." && pwd)
+IEC2IEC=${IEC2IEC:-"$PROJECT_ROOT/iec2iec"}
+MATIEC_LIBDIR=${MATIEC_LIBDIR:-"$PROJECT_ROOT/lib"}
+
+TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/matiec-identifiers.XXXXXX") || exit 1
+trap 'rm -rf "$TMP_ROOT"' EXIT
+
+error=0
+total=0
+shopt -s nullglob
+templates=("$SCRIPT_DIR"/identifier_*.test)
+
+if test "${#templates[@]}" -eq 0; then
+  echo "FAILURE -> No identifier templates found!"
+  exit 1
+fi
+
+for template in "${templates[@]}"; do
+  template_name=$(basename "$template")
+  identifiers=()
+
+  while IFS= read -r declaration; do
+    read -r -a fields <<<"$declaration"
+    for ((index = 1; index < ${#fields[@]}; index++)); do
+      identifier=${fields[$index]}
+      if [[ $identifier != \#* ]]; then
+        identifiers+=("$identifier")
+      fi
+    done
+  done < <(grep '^#' "$template")
+
+  if test "${#identifiers[@]}" -eq 0; then
+    echo "[ERROR]    $template_name -> no enabled identifiers found"
+    error=1
+    continue
+  fi
+
+  template_errors=0
+  for identifier in "${identifiers[@]}"; do
+    case_name="${template_name%.test}-$identifier"
+    input_file="$TMP_ROOT/$case_name.iec"
+    stdout_file="$TMP_ROOT/$case_name.stdout"
+    stderr_file="$TMP_ROOT/$case_name.stderr"
+    sed "s/XXXX/$identifier/g" "$template" >"$input_file"
+
+    (
+      cd "$SCRIPT_DIR" || exit 1
+      "$IEC2IEC" -y -I "$MATIEC_LIBDIR" "$input_file" >"$stdout_file" 2>"$stderr_file"
+    )
+    status=$?
+    total=$((total + 1))
+
+    if test "$status" != 0; then
+      echo "[ERROR]    $case_name -> compiler returned $status"
+      sed -n '1,8p' "$stderr_file"
+      template_errors=$((template_errors + 1))
+    elif test -s "$stderr_file"; then
+      echo "[ERROR]    $case_name -> compiler emitted an unexpected diagnostic"
+      sed -n '1,8p' "$stderr_file"
+      template_errors=$((template_errors + 1))
+    fi
   done
+
+  if test "$template_errors" = 0; then
+    echo "[ O K ]    $template_name (${#identifiers[@]} identifiers)"
+  else
+    echo "[ERROR]    $template_name -> $template_errors case(s) failed"
+    error=1
+  fi
 done
 
 echo
-if `test $error = 1`
-  then echo "FAILURE -> At least one of the tests failed!"
-  else echo "SUCCESS -> All tests passed!"
+if test "$error" = 1; then
+  echo "FAILURE -> Identifier syntax tests failed ($total cases)."
+else
+  echo "SUCCESS -> All $total identifier syntax cases passed!"
 fi
+
+exit "$error"

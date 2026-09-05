@@ -112,6 +112,7 @@ static void printusage(const char *cmd) {
   printf("\nsyntax: %s [<options>] [-O <output_options>] [-I <include_directory>] [-T <target_directory>] <input_file>\n", cmd);
   printf(" -h : show this help message\n");
   printf(" -v : print version number\n");  
+  printf(" -y : stop after syntax analysis\n");
   printf(" -f : display full token location on error messages\n");
   printf(" -p : allow use of forward references                (a non-standard extension?)\n");  
   printf(" -l : use a relaxed datatype equivalence model       (a non-standard extension?)\n");  
@@ -143,6 +144,7 @@ int main(int argc, char **argv) {
   symbol_c *tree_root, *ordered_tree_root;
   char * builddir = NULL;
   int optres, errflg = 0;
+  bool syntax_only = false;
   int path_len;
 
   /* Default values for the command line options... */
@@ -165,7 +167,7 @@ int main(int argc, char **argv) {
   /******************************************/
   /*   Parse command line options...        */
   /******************************************/
-  while ((optres = getopt(argc, argv, ":nehvfplsrRabicI:T:O:")) != -1) {
+  while ((optres = getopt(argc, argv, ":nehvyfplsrRabicI:T:O:")) != -1) {
     switch(optres) {
     case 'h':
       printusage(argv[0]);
@@ -173,6 +175,7 @@ int main(int argc, char **argv) {
     case 'v':
       fprintf(stdout, "%s version %s\n" "changeset id: %s\n", PACKAGE_NAME, PACKAGE_VERSION, HGVERSION);      
       return 0;
+    case 'y': syntax_only = true;                              break;
     case 'l': runtime_options.relaxed_datatype_model   = true;  break;
     case 'p': runtime_options.pre_parsing              = true;  break;
     case 'f': runtime_options.full_token_loc           = true;  break;
@@ -255,6 +258,9 @@ int main(int argc, char **argv) {
   if (stage1_2(argv[optind], &tree_root) < 0)
     return EXIT_FAILURE;
 
+  if (syntax_only)
+    return EXIT_SUCCESS;
+
   /* 2nd Pass */
     /* basically loads some symbol tables to speed up look ups later on */
   absyntax_utils_init(tree_root);  
@@ -275,4 +281,3 @@ int main(int argc, char **argv) {
 
   return 0;
 }
-

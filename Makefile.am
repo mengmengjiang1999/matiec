@@ -11,7 +11,8 @@ TESTS_ENVIRONMENT = \
 
 TESTS = \
 	tests/initialization/runtests \
-	tests/cli/runtests
+	tests/cli/runtests \
+	tests/syntax/identifier/runtests
 
 EXTRA_DIST = $(TESTS)
 
