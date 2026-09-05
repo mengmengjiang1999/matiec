@@ -40,7 +40,7 @@
 - [x] 5.2 Wrap the existing Stage 3 order in a `SemanticPassManager` without changing individual visitors
 - [x] 5.3 Route Stage 3 diagnostics through `DiagnosticEngine` and remove duplicated diagnostic macros
 - [x] 5.4 Add focused tests for pass order, failure short-circuiting, and independently invocable passes
-- [ ] 5.5 Evaluate moving semantic annotations to a context-owned analysis store and either implement it or record a scoped follow-up
+- [x] 5.5 Evaluate moving semantic annotations to a context-owned analysis store and either implement it or record a scoped follow-up
 
 ## 6. Code-Generation Boundaries
 
