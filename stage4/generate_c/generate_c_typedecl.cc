@@ -21,6 +21,9 @@
  * This code is made available on the understanding that it will not be
  * used in safety-critical situations without a full and competent review.
  */
+#include "generate_c_base.hh"
+#include "../../compiler/ast_arena.hh"
+
 #include <stdlib.h>
 
 
@@ -1154,6 +1157,32 @@ class generate_c_implicit_typedecl_c: public iterator_visitor_c {
     }
 };
 
+class generate_c_type_generators_impl_c {
+  public:
+    generate_c_typedecl_c explicit_declarations;
+    generate_c_implicit_typedecl_c implicit_declarations;
 
+    explicit generate_c_type_generators_impl_c(stage4out_c *s4o_ptr)
+      : explicit_declarations(s4o_ptr),
+        implicit_declarations(s4o_ptr, &explicit_declarations) {}
+};
 
+generate_c_type_generators_c::generate_c_type_generators_c(stage4out_c *s4o_ptr)
+  : implementation_(new generate_c_type_generators_impl_c(s4o_ptr)) {}
+
+generate_c_type_generators_c::~generate_c_type_generators_c(void) {
+  delete implementation_;
+}
+
+visitor_c &generate_c_type_generators_c::explicit_declarations(void) {
+  return implementation_->explicit_declarations;
+}
+
+visitor_c &generate_c_type_generators_c::implicit_declarations(void) {
+  return implementation_->implicit_declarations;
+}
+
+visitor_c *new_generate_c_implicit_typedecl_generator(stage4out_c *s4o_ptr) {
+  return new generate_c_implicit_typedecl_c(s4o_ptr);
+}
 

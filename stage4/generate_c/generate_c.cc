@@ -145,11 +145,6 @@ int  stage4_parse_options(char *options) {return 0;}
 /***********************************************************************/
 
 #include "generate_c_base.hh"
-#include "generate_c_typedecl.cc"
-#include "generate_c_sfcdecl.cc"
-#include "generate_c_vardecl.cc"
-#include "generate_location_list.cc"
-#include "generate_var_list.cc"
 
 /***********************************************************************/
 /***********************************************************************/
@@ -751,28 +746,7 @@ class generate_c_pous_c {
           /* get the default value of this variable's type */
           symbol_c *default_value = type_initial_value_c::get(symbol->type_name);
           if (default_value == NULL) ERROR;
-          initialization_analyzer_c initialization_analyzer(default_value);
-          switch (initialization_analyzer.get_initialization_type()) {
-            case initialization_analyzer_c::struct_it:
-              {
-                generate_c_structure_initialization_c *structure_initialization = new generate_c_structure_initialization_c(&s4o);
-                structure_initialization->init_structure_default(symbol->type_name);
-                structure_initialization->init_structure_values(default_value);
-                delete structure_initialization;
-              }
-              break;
-            case initialization_analyzer_c::array_it:
-              {
-                generate_c_array_initialization_c *array_initialization = new generate_c_array_initialization_c(&s4o);
-                array_initialization->init_array_size(symbol->type_name);
-                array_initialization->init_array_values(default_value);
-                delete array_initialization;
-              }
-              break;
-            default:
-              default_value->accept(print_base);
-              break;
-          }
+          generate_c_initial_value(&s4o, symbol->type_name, default_value, print_base);
         }
       }
       s4o.print(";\n\n");
@@ -2168,7 +2142,7 @@ private:
       /* convert to upper case */
       for (char *c = resource_name; *c != '\0'; *c = toupper(*c), c++);
       
-      generate_c_vardecl_c vardecl = generate_c_vardecl_c(&s4o,
+      generate_c_vardecl_c vardecl(&s4o,
                                          generate_c_vardecl_c::local_vf,
                                          generate_c_vardecl_c::global_vt,
                                          symbol->resource_name);
@@ -2297,7 +2271,7 @@ class generate_c_backup_config_c: public generate_c_base_and_typeid_c {
       s4o.print("}\n");
       
       
-      generate_c_vardecl_c vardecl = generate_c_vardecl_c(&s4o,
+      generate_c_vardecl_c vardecl(&s4o,
                                          generate_c_vardecl_c::local_vf,
                                          generate_c_vardecl_c::global_vt,
                                          symbol->configuration_name);
@@ -2369,8 +2343,7 @@ class generate_c_c: public iterator_visitor_c {
     stage4out_c     located_variables_s4o;
     stage4out_c             variables_s4o;
     
-    generate_c_typedecl_c          generate_c_typedecl;
-    generate_c_implicit_typedecl_c generate_c_implicit_typedecl;
+    generate_c_type_generators_c   generate_c_type_generators;
     generate_c_pous_c              generate_c_pous;
     
     symbol_c   *current_configuration;
@@ -2397,8 +2370,7 @@ class generate_c_c: public iterator_visitor_c {
             located_variables_s4o(s4o.output_manager(), builddir,
                                   "LOCATED_VARIABLES", "h"),
             variables_s4o(s4o.output_manager(), builddir, "VARIABLES", "csv"),
-            generate_c_typedecl         (&pous_incl_s4o),
-            generate_c_implicit_typedecl(&pous_incl_s4o, &generate_c_typedecl)
+            generate_c_type_generators(&pous_incl_s4o)
     {
       current_builddir = builddir;
       current_configuration = NULL;
@@ -2471,15 +2443,12 @@ class generate_c_c: public iterator_visitor_c {
         symbol->get_element(i)->accept(*this);
       }
       
-      generate_var_list_c generate_var_list(&variables_s4o, symbol);
-      generate_var_list.generate_programs(symbol);
-      generate_var_list.generate_variables(symbol);
+      generate_c_variable_list(&variables_s4o, symbol);
       variables_s4o.print("\n// Ticktime\n");
       variables_s4o.print_long_long_integer(common_ticktime, false);
       variables_s4o.print("\n");
 
-      generate_location_list_c generate_location_list(&located_variables_s4o);
-      symbol->accept(generate_location_list);
+      generate_c_location_list(&located_variables_s4o, symbol);
       return NULL;
     }
 
@@ -2505,8 +2474,8 @@ class generate_c_c: public iterator_visitor_c {
     void *visit(type_declaration_list_c *symbol) {
       if (pou_generation_pass != pou_pass_headers_and_types) return NULL;
       for(int i = 0; i < symbol->n; i++) {
-        symbol->get_element(i)->accept(generate_c_implicit_typedecl);
-        symbol->get_element(i)->accept(generate_c_typedecl);
+        symbol->get_element(i)->accept(generate_c_type_generators.implicit_declarations());
+        symbol->get_element(i)->accept(generate_c_type_generators.explicit_declarations());
       }
       return NULL;
     }
@@ -2527,8 +2496,9 @@ class generate_c_c: public iterator_visitor_c {
         s4o_c.print("#include \""); s4o_c.print(pou_name); s4o_c.print(".h\"\n");\
         s4o_h.print("#ifndef __");  s4o_h.print(pou_name); s4o_h.print("_H\n");\
         s4o_h.print("#define __");  s4o_h.print(pou_name); s4o_h.print("_H\n");\
-        generate_c_implicit_typedecl_c generate_c_implicit_typedecl__(&s4o_h);\
-        symbol->accept(generate_c_implicit_typedecl__); /* generate implicitly delcared datatypes (arrays and ref_to) */\
+        visitor_c *generate_c_implicit_typedecl__ = new_generate_c_implicit_typedecl_generator(&s4o_h);\
+        symbol->accept(*generate_c_implicit_typedecl__); /* generate implicitly delcared datatypes (arrays and ref_to) */\
+        delete generate_c_implicit_typedecl__;\
         generate_c_pous_c::fname(symbol, s4o_h, true); /* add types the <pou_name>.h file */\
         generate_c_pous_c::fname##_fwd_decl(symbol, s4o_h); /* add fw decl to the <pou_name>.h file */\
         generate_c_pous_c::fname(symbol, s4o_c, false);/* add functions the <pou_name>.c file */\
@@ -2542,7 +2512,7 @@ class generate_c_c: public iterator_visitor_c {
         pous_s4o.     print(".c\"\n");\
       } else switch (pou_generation_pass) {\
         case pou_pass_headers_and_types:\
-          symbol->accept(generate_c_implicit_typedecl);\
+          symbol->accept(generate_c_type_generators.implicit_declarations());\
           generate_c_pous_c::fname(symbol, pous_incl_s4o, true);\
           break;\
         case pou_pass_fwd_decls:\
@@ -2584,7 +2554,7 @@ class generate_c_c: public iterator_visitor_c {
     void *visit(configuration_declaration_c *symbol) {
       if (pou_generation_pass != pou_pass_definitions) return NULL;
       if (symbol->global_var_declarations != NULL)
-        symbol->global_var_declarations->accept(generate_c_implicit_typedecl);
+        symbol->global_var_declarations->accept(generate_c_type_generators.implicit_declarations());
       static int configuration_count = 0;
 
       if (configuration_count++) {
@@ -2636,7 +2606,7 @@ class generate_c_c: public iterator_visitor_c {
 
     void *visit(resource_declaration_c *symbol) {
       if (symbol->global_var_declarations != NULL)
-        symbol->global_var_declarations->accept(generate_c_implicit_typedecl);
+        symbol->global_var_declarations->accept(generate_c_type_generators.implicit_declarations());
       symbol->resource_name->accept(*this);
       stage4out_c resources_s4o(s4o.output_manager(), current_builddir,
                                 current_name, "c");

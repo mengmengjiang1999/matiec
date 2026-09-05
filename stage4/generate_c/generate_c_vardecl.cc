@@ -22,6 +22,8 @@
  * used in safety-critical situations without a full and competent review.
  */
 
+#include "generate_c_base.hh"
+
 #include <limits>  // required for std::numeric_limits<XXX>
 
 class initialization_analyzer_c: public null_visitor_c {
@@ -719,7 +721,7 @@ void *generate_c_array_initialization_c::visit(structure_element_initialization_
 
 
 
-class generate_c_vardecl_c: protected generate_c_base_and_typeid_c {
+class generate_c_vardecl_impl_c: protected generate_c_base_and_typeid_c {
 
   /* A Helper class to the main class... */
   /* print a string, except the first time it is called */
@@ -881,15 +883,15 @@ class generate_c_vardecl_c: protected generate_c_base_and_typeid_c {
   private:
     /* variable used to store the types of variables that need to be processed... */
     /* Only set in the constructor...! */
-    /* Will contain a set of values of generate_c_vardecl_c::XXXX_vt */
+    /* Will contain a set of values of generate_c_vardecl_impl_c::XXXX_vt */
     unsigned int wanted_vartype;
 
     /* variable used to store the type of variable currently being processed... */
-    /* Will contain a single value of generate_c_vardecl_c::XXXX_vt */
+    /* Will contain a single value of generate_c_vardecl_impl_c::XXXX_vt */
     unsigned int current_vartype;
 
     /* variable used to store the qualifier of variable currently being processed... */
-    /* Will contain a single value of generate_c_vardecl_c::XXXX_vq */
+    /* Will contain a single value of generate_c_vardecl_impl_c::XXXX_vq */
     unsigned int current_varqualifier;
 
     /* How variables should be declared: as local variables or
@@ -1196,7 +1198,7 @@ class generate_c_vardecl_c: protected generate_c_base_and_typeid_c {
 
 
   public:
-    generate_c_vardecl_c(stage4out_c *s4o_ptr, varformat_t varformat, unsigned int vartype, symbol_c* res_name = NULL)
+    generate_c_vardecl_impl_c(stage4out_c *s4o_ptr, varformat_t varformat, unsigned int vartype, symbol_c* res_name = NULL)
     : generate_c_base_and_typeid_c(s4o_ptr) {
       wanted_varformat = varformat;
       wanted_vartype   = vartype;
@@ -1209,7 +1211,7 @@ class generate_c_vardecl_c: protected generate_c_base_and_typeid_c {
       resource_name = res_name;
     }
 
-    ~generate_c_vardecl_c(void) {}
+    ~generate_c_vardecl_impl_c(void) {}
 
     void print(symbol_c *symbol, symbol_c *scope = NULL, const char *variable_prefix = NULL) {
       this->set_variable_prefix(variable_prefix);
@@ -2898,7 +2900,7 @@ SYM_REF2(fb_initialization_c, function_block_type_name, structure_initialization
 
 
 
-}; /* generate_c_vardecl_c */
+}; /* generate_c_vardecl_impl_c */
 
 void generate_c_structure_initialization(stage4out_c *s4o_ptr, symbol_c *type,
                                          symbol_c *initialization) {
@@ -2912,4 +2914,35 @@ void generate_c_array_initialization(stage4out_c *s4o_ptr, symbol_c *type,
   generate_c_array_initialization_c generator(s4o_ptr);
   generator.init_array_size(type);
   generator.init_array_values(initialization);
+}
+
+void generate_c_initial_value(stage4out_c *s4o_ptr, symbol_c *type,
+                              symbol_c *initialization, visitor_c &fallback) {
+  initialization_analyzer_c analyzer(initialization);
+  switch (analyzer.get_initialization_type()) {
+    case initialization_analyzer_c::struct_it:
+      generate_c_structure_initialization(s4o_ptr, type, initialization);
+      break;
+    case initialization_analyzer_c::array_it:
+      generate_c_array_initialization(s4o_ptr, type, initialization);
+      break;
+    default:
+      initialization->accept(fallback);
+      break;
+  }
+}
+
+generate_c_vardecl_c::generate_c_vardecl_c(stage4out_c *s4o_ptr, varformat_t varformat,
+                                           unsigned int vartype, symbol_c *res_name)
+  : implementation_(new generate_c_vardecl_impl_c(
+        s4o_ptr, static_cast<generate_c_vardecl_impl_c::varformat_t>(varformat),
+        vartype, res_name)) {}
+
+generate_c_vardecl_c::~generate_c_vardecl_c(void) {
+  delete implementation_;
+}
+
+void generate_c_vardecl_c::print(symbol_c *symbol, symbol_c *scope,
+                                 const char *variable_prefix) {
+  implementation_->print(symbol, scope, variable_prefix);
 }

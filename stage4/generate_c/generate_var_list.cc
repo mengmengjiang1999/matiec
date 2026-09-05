@@ -27,6 +27,8 @@
 
 
 
+#include "generate_c_base.hh"
+
 /***********************************************************************/
 /***********************************************************************/
 /***********************************************************************/
@@ -78,8 +80,6 @@ class search_location_type_c: public iterator_visitor_c {
       return NULL;
     }
 };
-
-
 
 /***********************************************************************/
 /***********************************************************************/
@@ -1146,3 +1146,9 @@ class generate_var_list_c: protected generate_c_base_and_typeid_c {
     }
     
 };
+
+void generate_c_variable_list(stage4out_c *s4o_ptr, symbol_c *root) {
+  generate_var_list_c generator(s4o_ptr, root);
+  generator.generate_programs(root);
+  generator.generate_variables(root);
+}

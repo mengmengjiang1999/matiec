@@ -22,12 +22,14 @@
  * used in safety-critical situations without a full and competent review.
  */
 
+#include "generate_c_base.hh"
+
 /***********************************************************************/
 /***********************************************************************/
 /***********************************************************************/
 /***********************************************************************/
 
-class generate_c_sfcdecl_c: protected generate_c_base_and_typeid_c {
+class generate_c_sfcdecl_impl_c: protected generate_c_base_and_typeid_c {
   
   public:
       typedef enum {
@@ -53,12 +55,12 @@ class generate_c_sfcdecl_c: protected generate_c_base_and_typeid_c {
     search_var_instance_decl_c *search_var_instance_decl;
     
   public:
-    generate_c_sfcdecl_c(stage4out_c *s4o_ptr, symbol_c *scope, const char *variable_prefix = NULL)
+    generate_c_sfcdecl_impl_c(stage4out_c *s4o_ptr, symbol_c *scope, const char *variable_prefix = NULL)
     : generate_c_base_and_typeid_c(s4o_ptr) {
       this->set_variable_prefix(variable_prefix);
       search_var_instance_decl = new search_var_instance_decl_c(scope);
     }
-    ~generate_c_sfcdecl_c(void) {
+    ~generate_c_sfcdecl_impl_c(void) {
       variable_list.clear();
       delete search_var_instance_decl;
     }
@@ -403,4 +405,17 @@ class generate_c_sfcdecl_c: protected generate_c_base_and_typeid_c {
       return NULL;
     }
 
-}; /* generate_c_sfcdecl_c */
+}; /* generate_c_sfcdecl_impl_c */
+
+generate_c_sfcdecl_c::generate_c_sfcdecl_c(stage4out_c *s4o_ptr, symbol_c *scope,
+                                           const char *variable_prefix)
+  : implementation_(new generate_c_sfcdecl_impl_c(s4o_ptr, scope, variable_prefix)) {}
+
+generate_c_sfcdecl_c::~generate_c_sfcdecl_c(void) {
+  delete implementation_;
+}
+
+void generate_c_sfcdecl_c::generate(symbol_c *symbol, sfcdeclaration_t declaration_type) {
+  implementation_->generate(
+      symbol, static_cast<generate_c_sfcdecl_impl_c::sfcdeclaration_t>(declaration_type));
+}

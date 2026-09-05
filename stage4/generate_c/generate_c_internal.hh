@@ -22,8 +22,8 @@ class generate_c_base_c;
 class generate_c_base_and_typeid_c;
 class generate_c_typedecl_c;
 class generate_c_implicit_typedecl_c;
-class generate_c_vardecl_c;
-class generate_c_sfcdecl_c;
+class generate_c_vardecl_impl_c;
+class generate_c_sfcdecl_impl_c;
 class generate_c_st_c;
 class generate_c_il_c;
 class generate_c_inlinefcall_c;
@@ -32,6 +32,80 @@ class generate_c_sfc_c;
 typedef struct {
   identifier_c *symbol;
 } VARIABLE;
+
+class generate_c_vardecl_c {
+  private:
+    generate_c_vardecl_impl_c *implementation_;
+
+  public:
+    static const unsigned int none_vt     = 0x0000;
+    static const unsigned int input_vt    = 0x0001;
+    static const unsigned int output_vt   = 0x0002;
+    static const unsigned int inoutput_vt = 0x0004;
+    static const unsigned int private_vt  = 0x0008;
+    static const unsigned int temp_vt     = 0x0010;
+    static const unsigned int external_vt = 0x0020;
+    static const unsigned int global_vt   = 0x0040;
+    static const unsigned int located_vt  = 0x0080;
+    static const unsigned int program_vt  = 0x0100;
+    static const unsigned int en_vt       = 0x0200;
+    static const unsigned int eno_vt      = 0x0400;
+    static const unsigned int resource_vt = 0x8000;
+
+    typedef enum {
+      finterface_vf,
+      foutputassign_vf,
+      local_vf,
+      localinit_vf,
+      init_vf,
+      constructorinit_vf,
+      globalinit_vf,
+      globalprototype_vf,
+      location_list_vf
+    } varformat_t;
+
+    generate_c_vardecl_c(stage4out_c *s4o_ptr, varformat_t varformat,
+                         unsigned int vartype, symbol_c *res_name = NULL);
+    ~generate_c_vardecl_c(void);
+    void print(symbol_c *symbol, symbol_c *scope = NULL,
+               const char *variable_prefix = NULL);
+};
+
+class generate_c_sfcdecl_c {
+  private:
+    generate_c_sfcdecl_impl_c *implementation_;
+
+  public:
+    typedef enum {
+      sfcdecl_sd,
+      sfcinit_sd,
+      stepcount_sd,
+      stepdef_sd,
+      stepundef_sd,
+      actiondef_sd,
+      actionundef_sd,
+      actioncount_sd,
+      transitioncount_sd
+    } sfcdeclaration_t;
+
+    generate_c_sfcdecl_c(stage4out_c *s4o_ptr, symbol_c *scope,
+                         const char *variable_prefix = NULL);
+    ~generate_c_sfcdecl_c(void);
+    void generate(symbol_c *symbol, sfcdeclaration_t declaration_type);
+};
+
+class generate_c_type_generators_impl_c;
+
+class generate_c_type_generators_c {
+  private:
+    generate_c_type_generators_impl_c *implementation_;
+
+  public:
+    explicit generate_c_type_generators_c(stage4out_c *s4o_ptr);
+    ~generate_c_type_generators_c(void);
+    visitor_c &explicit_declarations(void);
+    visitor_c &implicit_declarations(void);
+};
 
 /* A helper shared by the language-specific generators. */
 class analyse_variable_c: public search_visitor_c {
@@ -144,6 +218,8 @@ void generate_c_structure_initialization(stage4out_c *s4o_ptr, symbol_c *type,
                                          symbol_c *initialization);
 void generate_c_array_initialization(stage4out_c *s4o_ptr, symbol_c *type,
                                      symbol_c *initialization);
+void generate_c_initial_value(stage4out_c *s4o_ptr, symbol_c *type,
+                              symbol_c *initialization, visitor_c &fallback);
 
 visitor_c *new_generate_c_st_generator(stage4out_c *s4o_ptr, symbol_c *name,
                                        symbol_c *scope, const char *variable_prefix = NULL);
@@ -153,6 +229,9 @@ visitor_c *new_generate_c_sfc_generator(stage4out_c *s4o_ptr, symbol_c *name,
                                         symbol_c *scope, const char *variable_prefix = NULL);
 visitor_c *new_generate_c_body_generator(stage4out_c *s4o_ptr, symbol_c *name,
                                          symbol_c *scope, const char *variable_prefix = NULL);
+visitor_c *new_generate_c_implicit_typedecl_generator(stage4out_c *s4o_ptr);
+void generate_c_variable_list(stage4out_c *s4o_ptr, symbol_c *root);
+void generate_c_location_list(stage4out_c *s4o_ptr, symbol_c *root);
 
 #ifdef DEBUG
 #define TRACE(classname) printf("\n____%s____\n",classname)

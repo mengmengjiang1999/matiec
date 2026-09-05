@@ -22,6 +22,8 @@
  * used in safety-critical situations without a full and competent review.
  */
 
+#include "generate_c_base.hh"
+
 class generate_location_list_c: public iterator_visitor_c {
 
   protected:
@@ -65,3 +67,8 @@ class generate_location_list_c: public iterator_visitor_c {
     }
 
 }; /* generate_location_list_c */
+
+void generate_c_location_list(stage4out_c *s4o_ptr, symbol_c *root) {
+  generate_location_list_c generator(s4o_ptr);
+  root->accept(generator);
+}
