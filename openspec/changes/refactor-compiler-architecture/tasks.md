@@ -27,7 +27,7 @@
 
 ## 4. AST and Compilation Lifetime
 
-- [ ] 4.1 Inventory AST, token-string, reordered-tree, and visitor allocation ownership in a checked-in migration note
+- [x] 4.1 Inventory AST, token-string, reordered-tree, and visitor allocation ownership in a checked-in migration note
 - [ ] 4.2 Introduce a per-compilation `AstArena` with allocation and destruction tests
 - [ ] 4.3 Route parser-created AST nodes and owned token strings through the arena without changing node relationships
 - [ ] 4.4 Replace stateful singleton visitors with stack or context-owned instances
