@@ -29,7 +29,11 @@ jobs:
         run: make --jobs=2
 
       - name: Run regressions
-        run: make check
+        run: |
+          make check || {
+            test ! -r test-suite.log || cat test-suite.log
+            exit 1
+          }
 
   clang-macos:
     runs-on: macos-latest
@@ -55,4 +59,8 @@ jobs:
         run: make --jobs=2
 
       - name: Run regressions
-        run: make check
+        run: |
+          make check || {
+            test ! -r test-suite.log || cat test-suite.log
+            exit 1
+          }
