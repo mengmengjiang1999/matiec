@@ -315,6 +315,11 @@ class print_function_parameter_data_types_c: public generate_c_base_and_typeid_c
      */
     void *visit(double_byte_string_var_declaration_c *symbol) {return NULL;}
 };
+
+void print_function_parameter_data_types(stage4out_c *s4o_ptr, symbol_c *declaration) {
+  print_function_parameter_data_types_c printer(s4o_ptr);
+  declaration->accept(printer);
+}
     
 
 /***********************************************************************/
@@ -324,126 +329,6 @@ class print_function_parameter_data_types_c: public generate_c_base_and_typeid_c
 
 /* A helper class that analyses if the datatype of a variable is 'complex'. */
 /* 'complex' means that it is either a strcuture or an array!               */
-class analyse_variable_c: public search_visitor_c {
-  public:
-    analyse_variable_c(void) : last_fb(NULL), first_non_fb_identifier(NULL) {};
-    
-    static bool is_complex_type(symbol_c *symbol) {
-      if (NULL == symbol) ERROR;
-      if (!get_datatype_info_c::is_type_valid     (symbol->datatype)) return false;
-      return (   get_datatype_info_c::is_structure(symbol->datatype) 
-              || get_datatype_info_c::is_array    (symbol->datatype) 
-             );
-    }
-
-    
-  private:
-    symbol_c *last_fb, *first_non_fb_identifier;
-
-  public:  
-    /* returns the first element (from left to right) in a structured variable that is not a FB, i.e. is either a structure or an array! */
-    /* eg:
-     *      fb1.fb2.fb3.real       returns ??????
-     *      fb1.fb2.struct1.real   returns struct1
-     *      struct1.real           returns struct1
-     */
-    static symbol_c *find_first_nonfb(symbol_c *symbol) {
-      if (NULL == symbol)           ERROR;
-      analyse_variable_c visitor;
-      return (symbol_c *)symbol->accept(visitor);
-    }
-    
-    /* returns true if a strcutured variable (e.g. fb1.fb2.strcut1.real) contains a structure or array */
-    /* eg:
-     *      fb1.fb2.fb3.real       returns FALSE
-     *      fb1.fb2.struct1.real   returns TRUE
-     *      struct1.real           returns TRUE
-     */
-    static bool contains_complex_type(symbol_c *symbol) {
-      if (NULL == symbol) ERROR;
-      if (!get_datatype_info_c::is_type_valid(symbol->datatype)) ERROR;
-      
-      symbol_c *first_non_fb = (symbol_c *)find_first_nonfb(symbol);
-      return is_complex_type(first_non_fb->datatype);
-    }
-    
-    
-    /* returns the datatype of the variable returned by find_first_nonfb() */
-    /* eg:
-     *      fb1.fb2.fb3.real       returns ??????
-     *      fb1.fb2.struct1.real   returns datatype of struct1
-     *      struct1.real           returns datatype of struct1
-     */
-    static search_var_instance_decl_c::vt_t first_nonfb_vardecltype(symbol_c *symbol, symbol_c *scope) {
-      if (NULL == symbol) ERROR;
-      if (!get_datatype_info_c::is_type_valid(symbol->datatype)) ERROR;
-      
-      analyse_variable_c visitor;
-      symbol_c *first_non_fb = (symbol_c *)symbol->accept(visitor);
-      if (NULL != visitor.last_fb) {
-        scope = visitor.last_fb->datatype;
-        symbol = visitor.first_non_fb_identifier;
-      }
-      
-      search_var_instance_decl_c search_var_instance_decl(scope);
-      
-      return search_var_instance_decl.get_vartype(symbol);
-    }
-    
-    
-    /*********************/
-    /* B 1.4 - Variables */
-    /*********************/
-    void *visit(symbolic_variable_c *symbol) {
-      if (!get_datatype_info_c::is_type_valid    (symbol->datatype)) ERROR;
-      if (!get_datatype_info_c::is_function_block(symbol->datatype)) {
-         first_non_fb_identifier = symbol; 
-         return (void *)symbol;
-      }
-      last_fb = symbol;
-      return NULL;
-    }
-    
-    /*************************************/
-    /* B.1.4.2   Multi-element Variables */
-    /*************************************/
-    
-    // SYM_REF2(structured_variable_c, record_variable, field_selector)
-    void *visit(structured_variable_c *symbol) {
-      symbol_c *res = (symbol_c *)symbol->record_variable->accept(*this);
-      if (NULL != res) return res;
-      
-      if (!get_datatype_info_c::is_type_valid    (symbol->datatype)) ERROR;
-      if (!get_datatype_info_c::is_function_block(symbol->datatype)) {
-         first_non_fb_identifier = symbol->field_selector; 
-         return (void *)symbol;
-      }
-
-      last_fb = symbol;      
-      return NULL;      
-    }
-    
-    /*  subscripted_variable '[' subscript_list ']' */
-    //SYM_REF2(array_variable_c, subscripted_variable, subscript_list)
-    void *visit(array_variable_c *symbol) {
-      void *res = symbol->subscripted_variable->accept(*this);
-      if (NULL != res) return res;
-      return (void *)symbol;      
-    }
-
-    
-};
-
-/***********************************************************************/
-/***********************************************************************/
-/***********************************************************************/
-/***********************************************************************/
-
-
-#include "generate_c_st.cc"
-#include "generate_c_il.cc"
-#include "generate_c_inlinefcall.cc"
-
 /***********************************************************************/
 /***********************************************************************/
 /***********************************************************************/
@@ -697,8 +582,6 @@ class generate_c_SFC_IL_ST_c: public null_visitor_c {
 /* Remainder implemented in generate_c_st_c... */
 };
 
-#include "generate_c_sfc.cc"
-
 generate_c_SFC_IL_ST_c::generate_c_SFC_IL_ST_c(stage4out_c *s4o_ptr, symbol_c *name, symbol_c *scope, const char *variable_prefix) {
   if (NULL == scope) ERROR;
   this->s4o_ptr = s4o_ptr;
@@ -708,21 +591,28 @@ generate_c_SFC_IL_ST_c::generate_c_SFC_IL_ST_c(stage4out_c *s4o_ptr, symbol_c *n
 }
 
 void *generate_c_SFC_IL_ST_c::visit(sequential_function_chart_c * symbol) {
-  generate_c_sfc_c generate_c_sfc(s4o_ptr, fbname, scope, variable_prefix);
-  generate_c_sfc.generate(symbol);
+  visitor_c *generator = new_generate_c_sfc_generator(s4o_ptr, fbname, scope, variable_prefix);
+  symbol->accept(*generator);
+  delete generator;
   return NULL;
 }
 
 void *generate_c_SFC_IL_ST_c::visit(instruction_list_c *symbol) {
-  generate_c_il_c generate_c_il(s4o_ptr, fbname, scope, variable_prefix);
-  generate_c_il.generate(symbol);
+  generate_c_il_adapter_c generator(s4o_ptr, fbname, scope, variable_prefix);
+  symbol->accept(generator.visitor());
   return NULL;
 }
 
 void *generate_c_SFC_IL_ST_c::visit(statement_list_c *symbol) {
-  generate_c_st_c generate_c_st(s4o_ptr, fbname, scope, variable_prefix);
-  generate_c_st.generate(symbol);
+  visitor_c *generator = new_generate_c_st_generator(s4o_ptr, fbname, scope, variable_prefix);
+  symbol->accept(*generator);
+  delete generator;
   return NULL;
+}
+
+visitor_c *new_generate_c_body_generator(stage4out_c *s4o_ptr, symbol_c *name,
+                                         symbol_c *scope, const char *variable_prefix) {
+  return new generate_c_SFC_IL_ST_c(s4o_ptr, name, scope, variable_prefix);
 }
 
 
@@ -1006,7 +896,7 @@ class generate_c_pous_c {
       
       if (!print_declaration) {
         /* (A.6) Function Block inline function declaration for function invocation */
-        generate_c_inlinefcall_c *inlinedecl = new generate_c_inlinefcall_c(&s4o, symbol->fblock_name, symbol, FB_FUNCTION_PARAM"->");
+        visitor_c *inlinedecl = new_generate_c_inlinefcall_generator(&s4o, symbol->fblock_name, symbol, FB_FUNCTION_PARAM"->");
         symbol->fblock_body->accept(*inlinedecl);
         delete inlinedecl;
 
@@ -1204,7 +1094,7 @@ class generate_c_pous_c {
         s4o.print(";\n\n");
       } else {
         /* (A.6) Function Block inline function declaration for function invocation */
-        generate_c_inlinefcall_c *inlinedecl = new generate_c_inlinefcall_c(&s4o, symbol->program_type_name, symbol, FB_FUNCTION_PARAM"->");
+        visitor_c *inlinedecl = new_generate_c_inlinefcall_generator(&s4o, symbol->program_type_name, symbol, FB_FUNCTION_PARAM"->");
         symbol->function_block_body->accept(*inlinedecl);
         delete inlinedecl;
         /* (B) Constructor */

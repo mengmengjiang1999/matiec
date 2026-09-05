@@ -2900,3 +2900,16 @@ SYM_REF2(fb_initialization_c, function_block_type_name, structure_initialization
 
 }; /* generate_c_vardecl_c */
 
+void generate_c_structure_initialization(stage4out_c *s4o_ptr, symbol_c *type,
+                                         symbol_c *initialization) {
+  generate_c_structure_initialization_c generator(s4o_ptr);
+  generator.init_structure_default(type);
+  generator.init_structure_values(initialization);
+}
+
+void generate_c_array_initialization(stage4out_c *s4o_ptr, symbol_c *type,
+                                     symbol_c *initialization) {
+  generate_c_array_initialization_c generator(s4o_ptr);
+  generator.init_array_size(type);
+  generator.init_array_values(initialization);
+}

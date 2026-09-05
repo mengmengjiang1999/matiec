@@ -29,6 +29,131 @@ class generate_c_il_c;
 class generate_c_inlinefcall_c;
 class generate_c_sfc_c;
 
+typedef struct {
+  identifier_c *symbol;
+} VARIABLE;
+
+/* A helper shared by the language-specific generators. */
+class analyse_variable_c: public search_visitor_c {
+  private:
+    symbol_c *last_fb;
+    symbol_c *first_non_fb_identifier;
+
+  public:
+    analyse_variable_c(void) : last_fb(NULL), first_non_fb_identifier(NULL) {}
+
+    static bool is_complex_type(symbol_c *symbol) {
+      if (NULL == symbol) ERROR;
+      if (!get_datatype_info_c::is_type_valid(symbol->datatype)) return false;
+      return (get_datatype_info_c::is_structure(symbol->datatype)
+           || get_datatype_info_c::is_array(symbol->datatype));
+    }
+
+    static symbol_c *find_first_nonfb(symbol_c *symbol) {
+      if (NULL == symbol) ERROR;
+      analyse_variable_c visitor;
+      return (symbol_c *)symbol->accept(visitor);
+    }
+
+    static bool contains_complex_type(symbol_c *symbol) {
+      if (NULL == symbol) ERROR;
+      if (!get_datatype_info_c::is_type_valid(symbol->datatype)) ERROR;
+      symbol_c *first_non_fb = find_first_nonfb(symbol);
+      return is_complex_type(first_non_fb->datatype);
+    }
+
+    static search_var_instance_decl_c::vt_t first_nonfb_vardecltype(symbol_c *symbol, symbol_c *scope) {
+      if (NULL == symbol) ERROR;
+      if (!get_datatype_info_c::is_type_valid(symbol->datatype)) ERROR;
+
+      analyse_variable_c visitor;
+      symbol_c *first_non_fb = (symbol_c *)symbol->accept(visitor);
+      if (NULL != visitor.last_fb) {
+        scope = visitor.last_fb->datatype;
+        symbol = visitor.first_non_fb_identifier;
+      }
+
+      search_var_instance_decl_c search_var_instance_decl(scope);
+      return search_var_instance_decl.get_vartype(symbol);
+    }
+
+    void *visit(symbolic_variable_c *symbol) {
+      if (!get_datatype_info_c::is_type_valid(symbol->datatype)) ERROR;
+      if (!get_datatype_info_c::is_function_block(symbol->datatype)) {
+        first_non_fb_identifier = symbol;
+        return (void *)symbol;
+      }
+      last_fb = symbol;
+      return NULL;
+    }
+
+    void *visit(structured_variable_c *symbol) {
+      symbol_c *res = (symbol_c *)symbol->record_variable->accept(*this);
+      if (NULL != res) return res;
+
+      if (!get_datatype_info_c::is_type_valid(symbol->datatype)) ERROR;
+      if (!get_datatype_info_c::is_function_block(symbol->datatype)) {
+        first_non_fb_identifier = symbol->field_selector;
+        return (void *)symbol;
+      }
+      last_fb = symbol;
+      return NULL;
+    }
+
+    void *visit(array_variable_c *symbol) {
+      void *res = symbol->subscripted_variable->accept(*this);
+      if (NULL != res) return res;
+      return (void *)symbol;
+    }
+};
+
+class il_default_variable_c;
+
+class il_default_variable_visitor_c {
+  public:
+    virtual void *visit(il_default_variable_c *symbol) = 0;
+    virtual ~il_default_variable_visitor_c(void) {}
+};
+
+class il_default_variable_c: public symbol_c {
+  public:
+    symbol_c *var_name;
+
+    il_default_variable_c(const char *var_name_str, symbol_c *current_type);
+    virtual void *accept(visitor_c &visitor);
+};
+
+/* Narrow adapter used by SFC without exposing the concrete IL generator. */
+class generate_c_il_adapter_c {
+  private:
+    generate_c_il_c *implementation_;
+    generate_c_il_adapter_c(const generate_c_il_adapter_c &);
+    generate_c_il_adapter_c &operator=(const generate_c_il_adapter_c &);
+
+  public:
+    generate_c_il_adapter_c(stage4out_c *s4o_ptr, symbol_c *name, symbol_c *scope,
+                            const char *variable_prefix = NULL);
+    ~generate_c_il_adapter_c(void);
+    visitor_c &visitor(void);
+    void declare_implicit_variable_back(void);
+    void print_implicit_variable_back(void);
+};
+
+void print_function_parameter_data_types(stage4out_c *s4o_ptr, symbol_c *declaration);
+void generate_c_structure_initialization(stage4out_c *s4o_ptr, symbol_c *type,
+                                         symbol_c *initialization);
+void generate_c_array_initialization(stage4out_c *s4o_ptr, symbol_c *type,
+                                     symbol_c *initialization);
+
+visitor_c *new_generate_c_st_generator(stage4out_c *s4o_ptr, symbol_c *name,
+                                       symbol_c *scope, const char *variable_prefix = NULL);
+visitor_c *new_generate_c_inlinefcall_generator(stage4out_c *s4o_ptr, symbol_c *name,
+                                                symbol_c *scope, const char *variable_prefix = NULL);
+visitor_c *new_generate_c_sfc_generator(stage4out_c *s4o_ptr, symbol_c *name,
+                                        symbol_c *scope, const char *variable_prefix = NULL);
+visitor_c *new_generate_c_body_generator(stage4out_c *s4o_ptr, symbol_c *name,
+                                         symbol_c *scope, const char *variable_prefix = NULL);
+
 #ifdef DEBUG
 #define TRACE(classname) printf("\n____%s____\n",classname)
 #else

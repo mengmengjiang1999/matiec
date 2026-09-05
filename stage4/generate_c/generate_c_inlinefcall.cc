@@ -23,6 +23,9 @@
  */
 
 
+#include "generate_c_base.hh"
+#include "../../util/strdup.hh"
+
 #define INLINE_RESULT_TEMP_VAR "__res"
 #define INLINE_PARAM_COUNT "__PARAM_COUNT"
 
@@ -113,8 +116,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
       if (f_decl != NULL) {
         /* function being called is overloaded! */
         s4o.print("__");
-        print_function_parameter_data_types_c overloaded_func_suf(&s4o);
-        f_decl->accept(overloaded_func_suf);
+        print_function_parameter_data_types(&s4o, f_decl);
       }
       if (function_type_suffix) {
         function_type_suffix->accept(*this);
@@ -167,8 +169,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
       if (f_decl != NULL) {
         /* function being called is overloaded! */
         s4o.print("__");
-        print_function_parameter_data_types_c overloaded_func_suf(&s4o);
-        f_decl->accept(overloaded_func_suf);
+        print_function_parameter_data_types(&s4o, f_decl);
       }
 
       if (function_type_suffix)
@@ -953,3 +954,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
 
 };  /* generate_c_inlinefcall_c */
 
+visitor_c *new_generate_c_inlinefcall_generator(stage4out_c *s4o_ptr, symbol_c *name,
+                                                symbol_c *scope, const char *variable_prefix) {
+  return new generate_c_inlinefcall_c(s4o_ptr, name, scope, variable_prefix);
+}

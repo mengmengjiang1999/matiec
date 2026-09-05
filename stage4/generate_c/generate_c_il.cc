@@ -22,6 +22,9 @@
  * used in safety-critical situations without a full and competent review.
  */
 
+#include "generate_c_base.hh"
+#include "../../util/strdup.hh"
+
 /***********************************************************************/
 /***********************************************************************/
 /***********************************************************************/
@@ -46,84 +49,6 @@
 /***********************************************************************/
 /***********************************************************************/
 /***********************************************************************/
-
-
-/* A new class to ouput the IL implicit variable to c++ code
- * We use this class, inheriting from symbol_c, so it may be used
- * as any other symbol_c object in the intermediate parse tree,
- * more specifically, so it can be used as any other il operand.
- * This makes the rest of the code much easier...
- *
- * Nevertheless, the basic visitor class visitor_c does not know
- * how to visit this new il_default_variable_c class, so we have
- * to extend that too.
- * In reality extending the basic symbols doesn't quite work out
- * as cleanly as desired (we need to use dynamic_cast in the
- * accept method of the il_default_variable_c), but it is cleaner
- * than the alternative...
- */
-class il_default_variable_c;
-
-/* This visitor class is not really required, we could place the
- * visit() method directly in genertae_cc_il_c, but doing it in
- * a seperate class makes the architecture more evident...
- */
-class il_default_variable_visitor_c {
-  public:
-    virtual void *visit(il_default_variable_c *symbol) = 0;
-
-    virtual ~il_default_variable_visitor_c(void) {return;}
-};
-
-
-/* A class to print out to the resulting C++ code
- * the IL implicit variable name.
- *
- * It includes a reference to its name,
- * and the data type of the data currently stored
- * in this C++ variable... This is required because the
- * C++ variable is a union, and we must know which member
- * of the union top reference!!
- *
- * Note that we also need to keep track of the data type of
- * the value currently being stored in the IL implicit variable.
- * This is required so we can process parenthesis,
- *
- * e.g. :
- *         LD var1
- *         AND (
- *         LD var2
- *         OR var3
- *         )
- *
- * Note that we only execute the 'AND (' operation when we come across
- * the ')', i.e. once we have evaluated the result of the
- * instructions inside the parenthesis.
- * When we do execute the 'AND (' operation, we need to know the data type
- * of the operand, which in this case is the result of the evaluation of the
- * instruction list inside the parenthesis. We can only know this if we
- * keep track of the data type currently stored in the IL implicit variable!
- *
- * We use the current_type inside the generate_c_il::default_variable_name variable
- * to track this!
- */
-class il_default_variable_c: public symbol_c {
-  public:
-    symbol_c *var_name;  /* in principle, this should point to an indentifier_c */
-
-  public:
-    il_default_variable_c(const char *var_name_str, symbol_c *current_type);
-    virtual void *accept(visitor_c &visitor);
-};
-
-
-/***********************************************************************/
-/***********************************************************************/
-/***********************************************************************/
-/***********************************************************************/
-
-
-
 
 
 class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_visitor_c {
@@ -684,20 +609,14 @@ void *visit(subscript_list_c *symbol) {
 /* helper symbol for structure_initialization */
 /* structure_element_initialization_list ',' structure_element_initialization */
 void *visit(structure_element_initialization_list_c *symbol) {
-  generate_c_structure_initialization_c *structure_initialization = new generate_c_structure_initialization_c(&s4o);
-  structure_initialization->init_structure_default(this->current_param_type);
-  structure_initialization->init_structure_values(symbol);
-  delete structure_initialization;
+  generate_c_structure_initialization(&s4o, this->current_param_type, symbol);
   return NULL;
 }
 
 /* helper symbol for array_initialization */
 /* array_initial_elements_list ',' array_initial_elements */
 void *visit(array_initial_elements_list_c *symbol) {
-  generate_c_array_initialization_c *array_initialization = new generate_c_array_initialization_c(&s4o);
-  array_initialization->init_array_size(this->current_param_type);
-  array_initialization->init_array_values(symbol);
-  delete array_initialization;
+  generate_c_array_initialization(&s4o, this->current_param_type, symbol);
   return NULL;
 }
 /****************************************/
@@ -916,8 +835,7 @@ void *visit(il_function_call_c *symbol) {
     if (fdecl_mutiplicity > 1) {
       /* function being called is overloaded! */
       s4o.print("__");
-      print_function_parameter_data_types_c overloaded_func_suf(&s4o);
-      f_decl->accept(overloaded_func_suf);
+      print_function_parameter_data_types(&s4o, f_decl);
     }
   }
   if (has_output_params) {
@@ -1317,8 +1235,7 @@ void *visit(il_formal_funct_call_c *symbol) {
     if (fdecl_mutiplicity > 1) {
       /* function being called is overloaded! */
       s4o.print("__");
-      print_function_parameter_data_types_c overloaded_func_suf(&s4o);
-      f_decl->accept(overloaded_func_suf);
+      print_function_parameter_data_types(&s4o, f_decl);
     }
     s4o.print(fcall_number);
   }
@@ -1328,8 +1245,7 @@ void *visit(il_formal_funct_call_c *symbol) {
       if (fdecl_mutiplicity > 1) {
         /* function being called is overloaded! */
         s4o.print("__");
-        print_function_parameter_data_types_c overloaded_func_suf(&s4o);
-        f_decl->accept(overloaded_func_suf);
+        print_function_parameter_data_types(&s4o, f_decl);
       }
     }  
     if (function_type_suffix != NULL)
@@ -1849,4 +1765,24 @@ il_default_variable_c::il_default_variable_c(const char *var_name_str, symbol_c 
   if (NULL == this->var_name) ERROR;
 
   this->datatype = current_type;
+}
+
+generate_c_il_adapter_c::generate_c_il_adapter_c(stage4out_c *s4o_ptr, symbol_c *name,
+                                                 symbol_c *scope, const char *variable_prefix)
+  : implementation_(new generate_c_il_c(s4o_ptr, name, scope, variable_prefix)) {}
+
+generate_c_il_adapter_c::~generate_c_il_adapter_c(void) {
+  delete implementation_;
+}
+
+visitor_c &generate_c_il_adapter_c::visitor(void) {
+  return *implementation_;
+}
+
+void generate_c_il_adapter_c::declare_implicit_variable_back(void) {
+  implementation_->declare_implicit_variable_back();
+}
+
+void generate_c_il_adapter_c::print_implicit_variable_back(void) {
+  implementation_->print_implicit_variable_back();
 }

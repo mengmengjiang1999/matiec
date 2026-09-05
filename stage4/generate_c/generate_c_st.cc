@@ -36,6 +36,7 @@
 
 
 
+#include "generate_c_base.hh"
 #include "../../util/strdup.hh"
 
 /***********************************************************************/
@@ -447,20 +448,14 @@ void *visit(subscript_list_c *symbol) {
 /* helper symbol for structure_initialization */
 /* structure_element_initialization_list ',' structure_element_initialization */
 void *visit(structure_element_initialization_list_c *symbol) {
-  generate_c_structure_initialization_c *structure_initialization = new generate_c_structure_initialization_c(&s4o);
-  structure_initialization->init_structure_default(this->current_param_type);
-  structure_initialization->init_structure_values(symbol);
-  delete structure_initialization;
+  generate_c_structure_initialization(&s4o, this->current_param_type, symbol);
   return NULL;
 }
 
 /* helper symbol for array_initialization */
 /* array_initial_elements_list ',' array_initial_elements */
 void *visit(array_initial_elements_list_c *symbol) {
-  generate_c_array_initialization_c *array_initialization = new generate_c_array_initialization_c(&s4o);
-  array_initialization->init_array_size(this->current_param_type);
-  array_initialization->init_array_values(symbol);
-  delete array_initialization;
+  generate_c_array_initialization(&s4o, this->current_param_type, symbol);
   return NULL;
 }
 
@@ -853,8 +848,7 @@ void *visit(function_invocation_c *symbol) {
   if (fdecl_mutiplicity > 1) {
     /* function being called is overloaded! */
     s4o.print("__");
-    print_function_parameter_data_types_c overloaded_func_suf(&s4o);
-    f_decl->accept(overloaded_func_suf);
+    print_function_parameter_data_types(&s4o, f_decl);
   }
 
   if (has_output_params) s4o.print(fcall_number);
@@ -1371,7 +1365,10 @@ void *visit(continue_statement_c *symbol) {
 
 }; /* generate_c_st_c */
 
-
+visitor_c *new_generate_c_st_generator(stage4out_c *s4o_ptr, symbol_c *name,
+                                       symbol_c *scope, const char *variable_prefix) {
+  return new generate_c_st_c(s4o_ptr, name, scope, variable_prefix);
+}
 
 
 
