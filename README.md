@@ -216,8 +216,16 @@ target compiler, runtime, PLC integration, and applicable safety process.
 
 ## License and credits
 
-MATIEC is distributed under the GNU General Public License, version 3. See
-[COPYING](COPYING) for the complete license text.
+The MATIEC compiler sources are distributed under the GNU General Public
+License as stated in their original copyright notices, generally version 3 or
+(at your option) any later version. See [COPYING](COPYING) for the GPL version
+3 license text.
+
+Some runtime and support files under `lib/`, including files intended to be
+used with generated C code, carry GNU Lesser General Public License notices.
+See [lib/COPYING.LESSER](lib/COPYING.LESSER) and the header of each file for
+the applicable version and terms. Individual file notices remain authoritative;
+this README does not replace or alter them.
 
 The project was started by Mario de Sousa, with historical contributions and
 copyright notices retained in the source files and original documentation.
