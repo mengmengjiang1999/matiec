@@ -72,6 +72,10 @@ this migration set.
 6. Run ASan with leak detection and UBSan. Any remaining process-lifetime allocation
    must be documented as immutable shared data or migrated before task 4.6 closes.
 
+Tasks 4.1 through 4.6 are complete. The sanitizer entry point now regenerates
+the parser/scanner from their checked-in sources, enables leak detection by
+default, and passes both address/leak and undefined-behavior suites.
+
 ## Completion invariants
 
 - Destroying one `CompilationContext` releases every AST node, retained token

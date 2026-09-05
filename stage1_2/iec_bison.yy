@@ -101,6 +101,7 @@ void yyerror (const char *error_msg);
 /* The interface through which bison and flex interact. */
 #include "stage1_2_priv.hh"
 #include "create_enumtype_conversion_functions.hh"
+#include "../compiler/ast_arena.hh"
 
 #include "../absyntax_utils/add_en_eno_param_decl.hh"	/* required for  add_en_eno_param_decl_c */
 
@@ -4933,7 +4934,7 @@ standard_function_name_simpleop_clashes:
 /* standard_function_name_NOT_clashes is only used in function invocations, so we use the poutype_identifier_c class! */
 standard_function_name_NOT_clashes:
   NOT
-	{$$ = new poutype_identifier_c(strdup("NOT"), locloc(@$));}
+	{$$ = new poutype_identifier_c(matiec::retain_ast_string("NOT"), locloc(@$));}
 ;
 
 /* Add here any other IL simple operators that collide
@@ -4950,20 +4951,20 @@ standard_function_name_simpleop_only_clashes:
 
 /* standard_function_name_expression_clashes is only used in function invocations, so we use the poutype_identifier_c class! */
 standard_function_name_expression_clashes:
-  AND	{$$ = new poutype_identifier_c(strdup("AND"), locloc(@$));}
-| OR	{$$ = new poutype_identifier_c(strdup("OR"), locloc(@$));}
-| XOR	{$$ = new poutype_identifier_c(strdup("XOR"), locloc(@$));}
-| ADD	{$$ = new poutype_identifier_c(strdup("ADD"), locloc(@$));}
-| SUB	{$$ = new poutype_identifier_c(strdup("SUB"), locloc(@$));}
-| MUL	{$$ = new poutype_identifier_c(strdup("MUL"), locloc(@$));}
-| DIV	{$$ = new poutype_identifier_c(strdup("DIV"), locloc(@$));}
-| MOD	{$$ = new poutype_identifier_c(strdup("MOD"), locloc(@$));}
-| GT	{$$ = new poutype_identifier_c(strdup("GT"), locloc(@$));}
-| GE	{$$ = new poutype_identifier_c(strdup("GE"), locloc(@$));}
-| EQ	{$$ = new poutype_identifier_c(strdup("EQ"), locloc(@$));}
-| LT	{$$ = new poutype_identifier_c(strdup("LT"), locloc(@$));}
-| LE	{$$ = new poutype_identifier_c(strdup("LE"), locloc(@$));}
-| NE	{$$ = new poutype_identifier_c(strdup("NE"), locloc(@$));}
+  AND	{$$ = new poutype_identifier_c(matiec::retain_ast_string("AND"), locloc(@$));}
+| OR	{$$ = new poutype_identifier_c(matiec::retain_ast_string("OR"), locloc(@$));}
+| XOR	{$$ = new poutype_identifier_c(matiec::retain_ast_string("XOR"), locloc(@$));}
+| ADD	{$$ = new poutype_identifier_c(matiec::retain_ast_string("ADD"), locloc(@$));}
+| SUB	{$$ = new poutype_identifier_c(matiec::retain_ast_string("SUB"), locloc(@$));}
+| MUL	{$$ = new poutype_identifier_c(matiec::retain_ast_string("MUL"), locloc(@$));}
+| DIV	{$$ = new poutype_identifier_c(matiec::retain_ast_string("DIV"), locloc(@$));}
+| MOD	{$$ = new poutype_identifier_c(matiec::retain_ast_string("MOD"), locloc(@$));}
+| GT	{$$ = new poutype_identifier_c(matiec::retain_ast_string("GT"), locloc(@$));}
+| GE	{$$ = new poutype_identifier_c(matiec::retain_ast_string("GE"), locloc(@$));}
+| EQ	{$$ = new poutype_identifier_c(matiec::retain_ast_string("EQ"), locloc(@$));}
+| LT	{$$ = new poutype_identifier_c(matiec::retain_ast_string("LT"), locloc(@$));}
+| LE	{$$ = new poutype_identifier_c(matiec::retain_ast_string("LE"), locloc(@$));}
+| NE	{$$ = new poutype_identifier_c(matiec::retain_ast_string("NE"), locloc(@$));}
 /*
   AND_operator	{$$ = il_operator_c_2_poutype_identifier_c($1);}
 //NOTE: AND2 (corresponding to the source code string '&') does not clash
@@ -5669,20 +5670,20 @@ action_qualifier:
 ;
 
 qualifier:
-  N		{$$ = new qualifier_c(strdup("N"), locloc(@$));}
-| R		{$$ = new qualifier_c(strdup("R"), locloc(@$));}
-| S		{$$ = new qualifier_c(strdup("S"), locloc(@$));}
-| P		{$$ = new qualifier_c(strdup("P"), locloc(@$));}
-| P0	{$$ = new qualifier_c(strdup("P0"), locloc(@$));}
-| P1	{$$ = new qualifier_c(strdup("P1"), locloc(@$));}
+  N		{$$ = new qualifier_c(matiec::retain_ast_string("N"), locloc(@$));}
+| R		{$$ = new qualifier_c(matiec::retain_ast_string("R"), locloc(@$));}
+| S		{$$ = new qualifier_c(matiec::retain_ast_string("S"), locloc(@$));}
+| P		{$$ = new qualifier_c(matiec::retain_ast_string("P"), locloc(@$));}
+| P0	{$$ = new qualifier_c(matiec::retain_ast_string("P0"), locloc(@$));}
+| P1	{$$ = new qualifier_c(matiec::retain_ast_string("P1"), locloc(@$));}
 ;
 
 timed_qualifier:
-  L		{$$ = new timed_qualifier_c(strdup("L"), locloc(@$));}
-| D		{$$ = new timed_qualifier_c(strdup("D"), locloc(@$));}
-| SD		{$$ = new timed_qualifier_c(strdup("SD"), locloc(@$));}
-| DS		{$$ = new timed_qualifier_c(strdup("DS"), locloc(@$));}
-| SL		{$$ = new timed_qualifier_c(strdup("SL"), locloc(@$));}
+  L		{$$ = new timed_qualifier_c(matiec::retain_ast_string("L"), locloc(@$));}
+| D		{$$ = new timed_qualifier_c(matiec::retain_ast_string("D"), locloc(@$));}
+| SD		{$$ = new timed_qualifier_c(matiec::retain_ast_string("SD"), locloc(@$));}
+| DS		{$$ = new timed_qualifier_c(matiec::retain_ast_string("DS"), locloc(@$));}
+| SL		{$$ = new timed_qualifier_c(matiec::retain_ast_string("SL"), locloc(@$));}
 ;
 
 /* NOTE: A step_name may be used as a structured vaqriable, in order to access the status bit (e.g. Step1.X) 
@@ -8625,7 +8626,7 @@ identifier_c *token_2_identifier_c(char *value, ) {
  */
 poutype_identifier_c *il_operator_c_2_poutype_identifier_c(symbol_c *il_operator) {
   identifier_c         *    id = il_operator_c_2_identifier_c(il_operator);
-  poutype_identifier_c *pou_id = new poutype_identifier_c(strdup(id->value));
+  poutype_identifier_c *pou_id = new poutype_identifier_c(matiec::retain_ast_string(id->value));
 
   *(symbol_c *)pou_id = *(symbol_c *)id;
   delete id;
@@ -8712,7 +8713,7 @@ identifier_c *il_operator_c_2_identifier_c(symbol_c *il_operator) {
                         );
   free(il_operator);
 */
-  res = new identifier_c(strdup(name));
+  res = new identifier_c(matiec::retain_ast_string(name));
   *(symbol_c *)res = *(symbol_c *)il_operator;
   delete il_operator;
   
@@ -8770,7 +8771,9 @@ static int parse_files(const char *libfilename, const char *filename) {
   allow_ref_to_any                     = runtime_options.ref_nonstand_extensions;
   allow_ref_to_in_derived_datatypes    = runtime_options.ref_nonstand_extensions;
   yynerrs = 0;
-  if (yyparse() != 0) {
+  const int library_parse_status = yyparse();
+  reset_lexer_state();
+  if (library_parse_status != 0) {
     fprintf (stderr, "\nParsing failed because of too many consecutive syntax errors in standard library. Bailing out!\n");
     fclose(libfile);
     return -2;
@@ -8809,7 +8812,9 @@ static int parse_files(const char *libfilename, const char *filename) {
   yynerrs = 0;
   //allow_ref_to_any = false;    /* we only allow REF_TO ANY in library functions/FBs, no matter what the user asks for in the command line */
 
-  if (yyparse() != 0) {
+  const int main_parse_status = yyparse();
+  reset_lexer_state();
+  if (main_parse_status != 0) {
     fprintf (stderr, "\nParsing failed because of too many consecutive syntax errors. Bailing out!\n");
     fclose(mainfile);
     return -4;
@@ -8903,8 +8908,6 @@ int stage2__(const char *filename,
 
   return 0;
 }
-
-
 
 
 

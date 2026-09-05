@@ -351,12 +351,11 @@ class generate_var_list_c: protected generate_c_base_and_typeid_c {
           print_retain();
           s4o.print(";\n");
           if (this->current_var_class_category != external_vcc) {
-              SYMBOL *current_name;
+              SYMBOL current_name;
               symbol_c *tmp_var_type;
-              current_name = new SYMBOL;
-              current_name->symbol = symbol;
+              current_name.symbol = symbol;
               tmp_var_type = this->current_var_type_symbol;
-              current_symbol_list.push_back(*current_name);
+              current_symbol_list.push_back(current_name);
               this->current_var_type_symbol->accept(*this);
               current_symbol_list.pop_back();
               this->current_var_type_symbol = tmp_var_type;
@@ -1077,10 +1076,9 @@ class generate_var_list_c: protected generate_c_base_and_typeid_c {
      */
     //SYM_REF5(configuration_declaration_c, configuration_name, global_var_declarations, resource_declarations, access_declarations, instance_specific_initializations)
     void *visit(configuration_declaration_c *symbol) {
-      SYMBOL *current_name;
-      current_name = new SYMBOL;
-      current_name->symbol = symbol->configuration_name;
-      current_symbol_list.push_back(*current_name);
+      SYMBOL current_name;
+      current_name.symbol = symbol->configuration_name;
+      current_symbol_list.push_back(current_name);
       configuration_defined = true;
       
       switch (current_declarationtype) {
@@ -1105,10 +1103,9 @@ class generate_var_list_c: protected generate_c_base_and_typeid_c {
      */
     //SYM_REF4(resource_declaration_c, resource_name, resource_type_name, global_var_declarations, resource_declaration)
     void *visit(resource_declaration_c *symbol) {
-      SYMBOL *current_name;
-      current_name = new SYMBOL;
-      current_name->symbol = symbol->resource_name;
-      current_symbol_list.push_back(*current_name);
+      SYMBOL current_name;
+      current_name.symbol = symbol->resource_name;
+      current_symbol_list.push_back(current_name);
 
       switch (current_declarationtype) {
         case variables_dt:

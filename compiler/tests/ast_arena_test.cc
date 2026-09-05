@@ -36,7 +36,7 @@ struct DerivedProbe : public LifetimeProbe {
 }  // namespace
 
 int main() {
-  int destruction_order[2] = {0, 0};
+  int destruction_order[4] = {0, 0, 0, 0};
   int destruction_count = 0;
   bool derived_destroyed = false;
 

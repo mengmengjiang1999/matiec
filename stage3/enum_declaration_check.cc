@@ -214,7 +214,9 @@ enum_declaration_check_c::enum_declaration_check_c(symbol_c *ignore) {
   populate_enumvalue_symtable = new populate_enumvalue_symtable_c(error_count, current_display_error_level);
 }
 
-enum_declaration_check_c::~enum_declaration_check_c(void) {}
+enum_declaration_check_c::~enum_declaration_check_c(void) {
+  delete populate_enumvalue_symtable;
+}
 
 int enum_declaration_check_c::get_error_count() {return error_count;}
 

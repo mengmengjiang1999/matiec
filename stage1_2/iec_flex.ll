@@ -1965,6 +1965,26 @@ void FreeTracking(tracking_t *tracking) {
 }
 
 
+void reset_lexer_state(void) {
+  while (include_stack_ptr > 0) {
+    fclose(yyin);
+    FreeTracking(current_tracking);
+    yy_delete_buffer(YY_CURRENT_BUFFER);
+    --include_stack_ptr;
+    yy_switch_to_buffer(include_stack[include_stack_ptr].buffer_state);
+    current_tracking = include_stack[include_stack_ptr].env;
+    current_filename = include_stack[include_stack_ptr].filename;
+  }
+
+  yylex_destroy();
+  FreeTracking(current_tracking);
+  current_tracking = NULL;
+  current_filename = NULL;
+  yyin = NULL;
+  current_order = 0;
+}
+
+
 void UpdateTracking(const char *text) {
   const char *newline, *token = text;
   while ((newline = strchr(token, '\n')) != NULL) {
