@@ -57,7 +57,10 @@ do
   if grep -q "Internal compiler error" "$stderr_file"
     then echo "[ERROR]    $test_name -> internal compiler error"; error=1
   elif test "$expected_status" = 0 && test "$status" != 0
-    then echo "[ERROR]    $test_name -> should have been accepted"; error=1
+    then
+      echo "[ERROR]    $test_name -> should have been accepted"
+      sed -n '1,20p' "$stderr_file"
+      error=1
   elif test "$expected_status" = 1 && test "$status" = 0
     then echo "[ERROR]    $test_name -> should have been rejected"; error=1
   elif test "$expected_status" = 1 && find "$output_dir" -type f -print -quit | grep -q .

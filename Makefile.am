@@ -21,7 +21,16 @@ EXTRA_DIST = \
 	tests/characterization/expected.sha256 \
 	tests/characterization/instruction_list.il \
 	tests/initialization/ok_array_scalar.st \
-	tests/syntax/sfc/sfc.txt
+	tests/syntax/sfc/sfc.txt \
+	tests/sanitizers/runtests
+
+.PHONY: check-asan check-ubsan
+
+check-asan:
+	tests/sanitizers/runtests address
+
+check-ubsan:
+	tests/sanitizers/runtests undefined
 
 ACLOCAL_AMFLAGS=-I config
 

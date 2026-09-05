@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Build and run the regression suite under one compiler sanitizer without
+# modifying the developer's configured source tree.
+
+set -eu
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+PROJECT_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
+SANITIZER=${1:-}
+JOBS=${JOBS:-2}
+
+case "$SANITIZER" in
+  address|undefined) ;;
+  *)
+    echo "usage: $0 {address|undefined}" >&2
+    exit 2
+    ;;
+esac
+
+TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/matiec-$SANITIZER.XXXXXX") || exit 1
+SOURCE_COPY="$TMP_ROOT/source"
+
+cleanup() {
+  status=$?
+  trap - EXIT
+  if test "$status" != 0 && test -r "$SOURCE_COPY/test-suite.log"; then
+    echo
+    echo "Sanitizer test log:"
+    sed -n '1,240p' "$SOURCE_COPY/test-suite.log"
+  fi
+  rm -rf "$TMP_ROOT"
+  exit "$status"
+}
+trap cleanup EXIT
+
+mkdir -p "$SOURCE_COPY"
+cp -R "$PROJECT_ROOT/." "$SOURCE_COPY"
+find "$SOURCE_COPY" -type f \( -name '*.o' -o -name '*.a' -o -name '*.Po' \) -delete
+rm -f "$SOURCE_COPY/iec2c" "$SOURCE_COPY/iec2iec"
+
+SANITIZER_FLAGS="-g -O1 -fno-omit-frame-pointer -fsanitize=$SANITIZER"
+
+cd "$SOURCE_COPY"
+autoreconf -i
+CC=${CC:-cc} CXX=${CXX:-c++} \
+  CFLAGS="$SANITIZER_FLAGS" \
+  CXXFLAGS="$SANITIZER_FLAGS" \
+  LDFLAGS="-fsanitize=$SANITIZER" \
+  ./configure
+make -j"$JOBS"
+
+if test "$SANITIZER" = address; then
+  ASAN_OPTIONS=${ASAN_OPTIONS:-detect_leaks=0:halt_on_error=1} make check
+else
+  UBSAN_OPTIONS=${UBSAN_OPTIONS:-halt_on_error=1:print_stacktrace=1} make check
+fi
