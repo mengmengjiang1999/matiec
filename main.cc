@@ -71,7 +71,6 @@
 #include <getopt.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <iostream>
 
 
@@ -85,26 +84,6 @@
 #ifndef MATIEC_REVISION
    #define MATIEC_REVISION "unknown"
 #endif
-
-
-
-void error_exit(const char *file_name, int line_no, const char *errmsg, ...) {
-  va_list argptr;
-  va_start(argptr, errmsg); /* second argument is last fixed pamater of error_exit() */
-
-  fprintf(stderr, "\nInternal compiler error in file %s at line %d", file_name, line_no);
-  if (errmsg != NULL) {
-    fprintf(stderr, ": ");
-    vfprintf(stderr, errmsg, argptr);
-  } else {
-    fprintf(stderr, ".");
-  }
-  fprintf(stderr, "\n");
-  va_end(argptr);
-    
-  exit(EXIT_FAILURE);
-}
-
 
 static void printusage(const char *cmd) {
   printf("\nsyntax: %s [<options>] [-O <output_options>] [-I <include_directory>] [-T <target_directory>] <input_file>\n", cmd);

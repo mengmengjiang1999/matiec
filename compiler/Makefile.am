@@ -10,8 +10,10 @@ libcompiler_a_SOURCES = \
 	diagnostic_engine.cc \
 	legacy_global_state_adapter.cc
 
-check_PROGRAMS = compilation_context_test compiler_types_test diagnostic_engine_test
+check_PROGRAMS = compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test
 TESTS = $(check_PROGRAMS)
+
+compilation_abort_test_SOURCES = tests/compilation_abort_test.cc compilation_abort.cc
 
 compilation_context_test_SOURCES = tests/compilation_context_test.cc
 compilation_context_test_LDADD = libcompiler.a

@@ -8771,7 +8771,8 @@ static int parse_files(const char *libfilename, const char *filename) {
   allow_ref_to_in_derived_datatypes    = runtime_options.ref_nonstand_extensions;
   if (yyparse() != 0) {
     fprintf (stderr, "\nParsing failed because of too many consecutive syntax errors in standard library. Bailing out!\n");
-    exit(EXIT_FAILURE);
+    fclose(libfile);
+    return -2;
   }
   fclose(libfile);
       
@@ -8808,13 +8809,14 @@ static int parse_files(const char *libfilename, const char *filename) {
 
   if (yyparse() != 0) {
     fprintf (stderr, "\nParsing failed because of too many consecutive syntax errors. Bailing out!\n");
-    exit(EXIT_FAILURE);
+    fclose(mainfile);
+    return -4;
   }
   fclose(mainfile);
   
   if (yynerrs > 0) {
     fprintf (stderr, "\n%d error(s) found. Bailing out!\n", yynerrs /* global variable */);
-    exit(EXIT_FAILURE);
+    return -5;
   }
 
   return 0;
@@ -8864,7 +8866,7 @@ int stage2__(const char *filename,
 
   if ((libfilename = strdup3(INCLUDE_DIRECTORIES[0], "/", LIBFILE)) == NULL) {
     fprintf (stderr, "Out of memory. Bailing out!\n");
-    exit(EXIT_FAILURE);
+    return -1;
   }
 
   /*******************************/
@@ -8874,8 +8876,10 @@ int stage2__(const char *filename,
     // fprintf (stderr, "----> Starting pre-parsing!\n");
     tree_root = NULL;
     set_preparse_state();
-    if (parse_files(libfilename, filename) < 0)
-      exit(EXIT_FAILURE);
+    if (parse_files(libfilename, filename) < 0) {
+      free(libfilename);
+      return -1;
+    }
     // TODO: delete the current AST. For the moment, we leave all the objects in memory (not much of an issue in a program that always runs to completion).
   }
   /*******************************/
@@ -8884,8 +8888,10 @@ int stage2__(const char *filename,
   // fprintf (stderr, "----> Starting normal parsing!\n");
   tree_root = NULL;
   rst_preparse_state();
-  if (parse_files(libfilename, filename) < 0)
-    exit(EXIT_FAILURE);
+  if (parse_files(libfilename, filename) < 0) {
+    free(libfilename);
+    return -1;
+  }
   
 
   /* Final clean-up... */
@@ -8895,7 +8901,6 @@ int stage2__(const char *filename,
 
   return 0;
 }
-
 
 
 

@@ -46,6 +46,7 @@
 #include <stdlib.h>
 
 #include "stage4.hh"
+#include "../compiler/compilation_abort.hh"
 #include "../main.hh" // required for ERROR() and ERROR_MSG() macros.
 
 
@@ -96,7 +97,8 @@ stage4out_c::stage4out_c(const char *dir, const char *radix, const char *extensi
   std::fstream *file = new std::fstream(filepath.c_str(), std::fstream::out);
   if(file->fail()){
     std::cerr << "Cannot open " << filename << " for write access \n";
-    exit(EXIT_FAILURE);
+    delete file;
+    throw matiec::CompilationAbort("Cannot open generated output file", true);
   }else{
     std::cout << filename << "\n";
   }

@@ -23,7 +23,7 @@
 - [x] 3.3 Add `CompilationContext` and route CLI options through it while preserving current behavior
 - [x] 3.4 Extract a `Compiler` driver API and reduce `main()` to argument adaptation, invocation, rendering, and exit status
 - [x] 3.5 Migrate pre-parser and global symbol-table access behind context-owned services or documented temporary adapters
-- [ ] 3.6 Replace deep `exit()` paths in parser, semantic, and generation entry points with structured failure propagation
+- [x] 3.6 Replace deep `exit()` paths in parser, semantic, and generation entry points with structured failure propagation
 
 ## 4. AST and Compilation Lifetime
 

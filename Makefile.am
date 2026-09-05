@@ -57,6 +57,6 @@ iec2iec_LDADD = compiler/libcompiler.a \
 	absyntax/libabsyntax.a \
 	absyntax_utils/libabsyntax_utils.a
 
-iec2c_SOURCES = main.cc
+iec2c_SOURCES = main.cc compiler/compilation_abort.cc
 
-iec2iec_SOURCES = main.cc
+iec2iec_SOURCES = main.cc compiler/compilation_abort.cc

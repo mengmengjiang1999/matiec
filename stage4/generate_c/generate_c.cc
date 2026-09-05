@@ -39,6 +39,7 @@
 #include "../../main.hh" // required for ERROR() and ERROR_MSG() macros.
 
 #include "../stage4.hh"
+#include "../../compiler/compilation_abort.hh"
 
 //#define DEBUG
 #ifdef DEBUG
@@ -49,7 +50,7 @@
 
 
 
-#define STAGE4_ERROR(symbol1, symbol2, ...) {stage4err("while generating C code", symbol1, symbol2, __VA_ARGS__); exit(EXIT_FAILURE);}
+#define STAGE4_ERROR(symbol1, symbol2, ...) {stage4err("while generating C code", symbol1, symbol2, __VA_ARGS__); throw matiec::CompilationAbort("C code generation failed", true);}
 
 
 /* Macros to access the constant value of each expression (if it exists) from the annotation introduced to the symbol_c object by constant_folding_c in stage3! */
@@ -2879,5 +2880,4 @@ class generate_c_c: public iterator_visitor_c {
 
 visitor_c *new_code_generator(stage4out_c *s4o, const char *builddir)  {return new generate_c_c(s4o, builddir);}
 void delete_code_generator(visitor_c *code_generator) {delete code_generator;}
-
 

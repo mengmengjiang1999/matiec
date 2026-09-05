@@ -141,6 +141,7 @@
  */
 #include "iec_bison.hh"
 #include "stage1_2_priv.hh"
+#include "../compiler/compilation_abort.hh"
 
 
 /* Variable defined by the bison parser,
@@ -2005,7 +2006,7 @@ void print_include_stack(void) {
 void handle_include_file_(FILE *filehandle, const char *filename) {
   if (include_stack_ptr >= MAX_INCLUDE_DEPTH) {
     fprintf(stderr, "Includes nested too deeply\n");
-    exit( 1 );
+    throw matiec::CompilationAbort("Includes nested too deeply", true);
   }
   
   yyin = filehandle;
@@ -2032,7 +2033,7 @@ void include_string_(const char *source_code) {
   
   if(tmp_file == NULL) {
     perror("Error creating temp file.");
-    exit(EXIT_FAILURE);
+    throw matiec::CompilationAbort("Error creating temporary include file", true);
   }
 
   fwrite((void *)source_code, 1, strlen(source_code), tmp_file);
@@ -2054,7 +2055,7 @@ void include_file(const char *filename) {
     full_name = strdup3(INCLUDE_DIRECTORIES[i], "/", filename);
     if (full_name == NULL) {
       fprintf(stderr, "Out of memory!\n");
-      exit( 1 );
+      throw matiec::CompilationAbort("Out of memory while resolving include", true);
     }
     filehandle = fopen(full_name, "r");
     free(full_name);
@@ -2062,7 +2063,7 @@ void include_file(const char *filename) {
 
   if (NULL == filehandle) {
     fprintf(stderr, "Error opening included file %s\n", filename);
-    exit( 1 );
+    throw matiec::CompilationAbort("Error opening included file", true);
   }
 
   /* now process the new file... */

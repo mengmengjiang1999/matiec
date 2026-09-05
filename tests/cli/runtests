@@ -48,6 +48,9 @@ expect_failure empty-include-directory "Option -I requires a non-empty directory
   "$IEC2C" -I "" "$INPUT_FILE"
 expect_failure empty-target-directory "Option -T requires a non-empty directory" \
   "$IEC2C" -T "" "$INPUT_FILE"
+expect_failure output-open-failure "Cannot open POUS.c for write access" \
+  "$IEC2C" -f -l -p -I "$MATIEC_LIBDIR" \
+  -T "$TMP_ROOT/missing/child" "$INPUT_FILE"
 
 generated_dir="$TMP_ROOT/generated"
 mkdir -p "$generated_dir"
