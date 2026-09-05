@@ -14,6 +14,7 @@ namespace matiec {
 class OutputManager {
  public:
   explicit OutputManager(DiagnosticEngine &diagnostics);
+  OutputManager(DiagnosticEngine &diagnostics, OutputSink &standard_output);
 
   OutputSink &standard_output();
   FileOutputSink &create_file(std::string path);
@@ -27,7 +28,8 @@ class OutputManager {
   void record_failure(OutputSink &sink, const OutputResult &result);
 
   DiagnosticEngine &diagnostics_;
-  StreamOutputSink standard_output_;
+  StreamOutputSink default_standard_output_;
+  OutputSink *standard_output_;
   std::vector<std::unique_ptr<OutputSink>> owned_sinks_;
   std::unordered_set<const OutputSink *> reported_sinks_;
   bool has_errors_ = false;

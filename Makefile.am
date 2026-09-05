@@ -13,6 +13,7 @@ TESTS_ENVIRONMENT = \
 
 TESTS = \
 	sequential_compilation_test \
+	in_memory_generator_test \
 	tests/initialization/runtests \
 	tests/cli/runtests \
 	tests/syntax/identifier/runtests \
@@ -65,9 +66,15 @@ iec2c_SOURCES = main.cc compiler/compilation_abort.cc
 
 iec2iec_SOURCES = main.cc compiler/compilation_abort.cc
 
-check_PROGRAMS = sequential_compilation_test
+check_PROGRAMS = sequential_compilation_test in_memory_generator_test
 
 sequential_compilation_test_SOURCES = \
 	tests/compiler/sequential_compilation_test.cc \
 	compiler/compilation_abort.cc
 sequential_compilation_test_LDADD = $(iec2c_LDADD)
+
+in_memory_generator_test_SOURCES = \
+	tests/compiler/in_memory_generator_test.cc \
+	compiler/compilation_abort.cc \
+	compiler/compilation_context.cc
+in_memory_generator_test_LDADD = $(iec2c_LDADD)

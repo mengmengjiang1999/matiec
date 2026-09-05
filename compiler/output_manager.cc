@@ -6,10 +6,18 @@
 namespace matiec {
 
 OutputManager::OutputManager(DiagnosticEngine &diagnostics)
-    : diagnostics_(diagnostics), standard_output_(std::cout) {}
+    : diagnostics_(diagnostics),
+      default_standard_output_(std::cout),
+      standard_output_(&default_standard_output_) {}
+
+OutputManager::OutputManager(DiagnosticEngine &diagnostics,
+                             OutputSink &standard_output)
+    : diagnostics_(diagnostics),
+      default_standard_output_(std::cout),
+      standard_output_(&standard_output) {}
 
 OutputSink &OutputManager::standard_output() {
-  return standard_output_;
+  return *standard_output_;
 }
 
 FileOutputSink &OutputManager::create_file(std::string path) {
