@@ -57,4 +57,4 @@
 - [x] 7.2 Run clean GCC and Clang builds, all regressions, generated-C compilation, sequential compilation, and sanitizer checks
 - [x] 7.3 Confirm no new mutable process-wide compilation state or deep process exits remain outside documented adapters
 - [x] 7.4 Sync the completed delta specifications to main OpenSpec specs and archive the change
-- [ ] 7.5 Push each validated workflow-named branch only to the fork's `origin` and verify remote commit hashes
+- [x] 7.5 Push each validated workflow-named branch only to the fork's `origin` and verify remote commit hashes
