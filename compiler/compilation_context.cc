@@ -23,6 +23,14 @@ const DiagnosticEngine &CompilationContext::diagnostics() const {
   return diagnostics_;
 }
 
+AstArena &CompilationContext::ast_arena() {
+  return ast_arena_;
+}
+
+const AstArena &CompilationContext::ast_arena() const {
+  return ast_arena_;
+}
+
 void CompilationContext::set_source_path(std::string source_path) {
   source_path_ = std::move(source_path);
 }
