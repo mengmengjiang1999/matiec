@@ -22,15 +22,19 @@ trap 'rm -rf "$TMP_ROOT"' EXIT
 "$CC" -std=c11 -I "$TMP_ROOT" -I "$MATIEC_LIBDIR/C" \
   -c "$TMP_ROOT/resource1.c" -o "$TMP_ROOT/resource1.o" || exit 1
 
+has_global_symbol() {
+  nm -g "$1" | awk '{print $NF}' | sed 's/^_//' | grep -qx "$2"
+}
+
 for symbol in config_init__ config_run__ common_ticktime__ greatest_tick_count__; do
-  nm -g "$TMP_ROOT/config.o" | awk '{print $3}' | grep -qx "$symbol" || {
+  has_global_symbol "$TMP_ROOT/config.o" "$symbol" || {
     echo "FAILURE -> Missing generated configuration ABI symbol: $symbol"
     exit 1
   }
 done
 
 for symbol in RESOURCE1__INSTANCE0 RESOURCE1_init__ RESOURCE1_run__; do
-  nm -g "$TMP_ROOT/resource1.o" | awk '{print $3}' | grep -qx "$symbol" || {
+  has_global_symbol "$TMP_ROOT/resource1.o" "$symbol" || {
     echo "FAILURE -> Missing generated resource ABI symbol: $symbol"
     exit 1
   }
