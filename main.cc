@@ -84,8 +84,8 @@
 #include "main.hh"
 
 
-#ifndef HGVERSION
-   #define HGVERSION ""
+#ifndef MATIEC_REVISION
+   #define MATIEC_REVISION "unknown"
 #endif
 
 
@@ -173,7 +173,7 @@ int main(int argc, char **argv) {
       printusage(argv[0]);
       return 0;
     case 'v':
-      fprintf(stdout, "%s version %s\n" "changeset id: %s\n", PACKAGE_NAME, PACKAGE_VERSION, HGVERSION);      
+      fprintf(stdout, "%s version %s\n" "revision: %s\n", PACKAGE_NAME, PACKAGE_VERSION, MATIEC_REVISION);
       return 0;
     case 'y': syntax_only = true;                              break;
     case 'l': runtime_options.relaxed_datatype_model   = true;  break;

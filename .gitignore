@@ -10,6 +10,7 @@ iec2iec
 *.a
 autom4te.cache/*
 config/*
+!config/revision.sh
 stage1_2/*.cc
 stage1_2/*.hh
 stage4/generate_iec/Makefile

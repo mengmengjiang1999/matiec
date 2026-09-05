@@ -22,7 +22,9 @@ EXTRA_DIST = \
 	tests/characterization/instruction_list.il \
 	tests/initialization/ok_array_scalar.st \
 	tests/syntax/sfc/sfc.txt \
-	tests/sanitizers/runtests
+	tests/sanitizers/runtests \
+	config/revision.sh \
+	.git_archival.txt
 
 .PHONY: check-asan check-ubsan
 
@@ -34,8 +36,8 @@ check-ubsan:
 
 ACLOCAL_AMFLAGS=-I config
 
-HGVERSION= $(shell hg -R $(top_srcdir) parents --template '{node|short}' 2> /dev/null || grep node $(top_srcdir)/.hg_archival.txt 2> /dev/null || true )
-AM_CXXFLAGS += -DHGVERSION="\"${HGVERSION}\""
+MATIEC_REVISION = $(shell $(SHELL) $(top_srcdir)/config/revision.sh $(top_srcdir))
+AM_CXXFLAGS += -DMATIEC_REVISION="\"${MATIEC_REVISION}\""
 
 iec2c_LDADD = stage1_2/libstage1_2.a \
 	stage1_2/libstage1_2_generated.a \
