@@ -76,6 +76,7 @@
 
 
 #include "config/config.h"
+#include "compiler/compilation_context.hh"
 #include "absyntax/absyntax.hh"
 #include "absyntax_utils/absyntax_utils.hh"
 #include "stage1_2/stage1_2.hh"
@@ -127,7 +128,6 @@ static void printusage(const char *cmd) {
   printf(" -e : disable generation of implicit EN and ENO parameters.\n");
   printf(" -c : create conversion functions for enumerated data types\n");
   printf(" -O : options for output (code generation) stage. Available options for %s are...\n", cmd);
-  runtime_options.allow_missing_var_in    = false; /* disable: allow definition and invocation of POUs with no input, output and in_out parameters! */
   stage4_print_options();
   printf("\n");
   printf("%s - Copyright (C) 2003-2014 \n"
@@ -139,30 +139,33 @@ static void printusage(const char *cmd) {
 /* declare the global options variable */
 runtime_options_t runtime_options;
 
+/* Compatibility adapter for stages that have not yet migrated to
+ * CompilationContext. New option state must be added to CompilerOptions first. */
+static void apply_compiler_options(const matiec::CompilerOptions &options) {
+  runtime_options.allow_void_datatype = options.allow_void_datatype;
+  runtime_options.allow_missing_var_in = options.allow_missing_var_in;
+  runtime_options.disable_implicit_en_eno = options.disable_implicit_en_eno;
+  runtime_options.pre_parsing = options.pre_parsing;
+  runtime_options.safe_extensions = options.safe_extensions;
+  runtime_options.full_token_loc = options.full_token_location;
+  runtime_options.conversion_functions = options.conversion_functions;
+  runtime_options.nested_comments = options.nested_comments;
+  runtime_options.ref_standard_extensions = options.reference_extensions;
+  runtime_options.ref_nonstand_extensions = options.nonstandard_reference_extensions;
+  runtime_options.nonliteral_in_array_size = options.nonliteral_array_size;
+  runtime_options.relaxed_datatype_model = options.relaxed_datatype_model;
+  runtime_options.includedir = options.include_directory.empty()
+                                  ? NULL
+                                  : options.include_directory.c_str();
+}
+
 
 int main(int argc, char **argv) {
   symbol_c *tree_root, *ordered_tree_root;
-  char * builddir = NULL;
+  matiec::CompilationContext context;
+  matiec::CompilerOptions &options = context.options();
   int optres, errflg = 0;
-  bool syntax_only = false;
   int path_len;
-
-  /* Default values for the command line options... */
-  runtime_options.allow_void_datatype     = false; /* disable: allow declaration of functions returning VOID  */
-  runtime_options.allow_missing_var_in    = false; /* disable: allow definition and invocation of POUs with no input, output and in_out parameters! */
-  runtime_options.disable_implicit_en_eno = false; /* disable: do not generate EN and ENO parameters */
-  runtime_options.pre_parsing             = false; /* disable: allow use of forward references (run pre-parsing phase before the definitive parsing phase that builds the AST) */
-  runtime_options.safe_extensions         = false; /* disable: allow use of SAFExxx datatypes */
-  runtime_options.full_token_loc          = false; /* disable: error messages specify full token location */
-  runtime_options.conversion_functions    = false; /* disable: create a conversion function for derived datatype */
-  runtime_options.nested_comments         = false; /* disable: Allow the use of nested comments. */
-  runtime_options.ref_standard_extensions = false; /* disable: Allow the use of REFerences (keywords REF_TO, REF, DREF, ^, NULL). */
-  runtime_options.ref_nonstand_extensions = false; /* disable: Allow the use of non-standard extensions to REF_TO datatypes: REF_TO ANY, and REF_TO in struct elements! */
-  runtime_options.nonliteral_in_array_size= false; /* disable: Allow the use of constant non-literals when specifying size of arrays (ARRAY [1..max] OF INT) */
-  runtime_options.includedir              = NULL;  /* Include directory, where included files will be searched for... */
-
-  /* Default values for the command line options... */
-  runtime_options.relaxed_datatype_model    = false; /* by default use the strict datatype equivalence model */
   
   /******************************************/
   /*   Parse command line options...        */
@@ -175,20 +178,20 @@ int main(int argc, char **argv) {
     case 'v':
       fprintf(stdout, "%s version %s\n" "revision: %s\n", PACKAGE_NAME, PACKAGE_VERSION, MATIEC_REVISION);
       return 0;
-    case 'y': syntax_only = true;                              break;
-    case 'l': runtime_options.relaxed_datatype_model   = true;  break;
-    case 'p': runtime_options.pre_parsing              = true;  break;
-    case 'f': runtime_options.full_token_loc           = true;  break;
-    case 's': runtime_options.safe_extensions          = true;  break;
-    case 'R': runtime_options.ref_standard_extensions  = true; /* use of REF_TO ANY implies activating support for REF extensions! */
-              runtime_options.ref_nonstand_extensions  = true;  break;
-    case 'r': runtime_options.ref_standard_extensions  = true;  break;
-    case 'a': runtime_options.nonliteral_in_array_size = true;  break;
-    case 'b': runtime_options.allow_void_datatype      = true;  break;
-    case 'i': runtime_options.allow_missing_var_in     = true;  break;
-    case 'c': runtime_options.conversion_functions     = true;  break;
-    case 'n': runtime_options.nested_comments          = true;  break;
-    case 'e': runtime_options.disable_implicit_en_eno  = true;  break;
+    case 'y': options.syntax_only = true;                       break;
+    case 'l': options.relaxed_datatype_model = true;            break;
+    case 'p': options.pre_parsing = true;                       break;
+    case 'f': options.full_token_location = true;               break;
+    case 's': options.safe_extensions = true;                   break;
+    case 'R': options.reference_extensions = true;
+              options.nonstandard_reference_extensions = true; break;
+    case 'r': options.reference_extensions = true;              break;
+    case 'a': options.nonliteral_array_size = true;              break;
+    case 'b': options.allow_void_datatype = true;                break;
+    case 'i': options.allow_missing_var_in = true;               break;
+    case 'c': options.conversion_functions = true;               break;
+    case 'n': options.nested_comments = true;                    break;
+    case 'e': options.disable_implicit_en_eno = true;            break;
     case 'I':
       /* NOTE: To improve the usability under windows:
        *       We delete last char's path if it ends with "\".
@@ -203,7 +206,7 @@ int main(int argc, char **argv) {
       }
       path_len--;
       if (optarg[path_len] == '\\') optarg[path_len]= '\0';
-      runtime_options.includedir = optarg;
+      options.include_directory = optarg;
       break;
     case 'T':
       /* NOTE: see note above */
@@ -215,9 +218,10 @@ int main(int argc, char **argv) {
       }
       path_len--;
       if (optarg[path_len] == '\\') optarg[path_len]= '\0';
-      builddir = optarg;
+      options.output_directory = optarg;
       break;
     case 'O':
+      options.generator_options = optarg;
       if (stage4_parse_options(optarg) < 0) errflg++;
       break;
     case ':':       /* -I, -T, or -O without operand */
@@ -250,6 +254,9 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   }
 
+  context.set_source_path(argv[optind]);
+  apply_compiler_options(options);
+
 
   /***************************/
   /*   Run the compiler...   */
@@ -258,7 +265,7 @@ int main(int argc, char **argv) {
   if (stage1_2(argv[optind], &tree_root) < 0)
     return EXIT_FAILURE;
 
-  if (syntax_only)
+  if (options.syntax_only)
     return EXIT_SUCCESS;
 
   /* 2nd Pass */
@@ -272,7 +279,9 @@ int main(int argc, char **argv) {
     return EXIT_FAILURE;
   
   /* 3rd Pass */
-  if (stage4(ordered_tree_root, builddir) < 0)
+  if (stage4(ordered_tree_root, options.output_directory.empty()
+                                    ? NULL
+                                    : options.output_directory.c_str()) < 0)
     return EXIT_FAILURE;
 
   /* 4th Pass */

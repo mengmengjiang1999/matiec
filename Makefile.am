@@ -45,7 +45,8 @@ iec2c_LDADD = stage1_2/libstage1_2.a \
 	stage3/libstage3.a \
 	stage4/generate_c/libstage4_c.a \
 	absyntax/libabsyntax.a \
-	absyntax_utils/libabsyntax_utils.a 
+	absyntax_utils/libabsyntax_utils.a \
+	compiler/libcompiler.a
 
 iec2iec_LDADD = stage1_2/libstage1_2.a \
 	stage1_2/libstage1_2_generated.a \
@@ -53,7 +54,8 @@ iec2iec_LDADD = stage1_2/libstage1_2.a \
 	stage3/libstage3.a \
 	stage4/generate_iec/libstage4_iec.a \
 	absyntax/libabsyntax.a \
-	absyntax_utils/libabsyntax_utils.a 
+	absyntax_utils/libabsyntax_utils.a \
+	compiler/libcompiler.a
 
 iec2c_SOURCES = main.cc
 
