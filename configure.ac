@@ -70,6 +70,7 @@ AC_CHECK_FUNCS([clock_gettime memset pow strcasecmp strdup strtoul strtoull])
 AC_CONFIG_MACRO_DIR([config])
 
 AC_CONFIG_FILES([Makefile \
+	compiler/Makefile \
 	absyntax/Makefile \
 	absyntax_utils/Makefile \
 	stage1_2/Makefile \
@@ -78,4 +79,3 @@ AC_CONFIG_FILES([Makefile \
 	stage4/generate_c/Makefile \
 	stage4/generate_iec/Makefile])
 AC_OUTPUT
-

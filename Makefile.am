@@ -2,7 +2,7 @@ include common.mk
 
 bin_PROGRAMS = iec2c iec2iec
 
-SUBDIRS = absyntax absyntax_utils stage1_2 stage3 stage4 
+SUBDIRS = compiler absyntax absyntax_utils stage1_2 stage3 stage4
 
 TESTS_ENVIRONMENT = \
 	CC='$(CC)' \
