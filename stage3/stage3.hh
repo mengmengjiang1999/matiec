@@ -35,7 +35,10 @@
 
 #include "../util/symtable.hh"
 
+namespace matiec { class DiagnosticEngine; }
 
-int stage3(symbol_c *tree_root, symbol_c **ordered_tree_root);
+
+int stage3(symbol_c *tree_root, symbol_c **ordered_tree_root,
+           matiec::DiagnosticEngine &diagnostics);
 
 #endif /* _STAGE3_HH */

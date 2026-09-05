@@ -54,6 +54,8 @@
 class   find_forward_dependencies_c;
 typedef symtable_c<symbol_c *> identifiers_symbtable_t;
 
+#include "semantic_diagnostics.hh"
+
 
 
 
@@ -69,6 +71,7 @@ class remove_forward_dependencies_c: public search_visitor_c {
     int             current_display_error_level;
     int             error_count;
     bool            warning_found;
+    matiec::SemanticDiagnostics diagnostics_;
     library_c      *new_tree;
     int             cycle_count; // main algorithm runs in a loop. The nuber of the current cycle...
     // NOTE: we need two lists in order to correctly handle overloaded functions
@@ -78,7 +81,8 @@ class remove_forward_dependencies_c: public search_visitor_c {
     find_forward_dependencies_c    *find_forward_dependencies;  
 
   public:
-     remove_forward_dependencies_c(void);
+     explicit remove_forward_dependencies_c(
+         matiec::DiagnosticEngine &diagnostics);
     ~remove_forward_dependencies_c(void);
     library_c *create_new_tree(symbol_c *old_tree);  // create a new tree with POUs ordered so it does not contain forward dependencies...
     int        get_error_count(void);
@@ -109,5 +113,4 @@ class remove_forward_dependencies_c: public search_visitor_c {
     void *visit(pragma_c *symbol);
 
 };   /* class remove_forward_dependencies_c */
-
 

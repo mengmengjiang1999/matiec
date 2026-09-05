@@ -44,30 +44,7 @@
 
 #include "declaration_check.hh"
 #include "datatype_functions.hh"
-
-#define FIRST_(symbol1, symbol2) (((symbol1)->first_order < (symbol2)->first_order)   ? (symbol1) : (symbol2))
-#define  LAST_(symbol1, symbol2) (((symbol1)->last_order  > (symbol2)->last_order)    ? (symbol1) : (symbol2))
-
-#define STAGE3_ERROR(error_level, symbol1, symbol2, ...) {                                                                  \
-  if (current_display_error_level >= error_level) {                                                                         \
-    fprintf(stderr, "%s:%d-%d..%d-%d: error: ",                                                                             \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    error_count++;                                                                                                     \
-  }                                                                                                                         \
-}
-
-
-#define STAGE3_WARNING(symbol1, symbol2, ...) {                                                                             \
-    fprintf(stderr, "%s:%d-%d..%d-%d: warning: ",                                                                           \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    warning_found = true;                                                                                                   \
-}
+#include "semantic_diagnostic_macros.hh"
 
 
 
@@ -82,6 +59,7 @@ class check_extern_c: public iterator_visitor_c {
   public:
   
   private:
+    matiec::SemanticDiagnostics &diagnostics_;
     int current_display_error_level;
     symbol_c *current_pou_decl;
     symbol_c *current_resource_decl;
@@ -91,7 +69,9 @@ class check_extern_c: public iterator_visitor_c {
   public:
     static int error_count;
     
-    check_extern_c(symbol_c *current_pou, symbol_c *current_resource) {
+    check_extern_c(matiec::SemanticDiagnostics &diagnostics,
+                   symbol_c *current_pou, symbol_c *current_resource)
+        : diagnostics_(diagnostics) {
       current_display_error_level = 0;
       current_pou_decl      = current_pou;
       current_resource_decl = current_resource;
@@ -220,6 +200,7 @@ std::set<symbol_c *> check_extern_c::checked_decl;
 
 class constant_function_block_check_c: public iterator_visitor_c {
   private:
+    matiec::SemanticDiagnostics &diagnostics_;
     int error_count;
     int current_display_error_level;
     bool declarations_are_constant;
@@ -233,7 +214,9 @@ class constant_function_block_check_c: public iterator_visitor_c {
     }
 
   public:
-    constant_function_block_check_c(void) {
+    explicit constant_function_block_check_c(
+        matiec::SemanticDiagnostics &diagnostics)
+        : diagnostics_(diagnostics) {
       error_count = 0;
       current_display_error_level = 0;
       declarations_are_constant = false;
@@ -269,11 +252,13 @@ class constant_function_block_check_c: public iterator_visitor_c {
 
 
 
-declaration_check_c::declaration_check_c(symbol_c *ignore) {
+declaration_check_c::declaration_check_c(
+    symbol_c *ignore, matiec::DiagnosticEngine &diagnostics)
+    : diagnostics_(diagnostics) {
   current_display_error_level = 0;
   current_pou_decl = NULL;
   current_resource_decl = NULL;
-  constant_function_block_check_c constant_function_block_check;
+  constant_function_block_check_c constant_function_block_check(diagnostics_);
   if (NULL != ignore) ignore->accept(constant_function_block_check);
   error_count = constant_function_block_check.get_error_count();
 }
@@ -335,7 +320,8 @@ END_RESOURCE
 // SYM_REF4(resource_declaration_c, resource_name, resource_type_name, global_var_declarations, resource_declaration, enumvalue_symtable_t enumvalue_symtable;)
 void *declaration_check_c::visit(resource_declaration_c *symbol) {
   // check if any FB instantiated inside this resource (in a VAR_GLOBAL) has any VAR_EXTERNAL declarations incompatible with the configuration's VAR_GLOBALs
-  check_extern_c check_extern(current_pou_decl, current_resource_decl);
+  check_extern_c check_extern(diagnostics_, current_pou_decl,
+                              current_resource_decl);
   symbol->global_var_declarations->accept(check_extern);   
   // Now check the Programs instantiated in this resource
   current_resource_decl = symbol;
@@ -358,7 +344,8 @@ void *declaration_check_c::visit(program_configuration_c *symbol) {
   if ((iter_f == function_block_type_symtable.end()) && (iter_p == program_type_symtable.end())) 
     ERROR;  // Should never occur! stage1_2 guarantees that we are sure to find a declaration in FB or Program symtable.
 
-  check_extern_c check_extern(current_pou_decl, current_resource_decl);
+  check_extern_c check_extern(diagnostics_, current_pou_decl,
+                              current_resource_decl);
   p_decl->accept(check_extern);
   return NULL;
 }

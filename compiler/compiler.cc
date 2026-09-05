@@ -29,8 +29,8 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     legacy_state.initialize_symbol_tables(tree_root);
 
     symbol_c *ordered_tree_root = NULL;
-    if (stage3(tree_root, &ordered_tree_root) < 0)
-      return CompilationResult::failure();
+    if (stage3(tree_root, &ordered_tree_root, context.diagnostics()) < 0)
+      return context.diagnostics().result();
 
     const char *output_directory = options.output_directory.empty()
                                        ? NULL

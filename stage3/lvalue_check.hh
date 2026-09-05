@@ -45,6 +45,8 @@
 
 
 
+#include "semantic_diagnostics.hh"
+
 class lvalue_check_c: public iterator_visitor_c {
 
   private:
@@ -52,6 +54,7 @@ class lvalue_check_c: public iterator_visitor_c {
     search_var_instance_decl_c *search_var_instance_decl;
     int error_count;
     int current_display_error_level;
+    matiec::SemanticDiagnostics diagnostics_;
     std::vector <token_c *> control_variables;
     symbol_c *current_il_operand;
 
@@ -67,7 +70,7 @@ class lvalue_check_c: public iterator_visitor_c {
 
 
   public:
-    lvalue_check_c(symbol_c *ignore);
+    lvalue_check_c(symbol_c *ignore, matiec::DiagnosticEngine &diagnostics);
     virtual ~lvalue_check_c(void);
     int get_error_count();
 
@@ -133,7 +136,6 @@ class lvalue_check_c: public iterator_visitor_c {
     void *visit(for_statement_c *symbol);
 
 }; /* lvalue_check_c */
-
 
 
 

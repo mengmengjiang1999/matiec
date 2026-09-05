@@ -37,18 +37,21 @@
 
 
 
+#include "semantic_diagnostics.hh"
+
 class array_range_check_c: public iterator_visitor_c {
 
   private:
     search_varfb_instance_type_c *search_varfb_instance_type;
     int error_count;
     int current_display_error_level;
+    matiec::SemanticDiagnostics diagnostics_;
 
     void check_dimension_count(array_variable_c *symbol);
     void check_bounds(array_variable_c *symbol);
 
   public:
-    array_range_check_c(symbol_c *ignore);
+    array_range_check_c(symbol_c *ignore, matiec::DiagnosticEngine &diagnostics);
     virtual ~array_range_check_c(void);
     int get_error_count();
 
@@ -93,7 +96,6 @@ class array_range_check_c: public iterator_visitor_c {
     void *visit(program_declaration_c *symbol);
 
 }; /* array_range_check_c */
-
 
 
 

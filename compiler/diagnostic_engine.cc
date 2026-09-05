@@ -1,4 +1,4 @@
-#include "compiler/diagnostic_engine.hh"
+#include "diagnostic_engine.hh"
 
 #include <algorithm>
 #include <ostream>

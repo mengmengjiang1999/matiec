@@ -151,29 +151,7 @@
 
 
 
-#define FIRST_(symbol1, symbol2) (((symbol1)->first_order < (symbol2)->first_order)   ? (symbol1) : (symbol2))
-#define  LAST_(symbol1, symbol2) (((symbol1)->last_order  > (symbol2)->last_order)    ? (symbol1) : (symbol2))
-
-#define STAGE3_ERROR(error_level, symbol1, symbol2, ...) {                                                                  \
-  if (current_display_error_level >= error_level) {                                                                         \
-    fprintf(stderr, "%s:%d-%d..%d-%d: error: ",                                                                             \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    error_count++;                                                                                                     \
-  }                                                                                                                         \
-}
-
-
-#define STAGE3_WARNING(symbol1, symbol2, ...) {                                                                             \
-    fprintf(stderr, "%s:%d-%d..%d-%d: warning: ",                                                                           \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    warning_found = true;                                                                                                   \
-}
+#include "semantic_diagnostic_macros.hh"
 
 
 
@@ -768,7 +746,9 @@ static void intersect_prev_cvalues(il_instruction_c *symbol) {
 /***********************************************************************/
 
 
-constant_folding_c::constant_folding_c(symbol_c *symbol) {
+constant_folding_c::constant_folding_c(symbol_c *symbol,
+                                       matiec::DiagnosticEngine &diagnostics)
+    : diagnostics_(diagnostics) {
     error_count = 0;
     warning_found = false;
     current_display_error_level = 0;
@@ -1235,8 +1215,9 @@ void *constant_folding_c::visit(   not_expression_c *symbol) {symbol->  exp->acc
 /***********************************************************************/
 
 
-constant_propagation_c::constant_propagation_c(symbol_c *symbol)
-  : constant_folding_c(symbol) {
+constant_propagation_c::constant_propagation_c(
+    symbol_c *symbol, matiec::DiagnosticEngine &diagnostics)
+  : constant_folding_c(symbol, diagnostics) {
     current_resource = NULL;
     current_configuration = NULL;
     fixed_init_value_ = false;
@@ -2107,7 +2088,4 @@ void *constant_propagation_c::visit(repeat_statement_c *symbol) {
 }
 
 #endif  // DO_CONSTANT_PROPAGATION__
-
-
-
 

@@ -52,11 +52,14 @@
 
 
 
+#include "semantic_diagnostics.hh"
+
 class constant_folding_c : public iterator_visitor_c {
   protected:
     int error_count;
     bool warning_found;
     int current_display_error_level;
+    matiec::SemanticDiagnostics diagnostics_;
   private:
     /* Pointer to the previous IL instruction, which contains the current cvalue of the data stored in the IL stack, i.e. the default variable, a.k.a. accumulator */
     symbol_c *prev_il_instruction;
@@ -66,7 +69,7 @@ class constant_folding_c : public iterator_visitor_c {
 
 
   public:
-    constant_folding_c(symbol_c *symbol = NULL);
+    constant_folding_c(symbol_c *symbol, matiec::DiagnosticEngine &diagnostics);
     virtual ~constant_folding_c(void);
     int get_error_count();
  
@@ -205,7 +208,8 @@ class constant_folding_c : public iterator_visitor_c {
 
 class constant_propagation_c : public constant_folding_c {
   public:
-    constant_propagation_c(symbol_c *symbol = NULL);
+    constant_propagation_c(symbol_c *symbol,
+                           matiec::DiagnosticEngine &diagnostics);
     virtual ~constant_propagation_c(void);
     typedef symtable_c<const_value_c> map_values_t;
   private:
@@ -334,4 +338,3 @@ class constant_propagation_c : public constant_folding_c {
     void *visit(repeat_statement_c *symbol);
     #endif // DO_CONSTANT_PROPAGATION__
 };
-

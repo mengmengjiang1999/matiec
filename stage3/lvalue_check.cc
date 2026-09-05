@@ -43,33 +43,12 @@
 
 
 #include "lvalue_check.hh"
-
-#define FIRST_(symbol1, symbol2) (((symbol1)->first_order < (symbol2)->first_order)   ? (symbol1) : (symbol2))
-#define  LAST_(symbol1, symbol2) (((symbol1)->last_order  > (symbol2)->last_order)    ? (symbol1) : (symbol2))
-
-#define STAGE3_ERROR(error_level, symbol1, symbol2, ...) {                                                                  \
-  if (current_display_error_level >= error_level) {                                                                         \
-    fprintf(stderr, "%s:%d-%d..%d-%d: error: ",                                                                             \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    error_count++;                                                                                                     \
-  }                                                                                                                         \
-}
+#include "semantic_diagnostic_macros.hh"
 
 
-#define STAGE3_WARNING(symbol1, symbol2, ...) {                                                                             \
-    fprintf(stderr, "%s:%d-%d..%d-%d: warning: ",                                                                           \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    warning_found = true;                                                                                                   \
-}
-
-
-lvalue_check_c::lvalue_check_c(symbol_c *ignore) {
+lvalue_check_c::lvalue_check_c(symbol_c *ignore,
+                               matiec::DiagnosticEngine &diagnostics)
+    : diagnostics_(diagnostics) {
 	error_count = 0;
 	current_display_error_level = 0;
 	current_il_operand = NULL;
@@ -579,8 +558,6 @@ void *lvalue_check_c::visit(for_statement_c *symbol) {
 	control_variables.pop_back();
 	return NULL;
 }
-
-
 
 
 

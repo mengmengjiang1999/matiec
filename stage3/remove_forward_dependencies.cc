@@ -52,32 +52,7 @@
 
 
 
-#define FIRST_(symbol1, symbol2) (((symbol1)->first_order < (symbol2)->first_order)   ? (symbol1) : (symbol2))
-#define  LAST_(symbol1, symbol2) (((symbol1)->last_order  > (symbol2)->last_order)    ? (symbol1) : (symbol2))
-
-#define FIRST_(symbol1, symbol2) (((symbol1)->first_order < (symbol2)->first_order)   ? (symbol1) : (symbol2))
-#define  LAST_(symbol1, symbol2) (((symbol1)->last_order  > (symbol2)->last_order)    ? (symbol1) : (symbol2))
-
-#define STAGE3_ERROR(error_level, symbol1, symbol2, ...) {                                                                  \
-  if (current_display_error_level >= error_level) {                                                                         \
-    fprintf(stderr, "%s:%d-%d..%d-%d: error: ",                                                                             \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    error_count++;                                                                                                     \
-  }                                                                                                                         \
-}
-
-
-#define STAGE3_WARNING(symbol1, symbol2, ...) {                                                                             \
-    fprintf(stderr, "%s:%d-%d..%d-%d: warning: ",                                                                           \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    warning_found = true;                                                                                                   \
-}
+#include "semantic_diagnostic_macros.hh"
 
 
 
@@ -156,7 +131,9 @@ symbol_c remove_forward_dependencies_c_null_symbol;
 /************************************************************/
 
 // constructor & destructor
-remove_forward_dependencies_c:: remove_forward_dependencies_c(void) {
+remove_forward_dependencies_c::remove_forward_dependencies_c(
+    matiec::DiagnosticEngine &diagnostics)
+    : diagnostics_(diagnostics) {
   find_forward_dependencies      = new find_forward_dependencies_c(&declared_identifiers);
   current_display_error_level = error_level_default;
   error_count = 0;
@@ -294,6 +271,4 @@ void *remove_forward_dependencies_c::visit(pragma_c *symbol) {
   new_tree->add_element(symbol);
   return NULL;
 }
-
-
 

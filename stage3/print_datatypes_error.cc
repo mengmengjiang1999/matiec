@@ -57,36 +57,16 @@
 
 
 
-#define FIRST_(symbol1, symbol2) (((symbol1)->first_order < (symbol2)->first_order)   ? (symbol1) : (symbol2))
-#define  LAST_(symbol1, symbol2) (((symbol1)->last_order  > (symbol2)->last_order)    ? (symbol1) : (symbol2))
-
-#define STAGE3_ERROR(error_level, symbol1, symbol2, ...) {                                                                  \
-  if (current_display_error_level >= error_level) {                                                                         \
-    fprintf(stderr, "%s:%d-%d..%d-%d: error: ",                                                                             \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    il_error = true;                                                                                                        \
-    error_count++;                                                                                                     \
-  }                                                                                                                         \
-}  
-
-
-#define STAGE3_WARNING(symbol1, symbol2, ...) {                                                                             \
-    fprintf(stderr, "%s:%d-%d..%d-%d: warning: ",                                                                           \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    warning_found = true;                                                                                                   \
-}  
+#define STAGE3_AFTER_ERROR il_error = true
+#include "semantic_diagnostic_macros.hh"
 
 
 /* set to 1 to see debug info during execution */
 static int debug = 0;
 
-print_datatypes_error_c::print_datatypes_error_c(symbol_c *ignore) {
+print_datatypes_error_c::print_datatypes_error_c(
+    symbol_c *ignore, matiec::DiagnosticEngine &diagnostics)
+    : diagnostics_(diagnostics) {
 	error_count = 0;
 	warning_found = false;
 	current_display_error_level = error_level_default;
@@ -1312,8 +1292,6 @@ void *print_datatypes_error_c::visit(repeat_statement_c *symbol) {
 	symbol->expression->accept(*this);
 	return NULL;
 }
-
-
 
 
 

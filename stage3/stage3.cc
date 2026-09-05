@@ -51,8 +51,9 @@
 
 
 
-static int enum_declaration_check(symbol_c *tree_root){
-    enum_declaration_check_c enum_declaration_check(NULL);
+static int enum_declaration_check(symbol_c *tree_root,
+                                  matiec::DiagnosticEngine &diagnostics){
+    enum_declaration_check_c enum_declaration_check(NULL, diagnostics);
     tree_root->accept(enum_declaration_check);
     return enum_declaration_check.get_error_count();
 }
@@ -68,8 +69,9 @@ static int enum_declaration_check(symbol_c *tree_root){
  *   VAR_EXTERN CONSTANT max: INT; END_VAR;
  *   VAR_EXTERN xx: ARRAY [1..max] OF INT; END_VAR;
  */
-static int declaration_safety(symbol_c *tree_root){
-    declaration_check_c declaration_check(tree_root);
+static int declaration_safety(symbol_c *tree_root,
+                              matiec::DiagnosticEngine &diagnostics){
+    declaration_check_c declaration_check(tree_root, diagnostics);
     tree_root->accept(declaration_check);
     return declaration_check.get_error_count();
 }
@@ -84,8 +86,9 @@ static int flow_control_analysis(symbol_c *tree_root){
 /* Constant folding assumes that flow control analysis has been completed!
  * so be sure to call flow_control_analysis() before calling this function!
  */
-static int constant_propagation(symbol_c *tree_root){
-    constant_propagation_c constant_propagation(tree_root);
+static int constant_propagation(symbol_c *tree_root,
+                                matiec::DiagnosticEngine &diagnostics){
+    constant_propagation_c constant_propagation(tree_root, diagnostics);
     tree_root->accept(constant_propagation);
     return constant_propagation.get_error_count();
 }
@@ -97,12 +100,13 @@ static int constant_propagation(symbol_c *tree_root){
  * has already been completed, so be sure to call those semantic checkers
  * before calling this function
  */
-static int type_safety(symbol_c *tree_root){
+static int type_safety(symbol_c *tree_root,
+                       matiec::DiagnosticEngine &diagnostics){
 	fill_candidate_datatypes_c fill_candidate_datatypes(tree_root);
 	tree_root->accept(fill_candidate_datatypes);
 	narrow_candidate_datatypes_c narrow_candidate_datatypes(tree_root);
 	tree_root->accept(narrow_candidate_datatypes);
-	print_datatypes_error_c print_datatypes_error(tree_root);
+	print_datatypes_error_c print_datatypes_error(tree_root, diagnostics);
 	tree_root->accept(print_datatypes_error);
 	forced_narrow_candidate_datatypes_c forced_narrow_candidate_datatypes(tree_root);
 	tree_root->accept(forced_narrow_candidate_datatypes);
@@ -113,8 +117,9 @@ static int type_safety(symbol_c *tree_root){
 /* Left value checking assumes that data type analysis has already been completed,
  * so be sure to call type_safety() before calling this function
  */
-static int lvalue_check(symbol_c *tree_root){
-	lvalue_check_c lvalue_check(tree_root);
+static int lvalue_check(symbol_c *tree_root,
+                        matiec::DiagnosticEngine &diagnostics){
+	lvalue_check_c lvalue_check(tree_root, diagnostics);
 	tree_root->accept(lvalue_check);
 	return lvalue_check.get_error_count();
 }
@@ -122,8 +127,9 @@ static int lvalue_check(symbol_c *tree_root){
 /* Array range check assumes that constant folding has been completed!
  * so be sure to call constant_folding() before calling this function!
  */
-static int array_range_check(symbol_c *tree_root){
-	array_range_check_c array_range_check(tree_root);
+static int array_range_check(symbol_c *tree_root,
+                             matiec::DiagnosticEngine &diagnostics){
+	array_range_check_c array_range_check(tree_root, diagnostics);
 	tree_root->accept(array_range_check);
 	return array_range_check.get_error_count();
 }
@@ -132,8 +138,9 @@ static int array_range_check(symbol_c *tree_root){
 /* Case options check assumes that constant folding has been completed!
  * so be sure to call constant_folding() before calling this function!
  */
-static int case_elements_check(symbol_c *tree_root){
-	case_elements_check_c case_elements_check(tree_root);
+static int case_elements_check(symbol_c *tree_root,
+                               matiec::DiagnosticEngine &diagnostics){
+	case_elements_check_c case_elements_check(tree_root, diagnostics);
 	tree_root->accept(case_elements_check);
 	return case_elements_check.get_error_count();
 }
@@ -144,12 +151,14 @@ static int case_elements_check(symbol_c *tree_root){
  * Typically this is run last, just to show that the remaining algorithms also do not depend on the fact that 
  * the library_c (i.e. the source code) does not contain forward dependencies.
  */
-static int remove_forward_dependencies(symbol_c *tree_root, symbol_c **ordered_tree_root) {
+static int remove_forward_dependencies(
+    symbol_c *tree_root, symbol_c **ordered_tree_root,
+    matiec::DiagnosticEngine &diagnostics) {
 	if (NULL != ordered_tree_root)    *ordered_tree_root = tree_root; // by default, consider tree_root already ordered
 	if (!runtime_options.pre_parsing)  return 0;                      // No re-ordering necessary, just return
 	  
 	/* We need to re-order the elements in the library, to fix any forward references! */
-	remove_forward_dependencies_c remove_forward_dependencies;
+	remove_forward_dependencies_c remove_forward_dependencies(diagnostics);
 	symbol_c *new_tree_root = remove_forward_dependencies.create_new_tree(tree_root);
 	if (NULL ==     new_tree_root)   ERROR;
 	if (NULL != ordered_tree_root)   *ordered_tree_root = new_tree_root;
@@ -157,60 +166,66 @@ static int remove_forward_dependencies(symbol_c *tree_root, symbol_c **ordered_t
 }
 
 
-int stage3(symbol_c *tree_root, symbol_c **ordered_tree_root) {
+int stage3(symbol_c *tree_root, symbol_c **ordered_tree_root,
+           matiec::DiagnosticEngine &diagnostics) {
 	matiec::SemanticPassManager passes;
-	passes.register_pass(matiec::SemanticPassId::enum_declaration, [tree_root]() {
+	passes.register_pass(matiec::SemanticPassId::enum_declaration,
+		[tree_root, &diagnostics]() {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::enum_declaration,
-			enum_declaration_check(tree_root));
+			enum_declaration_check(tree_root, diagnostics));
 	});
 	passes.register_pass(matiec::SemanticPassId::flow_control, [tree_root]() {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::flow_control,
 			flow_control_analysis(tree_root));
 	});
-	passes.register_pass(matiec::SemanticPassId::constant_propagation, [tree_root]() {
+	passes.register_pass(matiec::SemanticPassId::constant_propagation,
+		[tree_root, &diagnostics]() {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::constant_propagation,
-			constant_propagation(tree_root));
+			constant_propagation(tree_root, diagnostics));
 	});
-	passes.register_pass(matiec::SemanticPassId::declaration_safety, [tree_root]() {
+	passes.register_pass(matiec::SemanticPassId::declaration_safety,
+		[tree_root, &diagnostics]() {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::declaration_safety,
-			declaration_safety(tree_root));
+			declaration_safety(tree_root, diagnostics));
 	});
-	passes.register_pass(matiec::SemanticPassId::type_safety, [tree_root]() {
+	passes.register_pass(matiec::SemanticPassId::type_safety,
+		[tree_root, &diagnostics]() {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::type_safety,
-			type_safety(tree_root));
+			type_safety(tree_root, diagnostics));
 	});
-	passes.register_pass(matiec::SemanticPassId::lvalue, [tree_root]() {
+	passes.register_pass(matiec::SemanticPassId::lvalue,
+		[tree_root, &diagnostics]() {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::lvalue,
-			lvalue_check(tree_root));
+			lvalue_check(tree_root, diagnostics));
 	});
-	passes.register_pass(matiec::SemanticPassId::array_range, [tree_root]() {
+	passes.register_pass(matiec::SemanticPassId::array_range,
+		[tree_root, &diagnostics]() {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::array_range,
-			array_range_check(tree_root));
+			array_range_check(tree_root, diagnostics));
 	});
-	passes.register_pass(matiec::SemanticPassId::case_elements, [tree_root]() {
+	passes.register_pass(matiec::SemanticPassId::case_elements,
+		[tree_root, &diagnostics]() {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::case_elements,
-			case_elements_check(tree_root));
+			case_elements_check(tree_root, diagnostics));
 	});
 	passes.register_pass(matiec::SemanticPassId::dependency_ordering,
-		[tree_root, ordered_tree_root]() {
+		[tree_root, ordered_tree_root, &diagnostics]() {
 			return matiec::SemanticPassResult::failure(
 				matiec::SemanticPassId::dependency_ordering,
-				remove_forward_dependencies(tree_root, ordered_tree_root));
+				remove_forward_dependencies(tree_root, ordered_tree_root,
+				                            diagnostics));
 		});
 
 	const matiec::SemanticPipelineResult result = passes.run();
 	
-	if (!result.succeeded()) {
-		fprintf(stderr, "%zu error(s) found. Bailing out!\n", result.error_count);
-		return -1;
-	}
+	if (!result.succeeded()) return -1;
 	return 0;
 }

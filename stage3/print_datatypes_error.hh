@@ -46,6 +46,7 @@
 
 #include "../absyntax_utils/absyntax_utils.hh"
 #include "datatype_functions.hh"
+#include "semantic_diagnostics.hh"
 
 
 class print_datatypes_error_c: public iterator_visitor_c {
@@ -85,6 +86,7 @@ class print_datatypes_error_c: public iterator_visitor_c {
     bool il_error;
     int  error_count;
     bool warning_found;
+    matiec::SemanticDiagnostics diagnostics_;
 
     /* the current data type of the data stored in the IL stack, i.e. the default variable */
     il_instruction_c *fake_prev_il_instruction;
@@ -106,7 +108,8 @@ class print_datatypes_error_c: public iterator_visitor_c {
 
     
   public:
-    print_datatypes_error_c(symbol_c *ignore);
+    print_datatypes_error_c(symbol_c *ignore,
+                            matiec::DiagnosticEngine &diagnostics);
     virtual ~print_datatypes_error_c(void);
     int get_error_count();
 
@@ -342,7 +345,6 @@ class print_datatypes_error_c: public iterator_visitor_c {
     void *visit(repeat_statement_c *symbol);
 
 }; // print_datatypes_error_c
-
 
 
 

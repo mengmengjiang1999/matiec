@@ -42,32 +42,7 @@
 
 
 #include "enum_declaration_check.hh"
-
-
-
-#define FIRST_(symbol1, symbol2) (((symbol1)->first_order < (symbol2)->first_order)   ? (symbol1) : (symbol2))
-#define  LAST_(symbol1, symbol2) (((symbol1)->last_order  > (symbol2)->last_order)    ? (symbol1) : (symbol2))
-
-#define STAGE3_ERROR(error_level, symbol1, symbol2, ...) {                                                                  \
-  if (current_display_error_level >= error_level) {                                                                         \
-    fprintf(stderr, "%s:%d-%d..%d-%d: error: ",                                                                             \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    error_count++;                                                                                                     \
-  }                                                                                                                         \
-}
-
-
-#define STAGE3_WARNING(symbol1, symbol2, ...) {                                                                             \
-    fprintf(stderr, "%s:%d-%d..%d-%d: warning: ",                                                                           \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    warning_found = true;                                                                                                   \
-}
+#include "semantic_diagnostic_macros.hh"
 
 
 
@@ -91,12 +66,16 @@ class populate_enumvalue_symtable_c: public iterator_visitor_c {
     symbol_c::enumvalue_symtable_t  *enumvalue_symtable;
 
   private:
+    matiec::SemanticDiagnostics &diagnostics_;
     int &error_count;
     int &current_display_error_level;    
 
   public:
-     populate_enumvalue_symtable_c(int &error_count_, int &current_display_error_level_) 
-       : error_count(error_count_), current_display_error_level(current_display_error_level_) {
+     populate_enumvalue_symtable_c(
+         matiec::SemanticDiagnostics &diagnostics, int &error_count_,
+         int &current_display_error_level_)
+       : diagnostics_(diagnostics), error_count(error_count_),
+         current_display_error_level(current_display_error_level_) {
        current_enumerated_type = NULL;  
        enumvalue_symtable = NULL;
      };
@@ -207,11 +186,14 @@ class populate_enumvalue_symtable_c: public iterator_visitor_c {
 
 
 
-enum_declaration_check_c::enum_declaration_check_c(symbol_c *ignore) {
+enum_declaration_check_c::enum_declaration_check_c(
+    symbol_c *ignore, matiec::DiagnosticEngine &diagnostics)
+    : diagnostics_(diagnostics) {
   error_count = 0;
   current_display_error_level = 0;
   global_enumvalue_symtable = NULL;
-  populate_enumvalue_symtable = new populate_enumvalue_symtable_c(error_count, current_display_error_level);
+  populate_enumvalue_symtable = new populate_enumvalue_symtable_c(
+      diagnostics_, error_count, current_display_error_level);
 }
 
 enum_declaration_check_c::~enum_declaration_check_c(void) {

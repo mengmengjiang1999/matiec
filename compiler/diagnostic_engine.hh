@@ -1,7 +1,7 @@
 #ifndef MATIEC_COMPILER_DIAGNOSTIC_ENGINE_HH
 #define MATIEC_COMPILER_DIAGNOSTIC_ENGINE_HH
 
-#include "compiler/compiler_types.hh"
+#include "compiler_types.hh"
 
 #include <iosfwd>
 #include <string>

@@ -4,6 +4,7 @@ lib_LIBRARIES = libstage3.a
 
 libstage3_a_SOURCES = \
 	stage3.cc \
+	semantic_diagnostics.cc \
 	flow_control_analysis.cc \
 	fill_candidate_datatypes.cc \
 	narrow_candidate_datatypes.cc \
@@ -17,4 +18,3 @@ libstage3_a_SOURCES = \
         declaration_check.cc \
         enum_declaration_check.cc \
         remove_forward_dependencies.cc
-

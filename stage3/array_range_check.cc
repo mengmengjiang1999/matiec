@@ -43,31 +43,7 @@
 
 #include "array_range_check.hh"
 #include <limits>  // required for std::numeric_limits<XXX>
-
-
-#define FIRST_(symbol1, symbol2) (((symbol1)->first_order < (symbol2)->first_order)   ? (symbol1) : (symbol2))
-#define  LAST_(symbol1, symbol2) (((symbol1)->last_order  > (symbol2)->last_order)    ? (symbol1) : (symbol2))
-
-#define STAGE3_ERROR(error_level, symbol1, symbol2, ...) {                                                                  \
-  if (current_display_error_level >= error_level) {                                                                         \
-    fprintf(stderr, "%s:%d-%d..%d-%d: error: ",                                                                             \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    error_count++;                                                                                                     \
-  }                                                                                                                         \
-}
-
-
-#define STAGE3_WARNING(symbol1, symbol2, ...) {                                                                             \
-    fprintf(stderr, "%s:%d-%d..%d-%d: warning: ",                                                                           \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    warning_found = true;                                                                                                   \
-}
+#include "semantic_diagnostic_macros.hh"
 
 
 #define GET_CVALUE(dtype, symbol)             ((symbol)->const_value._##dtype.get())
@@ -97,7 +73,9 @@ static inline uint64_t magnitude_of_negative(const int64_t value) {
   return (uint64_t)(-(value + 1)) + 1;
 }
 
-array_range_check_c::array_range_check_c(symbol_c *ignore) {
+array_range_check_c::array_range_check_c(symbol_c *ignore,
+                                         matiec::DiagnosticEngine &diagnostics)
+    : diagnostics_(diagnostics) {
 	error_count = 0;
 	current_display_error_level = 0;
 	search_varfb_instance_type = NULL;

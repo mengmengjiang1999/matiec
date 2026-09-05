@@ -33,6 +33,7 @@
 #include <vector>
 
 #include "../absyntax_utils/absyntax_utils.hh"
+#include "semantic_diagnostics.hh"
 
 
 class declaration_check_c : public iterator_visitor_c {
@@ -40,9 +41,10 @@ class declaration_check_c : public iterator_visitor_c {
     int current_display_error_level;
     symbol_c *current_pou_decl;
     symbol_c *current_resource_decl;
+    matiec::SemanticDiagnostics diagnostics_;
 
 public:
-    declaration_check_c(symbol_c *ignore);
+    declaration_check_c(symbol_c *ignore, matiec::DiagnosticEngine &diagnostics);
     virtual ~declaration_check_c(void);
     int get_error_count();
 

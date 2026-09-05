@@ -44,31 +44,7 @@
 
 
 #include "case_elements_check.hh"
-
-
-#define FIRST_(symbol1, symbol2) (((symbol1)->first_order < (symbol2)->first_order)   ? (symbol1) : (symbol2))
-#define  LAST_(symbol1, symbol2) (((symbol1)->last_order  > (symbol2)->last_order)    ? (symbol1) : (symbol2))
-
-#define STAGE3_ERROR(error_level, symbol1, symbol2, ...) {                                                                  \
-  if (current_display_error_level >= error_level) {                                                                         \
-    fprintf(stderr, "%s:%d-%d..%d-%d: error: ",                                                                             \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    error_count++;                                                                                                     \
-  }                                                                                                                         \
-}
-
-
-#define STAGE3_WARNING(symbol1, symbol2, ...) {                                                                             \
-    fprintf(stderr, "%s:%d-%d..%d-%d: warning: ",                                                                           \
-            FIRST_(symbol1,symbol2)->first_file, FIRST_(symbol1,symbol2)->first_line, FIRST_(symbol1,symbol2)->first_column,\
-                                                 LAST_(symbol1,symbol2) ->last_line,  LAST_(symbol1,symbol2) ->last_column);\
-    fprintf(stderr, __VA_ARGS__);                                                                                           \
-    fprintf(stderr, "\n");                                                                                                  \
-    warning_found = true;                                                                                                   \
-}
+#include "semantic_diagnostic_macros.hh"
 
 
 #define GET_CVALUE(dtype, symbol)             ((symbol)->const_value._##dtype.get())
@@ -77,7 +53,9 @@
 
 
 
-case_elements_check_c::case_elements_check_c(symbol_c *ignore) {
+case_elements_check_c::case_elements_check_c(
+    symbol_c *ignore, matiec::DiagnosticEngine &diagnostics)
+    : diagnostics_(diagnostics) {
   warning_found = false;
   error_count = 0;
   current_display_error_level = 0;
@@ -245,5 +223,3 @@ void *case_elements_check_c::visit(case_list_c *symbol) {
     case_elements_list.push_back(symbol->get_element(i));
   return NULL;
 }
-
-

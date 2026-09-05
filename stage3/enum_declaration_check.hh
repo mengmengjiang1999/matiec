@@ -31,6 +31,7 @@
 
 
 #include "../absyntax_utils/absyntax_utils.hh"
+#include "semantic_diagnostics.hh"
 
 class populate_enumvalue_symtable_c;
 
@@ -38,11 +39,13 @@ class enum_declaration_check_c : public iterator_visitor_c {
   private:
     int error_count;
     int current_display_error_level;
+    matiec::SemanticDiagnostics diagnostics_;
     populate_enumvalue_symtable_c *populate_enumvalue_symtable;
     symbol_c::enumvalue_symtable_t *global_enumvalue_symtable;
     
   public:
-     enum_declaration_check_c(symbol_c *ignore);
+     enum_declaration_check_c(symbol_c *ignore,
+                              matiec::DiagnosticEngine &diagnostics);
     ~enum_declaration_check_c(void);
     int get_error_count();
 

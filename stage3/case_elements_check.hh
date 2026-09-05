@@ -43,6 +43,7 @@
  */
 
 #include "../absyntax_utils/absyntax_utils.hh"
+#include "semantic_diagnostics.hh"
 
 
 
@@ -52,6 +53,7 @@ class case_elements_check_c: public iterator_visitor_c {
     bool warning_found;
     int error_count;
     int current_display_error_level;
+    matiec::SemanticDiagnostics diagnostics_;
 
     std::vector<symbol_c *> case_elements_list;
     void check_subr_subr(symbol_c *s1, symbol_c *s2);
@@ -60,7 +62,8 @@ class case_elements_check_c: public iterator_visitor_c {
   
 
   public:
-    case_elements_check_c(symbol_c *ignore);
+    case_elements_check_c(symbol_c *ignore,
+                          matiec::DiagnosticEngine &diagnostics);
     virtual ~case_elements_check_c(void);
     int get_error_count();
 
@@ -76,7 +79,6 @@ class case_elements_check_c: public iterator_visitor_c {
     void *visit(case_statement_c *symbol);
     void *visit(case_list_c      *symbol);
 }; /* case_elements_check_c */
-
 
 
 
