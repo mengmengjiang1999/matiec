@@ -19,7 +19,7 @@
 ## 3. Compilation Context and Diagnostics
 
 - [x] 3.1 Add `CompilerOptions`, `SourceLocation`, `Diagnostic`, and `CompilationResult` value types with unit tests
-- [ ] 3.2 Add a `DiagnosticEngine` that collects and renders diagnostics without terminating the process
+- [x] 3.2 Add a `DiagnosticEngine` that collects and renders diagnostics without terminating the process
 - [ ] 3.3 Add `CompilationContext` and route CLI options through it while preserving current behavior
 - [ ] 3.4 Extract a `Compiler` driver API and reduce `main()` to argument adaptation, invocation, rendering, and exit status
 - [ ] 3.5 Migrate pre-parser and global symbol-table access behind context-owned services or documented temporary adapters
