@@ -44,7 +44,7 @@
 
 ## 6. Code-Generation Boundaries
 
-- [ ] 6.1 Introduce filesystem and in-memory output sinks with uniform write and flush error handling
+- [x] 6.1 Introduce filesystem and in-memory output sinks with uniform write and flush error handling
 - [ ] 6.2 Route C and IEC generators through context-owned output management
 - [ ] 6.3 Extract shared generator declarations into private headers
 - [ ] 6.4 Convert declaration, configuration, ST, IL, and SFC generator implementations from textual `.cc` inclusion to normal compilation units in validated batches
