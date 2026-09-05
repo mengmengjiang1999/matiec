@@ -47,6 +47,7 @@
 
 #include "stage4.hh"
 #include "../compiler/compilation_abort.hh"
+#include "../compiler/compilation_context.hh"
 #include "../main.hh" // required for ERROR() and ERROR_MSG() macros.
 
 
@@ -55,8 +56,6 @@
 #define FIRST_(symbol1, symbol2) (((symbol1)->first_order < (symbol2)->first_order)   ? (symbol1) : (symbol2))
 #define  LAST_(symbol1, symbol2) (((symbol1)->last_order  > (symbol2)->last_order)    ? (symbol1) : (symbol2))
 #include <stdarg.h>
-
-bool stage4out_c::output_error = false;
 
 void stage4err(const char *stage4_generator_id, symbol_c *symbol1, symbol_c *symbol2, const char *errmsg, ...) {
     va_list argptr;
@@ -76,15 +75,19 @@ void stage4err(const char *stage4_generator_id, symbol_c *symbol1, symbol_c *sym
 
 
 
-stage4out_c::stage4out_c(std::string indent_level):
-	m_file(NULL) {
-  out = &std::cout;
+stage4out_c::stage4out_c(matiec::OutputManager &output_manager,
+                         std::string indent_level)
+    : outputs(output_manager), sink(outputs.standard_output()), out(&buffer) {
   this->indent_level = indent_level;
   this->indent_spaces = "";
   allow_output = true;
 }
 
-stage4out_c::stage4out_c(const char *dir, const char *radix, const char *extension, std::string indent_level) {	
+stage4out_c::stage4out_c(matiec::OutputManager &output_manager, const char *dir,
+                         const char *radix, const char *extension,
+                         std::string indent_level)
+    : outputs(output_manager),
+      sink(outputs.create_file([&]() {
   std::string filename(radix);
   filename += ".";
   filename += extension;
@@ -94,43 +97,35 @@ stage4out_c::stage4out_c(const char *dir, const char *radix, const char *extensi
     filepath += "/";
   }
   filepath += filename;
-  std::fstream *file = new std::fstream(filepath.c_str(), std::fstream::out);
-  if(file->fail()){
-    std::cerr << "Cannot open " << filename << " for write access \n";
-    delete file;
+  return filepath;
+}())), out(&buffer) {
+  std::string filename(radix);
+  filename += ".";
+  filename += extension;
+  if (!sink.good())
     throw matiec::CompilationAbort("Cannot open generated output file", true);
-  }else{
-    std::cout << filename << "\n";
-  }
-  out = file;
-  m_file = file;
+  std::cout << filename << "\n";
   this->indent_level = indent_level;
   this->indent_spaces = "";
   allow_output = true;
 }
 
 stage4out_c::~stage4out_c(void) {
-  if(m_file)
-  {
-    m_file->flush();
-    if (m_file->fail()) output_error = true;
-    m_file->close();
-    if (m_file->fail()) output_error = true;
-    delete m_file;
-  }
+  flush();
 }
 
 void stage4out_c::flush(void) {
-  out->flush();
-  if (out->fail()) output_error = true;
+  const std::string pending = buffer.str();
+  if (!pending.empty()) {
+    outputs.write(sink, pending);
+    buffer.str("");
+    buffer.clear();
+  }
+  outputs.flush(sink);
 }
 
-void stage4out_c::reset_output_error(void) {
-  output_error = false;
-}
-
-bool stage4out_c::has_output_error(void) {
-  return output_error;
+matiec::OutputManager &stage4out_c::output_manager(void) {
+  return outputs;
 }
 
 void stage4out_c::enable_output(void) {
@@ -271,9 +266,11 @@ visitor_c *new_code_generator(stage4out_c *s4o, const char *builddir);
 void delete_code_generator(visitor_c *code_generator);
 
 
-int stage4(symbol_c *tree_root, const char *builddir) {
-  stage4out_c::reset_output_error();
-  stage4out_c s4o;
+int stage4(symbol_c *tree_root, matiec::CompilationContext &context) {
+  stage4out_c s4o(context.outputs());
+  const char *builddir = context.options().output_directory.empty()
+                             ? NULL
+                             : context.options().output_directory.c_str();
   visitor_c *generate_code = new_code_generator(&s4o, builddir);
 
   if (NULL == generate_code) ERROR;
@@ -283,10 +280,7 @@ int stage4(symbol_c *tree_root, const char *builddir) {
   delete_code_generator(generate_code);
 
   s4o.flush();
-  if (stage4out_c::has_output_error()) {
-    fprintf(stderr, "Error writing generated output.\n");
-    return -1;
-  }
+  if (context.outputs().has_errors()) return -1;
 
   return 0;
 }

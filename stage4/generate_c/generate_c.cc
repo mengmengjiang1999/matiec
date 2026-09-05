@@ -2597,10 +2597,11 @@ class generate_c_c: public iterator_visitor_c {
   public:
     generate_c_c(stage4out_c *s4o_ptr, const char *builddir):
             s4o(*s4o_ptr),
-            pous_s4o(builddir, "POUS", "c"),
-            pous_incl_s4o(builddir, "POUS", "h"),
-            located_variables_s4o(builddir, "LOCATED_VARIABLES","h"),
-            variables_s4o(builddir, "VARIABLES","csv"),
+            pous_s4o(s4o.output_manager(), builddir, "POUS", "c"),
+            pous_incl_s4o(s4o.output_manager(), builddir, "POUS", "h"),
+            located_variables_s4o(s4o.output_manager(), builddir,
+                                  "LOCATED_VARIABLES", "h"),
+            variables_s4o(s4o.output_manager(), builddir, "VARIABLES", "csv"),
             generate_c_typedecl         (&pous_incl_s4o),
             generate_c_implicit_typedecl(&pous_incl_s4o, &generate_c_typedecl)
     {
@@ -2726,8 +2727,8 @@ class generate_c_c: public iterator_visitor_c {
       if (generate_pou_filepairs__) {\
         if (pou_generation_pass != pou_pass_headers_and_types) return NULL;\
         const char *pou_name = get_datatype_info_c::get_id_str(pname);\
-        stage4out_c s4o_c(current_builddir, pou_name, "c");\
-        stage4out_c s4o_h(current_builddir, pou_name, "h");\
+        stage4out_c s4o_c(s4o.output_manager(), current_builddir, pou_name, "c");\
+        stage4out_c s4o_h(s4o.output_manager(), current_builddir, pou_name, "h");\
         s4o_c.print("#include \""); s4o_c.print(pou_name); s4o_c.print(".h\"\n");\
         s4o_h.print("#ifndef __");  s4o_h.print(pou_name); s4o_h.print("_H\n");\
         s4o_h.print("#define __");  s4o_h.print(pou_name); s4o_h.print("_H\n");\
@@ -2810,8 +2811,10 @@ class generate_c_c: public iterator_visitor_c {
 
         symbol->configuration_name->accept(*this);
         
-        stage4out_c config_s4o(current_builddir, current_name, "c");
-        stage4out_c config_incl_s4o(current_builddir, current_name, "h");
+        stage4out_c config_s4o(s4o.output_manager(), current_builddir,
+                               current_name, "c");
+        stage4out_c config_incl_s4o(s4o.output_manager(), current_builddir,
+                                    current_name, "h");
         generate_c_config_c generate_c_config(&config_s4o, &config_incl_s4o);
         symbol->accept(generate_c_config);
 
@@ -2840,7 +2843,8 @@ class generate_c_c: public iterator_visitor_c {
       if (symbol->global_var_declarations != NULL)
         symbol->global_var_declarations->accept(generate_c_implicit_typedecl);
       symbol->resource_name->accept(*this);
-      stage4out_c resources_s4o(current_builddir, current_name, "c");
+      stage4out_c resources_s4o(s4o.output_manager(), current_builddir,
+                                current_name, "c");
       generate_c_resources_c generate_c_resources(&resources_s4o, current_configuration, symbol, common_ticktime);
       symbol->accept(generate_c_resources);
       if (generate_plc_state_backup_fuctions__ > 0) {
@@ -2851,7 +2855,8 @@ class generate_c_c: public iterator_visitor_c {
     }
 
     void *visit(single_resource_declaration_c *symbol) {
-      stage4out_c resources_s4o(current_builddir, "RESOURCE", "c");
+      stage4out_c resources_s4o(s4o.output_manager(), current_builddir,
+                                "RESOURCE", "c");
       generate_c_resources_c generate_c_resources(&resources_s4o, current_configuration, symbol, common_ticktime);
       symbol->accept(generate_c_resources);
       return NULL;

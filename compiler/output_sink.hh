@@ -2,6 +2,7 @@
 #define MATIEC_COMPILER_OUTPUT_SINK_HH
 
 #include <fstream>
+#include <iosfwd>
 #include <string>
 #include <string_view>
 
@@ -56,6 +57,22 @@ class MemoryOutputSink final : public OutputSink {
 
  private:
   std::string contents_;
+  std::string error_message_;
+};
+
+class StreamOutputSink final : public OutputSink {
+ public:
+  explicit StreamOutputSink(std::ostream &stream);
+
+  OutputResult write(std::string_view text) override;
+  OutputResult flush() override;
+  bool good() const override;
+  const std::string &error_message() const override;
+
+ private:
+  OutputResult fail(std::string operation);
+
+  std::ostream &stream_;
   std::string error_message_;
 };
 

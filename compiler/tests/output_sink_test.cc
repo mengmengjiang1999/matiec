@@ -1,4 +1,5 @@
 #include "compiler/output_sink.hh"
+#include "compiler/output_manager.hh"
 
 #include <cassert>
 #include <cstdio>
@@ -35,5 +36,15 @@ int main() {
   assert(!invalid.write("ignored").ok);
   assert(!invalid.flush().ok);
   assert(!invalid.error_message().empty());
+
+  matiec::DiagnosticEngine diagnostics;
+  matiec::OutputManager outputs(diagnostics);
+  matiec::MemoryOutputSink &managed_memory = outputs.create_memory();
+  assert(outputs.write(managed_memory, "managed").ok);
+  assert(outputs.flush(managed_memory).ok);
+  assert(managed_memory.contents() == "managed");
+  outputs.create_file("missing-managed-output/file.c");
+  assert(outputs.has_errors());
+  assert(diagnostics.error_count() == 1);
   return 0;
 }

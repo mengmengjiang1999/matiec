@@ -4,8 +4,10 @@
 
 namespace matiec {
 
+CompilationContext::CompilationContext() : outputs_(diagnostics_) {}
+
 CompilationContext::CompilationContext(CompilerOptions options)
-    : options_(std::move(options)) {}
+    : options_(std::move(options)), outputs_(diagnostics_) {}
 
 CompilerOptions &CompilationContext::options() {
   return options_;
@@ -29,6 +31,14 @@ AstArena &CompilationContext::ast_arena() {
 
 const AstArena &CompilationContext::ast_arena() const {
   return ast_arena_;
+}
+
+OutputManager &CompilationContext::outputs() {
+  return outputs_;
+}
+
+const OutputManager &CompilationContext::outputs() const {
+  return outputs_;
 }
 
 void CompilationContext::set_source_path(std::string source_path) {

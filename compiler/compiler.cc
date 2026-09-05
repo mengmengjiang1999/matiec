@@ -32,11 +32,8 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     if (stage3(tree_root, &ordered_tree_root, context) < 0)
       return context.diagnostics().result();
 
-    const char *output_directory = options.output_directory.empty()
-                                       ? NULL
-                                       : options.output_directory.c_str();
-    if (stage4(ordered_tree_root, output_directory) < 0)
-      return CompilationResult::failure();
+    if (stage4(ordered_tree_root, context) < 0)
+      return context.diagnostics().result();
 
     return CompilationResult::success();
   } catch (const CompilationAbort &abort) {

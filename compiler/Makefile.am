@@ -10,6 +10,7 @@ libcompiler_a_SOURCES = \
 	compiler_types.cc \
 	diagnostic_engine.cc \
 	legacy_global_state_adapter.cc \
+	output_manager.cc \
 	output_sink.cc \
 	semantic_pass.cc \
 	semantic_pass_manager.cc

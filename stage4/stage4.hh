@@ -40,6 +40,9 @@
 #define _STAGE4_HH
 
 #include "../absyntax/absyntax.hh"
+#include "../compiler/output_manager.hh"
+
+#include <sstream>
 
 
 void stage4err(const char *stage4_generator_id, symbol_c *symbol1, symbol_c *symbol2, const char *errmsg, ...);
@@ -51,13 +54,15 @@ class stage4out_c {
     std::string indent_spaces;
 
   public:
-    stage4out_c(std::string indent_level = "  ");
-    stage4out_c(const char *dir, const char *radix, const char *extension, std::string indent_level = "  ");
+    explicit stage4out_c(matiec::OutputManager &outputs,
+                         std::string indent_level = "  ");
+    stage4out_c(matiec::OutputManager &outputs, const char *dir,
+                const char *radix, const char *extension,
+                std::string indent_level = "  ");
     ~stage4out_c(void);
     
     void flush(void);
-    static void reset_output_error(void);
-    static bool has_output_error(void);
+    matiec::OutputManager &output_manager(void);
     
     void enable_output(void);
     void disable_output(void);
@@ -90,8 +95,10 @@ class stage4out_c {
     void *printlocation_comasep(const char *str);
 
   protected:
+    matiec::OutputManager &outputs;
+    matiec::OutputSink &sink;
+    std::ostringstream buffer;
     std::ostream *out;
-    std::fstream *m_file;
     
     /* A flag to tell whether to really print to the file, or to ignore any request to print to the file */
     /* This is used to implement the no_code_generation pragmas, that lets the user tell the compiler
@@ -100,13 +107,12 @@ class stage4out_c {
      */
     bool allow_output;
 
-    static bool output_error;
-
 };
 
 
 
-int stage4(symbol_c *tree_root, const char *builddir);
+namespace matiec { class CompilationContext; }
+int stage4(symbol_c *tree_root, matiec::CompilationContext &context);
 
 /* Functions to be implemented by each generate_XX version of stage 4 */
 int  stage4_parse_options(char *options);

@@ -4,6 +4,7 @@
 #include "ast_arena.hh"
 #include "compiler_types.hh"
 #include "diagnostic_engine.hh"
+#include "output_manager.hh"
 
 #include <string>
 
@@ -11,7 +12,7 @@ namespace matiec {
 
 class CompilationContext {
  public:
-  CompilationContext() = default;
+  CompilationContext();
   explicit CompilationContext(CompilerOptions options);
 
   CompilerOptions &options();
@@ -23,12 +24,16 @@ class CompilationContext {
   AstArena &ast_arena();
   const AstArena &ast_arena() const;
 
+  OutputManager &outputs();
+  const OutputManager &outputs() const;
+
   void set_source_path(std::string source_path);
   const std::string &source_path() const;
 
  private:
   CompilerOptions options_;
   DiagnosticEngine diagnostics_;
+  OutputManager outputs_;
   AstArena ast_arena_;
   std::string source_path_;
 };
