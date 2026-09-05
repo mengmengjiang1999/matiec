@@ -1,4 +1,6 @@
-
+  NOTE: This file preserves MATIEC's detailed historical design notes.
+  For the current project overview, build instructions, architecture,
+  embedding boundary, and test workflow, see README.md.
 
 
   MATIEC - IEC 61131-3 compiler
