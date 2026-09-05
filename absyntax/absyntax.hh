@@ -48,6 +48,10 @@
 
 #include <stdio.h> // required for NULL
 #include <vector>
+
+namespace matiec {
+class AstArena;
+}
 #include <map>
 #include <string>
 #include <stdint.h>  // required for uint64_t, etc...
@@ -239,9 +243,12 @@ class symbol_c {
 
     /* default destructor */
     /* must be virtual so compiler does not complain... */ 
-    virtual ~symbol_c(void) {return;};
+    virtual ~symbol_c(void);
 
     virtual void *accept(visitor_c &visitor) {return NULL;};
+
+  private:
+    matiec::AstArena *arena_owner_;
 };
 
 
@@ -290,6 +297,7 @@ class list_c: public symbol_c {
            int fl = 0, int fc = 0, const char *ffile = NULL /* filename */, long int forder=0, /* order in which it is read by lexcial analyser */
            int ll = 0, int lc = 0, const char *lfile = NULL /* filename */, long int lorder=0  /* order in which it is read by lexcial analyser */
           );
+    virtual ~list_c(void);
      /* get element in position pos of the list */
     virtual symbol_c *get_element(int pos);
      /* find element associated to token value */

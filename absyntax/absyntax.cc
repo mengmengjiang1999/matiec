@@ -38,6 +38,7 @@
 #include <string.h>
 
 #include "absyntax.hh"
+#include "../compiler/ast_arena.hh"
 //#include "../stage1_2/iec.hh" /* required for BOGUS_TOKEN_ID, etc... */
 #include "visitor.hh"
 #include "../main.hh" // required for ERROR() and ERROR_MSG() macros.
@@ -46,9 +47,20 @@
 
 
 /* The base class of all symbols */
+namespace {
+
+void destroy_arena_symbol(void *address) {
+  delete static_cast<symbol_c *>(address);
+}
+
+}  // namespace
+
 symbol_c::symbol_c(
                    int first_line, int first_column, const char *ffile, long int first_order,
                    int last_line,  int last_column,  const char *lfile, long int last_order ) {
+  this->arena_owner_ = matiec::active_ast_arena();
+  if (this->arena_owner_ != NULL)
+    this->arena_owner_->adopt(this, &destroy_arena_symbol);
   this->first_file   = ffile,
   this->first_line   = first_line;
   this->first_column = first_column;
@@ -61,6 +73,10 @@ symbol_c::symbol_c(
   this->token        = NULL;
   this->datatype     = NULL;
   this->scope        = NULL;
+}
+
+symbol_c::~symbol_c(void) {
+  if (arena_owner_ != NULL) arena_owner_->release(this);
 }
 
 
@@ -98,6 +114,10 @@ list_c::list_c(symbol_c *elem,
   elements = (element_entry_t*)malloc(LIST_CAP_INIT*sizeof(element_entry_t));
   if (NULL == elements) ERROR_MSG("out of memory");
   add_element(elem); 
+}
+
+list_c::~list_c(void) {
+  free(elements);
 }
 
 
@@ -394,8 +414,6 @@ void *class_name_c::accept(visitor_c &visitor) {return visitor.visit(this);}
 #undef SYM_REF4
 #undef SYM_REF5
 #undef SYM_REF6
-
-
 
 
 

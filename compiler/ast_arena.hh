@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -22,13 +23,16 @@ class AstArena {
   T *make(Args &&...args) {
     std::unique_ptr<T> object(new T(std::forward<Args>(args)...));
     T *result = object.get();
-    allocations_.push_back(Allocation{result, &destroy<T>});
+    adopt(result, &destroy<T>);
     object.release();
     return result;
   }
 
-  const char *copy_string(const char *value);
-  const char *copy_string(const char *value, std::size_t length);
+  char *copy_string(const char *value);
+  char *copy_string(const char *value, std::size_t length);
+
+  void adopt(void *address, void (*destroy)(void *));
+  void release(void *address);
 
   std::size_t allocation_count() const;
   void clear();
@@ -47,7 +51,24 @@ class AstArena {
   static void destroy_string(void *address);
 
   std::vector<Allocation> allocations_;
+  std::unordered_set<void *> addresses_;
+  bool clearing_ = false;
 };
+
+class ActiveAstArenaScope {
+ public:
+  explicit ActiveAstArenaScope(AstArena &arena);
+  ~ActiveAstArenaScope();
+
+  ActiveAstArenaScope(const ActiveAstArenaScope &) = delete;
+  ActiveAstArenaScope &operator=(const ActiveAstArenaScope &) = delete;
+
+ private:
+  AstArena *previous_;
+};
+
+AstArena *active_ast_arena();
+char *retain_ast_string(const char *value);
 
 }  // namespace matiec
 

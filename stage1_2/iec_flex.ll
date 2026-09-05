@@ -141,6 +141,7 @@
  */
 #include "iec_bison.hh"
 #include "stage1_2_priv.hh"
+#include "../compiler/ast_arena.hh"
 #include "../compiler/compilation_abort.hh"
 
 
@@ -1009,13 +1010,13 @@ incompl_location	%[IQM]\*
 {pragma}	{/* return the pragmma without the enclosing '{' and '}' */
 		 int cut = yytext[1]=='{'?2:1;
 		 yytext[strlen(yytext)-cut] = '\0';
-		 yylval.ID=strdup(yytext+cut);
+		 yylval.ID=matiec::retain_ast_string(yytext+cut);
 		 return pragma_token;
 		}
 <vardecl_list_state>{pragma}/(VAR) {/* return the pragmma without the enclosing '{' and '}' */
 		 int cut = yytext[1]=='{'?2:1;
 		 yytext[strlen(yytext)-cut] = '\0';
-		 yylval.ID=strdup(yytext+cut);
+		 yylval.ID=matiec::retain_ast_string(yytext+cut);
 		 return pragma_token;
 		}
 
@@ -1107,7 +1108,7 @@ CONFIGURATION{st_whitespace}		if (get_preparse_state()) BEGIN(get_pou_name_state
 }
 
 <get_pou_name_state>{
-{identifier}			BEGIN(ignore_pou_state); yylval.ID=strdup(yytext); return identifier_token;
+{identifier}			BEGIN(ignore_pou_state); yylval.ID=matiec::retain_ast_string(yytext); return identifier_token;
 .				BEGIN(ignore_pou_state); unput_text(0);
 }
 
@@ -1358,7 +1359,7 @@ END_CONFIGURATION	BEGIN(INITIAL); return END_CONFIGURATION;
                   *       'MOD' et al must be removed from the 
                   *       library_symbol_table as a default function name!
 		  * //
-		   yylval.ID=strdup(yytext);
+		   yylval.ID=matiec::retain_ast_string(yytext);
 		   // fprintf(stderr, "returning token %d\n", token); 
 		   return token;
 		 }
@@ -1855,33 +1856,33 @@ CONTINUE    return CONTINUE;    /* Keyword */
 	/********************************************/
 	/* B.1.4.1   Directly Represented Variables */
 	/********************************************/
-{direct_variable}   {yylval.ID=strdup(yytext); return get_direct_variable_token(yytext);}
+{direct_variable}   {yylval.ID=matiec::retain_ast_string(yytext); return get_direct_variable_token(yytext);}
 
 
 	/******************************************/
 	/* B 1.4.3 - Declaration & Initialisation */
 	/******************************************/
-{incompl_location}	{yylval.ID=strdup(yytext); return incompl_location_token;}
+{incompl_location}	{yylval.ID=matiec::retain_ast_string(yytext); return incompl_location_token;}
 
 
 	/************************/
 	/* B 1.2.3.1 - Duration */
 	/************************/
-{fixed_point}		{yylval.ID=strdup(yytext); return fixed_point_token;}
+{fixed_point}		{yylval.ID=matiec::retain_ast_string(yytext); return fixed_point_token;}
 {interval}		{/*fprintf(stderr, "entering time_literal_state ##%s##\n", yytext);*/ unput_and_mark('#'); yy_push_state(time_literal_state);}
 {erroneous_interval}	{return erroneous_interval_token;}
 
 <time_literal_state>{
-{integer}d		{yylval.ID=strdup(yytext); yylval.ID[yyleng-1] = '\0'; return integer_d_token;}
-{integer}h		{yylval.ID=strdup(yytext); yylval.ID[yyleng-1] = '\0'; return integer_h_token;}
-{integer}m		{yylval.ID=strdup(yytext); yylval.ID[yyleng-1] = '\0'; return integer_m_token;}
-{integer}s		{yylval.ID=strdup(yytext); yylval.ID[yyleng-1] = '\0'; return integer_s_token;}
-{integer}ms		{yylval.ID=strdup(yytext); yylval.ID[yyleng-2] = '\0'; return integer_ms_token;}
-{fixed_point}d		{yylval.ID=strdup(yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_d_token;}
-{fixed_point}h		{yylval.ID=strdup(yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_h_token;}
-{fixed_point}m		{yylval.ID=strdup(yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_m_token;}
-{fixed_point}s		{yylval.ID=strdup(yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_s_token;}
-{fixed_point}ms		{yylval.ID=strdup(yytext); yylval.ID[yyleng-2] = '\0'; return fixed_point_ms_token;}
+{integer}d		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return integer_d_token;}
+{integer}h		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return integer_h_token;}
+{integer}m		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return integer_m_token;}
+{integer}s		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return integer_s_token;}
+{integer}ms		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-2] = '\0'; return integer_ms_token;}
+{fixed_point}d		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_d_token;}
+{fixed_point}h		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_h_token;}
+{fixed_point}m		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_m_token;}
+{fixed_point}s		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_s_token;}
+{fixed_point}ms		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-2] = '\0'; return fixed_point_ms_token;}
 
 _			/* do nothing - eat it up!*/
 \#			{/*fprintf(stderr, "popping from time_literal_state (###)\n");*/ yy_pop_state(); return end_interval_token;}
@@ -1891,26 +1892,26 @@ _			/* do nothing - eat it up!*/
 	/*******************************/
 	/* B.1.2.2   Character Strings */
 	/*******************************/
-{double_byte_character_string} {yylval.ID=strdup(yytext); return double_byte_character_string_token;}
-{single_byte_character_string} {yylval.ID=strdup(yytext); return single_byte_character_string_token;}
+{double_byte_character_string} {yylval.ID=matiec::retain_ast_string(yytext); return double_byte_character_string_token;}
+{single_byte_character_string} {yylval.ID=matiec::retain_ast_string(yytext); return single_byte_character_string_token;}
 
 
 	/******************************/
 	/* B.1.2.1   Numeric literals */
 	/******************************/
-{integer}		{yylval.ID=strdup(yytext); return integer_token;}
-{real}			{yylval.ID=strdup(yytext); return real_token;}
-{binary_integer}	{yylval.ID=strdup(yytext); return binary_integer_token;}
-{octal_integer} 	{yylval.ID=strdup(yytext); return octal_integer_token;}
-{hex_integer} 		{yylval.ID=strdup(yytext); return hex_integer_token;}
+{integer}		{yylval.ID=matiec::retain_ast_string(yytext); return integer_token;}
+{real}			{yylval.ID=matiec::retain_ast_string(yytext); return real_token;}
+{binary_integer}	{yylval.ID=matiec::retain_ast_string(yytext); return binary_integer_token;}
+{octal_integer} 	{yylval.ID=matiec::retain_ast_string(yytext); return octal_integer_token;}
+{hex_integer} 		{yylval.ID=matiec::retain_ast_string(yytext); return hex_integer_token;}
 
 
 	/*****************************************/
 	/* B.1.1 Letters, digits and identifiers */
 	/*****************************************/
-<st_state>{identifier}/({st_whitespace_or_pragma_or_comment})"=>"	{yylval.ID=strdup(yytext); return sendto_identifier_token;}
-<il_state>{identifier}/({il_whitespace_or_pragma_or_comment})"=>"	{yylval.ID=strdup(yytext); return sendto_identifier_token;}
-{identifier} 				{yylval.ID=strdup(yytext);
+<st_state>{identifier}/({st_whitespace_or_pragma_or_comment})"=>"	{yylval.ID=matiec::retain_ast_string(yytext); return sendto_identifier_token;}
+<il_state>{identifier}/({il_whitespace_or_pragma_or_comment})"=>"	{yylval.ID=matiec::retain_ast_string(yytext); return sendto_identifier_token;}
+{identifier} 				{yylval.ID=matiec::retain_ast_string(yytext);
 					 // printf("returning identifier...: %s, %d\n", yytext, get_identifier_token(yytext));
 					 return get_identifier_token(yytext);}
 
@@ -2015,7 +2016,7 @@ void handle_include_file_(FILE *filehandle, const char *filename) {
   include_stack[include_stack_ptr].env = current_tracking;
   include_stack[include_stack_ptr].filename = current_filename;
   
-  current_filename = strdup(filename);
+  current_filename = matiec::retain_ast_string(filename);
   current_tracking = GetNewTracking(yyin);
   include_stack_ptr++;
 
@@ -2239,7 +2240,7 @@ FILE *parse_file(const char *filename) {
 
   if((filehandle = fopen(filename, "r")) != NULL) {
     yyin = filehandle;
-    current_filename = strdup(filename);
+    current_filename = matiec::retain_ast_string(filename);
     current_tracking = GetNewTracking(yyin);
   }
   return filehandle;

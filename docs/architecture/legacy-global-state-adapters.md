@@ -22,9 +22,27 @@ This adapter is deliberately synchronous and does not claim thread safety.
 Sequential compilation becomes safe only after parser state, symbol tables,
 and AST storage are reset or context-owned in the later lifetime tasks.
 
+## AST allocation boundary
+
+`ActiveAstArenaScope` is a separate, thread-local compatibility binding used
+while legacy parser and visitor code still constructs `symbol_c` subclasses
+with direct `new` expressions. The `Compiler` binds the current context's
+arena for the complete parse, semantic, and generation sequence; the
+`symbol_c` base constructor then registers each concrete node for destruction.
+The scanner uses the same binding for retained token and filename strings.
+
+The binding restores any previous arena when it leaves scope, so nested use
+does not leak the inner context. It does not make the generated scanner and
+parser reentrant; it exists only to avoid changing hundreds of generated-parser
+actions before explicit parser context parameters are introduced. New code
+must use `CompilationContext::ast_arena()` directly rather than read the active
+binding.
+
 ## Migration rule
 
-No new mutable global compiler state may be added to this adapter. New state
+No new mutable process-wide compiler state may be added to this adapter. New state
 belongs in `CompilationContext` or one of its services. As parser and symbol
 APIs gain explicit context parameters, their corresponding adapter methods and
-the `runtime_options` compatibility structure must be removed.
+the `runtime_options` compatibility structure must be removed. The thread-local
+AST allocation binding must likewise be removed when parser and pass APIs carry
+the context explicitly.

@@ -15,6 +15,7 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
   }
 
   try {
+    ActiveAstArenaScope ast_arena_scope(context.ast_arena());
     const CompilerOptions &options = context.options();
     LegacyGlobalStateAdapter legacy_state(context);
 
