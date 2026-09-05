@@ -1,7 +1,7 @@
 # Compiler architecture and embedding boundaries
 
-This document describes the refactored compilation boundary. It complements
-the historical stage overview in `readme` and is the source of truth for new
+This document describes the refactored compilation boundary. It expands the
+architecture overview in `README.md` and is the source of truth for new
 compiler integrations.
 
 ## Compilation lifetime
