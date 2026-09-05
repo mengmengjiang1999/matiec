@@ -5,6 +5,7 @@ AM_CPPFLAGS = -I$(top_srcdir)
 noinst_LIBRARIES = libcompiler.a
 libcompiler_a_SOURCES = \
 	compilation_context.cc \
+	compiler.cc \
 	compiler_types.cc \
 	diagnostic_engine.cc
 

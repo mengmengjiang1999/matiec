@@ -77,10 +77,7 @@
 
 #include "config/config.h"
 #include "compiler/compilation_context.hh"
-#include "absyntax/absyntax.hh"
-#include "absyntax_utils/absyntax_utils.hh"
-#include "stage1_2/stage1_2.hh"
-#include "stage3/stage3.hh"
+#include "compiler/compiler.hh"
 #include "stage4/stage4.hh"
 #include "main.hh"
 
@@ -136,32 +133,7 @@ static void printusage(const char *cmd) {
 }
 
 
-/* declare the global options variable */
-runtime_options_t runtime_options;
-
-/* Compatibility adapter for stages that have not yet migrated to
- * CompilationContext. New option state must be added to CompilerOptions first. */
-static void apply_compiler_options(const matiec::CompilerOptions &options) {
-  runtime_options.allow_void_datatype = options.allow_void_datatype;
-  runtime_options.allow_missing_var_in = options.allow_missing_var_in;
-  runtime_options.disable_implicit_en_eno = options.disable_implicit_en_eno;
-  runtime_options.pre_parsing = options.pre_parsing;
-  runtime_options.safe_extensions = options.safe_extensions;
-  runtime_options.full_token_loc = options.full_token_location;
-  runtime_options.conversion_functions = options.conversion_functions;
-  runtime_options.nested_comments = options.nested_comments;
-  runtime_options.ref_standard_extensions = options.reference_extensions;
-  runtime_options.ref_nonstand_extensions = options.nonstandard_reference_extensions;
-  runtime_options.nonliteral_in_array_size = options.nonliteral_array_size;
-  runtime_options.relaxed_datatype_model = options.relaxed_datatype_model;
-  runtime_options.includedir = options.include_directory.empty()
-                                  ? NULL
-                                  : options.include_directory.c_str();
-}
-
-
 int main(int argc, char **argv) {
-  symbol_c *tree_root, *ordered_tree_root;
   matiec::CompilationContext context;
   matiec::CompilerOptions &options = context.options();
   int optres, errflg = 0;
@@ -255,38 +227,7 @@ int main(int argc, char **argv) {
   }
 
   context.set_source_path(argv[optind]);
-  apply_compiler_options(options);
-
-
-  /***************************/
-  /*   Run the compiler...   */
-  /***************************/
-  /* 1st Pass */
-  if (stage1_2(argv[optind], &tree_root) < 0)
-    return EXIT_FAILURE;
-
-  if (options.syntax_only)
-    return EXIT_SUCCESS;
-
-  /* 2nd Pass */
-    /* basically loads some symbol tables to speed up look ups later on */
-  absyntax_utils_init(tree_root);  
-    /* moved to bison, although it could perfectly well still be here instead of in bison code. */
-  //add_en_eno_param_decl_c::add_to(tree_root);
-
-  /* Do semantic verification of code */
-  if (stage3(tree_root, &ordered_tree_root) < 0)
-    return EXIT_FAILURE;
-  
-  /* 3rd Pass */
-  if (stage4(ordered_tree_root, options.output_directory.empty()
-                                    ? NULL
-                                    : options.output_directory.c_str()) < 0)
-    return EXIT_FAILURE;
-
-  /* 4th Pass */
-  /* Call gcc, g++, or whatever... */
-  /* Currently implemented in the Makefile! */
-
-  return 0;
+  const matiec::CompilationResult result = matiec::Compiler().compile(context);
+  context.diagnostics().render(std::cerr);
+  return result.succeeded() ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -39,23 +39,23 @@ ACLOCAL_AMFLAGS=-I config
 MATIEC_REVISION = $(shell $(SHELL) $(top_srcdir)/config/revision.sh $(top_srcdir))
 AM_CXXFLAGS += -DMATIEC_REVISION="\"${MATIEC_REVISION}\""
 
-iec2c_LDADD = stage1_2/libstage1_2.a \
+iec2c_LDADD = compiler/libcompiler.a \
+	stage1_2/libstage1_2.a \
 	stage1_2/libstage1_2_generated.a \
 	stage1_2/libstage1_2_parser_support.a \
 	stage3/libstage3.a \
 	stage4/generate_c/libstage4_c.a \
 	absyntax/libabsyntax.a \
-	absyntax_utils/libabsyntax_utils.a \
-	compiler/libcompiler.a
+	absyntax_utils/libabsyntax_utils.a
 
-iec2iec_LDADD = stage1_2/libstage1_2.a \
+iec2iec_LDADD = compiler/libcompiler.a \
+	stage1_2/libstage1_2.a \
 	stage1_2/libstage1_2_generated.a \
 	stage1_2/libstage1_2_parser_support.a \
 	stage3/libstage3.a \
 	stage4/generate_iec/libstage4_iec.a \
 	absyntax/libabsyntax.a \
-	absyntax_utils/libabsyntax_utils.a \
-	compiler/libcompiler.a
+	absyntax_utils/libabsyntax_utils.a
 
 iec2c_SOURCES = main.cc
 
