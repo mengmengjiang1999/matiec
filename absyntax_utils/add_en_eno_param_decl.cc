@@ -58,27 +58,13 @@
 
 
 
-/* This class is a singleton.
- * So we need a pointer to the singe instance...
- */
-add_en_eno_param_decl_c *add_en_eno_param_decl_c::singleton = NULL;
-
-/* Constructor for the singleton class */
 symbol_c *add_en_eno_param_decl_c::add_to(symbol_c *tree_root) {
-      if (NULL == singleton) {
-        singleton = new add_en_eno_param_decl_c;
-        if (NULL == singleton)
-          return NULL;
-      }
-      tree_root->accept(*singleton);
+      add_en_eno_param_decl_c visitor;
+      tree_root->accept(visitor);
       return tree_root;
     }
 
-/* Destructor for the singleton class */
-add_en_eno_param_decl_c::~add_en_eno_param_decl_c(void) {
-      if (NULL != singleton) delete singleton;
-      singleton = NULL;
-    }
+add_en_eno_param_decl_c::~add_en_eno_param_decl_c(void) = default;
 
 
 
@@ -203,7 +189,6 @@ void *add_en_eno_param_decl_c::visit(function_block_declaration_c *symbol) {
   TRACE("function_block_declaration_c"); 
   return symbol->var_declarations->accept(*this);
 }
-
 
 
 

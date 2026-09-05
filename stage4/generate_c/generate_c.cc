@@ -39,6 +39,7 @@
 #include "../../main.hh" // required for ERROR() and ERROR_MSG() macros.
 
 #include "../stage4.hh"
+#include "../../compiler/ast_arena.hh"
 #include "../../compiler/compilation_abort.hh"
 
 //#define DEBUG
@@ -419,11 +420,8 @@ class print_function_parameter_data_types_c: public generate_c_base_and_typeid_c
 /* A helper class that analyses if the datatype of a variable is 'complex'. */
 /* 'complex' means that it is either a strcuture or an array!               */
 class analyse_variable_c: public search_visitor_c {
-  private:
-    static analyse_variable_c *singleton_;
-
   public:
-    analyse_variable_c(void) {};
+    analyse_variable_c(void) : last_fb(NULL), first_non_fb_identifier(NULL) {};
     
     static bool is_complex_type(symbol_c *symbol) {
       if (NULL == symbol) ERROR;
@@ -445,13 +443,9 @@ class analyse_variable_c: public search_visitor_c {
      *      struct1.real           returns struct1
      */
     static symbol_c *find_first_nonfb(symbol_c *symbol) {
-      if (NULL == singleton_)       singleton_ = new analyse_variable_c();
-      if (NULL == singleton_)       ERROR;
       if (NULL == symbol)           ERROR;
-      
-      singleton_->last_fb                 = NULL;
-      singleton_->first_non_fb_identifier = NULL;
-      return (symbol_c *)symbol->accept(*singleton_);
+      analyse_variable_c visitor;
+      return (symbol_c *)symbol->accept(visitor);
     }
     
     /* returns true if a strcutured variable (e.g. fb1.fb2.strcut1.real) contains a structure or array */
@@ -479,10 +473,11 @@ class analyse_variable_c: public search_visitor_c {
       if (NULL == symbol) ERROR;
       if (!get_datatype_info_c::is_type_valid(symbol->datatype)) ERROR;
       
-      symbol_c *first_non_fb = (symbol_c *)find_first_nonfb(symbol);
-      if (NULL != singleton_->last_fb) {
-        scope = singleton_->last_fb->datatype;
-        symbol = singleton_->first_non_fb_identifier;
+      analyse_variable_c visitor;
+      symbol_c *first_non_fb = (symbol_c *)symbol->accept(visitor);
+      if (NULL != visitor.last_fb) {
+        scope = visitor.last_fb->datatype;
+        symbol = visitor.first_non_fb_identifier;
       }
       
       search_var_instance_decl_c search_var_instance_decl(scope);
@@ -533,8 +528,6 @@ class analyse_variable_c: public search_visitor_c {
 
     
 };
-
-analyse_variable_c *analyse_variable_c::singleton_ = NULL;
 
 /***********************************************************************/
 /***********************************************************************/
@@ -2880,4 +2873,3 @@ class generate_c_c: public iterator_visitor_c {
 
 visitor_c *new_code_generator(stage4out_c *s4o, const char *builddir)  {return new generate_c_c(s4o, builddir);}
 void delete_code_generator(visitor_c *code_generator) {delete code_generator;}
-

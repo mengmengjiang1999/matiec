@@ -61,13 +61,12 @@
 
 class get_var_name_c : public search_visitor_c {    
   public:
-    get_var_name_c(void)  {};
+    get_var_name_c(void) : last_field(NULL) {};
     ~get_var_name_c(void) {};  
     static token_c  *get_name(symbol_c *symbol);
     static symbol_c *get_last_field(symbol_c *symbol);
     
   private:
-    static get_var_name_c *singleton_instance_;
     symbol_c *last_field;
     
   private:  
@@ -112,6 +111,5 @@ class get_var_name_c : public search_visitor_c {
     // SYM_REF2(structured_variable_c, record_variable, field_selector)
     void *visit(structured_variable_c *symbol);
 };
-
 
 

@@ -43,13 +43,8 @@
 class spec_init_sperator_c: public null_visitor_c {
 
   private:
-    /* this is a singleton class... */
-    static spec_init_sperator_c *class_instance;
-    static spec_init_sperator_c *get_class_instance(void);
-
-  private:
     typedef enum {search_spec, search_init} search_what_t;
-    static search_what_t search_what;
+    search_what_t search_what;
 
   public:
     /* the only two public functions... */

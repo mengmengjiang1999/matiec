@@ -49,25 +49,17 @@
 
 
 
-spec_init_sperator_c *spec_init_sperator_c::get_class_instance(void) {
-  if (NULL == class_instance)
-    class_instance = new spec_init_sperator_c();
-
-  if (NULL == class_instance)
-    ERROR;
-
-  return class_instance;
-}
-
  /* the only two public functions... */
 symbol_c *spec_init_sperator_c::get_spec(symbol_c *spec_init) {
-   search_what = search_spec;
-   return (symbol_c *)spec_init->accept(*get_class_instance());
+   spec_init_sperator_c visitor;
+   visitor.search_what = search_spec;
+   return (symbol_c *)spec_init->accept(visitor);
 }
 
 symbol_c *spec_init_sperator_c::get_init(symbol_c *spec_init) {
-   search_what = search_init;
-   return (symbol_c *)spec_init->accept(*get_class_instance());
+   spec_init_sperator_c visitor;
+   visitor.search_what = search_init;
+   return (symbol_c *)spec_init->accept(visitor);
 }
 
 /*******************************************/
@@ -263,7 +255,3 @@ void *spec_init_sperator_c::visit(double_byte_string_spec_c *symbol) {
   ERROR; /* should never occur */
   return NULL;
 }
-
-
-spec_init_sperator_c *spec_init_sperator_c ::class_instance = NULL;
-spec_init_sperator_c::search_what_t spec_init_sperator_c::search_what;

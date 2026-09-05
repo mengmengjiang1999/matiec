@@ -52,11 +52,6 @@
  *  END_TYPE
  * Where the default initial value for C_t is 20!
  */
-/* NOTE: The main program only needs one instance of
- *       this class of object. This class
- *       is therefore a singleton.
- */
-
 class type_initial_value_c : public null_visitor_c {
 
   public:
@@ -64,25 +59,23 @@ class type_initial_value_c : public null_visitor_c {
 
   private:
     /* constants for the default values of elementary data types... */
-    static ref_value_null_literal_c       *null_literal;
-    static real_c                         *real_0;
-    static integer_c                      *integer_0, *integer_1;
-    static boolean_literal_c              *bool_0;
-    static date_literal_c                 *date_literal_0;
-    static daytime_c                      *daytime_literal_0;
-    static duration_c                     *time_0;
-    static date_c                         *date_0;
-    static time_of_day_c                  *tod_0;
-    static date_and_time_c                *dt_0;
-    static single_byte_character_string_c *string_0;
-    static double_byte_character_string_c *wstring_0;
+    ref_value_null_literal_c       *null_literal;
+    real_c                         *real_0;
+    integer_c                      *integer_0, *integer_1;
+    boolean_literal_c              *bool_0;
+    date_literal_c                 *date_literal_0;
+    daytime_c                      *daytime_literal_0;
+    duration_c                     *time_0;
+    date_c                         *date_0;
+    time_of_day_c                  *tod_0;
+    date_and_time_c                *dt_0;
+    single_byte_character_string_c *string_0;
+    double_byte_character_string_c *wstring_0;
 
   protected:
     type_initial_value_c(void);
 
   private:
-    static type_initial_value_c *_instance;
-    static type_initial_value_c *instance(void);
     void *handle_type_spec(symbol_c *base_type_name, symbol_c *type_spec_init);
     void *handle_type_name(symbol_c *type_name);
 
@@ -294,6 +287,5 @@ class type_initial_value_c : public null_visitor_c {
     void *visit(ref_type_decl_c *symbol);
     
 }; // type_initial_value_c
-
 
 

@@ -80,10 +80,6 @@ class get_sizeof_datatype_c: public null_visitor_c {
     ~get_sizeof_datatype_c(void);
 
   private:
-    /* this class is a singleton. So we need a pointer to the single instance... */
-    static get_sizeof_datatype_c *singleton;
-
-  private:
 #if 0   /* We no longer need the code for handling numeric literals. But keep it around for a little while longer... */
     /*********************/
     /* B 1.2 - Constants */
@@ -237,7 +233,6 @@ class get_sizeof_datatype_c: public null_visitor_c {
     void *visit(string_type_declaration_c *symbol);
 #endif
 }; // get_sizeof_datatype_c
-
 
 
 

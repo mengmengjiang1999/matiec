@@ -35,20 +35,23 @@ memory; the target is one lifetime boundary per `CompilationContext`.
   compilation-created nodes. Arena teardown may destroy only allocations that it
   created, without following these pointers.
 
-## Stateful process-lifetime objects to remove
+## Stateful process-lifetime objects
 
-The following are stateful or heap-backed singletons and are unsafe for repeated
-in-process compilations unless reset. Task 4.4 should replace them with stack or
-context-owned instances:
+Task 4.4 replaced the following stateful or heap-backed singleton visitors with
+fresh stack instances for each query:
 
 - `pou_count_c` in `stage3/remove_forward_dependencies.cc`;
 - `get_var_name_c`, `get_sizeof_datatype_c`, `get_datatype_id_c`,
   `get_datatype_id_str_c`, `get_struct_info_c`, `search_base_type_c`, and the debug
   printers in `absyntax_utils`;
 - `generate_datatypes_aliasid_c` and `analyse_variable_c` in the C generator;
-- Stage 3 file-static enum symbol tables and their populating visitors;
-- function-local static mutable pass state such as declaration-check caches and
-  generator configuration counters.
+- `type_initial_value_c`, whose default-value nodes are now rebuilt inside the
+  active compilation lifetime rather than retained in static dangling pointers.
+
+Stage 3 file-static enum tables/populating visitors, declaration-check caches,
+and generator counters are mutable globals but are not singleton visitor APIs.
+They remain explicitly tracked for the semantic-pass and code-generation
+boundary migrations (tasks 5 and 6).
 
 Immutable tables, constants, and canonical elementary datatype objects are not in
 this migration set.

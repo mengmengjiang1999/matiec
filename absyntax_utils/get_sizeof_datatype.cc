@@ -87,12 +87,6 @@
 
 
 
-/* This class is a singleton.
- * So we need a pointer to the singe instance...
- */
-get_sizeof_datatype_c *get_sizeof_datatype_c::singleton = NULL;
-
-
 #define _encode_int(value)   ((void *)(((char *)NULL) + value))
 #define _decode_int(ptr)     (((char *)ptr) - ((char *)NULL))
 
@@ -122,21 +116,12 @@ static int strdivby2(char **strptr) {
 }
 #endif
 
-/* Constructor for the singleton class */
 int get_sizeof_datatype_c::getsize(symbol_c *data_type_symbol) {
-      if (NULL == singleton) {
-        singleton = new get_sizeof_datatype_c;
-        if (NULL == singleton)
-          ERROR;
-      }
-      return _decode_int(data_type_symbol->accept(*singleton));
+      get_sizeof_datatype_c visitor;
+      return _decode_int(data_type_symbol->accept(visitor));
     }
 
-/* Destructor for the singleton class */
-get_sizeof_datatype_c::~get_sizeof_datatype_c(void) {
-      if (NULL != singleton) delete singleton;
-      singleton = NULL;
-    }
+get_sizeof_datatype_c::~get_sizeof_datatype_c(void) = default;
 
 #if 0   /* We no longer need the code for handling numeric literals. But keep it around for a little while longer... */
 /*********************/

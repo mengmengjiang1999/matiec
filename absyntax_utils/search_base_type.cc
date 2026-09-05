@@ -49,51 +49,31 @@
 #include "../main.hh" // required for ERROR() and ERROR_MSG() macros.
 
 
-/* pointer to singleton instance */
-search_base_type_c *search_base_type_c::search_base_type_singleton = NULL;
-
-
-
 search_base_type_c::search_base_type_c(void) {current_basetype_name = NULL; current_basetype = NULL; current_equivtype = NULL;}
 
 /* static method! */
-void search_base_type_c::create_singleton(void) {
-  if (NULL == search_base_type_singleton)   search_base_type_singleton = new search_base_type_c();
-  if (NULL == search_base_type_singleton)   ERROR;
-}
-
-/* static method! */
 symbol_c *search_base_type_c::get_equivtype_decl(symbol_c *symbol) {
-  create_singleton();
   if (NULL == symbol)    return NULL; 
-  search_base_type_singleton->current_basetype_name = NULL;
-  search_base_type_singleton->current_basetype  = NULL; 
-  search_base_type_singleton->current_equivtype = NULL; 
-  symbol_c *basetype = (symbol_c *)symbol->accept(*search_base_type_singleton);
-  if (NULL != search_base_type_singleton->current_equivtype)
-    return search_base_type_singleton->current_equivtype;
+  search_base_type_c visitor;
+  symbol_c *basetype = (symbol_c *)symbol->accept(visitor);
+  if (NULL != visitor.current_equivtype)
+    return visitor.current_equivtype;
   return basetype;
 }
 
 /* static method! */
 symbol_c *search_base_type_c::get_basetype_decl(symbol_c *symbol) {
-  create_singleton();
   if (NULL == symbol)    return NULL; 
-  search_base_type_singleton->current_basetype_name = NULL;
-  search_base_type_singleton->current_basetype  = NULL; 
-  search_base_type_singleton->current_equivtype = NULL; 
-  return (symbol_c *)symbol->accept(*search_base_type_singleton);
+  search_base_type_c visitor;
+  return (symbol_c *)symbol->accept(visitor);
 }
 
 /* static method! */
 symbol_c *search_base_type_c::get_basetype_id  (symbol_c *symbol) {
-  create_singleton();
   if (NULL == symbol)    return NULL; 
-  search_base_type_singleton->current_basetype_name = NULL;
-  search_base_type_singleton->current_basetype  = NULL; 
-  search_base_type_singleton->current_equivtype = NULL; 
-  symbol->accept(*search_base_type_singleton);
-  return (symbol_c *)search_base_type_singleton->current_basetype_name;
+  search_base_type_c visitor;
+  symbol->accept(visitor);
+  return visitor.current_basetype_name;
 }
 
 
@@ -424,4 +404,3 @@ void *search_base_type_c::visit(step_c *symbol) {
   this->current_basetype_name = NULL; /* this pseudo data type does not have a type name! */
   return (void *)symbol;
 }
-

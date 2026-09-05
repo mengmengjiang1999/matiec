@@ -70,10 +70,7 @@ class search_base_type_c: public null_visitor_c {
     symbol_c *current_basetype_name;
     symbol_c *current_basetype;
     symbol_c *current_equivtype;
-    static search_base_type_c *search_base_type_singleton; // Make this a singleton class!
-    
   private:  
-    static void create_singleton(void);
     void *handle_datatype_identifier(token_c *type_name);
 
   public:
@@ -284,7 +281,6 @@ class search_base_type_c: public null_visitor_c {
 
 
 }; // search_base_type_c
-
 
 
 

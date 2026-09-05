@@ -90,22 +90,15 @@ class print_symbol_c: public fcall_visitor_c {
     void *visit(il_instruction_c *symbol);
 
   private:
-    static print_symbol_c *singleton;
-    
     void dump_symbol(symbol_c* symbol);
 };
 
 
 
 
-print_symbol_c *print_symbol_c::singleton = NULL;
-
-
 void print_symbol_c::print(symbol_c* symbol) {
-  if (NULL == singleton)   singleton = new print_symbol_c();
-  if (NULL == singleton)   ERROR;
-
-  symbol->accept(*singleton);
+  print_symbol_c visitor;
+  symbol->accept(visitor);
 }
 
 
@@ -198,21 +191,14 @@ class print_ast_c: public fcall_iterator_visitor_c {
     void prefix_fcall(symbol_c *symbol);
     void suffix_fcall(symbol_c *symbol);  
   
-  private:
-    static print_ast_c *singleton;    
 };
 
 
 
 
-print_ast_c *print_ast_c::singleton = NULL;
-
-
 void print_ast_c::print(symbol_c* symbol) {
-  if (NULL == singleton)   singleton = new print_ast_c();
-  if (NULL == singleton)   ERROR;
-
-  symbol->accept(*singleton);
+  print_ast_c visitor;
+  symbol->accept(visitor);
 }
 
 
@@ -250,7 +236,6 @@ void debug_c::print(symbol_c *symbol) {
 void debug_c::print_ast(symbol_c *symbol) {
   print_ast_c::print(symbol);
 }
-
 
 
 

@@ -121,16 +121,14 @@ class find_forward_dependencies_c: public search_visitor_c {
  */
 class pou_count_c: public search_visitor_c {
   private:
-    static pou_count_c *singleton;
     long long int count;
 
   public:
     static long long int get_count(library_c *library) {
-      if (NULL == singleton) singleton = new pou_count_c;
-      if (NULL == singleton) ERROR;
-      singleton->count = 0;
-      library->accept(*singleton);
-      return singleton->count;
+      pou_count_c visitor;
+      visitor.count = 0;
+      library->accept(visitor);
+      return visitor.count;
     }
     
     /**************************************/
@@ -142,7 +140,6 @@ class pou_count_c: public search_visitor_c {
     void *visit( configuration_declaration_c *symbol) {count++; return NULL;} 
 };   /* class pou_count_c */
 
-pou_count_c *pou_count_c::singleton = NULL;
 symbol_c remove_forward_dependencies_c_null_symbol;
 
 
@@ -297,7 +294,6 @@ void *remove_forward_dependencies_c::visit(pragma_c *symbol) {
   new_tree->add_element(symbol);
   return NULL;
 }
-
 
 
 

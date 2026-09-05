@@ -44,10 +44,6 @@
    
     
 
-get_var_name_c *get_var_name_c::singleton_instance_ = NULL;
-
-
-
 /*  For ex.:
  *       VAR
  *          A : int;
@@ -70,10 +66,8 @@ get_var_name_c *get_var_name_c::singleton_instance_ = NULL;
  */
 
 token_c *get_var_name_c::get_name(symbol_c *symbol) {
-  if (NULL == singleton_instance_) singleton_instance_ = new get_var_name_c(); 
-  if (NULL == singleton_instance_) ERROR; 
-  
-  return (token_c *)(symbol->accept(*singleton_instance_));
+  get_var_name_c visitor;
+  return (token_c *)(symbol->accept(visitor));
 }
 
 
@@ -84,12 +78,9 @@ token_c *get_var_name_c::get_name(symbol_c *symbol) {
  *          C.e  := 77;   --> returns e   !!!
  */
 symbol_c *get_var_name_c::get_last_field(symbol_c *symbol) {
-  if (NULL == singleton_instance_) singleton_instance_ = new get_var_name_c(); 
-  if (NULL == singleton_instance_) ERROR; 
-  
-  singleton_instance_->last_field = NULL;
-  symbol_c *res = (symbol_c*)(symbol->accept(*singleton_instance_));
-  return (NULL != singleton_instance_->last_field)? singleton_instance_->last_field : res;
+  get_var_name_c visitor;
+  symbol_c *res = (symbol_c *)(symbol->accept(visitor));
+  return (NULL != visitor.last_field) ? visitor.last_field : res;
 }
 
 
@@ -137,6 +128,5 @@ void *get_var_name_c::visit(structured_variable_c *symbol) {
   last_field = symbol->field_selector;
   return res;
 }
-
 
 

@@ -54,9 +54,6 @@ class add_en_eno_param_decl_c : public null_visitor_c {
     ~add_en_eno_param_decl_c(void);
 
   private:
-    /* this class is a singleton. So we need a pointer to the single instance... */
-    static add_en_eno_param_decl_c *singleton;
-
     /* flags to remember whether the EN and/or ENO parameters have already
      * been explicitly declared by the user in the IEC 61131-3 source code we are parsing...
      */
@@ -100,7 +97,6 @@ class add_en_eno_param_decl_c : public null_visitor_c {
 }; // function_param_iterator_c
 
 #endif /* _ADD_EN_ENO_PARAM_DECL_HH */
-
 
 
 

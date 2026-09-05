@@ -69,14 +69,10 @@
 /****************************************************************************************************/
 /****************************************************************************************************/
 class get_datatype_id_c: null_visitor_c {
-  private:
-    static get_datatype_id_c *singleton;
-    
   public:
     static symbol_c *get_id(symbol_c *symbol) {
-      if (NULL == singleton) singleton = new  get_datatype_id_c();
-      if (NULL == singleton) ERROR;
-      return (symbol_c *)symbol->accept(*singleton);
+      get_datatype_id_c visitor;
+      return (symbol_c *)symbol->accept(visitor);
     }
     
   protected:
@@ -165,12 +161,6 @@ class get_datatype_id_c: null_visitor_c {
     
 }; // get_datatype_id_c 
 
-get_datatype_id_c *get_datatype_id_c::singleton = NULL;
-
-
-
-
-
 
 /**************************************************/
 /**************************************************/
@@ -187,15 +177,10 @@ class get_datatype_id_str_c: public null_visitor_c {
      get_datatype_id_str_c(void)  {};
     ~get_datatype_id_str_c(void) {};
 
-  private:
-    /* singleton class! */
-    static get_datatype_id_str_c *singleton;
-
   public:
     static const char *get_id_str(symbol_c *symbol) {
-      if (NULL == singleton)    singleton = new get_datatype_id_str_c;
-      if (NULL == singleton)    ERROR;
-      const char *res           = (const char *)symbol->accept(*singleton);
+      get_datatype_id_str_c visitor;
+      const char *res = (const char *)symbol->accept(visitor);
       if (NULL == res)          ERROR;
       return res;
     }
@@ -311,10 +296,6 @@ class get_datatype_id_str_c: public null_visitor_c {
     void *visit(       program_declaration_c  *symbol)  {return symbol->program_type_name->accept(*this);} 
 };
 
-get_datatype_id_str_c *get_datatype_id_str_c::singleton = NULL;
-
-
-
 /*********************************************************/
 /*********************************************************/
 /* get the datatype of a field inside a struct data type */
@@ -324,17 +305,14 @@ get_datatype_id_str_c *get_datatype_id_str_c::singleton = NULL;
 class get_struct_info_c : null_visitor_c {
   private:
     symbol_c *current_field;
-    /* singleton class! */
-    static get_struct_info_c *singleton;
 
   public:
     get_struct_info_c(void) {current_field = NULL;}
 
     static symbol_c *get_field_type_id(symbol_c *struct_type, symbol_c *field_name) {
-      if (NULL == singleton)    singleton = new get_struct_info_c;
-      if (NULL == singleton)    ERROR;
-      singleton->current_field = field_name;
-      return (symbol_c *)struct_type->accept(*singleton);
+      get_struct_info_c visitor;
+      visitor.current_field = field_name;
+      return (symbol_c *)struct_type->accept(visitor);
     }
 
 
@@ -417,11 +395,6 @@ class get_struct_info_c : null_visitor_c {
     void *visit(step_c *symbol) {initial_step_c initial_step(NULL, NULL); return initial_step.accept(*this);}
       
 }; // get_struct_info_c
-
-get_struct_info_c *get_struct_info_c::singleton = NULL;
-
-
-
 
 
 /**********************************************************/
@@ -1469,7 +1442,6 @@ safedt_type_name_c       get_datatype_info_c::safedt_type_name;
 safedate_type_name_c     get_datatype_info_c::safedate_type_name;
 safetod_type_name_c      get_datatype_info_c::safetod_type_name;
 safetime_type_name_c     get_datatype_info_c::safetime_type_name;
-
 
 
 
