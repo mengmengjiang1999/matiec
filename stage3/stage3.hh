@@ -35,10 +35,10 @@
 
 #include "../util/symtable.hh"
 
-namespace matiec { class DiagnosticEngine; }
+namespace matiec { class CompilationContext; }
 
 
 int stage3(symbol_c *tree_root, symbol_c **ordered_tree_root,
-           matiec::DiagnosticEngine &diagnostics);
+           matiec::CompilationContext &context);
 
 #endif /* _STAGE3_HH */

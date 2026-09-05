@@ -1,4 +1,4 @@
-#include "compiler/compilation_context.hh"
+#include "compilation_context.hh"
 
 #include <utility>
 

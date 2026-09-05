@@ -1,9 +1,9 @@
 #ifndef MATIEC_COMPILER_COMPILATION_CONTEXT_HH
 #define MATIEC_COMPILER_COMPILATION_CONTEXT_HH
 
-#include "compiler/ast_arena.hh"
-#include "compiler/compiler_types.hh"
-#include "compiler/diagnostic_engine.hh"
+#include "ast_arena.hh"
+#include "compiler_types.hh"
+#include "diagnostic_engine.hh"
 
 #include <string>
 

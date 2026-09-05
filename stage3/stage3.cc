@@ -34,6 +34,7 @@
 
 #include "stage3.hh"
 
+#include "../compiler/compilation_context.hh"
 #include "../compiler/semantic_pass_manager.hh"
 
 #include "flow_control_analysis.hh"
@@ -167,64 +168,65 @@ static int remove_forward_dependencies(
 
 
 int stage3(symbol_c *tree_root, symbol_c **ordered_tree_root,
-           matiec::DiagnosticEngine &diagnostics) {
+           matiec::CompilationContext &context) {
 	matiec::SemanticPassManager passes;
 	passes.register_pass(matiec::SemanticPassId::enum_declaration,
-		[tree_root, &diagnostics]() {
+		[tree_root](matiec::CompilationContext &pass_context) {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::enum_declaration,
-			enum_declaration_check(tree_root, diagnostics));
+			enum_declaration_check(tree_root, pass_context.diagnostics()));
 	});
-	passes.register_pass(matiec::SemanticPassId::flow_control, [tree_root]() {
+	passes.register_pass(matiec::SemanticPassId::flow_control,
+		[tree_root](matiec::CompilationContext &) {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::flow_control,
 			flow_control_analysis(tree_root));
 	});
 	passes.register_pass(matiec::SemanticPassId::constant_propagation,
-		[tree_root, &diagnostics]() {
+		[tree_root](matiec::CompilationContext &pass_context) {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::constant_propagation,
-			constant_propagation(tree_root, diagnostics));
+			constant_propagation(tree_root, pass_context.diagnostics()));
 	});
 	passes.register_pass(matiec::SemanticPassId::declaration_safety,
-		[tree_root, &diagnostics]() {
+		[tree_root](matiec::CompilationContext &pass_context) {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::declaration_safety,
-			declaration_safety(tree_root, diagnostics));
+			declaration_safety(tree_root, pass_context.diagnostics()));
 	});
 	passes.register_pass(matiec::SemanticPassId::type_safety,
-		[tree_root, &diagnostics]() {
+		[tree_root](matiec::CompilationContext &pass_context) {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::type_safety,
-			type_safety(tree_root, diagnostics));
+			type_safety(tree_root, pass_context.diagnostics()));
 	});
 	passes.register_pass(matiec::SemanticPassId::lvalue,
-		[tree_root, &diagnostics]() {
+		[tree_root](matiec::CompilationContext &pass_context) {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::lvalue,
-			lvalue_check(tree_root, diagnostics));
+			lvalue_check(tree_root, pass_context.diagnostics()));
 	});
 	passes.register_pass(matiec::SemanticPassId::array_range,
-		[tree_root, &diagnostics]() {
+		[tree_root](matiec::CompilationContext &pass_context) {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::array_range,
-			array_range_check(tree_root, diagnostics));
+			array_range_check(tree_root, pass_context.diagnostics()));
 	});
 	passes.register_pass(matiec::SemanticPassId::case_elements,
-		[tree_root, &diagnostics]() {
+		[tree_root](matiec::CompilationContext &pass_context) {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::case_elements,
-			case_elements_check(tree_root, diagnostics));
+			case_elements_check(tree_root, pass_context.diagnostics()));
 	});
 	passes.register_pass(matiec::SemanticPassId::dependency_ordering,
-		[tree_root, ordered_tree_root, &diagnostics]() {
+		[tree_root, ordered_tree_root](matiec::CompilationContext &pass_context) {
 			return matiec::SemanticPassResult::failure(
 				matiec::SemanticPassId::dependency_ordering,
 				remove_forward_dependencies(tree_root, ordered_tree_root,
-				                            diagnostics));
+				                            pass_context.diagnostics()));
 		});
 
-	const matiec::SemanticPipelineResult result = passes.run();
+	const matiec::SemanticPipelineResult result = passes.run(context);
 	
 	if (!result.succeeded()) return -1;
 	return 0;
