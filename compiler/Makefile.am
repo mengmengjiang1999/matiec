@@ -9,9 +9,10 @@ libcompiler_a_SOURCES = \
 	compiler.cc \
 	compiler_types.cc \
 	diagnostic_engine.cc \
-	legacy_global_state_adapter.cc
+	legacy_global_state_adapter.cc \
+	semantic_pass.cc
 
-check_PROGRAMS = ast_arena_test compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test
+check_PROGRAMS = ast_arena_test compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test semantic_pass_test
 TESTS = $(check_PROGRAMS)
 
 ast_arena_test_SOURCES = tests/ast_arena_test.cc
@@ -27,3 +28,6 @@ compiler_types_test_LDADD = libcompiler.a
 
 diagnostic_engine_test_SOURCES = tests/diagnostic_engine_test.cc
 diagnostic_engine_test_LDADD = libcompiler.a
+
+semantic_pass_test_SOURCES = tests/semantic_pass_test.cc
+semantic_pass_test_LDADD = libcompiler.a
