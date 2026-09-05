@@ -8,9 +8,11 @@ TESTS_ENVIRONMENT = \
 	CC='$(CC)' \
 	IEC2C='$(abs_top_builddir)/iec2c' \
 	IEC2IEC='$(abs_top_builddir)/iec2iec' \
-	MATIEC_LIBDIR='$(abs_top_srcdir)/lib'
+	MATIEC_LIBDIR='$(abs_top_srcdir)/lib' \
+	SEQUENTIAL_VALID_INPUT='$(abs_top_srcdir)/tests/initialization/ok_array_scalar.st'
 
 TESTS = \
+	sequential_compilation_test \
 	tests/initialization/runtests \
 	tests/cli/runtests \
 	tests/syntax/identifier/runtests \
@@ -60,3 +62,10 @@ iec2iec_LDADD = compiler/libcompiler.a \
 iec2c_SOURCES = main.cc compiler/compilation_abort.cc
 
 iec2iec_SOURCES = main.cc compiler/compilation_abort.cc
+
+check_PROGRAMS = sequential_compilation_test
+
+sequential_compilation_test_SOURCES = \
+	tests/compiler/sequential_compilation_test.cc \
+	compiler/compilation_abort.cc
+sequential_compilation_test_LDADD = $(iec2c_LDADD)

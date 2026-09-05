@@ -246,6 +246,8 @@ int stage1_2(const char *filename, symbol_c **tree_root_ref) {
        *       These callback functions will get their data from local (to this file) global variables...
        *       We now set those variables...
        */
+  library_element_symtable.clear();
+  variable_name_symtable.clear();
+  direct_variable_symtable.clear();
   return stage2__(filename, tree_root_ref);
 }
-

@@ -8769,6 +8769,7 @@ static int parse_files(const char *libfilename, const char *filename) {
   allow_ref_dereferencing              = runtime_options.ref_standard_extensions;
   allow_ref_to_any                     = runtime_options.ref_nonstand_extensions;
   allow_ref_to_in_derived_datatypes    = runtime_options.ref_nonstand_extensions;
+  yynerrs = 0;
   if (yyparse() != 0) {
     fprintf (stderr, "\nParsing failed because of too many consecutive syntax errors in standard library. Bailing out!\n");
     fclose(libfile);
@@ -8805,6 +8806,7 @@ static int parse_files(const char *libfilename, const char *filename) {
   allow_ref_dereferencing              = runtime_options.ref_standard_extensions;
   allow_ref_to_any                     = runtime_options.ref_nonstand_extensions;
   allow_ref_to_in_derived_datatypes    = runtime_options.ref_nonstand_extensions;
+  yynerrs = 0;
   //allow_ref_to_any = false;    /* we only allow REF_TO ANY in library functions/FBs, no matter what the user asks for in the command line */
 
   if (yyparse() != 0) {
@@ -8901,7 +8903,6 @@ int stage2__(const char *filename,
 
   return 0;
 }
-
 
 
 

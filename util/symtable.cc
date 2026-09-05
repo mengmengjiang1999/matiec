@@ -49,6 +49,8 @@ symtable_c<value_type>::symtable_c(void) {inner_scope = NULL;}
 template<typename value_type>
 void symtable_c<value_type>::clear(void) {
   _base.clear();
+  delete inner_scope;
+  inner_scope = NULL;
 }
 
  /* create new inner scope */
@@ -204,7 +206,6 @@ void symtable_c<value_type>::print(void) {
     inner_scope->print();
   }
 }
-
 
 
 
