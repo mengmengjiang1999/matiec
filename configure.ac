@@ -1,12 +1,12 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.61])
+AC_PREREQ([2.69])
 AC_INIT([matiec], [0.1], [msousa@fe.up.pt, beremiz-devel@lists.sourceforge.net])
 AC_CONFIG_HEADERS([config/config.h])
 AC_CONFIG_AUX_DIR(config)
 
-AM_INIT_AUTOMAKE([foreign])
+AM_INIT_AUTOMAKE([1.16 foreign parallel-tests])
 
 # Before checking for CXX and CC, set CFLAGS and CXXFLAGS because they
 # are otherwise initialized to contain -g -O2
@@ -78,5 +78,4 @@ AC_CONFIG_FILES([Makefile \
 	stage4/generate_c/Makefile \
 	stage4/generate_iec/Makefile])
 AC_OUTPUT
-
 
