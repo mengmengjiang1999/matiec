@@ -6,7 +6,7 @@
 - [x] 1.4 Compile representative generated C artifacts as part of regression testing
 - [x] 1.5 Add stable generated-output characterization fixtures for representative ST, IL, and SFC inputs
 - [x] 1.6 Add sanitizer build and test entry points for address and undefined-behavior checks
-- [ ] 1.7 Add GCC/Linux and Clang/macOS CI jobs that bootstrap, build, and run the shared test entry point
+- [x] 1.7 Add GCC/Linux and Clang/macOS CI jobs that bootstrap, build, and run the shared test entry point
 
 ## 2. Build Foundation
 
