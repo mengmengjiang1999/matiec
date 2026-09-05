@@ -13,9 +13,15 @@ TESTS_ENVIRONMENT = \
 TESTS = \
 	tests/initialization/runtests \
 	tests/cli/runtests \
-	tests/syntax/identifier/runtests
+	tests/syntax/identifier/runtests \
+	tests/characterization/runtests
 
-EXTRA_DIST = $(TESTS)
+EXTRA_DIST = \
+	$(TESTS) \
+	tests/characterization/expected.sha256 \
+	tests/characterization/instruction_list.il \
+	tests/initialization/ok_array_scalar.st \
+	tests/syntax/sfc/sfc.txt
 
 ACLOCAL_AMFLAGS=-I config
 
