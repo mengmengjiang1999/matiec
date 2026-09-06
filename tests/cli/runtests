@@ -110,6 +110,7 @@ if "$IEC2C" --std=iec61131-3:2025-experimental -f -l -p \
    && grep -q '\\xE4\\xB8\\xAD\\xE6\\x96\\x87\\xF0\\x9F\\x9A\\x80' \
         "$UTF8_GENERATED/POUS.c" \
    && "${CC_COMMAND[@]}" -std=c99 -I "$MATIEC_LIBDIR/C" -I "$UTF8_GENERATED" \
+        -include "$UTF8_GENERATED/POUS.h" \
         -c "$UTF8_GENERATED/POUS.c" -o "$UTF8_GENERATED/POUS.o"; then
   echo "[ O K ]    experimental-utf8-literal"
 else
