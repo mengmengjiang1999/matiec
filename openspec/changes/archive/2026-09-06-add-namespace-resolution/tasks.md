@@ -6,5 +6,5 @@
 ## 2. Implementation and validation
 
 - [x] 2.1 Add experimental-profile AST, parser, and resolver support
-- [ ] 2.2 Add positive, ambiguity, visibility, legacy, and output tests
+- [x] 2.2 Add positive, ambiguity, visibility, legacy, and output tests
 - [x] 2.3 Update catalogue and documentation
