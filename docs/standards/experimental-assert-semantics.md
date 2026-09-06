@@ -23,9 +23,10 @@ standard form. The resulting C symbol is an unstable internal ABI and must not b
 called directly by applications.
 
 Comments and string literals are ignored while recognizing calls. Inline block
-comments inside an `ASSERT` call, multiline calls, and a user declaration named
-`ASSERT` combined with standard-form calls are rejected with source-located
-diagnostics.
+comments inside an `ASSERT` call and multiline calls are rejected with
+source-located diagnostics. If the compilation unit declares its own function named
+`ASSERT`, experimental recognition is disabled for that unit and normal legacy name
+resolution applies.
 
 Legacy mode is not rewritten. Existing projects that declare and use their own
 expression-valued function named `ASSERT` therefore retain their previous overload

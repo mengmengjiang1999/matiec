@@ -108,6 +108,7 @@ bool normalize_experimental_modern_library(
       break;
     }
   }
+  if (declared_by_user) return true;
 
   in_comment = false;
   for (const Line &line : lines) {
@@ -122,12 +123,8 @@ bool normalize_experimental_modern_library(
         if (line.has_newline) normalized << '\n';
         continue;
       }
-      if (declared_by_user) {
-        diagnostics.error(
-            "Experimental standard ASSERT conflicts with a user declaration",
-            line_range(line, source_path));
-      } else if (source_match[2].str().find_first_not_of(" \t") ==
-                 std::string::npos) {
+      if (source_match[2].str().find_first_not_of(" \t") ==
+          std::string::npos) {
         diagnostics.error("ASSERT requires a BOOL input expression",
                           line_range(line, source_path));
       } else {

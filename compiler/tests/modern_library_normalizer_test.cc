@@ -44,4 +44,17 @@ int main() {
     assert(diagnostics.diagnostics().front().message.find("standalone") !=
            std::string::npos);
   }
+  {
+    const std::string source =
+        "FUNCTION ASSERT : BOOL\nVAR_INPUT IN : BOOL; END_VAR\n"
+        "ASSERT := IN;\nEND_FUNCTION\n"
+        "PROGRAM Demo\nVAR Value : BOOL; END_VAR\n"
+        "Value := ASSERT(TRUE);\nEND_PROGRAM\n";
+    matiec::DiagnosticEngine diagnostics;
+    matiec::ModernLibraryNormalizeResult result;
+    assert(matiec::normalize_experimental_modern_library(
+        source, "custom.st", diagnostics, &result));
+    assert(!result.used_modern_library);
+    assert(result.source == source);
+  }
 }
