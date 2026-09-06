@@ -1,0 +1,13 @@
+FUNCTION ASSERT : BOOL
+  VAR_INPUT
+    IN : BOOL;
+  END_VAR
+  ASSERT := IN;
+END_FUNCTION
+
+PROGRAM LegacyAssertName
+  VAR
+    Value : BOOL;
+  END_VAR
+  Value := ASSERT(TRUE);
+END_PROGRAM

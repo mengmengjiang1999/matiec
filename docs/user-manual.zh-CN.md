@@ -520,6 +520,21 @@ Result := CounterInstance.Increment(2);
 `MATIECMETHOD...` 名称不是稳定 ABI。详见
 [实验性方法语义](standards/object-method-semantics.md)。
 
+### 7.6 实验性标准函数 `ASSERT`
+
+实验 Profile 支持把一个布尔条件写成独立断言语句：
+
+```iecst
+ASSERT(Speed <= MaximumSpeed);
+```
+
+当前实现会对条件求值，然后继续执行；无论结果真假都不产生外部通知。这是明确
+记录的发布态 no-op 策略。调用必须独占一行，不能嵌入表达式，也不能取得返回值。
+前端会为使用该调用的编译单元注入实验性 `VOID` 声明；生成的 C 名称不是源码 API
+或稳定 ABI。legacy Profile 不做此转换，所以已有项目自定义的表达式函数
+`ASSERT` 保持不变。详见
+[实验性 ASSERT 语义](standards/experimental-assert-semantics.md)。
+
 ## 8. Structured Text（ST）
 
 ### 8.1 表达式与运算符

@@ -65,6 +65,7 @@ IEC 官方页面确认 IEC 61131-3:2025 是第 4.0 版，发布日期为 2025-05
 | `ED3-NAMESPACE` | 命名空间和限定名 | 部分实现 | `iec61131-3:2025-experimental` | namespace normalizer、单元与 CLI/生成 C 回归 | `cross-vendor-provisional`；MATIEC 临时规则，2025 规范细节未核对 |
 | `ED3-OO` | 面向对象元素 | 部分实现 | `iec61131-3:2025-experimental` | method normalizer、单元与生成 C 运行回归 | 仅 FB 公开方法静态派发；其他 OO 与 2025 细节未核对 |
 | `ED4-UTF8` | UTF-8 源码与 `STRING` 字面量 | 部分实现 | `iec61131-3:2025-experimental` | 编码验证、lexer、生成 C 与运行回归 | `official-public`；函数签名等细节待核对 |
+| `ED4-ASSERT` | `ASSERT(IN : BOOL) : VOID` | 部分实现 | `iec61131-3:2025-experimental` | modern library normalizer、生成 C 与运行回归 | `cross-vendor-provisional`；当前为发布态 no-op 策略 |
 
 ## Annex B 未决问题
 
@@ -93,6 +94,8 @@ IEC 公开页面说明 Annex B 包含与 2013 版相比的重要技术变更，�
 > Function-block methods in the experimental profile use a bounded static-dispatch MATIEC contract; classes, interfaces, inheritance, and dynamic dispatch are not implemented.
 
 > Access variables in the experimental profile use a bounded configuration-global alias contract and export metadata to `ACCESS.csv`; hierarchical and direct paths are not implemented.
+
+> ASSERT in the experimental profile accepts a standalone BOOL condition and uses a documented released/no-op runtime policy; development notification remains unimplemented.
 
 项目文档不得在缺少完整证据时使用这些表述：
 

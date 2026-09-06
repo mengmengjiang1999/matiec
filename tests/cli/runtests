@@ -100,6 +100,7 @@ compare_profiles instruction-list "$PROJECT_ROOT/tests/characterization/instruct
 compare_profiles sfc "$PROJECT_ROOT/tests/syntax/sfc/sfc.txt"
 compare_profiles configuration "$PROJECT_ROOT/tests/initialization/ok_array_scalar.st"
 compare_profiles reference "$SCRIPT_DIR/profile-fixtures/reference.st" -r
+compare_profiles legacy-assert-name "$SCRIPT_DIR/profile-fixtures/legacy-assert-function.st"
 
 UTF8_INPUT="$SCRIPT_DIR/profile-fixtures/utf8.st"
 UTF8_GENERATED="$TMP_ROOT/utf8-generated"
@@ -306,6 +307,50 @@ expect_failure var-access-unresolved "Unresolved VAR_ACCESS target" \
   -I "$MATIEC_LIBDIR" "$SCRIPT_DIR/profile-fixtures/var-access-unresolved.st"
 expect_failure legacy-var-access "VAR_ACCESS requires --std=iec61131-3:2025-experimental" \
   "$IEC2C" --std=legacy -y -f -l -p -I "$MATIEC_LIBDIR" "$ACCESS_INPUT"
+
+ASSERT_INPUT="$SCRIPT_DIR/profile-fixtures/assert.st"
+ASSERT_GENERATED="$TMP_ROOT/assert-generated"
+mkdir -p "$ASSERT_GENERATED"
+if "$IEC2C" --std=iec61131-3:2025-experimental -f -l -p \
+     -I "$MATIEC_LIBDIR" -T "$ASSERT_GENERATED" "$ASSERT_INPUT" \
+     >"$TMP_ROOT/assert.stdout" 2>"$TMP_ROOT/assert.stderr" \
+   && grep -q 'ASSERT' "$ASSERT_GENERATED/POUS.c" \
+   && "${CC_COMMAND[@]}" -std=c11 -I "$MATIEC_LIBDIR/C" -I "$ASSERT_GENERATED" \
+        -c "$ASSERT_GENERATED/config.c" -o "$ASSERT_GENERATED/config.o" \
+   && "${CC_COMMAND[@]}" -std=c11 -I "$MATIEC_LIBDIR/C" -I "$ASSERT_GENERATED" \
+        -c "$ASSERT_GENERATED/resource1.c" -o "$ASSERT_GENERATED/resource1.o"; then
+  cat >"$ASSERT_GENERATED/driver.c" <<'EOF'
+#include <assert.h>
+#include "POUS.h"
+extern ASSERTDEMO_data__ RESOURCE1__INSTANCE0;
+TIME __CURRENT_TIME = {0, 0};
+void config_init__(void);
+void config_run__(unsigned long tick);
+int main(void) {
+  config_init__();
+  config_run__(0);
+  assert(__GET_VAR(RESOURCE1__INSTANCE0.RESULT,) == 42);
+  return 0;
+}
+EOF
+  if "${CC_COMMAND[@]}" -std=c11 -I "$MATIEC_LIBDIR/C" -I "$ASSERT_GENERATED" \
+       "$ASSERT_GENERATED/driver.c" "$ASSERT_GENERATED/config.o" \
+       "$ASSERT_GENERATED/resource1.o" -o "$ASSERT_GENERATED/runtime" \
+     && "$ASSERT_GENERATED/runtime"; then
+    echo "[ O K ]    experimental-assert-runtime"
+  else
+    echo "[ERROR]    experimental-assert-runtime -> generated behavior failed"
+    error=1
+  fi
+else
+  echo "[ERROR]    experimental-assert-runtime -> lowering or C build failed"
+  sed -n '1,16p' "$TMP_ROOT/assert.stderr"
+  error=1
+fi
+
+expect_failure assert-invalid "ASSERT must be a standalone call" \
+  "$IEC2C" --std=iec61131-3:2025-experimental -y -f -l -p \
+  -I "$MATIEC_LIBDIR" "$SCRIPT_DIR/profile-fixtures/assert-invalid.st"
 
 generated_dir="$TMP_ROOT/generated"
 mkdir -p "$generated_dir"

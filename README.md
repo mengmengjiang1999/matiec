@@ -108,6 +108,10 @@ block with static dispatch. It does not yet implement classes, interfaces,
 inheritance, overrides, properties, or dynamic dispatch. See the
 [object method semantics](docs/standards/object-method-semantics.md).
 
+The experimental standard-library layer also supports standalone
+`ASSERT(boolean-expression);` calls with a deterministic released/no-op runtime
+policy. See the [experimental ASSERT semantics](docs/standards/experimental-assert-semantics.md).
+
 ## Quick start
 
 ```sh

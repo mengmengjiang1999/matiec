@@ -2,6 +2,7 @@
 #include "compiler/access_variable_normalizer.hh"
 #include "compiler/compilation_abort.hh"
 #include "compiler/legacy_global_state_adapter.hh"
+#include "compiler/modern_library_normalizer.hh"
 #include "compiler/namespace_normalizer.hh"
 #include "compiler/object_method_normalizer.hh"
 #include "compiler/utf8_validation.hh"
@@ -82,12 +83,12 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
       }
     }
     ActiveAstArenaScope ast_arena_scope(context.ast_arena());
-    const CompilerOptions &options = context.options();
-    LegacyGlobalStateAdapter legacy_state(context);
+    CompilerOptions &options = context.options();
 
     NamespaceNormalizeResult namespace_result;
     ObjectMethodNormalizeResult method_result;
     AccessVariableNormalizeResult access_result;
+    ModernLibraryNormalizeResult modern_library_result;
     TemporarySource normalized_source;
     std::string parser_source_path = context.source_path();
     if (language_profile_is_experimental(options.language_profile)) {
@@ -102,10 +103,17 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
               method_result.source, context.source_path(), context.diagnostics(),
               &access_result))
         return context.diagnostics().result();
+      if (!normalize_experimental_modern_library(
+              access_result.source, context.source_path(), context.diagnostics(),
+              &modern_library_result))
+        return context.diagnostics().result();
+      if (modern_library_result.used_modern_library)
+        options.allow_void_datatype = true;
       if (namespace_result.used_namespaces || method_result.used_methods ||
-          access_result.used_access_variables) {
+          access_result.used_access_variables ||
+          modern_library_result.used_modern_library) {
         std::string error;
-        if (!normalized_source.write(access_result.source, &error)) {
+        if (!normalized_source.write(modern_library_result.source, &error)) {
           context.diagnostics().fatal(
               "Cannot create normalized namespace source: " + error);
           return context.diagnostics().result();
@@ -113,6 +121,8 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
         parser_source_path = normalized_source.path();
       }
     }
+
+    LegacyGlobalStateAdapter legacy_state(context);
 
     symbol_c *tree_root = NULL;
     if (legacy_state.parse(parser_source_path, context.source_path(), &tree_root) < 0)
