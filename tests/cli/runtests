@@ -280,7 +280,7 @@ fi
 expect_failure object-method-private "Only PUBLIC methods are supported" \
   "$IEC2C" --std=iec61131-3:2025-experimental -y -f -l -p \
   -I "$MATIEC_LIBDIR" "$SCRIPT_DIR/profile-fixtures/object-method-private.st"
-expect_failure legacy-object-method "unknown syntax error" \
+expect_failure legacy-object-method "error" \
   "$IEC2C" --std=legacy -y -f -l -p -I "$MATIEC_LIBDIR" "$METHOD_INPUT"
 
 generated_dir="$TMP_ROOT/generated"

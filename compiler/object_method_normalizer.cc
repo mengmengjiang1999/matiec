@@ -254,18 +254,42 @@ bool normalize_experimental_object_methods(
     for (std::size_t line = block.begin_line; line <= block.end_line; ++line)
       removed[line] = true;
     generated << "\nFUNCTION " << block.ast.lowered_name << " : "
-              << block.ast.return_type << "\n"
-              << "  VAR_IN_OUT\n    MATIECSELF : " << block.ast.owner
-              << ";\n  END_VAR\n";
+              << block.ast.return_type << "\n";
+    std::string interface_declarations;
     std::string body;
-    for (std::size_t line = block.begin_line + 1; line < block.end_line; ++line)
+    std::size_t line = block.begin_line + 1;
+    while (line < block.end_line) {
+      const std::string heading = uppercase(trim(lines[line].text));
+      if (heading.empty()) {
+        interface_declarations += lines[line].text +
+            (lines[line].has_newline ? "\n" : "");
+        ++line;
+        continue;
+      }
+      if (heading != "VAR_INPUT" && heading != "VAR_OUTPUT" &&
+          heading != "VAR_IN_OUT")
+        break;
+      for (; line < block.end_line; ++line) {
+        interface_declarations += lines[line].text +
+            (lines[line].has_newline ? "\n" : "");
+        std::smatch declaration_match;
+        if (match_line(lines[line].text, var_end, &declaration_match)) {
+          ++line;
+          break;
+        }
+      }
+    }
+    for (; line < block.end_line; ++line)
       body += lines[line].text + (lines[line].has_newline ? "\n" : "");
     std::map<std::string, std::string> names;
     names[uppercase(block.ast.name)] = block.ast.lowered_name;
     for (const std::string &field : block.owner_fields) {
       if (block.locals.count(field) == 0) names[field] = "MATIECSELF." + field;
     }
-    generated << rewrite_identifiers(body, names) << "END_FUNCTION\n";
+    generated << rewrite_identifiers(interface_declarations, names)
+              << "  VAR_IN_OUT\n    MATIECSELF : " << block.ast.owner
+              << ";\n  END_VAR\n"
+              << rewrite_identifiers(body, names) << "END_FUNCTION\n";
   }
 
   std::string base;
