@@ -26,9 +26,10 @@ int main() {
     assert(result.source.find("METHOD PUBLIC") == std::string::npos);
     assert(result.source.find("FUNCTION MATIECMETHOD7COUNTER9INCREMENT : INT") !=
            std::string::npos);
-    assert(result.source.find("MATIECSELF.COUNT := MATIECSELF.COUNT + Delta") !=
+    assert(result.source.find("MATIECSELFCOUNT := MATIECSELFCOUNT + Delta") !=
            std::string::npos);
-    assert(result.source.find("MATIECMETHOD7COUNTER9INCREMENT(2, C)") !=
+    assert(result.source.find("MATIECSELFCOUNT : INT") != std::string::npos);
+    assert(result.source.find("MATIECMETHOD7COUNTER9INCREMENT(2, C.COUNT)") !=
            std::string::npos);
   }
   {

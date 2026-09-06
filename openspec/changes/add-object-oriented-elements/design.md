@@ -20,8 +20,9 @@ to be verified. Generated C needs a stable and documented ABI.
   - Method locals retain legacy function-local lifetime. The owner instance remains
     caller-owned and is never copied by method dispatch.
   - C lowering uses one length-prefixed function symbol per owner/method and passes
-    the instance as the final hidden `VAR_IN_OUT` parameter, after the method's
-    ordinary interface parameters. This is an unstable
+    each owner field as a final hidden `VAR_IN_OUT` parameter, after the method's
+    ordinary interface parameters. This preserves caller-owned state without
+    introducing a recursive function-block parameter into the legacy ABI. It is an unstable
     experimental ABI but deterministic and collision-resistant.
 
 ## Open Questions

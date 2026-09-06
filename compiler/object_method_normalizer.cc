@@ -25,7 +25,7 @@ struct MethodBlock {
   ObjectMethodAst ast;
   std::size_t begin_line = 0;
   std::size_t end_line = 0;
-  std::set<std::string> owner_fields;
+  std::map<std::string, std::string> owner_fields;
   std::set<std::string> locals;
 };
 
@@ -160,7 +160,7 @@ bool normalize_experimental_object_methods(
   std::vector<MethodBlock> blocks;
   std::map<std::string, std::string> instance_types;
   std::string owner;
-  std::set<std::string> owner_fields;
+  std::map<std::string, std::string> owner_fields;
   bool in_owner_vars = false;
 
   for (std::size_t index = 0; index < lines.size(); ++index) {
@@ -191,7 +191,7 @@ bool normalize_experimental_object_methods(
       in_owner_vars = false; continue;
     }
     if (in_owner_vars && match_line(lines[index].text, variable, &match)) {
-      owner_fields.insert(uppercase(match[1].str()));
+      owner_fields[uppercase(match[1].str())] = match[2].str();
       continue;
     }
     if (!match_line(lines[index].text, method_start, &match)) continue;
@@ -283,13 +283,22 @@ bool normalize_experimental_object_methods(
       body += lines[line].text + (lines[line].has_newline ? "\n" : "");
     std::map<std::string, std::string> names;
     names[uppercase(block.ast.name)] = block.ast.lowered_name;
-    for (const std::string &field : block.owner_fields) {
-      if (block.locals.count(field) == 0) names[field] = "MATIECSELF." + field;
+    std::vector<std::pair<std::string, std::string> > hidden_fields;
+    for (const auto &field : block.owner_fields) {
+      if (block.locals.count(field.first) == 0) {
+        names[field.first] = "MATIECSELF" + field.first;
+        hidden_fields.push_back(field);
+      }
     }
-    generated << rewrite_identifiers(interface_declarations, names)
-              << "  VAR_IN_OUT\n    MATIECSELF : " << block.ast.owner
-              << ";\n  END_VAR\n"
-              << rewrite_identifiers(body, names) << "END_FUNCTION\n";
+    generated << rewrite_identifiers(interface_declarations, names);
+    if (!hidden_fields.empty()) {
+      generated << "  VAR_IN_OUT\n";
+      for (const auto &field : hidden_fields)
+        generated << "    MATIECSELF" << field.first << " : "
+                  << field.second << ";\n";
+      generated << "  END_VAR\n";
+    }
+    generated << rewrite_identifiers(body, names) << "END_FUNCTION\n";
   }
 
   std::string base;
@@ -308,18 +317,27 @@ bool normalize_experimental_object_methods(
     for (const auto &method_entry : method_by_owner_and_name) {
       const MethodBlock &block = *method_entry.second;
       if (uppercase(block.ast.owner) != owner_type) continue;
+      std::string hidden_arguments;
+      for (const auto &field : block.owner_fields) {
+        if (block.locals.count(field.first) != 0) continue;
+        hidden_arguments += (hidden_arguments.empty() ? "" : ", ") +
+                            instance + "." + field.first;
+      }
       const std::regex zero_call("\\b" + instance + "[ \\t]*\\.[ \\t]*" +
                                      uppercase(block.ast.name) +
                                      "[ \\t]*\\([ \\t]*\\)",
                                  std::regex::icase);
       base = std::regex_replace(base, zero_call,
-                                block.ast.lowered_name + "(" + instance + ")");
+                                block.ast.lowered_name + "(" + hidden_arguments + ")");
       const std::regex call("\\b" + instance + "[ \\t]*\\.[ \\t]*" +
                                 uppercase(block.ast.name) +
                                 "[ \\t]*\\(([^()]*)\\)",
                             std::regex::icase);
+      const std::string suffix = hidden_arguments.empty()
+                                     ? ""
+                                     : ", " + hidden_arguments;
       base = std::regex_replace(base, call,
-                                block.ast.lowered_name + "($1, " + instance + ")");
+                                block.ast.lowered_name + "($1" + suffix + ")");
     }
   }
 
