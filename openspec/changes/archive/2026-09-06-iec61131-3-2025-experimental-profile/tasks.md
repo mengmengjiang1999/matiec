@@ -39,5 +39,5 @@
 
 - [x] 6.1 Update the README, user manual, and standards evolution matrix with the implemented profile interface
 - [x] 6.2 Confirm no documentation claims complete or certified IEC 61131-3:2025 conformance
-- [ ] 6.3 Sync completed delta specifications into the main OpenSpec specifications and archive the change
-- [ ] 6.4 Commit validated increments and push only to the fork's `origin`
+- [x] 6.3 Sync completed delta specifications into the main OpenSpec specifications and archive the change
+- [x] 6.4 Commit validated increments and push only to the fork's `origin`
