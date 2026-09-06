@@ -40,6 +40,15 @@ int main() {
     matiec::NamespaceNormalizeResult result;
     const std::string source =
         "NAMESPACE A\nTYPE Value : INT; END_TYPE\nEND_NAMESPACE\n"
+        "USING A;\nPROGRAM Main\nVAR X : Value; END_VAR\nEND_PROGRAM\n";
+    assert(normalize(source, &diagnostics, &result));
+    assert(result.source.find("MATIECNS1A5VALUE") != std::string::npos);
+  }
+  {
+    matiec::DiagnosticEngine diagnostics;
+    matiec::NamespaceNormalizeResult result;
+    const std::string source =
+        "NAMESPACE A\nTYPE Value : INT; END_TYPE\nEND_NAMESPACE\n"
         "NAMESPACE B\nTYPE Value : INT; END_TYPE\nEND_NAMESPACE\n"
         "USING A;\nUSING B;\nPROGRAM Main\nVAR X : Value; END_VAR\nEND_PROGRAM\n";
     assert(!normalize(source, &diagnostics, &result));

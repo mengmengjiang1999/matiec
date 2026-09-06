@@ -372,10 +372,12 @@ bool normalize_experimental_namespaces(std::string_view source,
     }
     if (candidates.empty()) {
       std::vector<std::string> visible_imports = imports[""];
-      const auto local = imports.find(token_scope[index]);
-      if (local != imports.end())
-        visible_imports.insert(visible_imports.end(), local->second.begin(),
-                               local->second.end());
+      if (!token_scope[index].empty()) {
+        const auto local = imports.find(token_scope[index]);
+        if (local != imports.end())
+          visible_imports.insert(visible_imports.end(), local->second.begin(),
+                                 local->second.end());
+      }
       for (const std::string &imported : visible_imports) {
         const auto found = symbols.find(imported + "." + tokens[index].canonical);
         if (found != symbols.end()) candidates.push_back(&found->second);
