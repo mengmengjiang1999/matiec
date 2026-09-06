@@ -283,6 +283,30 @@ expect_failure object-method-private "Only PUBLIC methods are supported" \
 expect_failure legacy-object-method "error" \
   "$IEC2C" --std=legacy -y -f -l -p -I "$MATIEC_LIBDIR" "$METHOD_INPUT"
 
+ACCESS_INPUT="$SCRIPT_DIR/profile-fixtures/var-access.st"
+ACCESS_GENERATED="$TMP_ROOT/access-generated"
+mkdir -p "$ACCESS_GENERATED"
+if "$IEC2C" --std=iec61131-3:2025-experimental -f -l -p \
+     -I "$MATIEC_LIBDIR" -T "$ACCESS_GENERATED" "$ACCESS_INPUT" \
+     >"$TMP_ROOT/access.stdout" 2>"$TMP_ROOT/access.stderr" \
+   && grep -q '^configuration,name,path,type,direction$' "$ACCESS_GENERATED/ACCESS.csv" \
+   && grep -q '^AccessConfig,RemoteSetpoint,Setpoint,INT,READ_WRITE$' \
+        "$ACCESS_GENERATED/ACCESS.csv" \
+   && grep -q '^AccessConfig,MonitorSetpoint,Setpoint,INT,READ_ONLY$' \
+        "$ACCESS_GENERATED/ACCESS.csv"; then
+  echo "[ O K ]    experimental-var-access-metadata"
+else
+  echo "[ERROR]    experimental-var-access-metadata -> validation or export failed"
+  sed -n '1,12p' "$TMP_ROOT/access.stderr"
+  error=1
+fi
+
+expect_failure var-access-unresolved "Unresolved VAR_ACCESS target" \
+  "$IEC2C" --std=iec61131-3:2025-experimental -f -l -p \
+  -I "$MATIEC_LIBDIR" "$SCRIPT_DIR/profile-fixtures/var-access-unresolved.st"
+expect_failure legacy-var-access "error" \
+  "$IEC2C" --std=legacy -y -f -l -p -I "$MATIEC_LIBDIR" "$ACCESS_INPUT"
+
 generated_dir="$TMP_ROOT/generated"
 mkdir -p "$generated_dir"
 if "$IEC2C" --std=legacy -f -l -p -I "$MATIEC_LIBDIR" -T "$generated_dir" "$INPUT_FILE" \

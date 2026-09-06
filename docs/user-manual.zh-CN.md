@@ -9,7 +9,7 @@ MATIEC 的前端主要基于 IEC 61131-3 第 2 版最终草案，并选择性实
 两个命令行工具都接受 `--std=<profile>`：
 
 - `legacy`：默认值，保留现有 MATIEC 语法和输出行为；
-- `iec61131-3:2025-experimental`：面向公开证据所确认的 2025 能力演进。目前增加 UTF-8 源码与 `STRING` 字面量、引用声明初始化，以及明确标注为 MATIEC 临时规则的命名空间子集；它不是完整或认证符合 IEC 61131-3:2025 的声明。
+- `iec61131-3:2025-experimental`：面向公开证据所确认的 2025 能力演进。目前增加 UTF-8 源码与 `STRING` 字面量、引用声明初始化，以及明确标注为 MATIEC 临时规则的命名空间、FB 方法和配置级 `VAR_ACCESS` 子集；它不是完整或认证符合 IEC 61131-3:2025 的声明。
 
 例如：
 
@@ -48,7 +48,7 @@ Profile 只表示标准版本方向。`-r`、`-R`、`-s`、`-n`、`-a` 等现有
 | Function Block Diagram（FBD） | 不直接支持 | 不解析图形化 FBD 输入 |
 | Ladder Diagram（LD） | 不直接支持 | 不解析图形化 LD 输入 |
 | 配置模型 | 支持 | `CONFIGURATION`、`RESOURCE`、`TASK`、程序实例 |
-| `VAR_ACCESS` | 当前不支持 | 对应解析规则在当前前端中未启用 |
+| `VAR_ACCESS` | 实验性部分支持 | 配置级简单 `VAR_GLOBAL` 路径；导出 `ACCESS.csv` |
 | IEC 61131-3 第 3 版引用 | 可选 | 使用 `-r` 或 `-R` 启用 |
 | 命名空间与限定名 | 实验性部分支持 | 仅 `iec61131-3:2025-experimental`；采用 MATIEC 临时规则 |
 | 面向对象元素 | 实验性部分支持 | 仅支持 FB 的公开方法和静态派发；不支持类、接口、继承 |
@@ -720,7 +720,21 @@ TASK name(SINGLE := data_source, INTERVAL := data_source, PRIORITY := integer);
 
 `PRIORITY` 必填，`SINGLE` 和 `INTERVAL` 可选但顺序固定。程序实例可以使用 `RETAIN`/`NON_RETAIN`、`WITH task`，并通过括号配置输入和输出连接。
 
-配置末尾可使用 `VAR_CONFIG` 为具体程序或功能块实例设置初始化值。`VAR_ACCESS` 虽属于标准配置模型的一部分，但当前仓库没有启用其解析规则。
+配置末尾可使用 `VAR_CONFIG` 为具体程序或功能块实例设置初始化值。实验
+Profile 还支持一个受限的配置级 `VAR_ACCESS`：
+
+```iecst
+VAR_ACCESS
+  RemoteSetpoint : Setpoint : INT READ_WRITE;
+  MonitorSetpoint : Setpoint : INT;
+END_VAR
+```
+
+这里的 `Setpoint` 必须是在同一 `CONFIGURATION` 中声明的简单 `VAR_GLOBAL`
+名称，类型必须一致；省略方向时默认为 `READ_ONLY`，常量不能声明为
+`READ_WRITE`。成功生成后会在 `-T` 目录写入 `ACCESS.csv`。资源、程序、功能块
+层级路径、直接地址及结构/数组元素仍未实现。完整边界见
+[`access-variable-semantics.md`](standards/access-variable-semantics.md)。
 
 ## 12. 会改变语法的命令行开关
 
@@ -754,7 +768,7 @@ TASK name(SINGLE := data_source, INTERVAL := data_source, PRIORITY := integer);
 
 - 本项目直接解析的是文本源，不是 FBD、LD 编辑器文件；XML 或图形工程需由上游工具转换。
 - 前端以 IEC 61131-3 第 2 版草案为基础，并非第 3 版全部语法的实现。
-- `VAR_ACCESS` 当前未启用。
+- `VAR_ACCESS` 仅在实验 Profile 下支持同配置的简单全局变量路径，不支持完整层级路径。
 - 命名空间只在实验 Profile 下部分实现，使用 MATIEC 临时语义而非已验证的第四版完整规则。
 - 面向对象能力当前只实现公开 FB 方法的静态派发，不应理解为完整类/接口模型。
 - `REF_TO` 是选择性扩展；默认命令行下不能直接使用。

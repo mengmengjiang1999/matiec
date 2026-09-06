@@ -70,8 +70,9 @@ Both tools support an explicit `--std=<profile>` selector:
 
 The experimental profile currently adds validated UTF-8 source/`STRING` literals,
 reference declaration initialization, and deliberately provisional MATIEC
-namespace and function-block method subsets. These behaviors are documented as
-project extensions because the complete normative 2025 rules are not publicly available. Existing switches
+namespace, function-block method, and configuration-level `VAR_ACCESS` subsets.
+These behaviors are documented as project extensions because the complete normative
+2025 rules are not publicly available. Existing switches
 such as `-r`, `-R`, `-s`, `-n`, and `-a` remain independent extensions and are not
 enabled by selecting a profile.
 
@@ -89,6 +90,18 @@ END_PROGRAM
 
 See the [namespace semantics](docs/standards/namespace-semantics.md) for supported
 syntax, visibility, lookup, and known limits.
+
+Access-variable quick example:
+
+```iecst
+VAR_ACCESS
+  RemoteSetpoint : Setpoint : INT READ_WRITE;
+END_VAR
+```
+
+This bounded form exports validated configuration-global aliases to `ACCESS.csv`.
+See the [access-variable semantics](docs/standards/access-variable-semantics.md) for
+the supported path and direction rules.
 
 The first object-oriented increment supports public methods owned by a function
 block with static dispatch. It does not yet implement classes, interfaces,

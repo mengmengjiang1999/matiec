@@ -4,6 +4,7 @@ AM_CPPFLAGS = -I$(top_srcdir)
 
 noinst_LIBRARIES = libcompiler.a
 libcompiler_a_SOURCES = \
+	access_variable_normalizer.cc \
 	ast_arena.cc \
 	compilation_context.cc \
 	compiler.cc \
@@ -19,8 +20,11 @@ libcompiler_a_SOURCES = \
 	semantic_pass_manager.cc \
 	utf8_validation.cc
 
-check_PROGRAMS = ast_arena_test compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test language_feature_catalog_test namespace_normalizer_test object_method_normalizer_test output_sink_test semantic_pass_test utf8_validation_test
+check_PROGRAMS = access_variable_normalizer_test ast_arena_test compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test language_feature_catalog_test namespace_normalizer_test object_method_normalizer_test output_sink_test semantic_pass_test utf8_validation_test
 TESTS = $(check_PROGRAMS)
+
+access_variable_normalizer_test_SOURCES = tests/access_variable_normalizer_test.cc
+access_variable_normalizer_test_LDADD = libcompiler.a
 
 ast_arena_test_SOURCES = tests/ast_arena_test.cc
 ast_arena_test_LDADD = libcompiler.a

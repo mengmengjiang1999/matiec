@@ -1,4 +1,5 @@
 #include "compiler/compiler.hh"
+#include "compiler/access_variable_normalizer.hh"
 #include "compiler/compilation_abort.hh"
 #include "compiler/legacy_global_state_adapter.hh"
 #include "compiler/namespace_normalizer.hh"
@@ -82,6 +83,7 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
 
     NamespaceNormalizeResult namespace_result;
     ObjectMethodNormalizeResult method_result;
+    AccessVariableNormalizeResult access_result;
     TemporarySource normalized_source;
     std::string parser_source_path = context.source_path();
     if (language_profile_is_experimental(options.language_profile)) {
@@ -92,9 +94,14 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
               namespace_result.source, context.source_path(), context.diagnostics(),
               &method_result))
         return context.diagnostics().result();
-      if (namespace_result.used_namespaces || method_result.used_methods) {
+      if (!normalize_experimental_access_variables(
+              method_result.source, context.source_path(), context.diagnostics(),
+              &access_result))
+        return context.diagnostics().result();
+      if (namespace_result.used_namespaces || method_result.used_methods ||
+          access_result.used_access_variables) {
         std::string error;
-        if (!normalized_source.write(method_result.source, &error)) {
+        if (!normalized_source.write(access_result.source, &error)) {
           context.diagnostics().fatal(
               "Cannot create normalized namespace source: " + error);
           return context.diagnostics().result();
@@ -117,6 +124,10 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
       return context.diagnostics().result();
 
     if (stage4(ordered_tree_root, context) < 0)
+      return context.diagnostics().result();
+
+    if (!write_access_variable_metadata(access_result, options.output_directory,
+                                        context.outputs()))
       return context.diagnostics().result();
 
     return CompilationResult::success();
