@@ -67,6 +67,10 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
   }
 
   try {
+    if (!language_profile_is_experimental(context.options().language_profile) &&
+        !reject_legacy_access_variables_in_file(context.source_path(),
+                                                context.diagnostics()))
+      return context.diagnostics().result();
     if (language_profile_is_experimental(context.options().language_profile)) {
       Utf8Error utf8_error;
       if (!validate_utf8_file(context.source_path(), &utf8_error)) {

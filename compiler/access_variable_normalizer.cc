@@ -5,9 +5,11 @@
 
 #include <algorithm>
 #include <cctype>
+#include <fstream>
 #include <map>
 #include <regex>
 #include <set>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -63,6 +65,25 @@ bool matches(const std::string &line, const std::regex &pattern,
 }
 
 }  // namespace
+
+bool reject_legacy_access_variables_in_file(
+    const std::string &source_path, DiagnosticEngine &diagnostics) {
+  std::ifstream input(source_path, std::ios::in | std::ios::binary);
+  if (!input) return true;
+  std::ostringstream contents;
+  contents << input.rdbuf();
+  const std::regex access_start("^[ \\t]*VAR_ACCESS\\b.*$", std::regex::icase);
+  const std::vector<Line> lines = split_lines(contents.str());
+  for (const Line &line : lines) {
+    std::smatch match;
+    if (!matches(line.text, access_start, &match)) continue;
+    diagnostics.error(
+        "VAR_ACCESS requires --std=iec61131-3:2025-experimental",
+        line_range(line, source_path));
+    return false;
+  }
+  return true;
+}
 
 bool normalize_experimental_access_variables(
     std::string_view source, const std::string &source_path,

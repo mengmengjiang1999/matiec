@@ -304,7 +304,7 @@ fi
 expect_failure var-access-unresolved "Unresolved VAR_ACCESS target" \
   "$IEC2C" --std=iec61131-3:2025-experimental -f -l -p \
   -I "$MATIEC_LIBDIR" "$SCRIPT_DIR/profile-fixtures/var-access-unresolved.st"
-expect_failure legacy-var-access "error" \
+expect_failure legacy-var-access "VAR_ACCESS requires --std=iec61131-3:2025-experimental" \
   "$IEC2C" --std=legacy -y -f -l -p -I "$MATIEC_LIBDIR" "$ACCESS_INPUT"
 
 generated_dir="$TMP_ROOT/generated"
