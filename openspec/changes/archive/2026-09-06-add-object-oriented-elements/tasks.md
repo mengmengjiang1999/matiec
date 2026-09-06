@@ -7,4 +7,4 @@
 
 - [x] 2.1 Implement profile-gated declarations and semantic checks
 - [x] 2.2 Implement deterministic C generation and runtime behavior
-- [ ] 2.3 Add positive, negative, legacy, ABI, and runtime tests and update docs
+- [x] 2.3 Add positive, negative, legacy, ABI, and runtime tests and update docs

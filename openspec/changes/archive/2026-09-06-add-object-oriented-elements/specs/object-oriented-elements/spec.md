@@ -16,13 +16,13 @@ for unimplemented or unverified elements.
 Enabled OO constructs SHALL have deterministic ownership, layout, dispatch, and C
 generation behavior covered by runtime tests.
 
-#### Scenario: A method is overridden
-- **WHEN** an instance is dispatched through a supported base or interface type
-- **THEN** the documented target executes consistently in generated C
+#### Scenario: A method is statically dispatched
+- **WHEN** an instance invokes a supported public method
+- **THEN** generated C calls the deterministic owner-and-method symbol
 
 #### Scenario: A bounded method updates owner state
 - **WHEN** a supported public method reads or writes a field of its owning function block
-- **THEN** generated C passes the caller-owned instance by reference and preserves the update
+- **THEN** generated C passes the affected caller-owned fields by reference and preserves the update
 
 ### Requirement: Legacy profile isolation
 Method syntax MUST remain unavailable in the legacy profile.
