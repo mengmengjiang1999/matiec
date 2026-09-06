@@ -132,6 +132,7 @@ UTF8_RUNTIME="$TMP_ROOT/utf8-runtime.c"
 cat >"$UTF8_RUNTIME" <<'EOF'
 #include <assert.h>
 #include "iec_std_lib.h"
+TIME __CURRENT_TIME = {0, 0};
 int main(void) {
   STRING value = __STRING_LITERAL(7, "\xE4\xB8\xAD\xF0\x9F\x9A\x80");
   assert(value.len == 7);
