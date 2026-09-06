@@ -51,10 +51,59 @@ expect_failure empty-target-directory "Option -T requires a non-empty directory"
 expect_failure output-open-failure "Cannot open POUS.c for write access" \
   "$IEC2C" -f -l -p -I "$MATIEC_LIBDIR" \
   -T "$TMP_ROOT/missing/child" "$INPUT_FILE"
+expect_failure invalid-language-profile "Unknown language profile" \
+  "$IEC2C" --std=iec61131-3:2025 "$INPUT_FILE"
+expect_failure missing-language-profile "Option --std requires an operand" \
+  "$IEC2C" --std
+
+for frontend in "$IEC2C" "$IEC2IEC"; do
+  frontend_name=$(basename "$frontend")
+  if "$frontend" -h >"$TMP_ROOT/$frontend_name.help" 2>&1 \
+     && grep -q "iec61131-3:2025-experimental" "$TMP_ROOT/$frontend_name.help" \
+     && grep -q "not a complete or certified" "$TMP_ROOT/$frontend_name.help"; then
+    echo "[ O K ]    $frontend_name-profile-help"
+  else
+    echo "[ERROR]    $frontend_name-profile-help -> experimental disclaimer missing"
+    error=1
+  fi
+done
+
+compare_profiles() {
+  test_name=$1
+  source_file=$2
+  shift 2
+  omitted_output="$TMP_ROOT/$test_name.omitted"
+  legacy_output="$TMP_ROOT/$test_name.legacy"
+  experimental_output="$TMP_ROOT/$test_name.experimental"
+
+  if "$IEC2IEC" "$@" -f -l -p -I "$MATIEC_LIBDIR" "$source_file" \
+       >"$omitted_output" 2>"$TMP_ROOT/$test_name.omitted.err" \
+     && "$IEC2IEC" "$@" --std=legacy -f -l -p -I "$MATIEC_LIBDIR" "$source_file" \
+       >"$legacy_output" 2>"$TMP_ROOT/$test_name.legacy.err" \
+     && "$IEC2IEC" "$@" --std=iec61131-3:2025-experimental \
+       -f -l -p -I "$MATIEC_LIBDIR" "$source_file" \
+       >"$experimental_output" 2>"$TMP_ROOT/$test_name.experimental.err" \
+     && cmp -s "$omitted_output" "$legacy_output" \
+     && cmp -s "$legacy_output" "$experimental_output"; then
+    echo "[ O K ]    $test_name-profile-equivalence"
+  else
+    echo "[ERROR]    $test_name-profile-equivalence -> acceptance or output differs"
+    for mode in omitted legacy experimental; do
+      sed -n '1,8p' "$TMP_ROOT/$test_name.$mode.err"
+    done
+    error=1
+  fi
+}
+
+compare_profiles structured-text "$INPUT_FILE"
+compare_profiles instruction-list "$PROJECT_ROOT/tests/characterization/instruction_list.il"
+compare_profiles sfc "$PROJECT_ROOT/tests/syntax/sfc/sfc.txt"
+compare_profiles configuration "$PROJECT_ROOT/tests/initialization/ok_array_scalar.st"
+compare_profiles reference "$SCRIPT_DIR/profile-fixtures/reference.st" -r
 
 generated_dir="$TMP_ROOT/generated"
 mkdir -p "$generated_dir"
-if "$IEC2C" -f -l -p -I "$MATIEC_LIBDIR" -T "$generated_dir" "$INPUT_FILE" \
+if "$IEC2C" --std=legacy -f -l -p -I "$MATIEC_LIBDIR" -T "$generated_dir" "$INPUT_FILE" \
      >"$TMP_ROOT/iec2c.stdout" 2>"$TMP_ROOT/iec2c.stderr" \
    && test -s "$generated_dir/POUS.c" \
    && test -s "$generated_dir/POUS.h"; then
@@ -83,7 +132,7 @@ else
   error=1
 fi
 
-if "$IEC2IEC" -f -l -p -I "$MATIEC_LIBDIR" "$INPUT_FILE" \
+if "$IEC2IEC" --std=iec61131-3:2025-experimental -f -l -p -I "$MATIEC_LIBDIR" "$INPUT_FILE" \
      >"$TMP_ROOT/iec2iec.stdout" 2>"$TMP_ROOT/iec2iec.stderr" \
    && test -s "$TMP_ROOT/iec2iec.stdout"; then
   echo "[ O K ]    iec2iec-smoke"

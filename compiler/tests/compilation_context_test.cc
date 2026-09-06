@@ -7,6 +7,8 @@ int main() {
   matiec::CompilationContext second;
 
   first.options().pre_parsing = true;
+  first.options().language_profile =
+      matiec::LanguageProfile::iec61131_3_2025_experimental;
   first.options().include_directory = "first-lib";
   first.set_source_path("first.st");
   first.diagnostics().error("first failure");
@@ -21,6 +23,9 @@ int main() {
   assert(second.outputs().write(second_output, "second").ok);
 
   assert(first.options().pre_parsing);
+  assert(first.options().language_profile ==
+         matiec::LanguageProfile::iec61131_3_2025_experimental);
+  assert(second.options().language_profile == matiec::LanguageProfile::legacy);
   assert(!second.options().pre_parsing);
   assert(!first.options().relaxed_datatype_model);
   assert(second.options().relaxed_datatype_model);

@@ -5,9 +5,23 @@
 
 int main() {
   matiec::CompilerOptions options;
+  assert(options.language_profile == matiec::LanguageProfile::legacy);
   assert(!options.pre_parsing);
   assert(!options.syntax_only);
   assert(options.output_language == matiec::OutputLanguage::c);
+
+  matiec::LanguageProfile profile = matiec::LanguageProfile::legacy;
+  assert(matiec::parse_language_profile("legacy", &profile));
+  assert(profile == matiec::LanguageProfile::legacy);
+  assert(!matiec::language_profile_is_experimental(profile));
+  assert(matiec::parse_language_profile(
+      "iec61131-3:2025-experimental", &profile));
+  assert(profile == matiec::LanguageProfile::iec61131_3_2025_experimental);
+  assert(matiec::language_profile_is_experimental(profile));
+  assert(std::string(matiec::language_profile_name(profile)) ==
+         "iec61131-3:2025-experimental");
+  assert(!matiec::parse_language_profile("iec61131-3:2025", &profile));
+  assert(!matiec::parse_language_profile("legacy", nullptr));
 
   const matiec::SourceLocation begin{"program.st", 4, 2, 18};
   const matiec::SourceLocation end{"program.st", 4, 7, 23};

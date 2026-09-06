@@ -59,6 +59,19 @@ the historical include pragma:
 {#include "filename" }
 ```
 
+### Language profiles
+
+Both tools support an explicit `--std=<profile>` selector:
+
+| Profile | Meaning |
+| --- | --- |
+| `legacy` | Default. Preserves the existing MATIEC language and generated output. |
+| `iec61131-3:2025-experimental` | Opt-in path for independently implemented features backed by public evidence. It is not a complete or certified conformance claim. |
+
+The experimental profile is currently feature-neutral, so it intentionally accepts
+the same language as `legacy`. Existing switches such as `-r`, `-R`, `-s`, `-n`,
+and `-a` remain independent extensions and are not enabled by selecting a profile.
+
 ## Quick start
 
 ```sh
@@ -83,9 +96,8 @@ make check
 | C/C++ compiler | GCC or Clang |
 | Make | GNU Make or compatible |
 
-The generated `configure` script and `Makefile.in` templates are committed. A
-prepared source archive can begin with `./configure`; a Git checkout should run
-`autoreconf --install` first.
+A prepared source archive may include generated build files and begin with
+`./configure`; a Git checkout should run `autoreconf --install` first.
 
 </details>
 
@@ -119,6 +131,13 @@ resource, and support sources. Headers needed by generated C are in `lib/C`.
 
 ```sh
 ./iec2iec -I lib counter.st > normalized.st
+```
+
+Select a profile explicitly when testing migration behavior:
+
+```sh
+./iec2c --std=legacy -I lib -T build/generated counter.st
+./iec2iec --std=iec61131-3:2025-experimental -I lib counter.st
 ```
 
 Both tools accept exactly one input file. They return a non-zero status for
@@ -201,6 +220,8 @@ process is not supported yet.
 
 int main() {
   matiec::CompilationContext context;
+  context.options().language_profile =
+      matiec::LanguageProfile::iec61131_3_2025_experimental;
   context.set_source_path("counter.st");
   context.options().include_directory = "lib";
   context.options().output_directory = "build/generated";
@@ -216,6 +237,9 @@ int main() {
 This is currently a source-level integration API, not a versioned binary ABI.
 AST pointers are context-owned and must not outlive their
 `CompilationContext`.
+
+The profile is a typed per-compilation option; it does not introduce mutable
+process-global configuration. Embedders that omit it retain the legacy default.
 
 ## Quality gates
 

@@ -11,7 +11,17 @@ enum class OutputLanguage {
   iec
 };
 
+enum class LanguageProfile {
+  legacy,
+  iec61131_3_2025_experimental
+};
+
+const char *language_profile_name(LanguageProfile profile);
+bool parse_language_profile(const std::string &name, LanguageProfile *profile);
+bool language_profile_is_experimental(LanguageProfile profile);
+
 struct CompilerOptions {
+  LanguageProfile language_profile = LanguageProfile::legacy;
   bool allow_void_datatype = false;
   bool allow_missing_var_in = false;
   bool disable_implicit_en_eno = false;

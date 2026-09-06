@@ -103,6 +103,10 @@ static void printusage(const char *cmd) {
   printf(" -b : allow functions returning VOID                 (a non-standard extension!)\n");
   printf(" -e : disable generation of implicit EN and ENO parameters.\n");
   printf(" -c : create conversion functions for enumerated data types\n");
+  printf(" --std=<profile> : select the language profile (default: legacy)\n");
+  printf("        legacy\n");
+  printf("        iec61131-3:2025-experimental\n");
+  printf("          Experimental only; not a complete or certified IEC 61131-3:2025 conformance claim.\n");
   printf(" -O : options for output (code generation) stage. Available options for %s are...\n", cmd);
   stage4_print_options();
   printf("\n");
@@ -117,11 +121,17 @@ int main(int argc, char **argv) {
   matiec::CompilerOptions &options = context.options();
   int optres, errflg = 0;
   int path_len;
+  const int language_profile_option = 1000;
+  const struct option long_options[] = {
+    {"std", required_argument, NULL, language_profile_option},
+    {NULL, 0, NULL, 0}
+  };
   
   /******************************************/
   /*   Parse command line options...        */
   /******************************************/
-  while ((optres = getopt(argc, argv, ":nehvyfplsrRabicI:T:O:")) != -1) {
+  while ((optres = getopt_long(argc, argv, ":nehvyfplsrRabicI:T:O:",
+                               long_options, NULL)) != -1) {
     switch(optres) {
     case 'h':
       printusage(argv[0]);
@@ -143,6 +153,15 @@ int main(int argc, char **argv) {
     case 'c': options.conversion_functions = true;               break;
     case 'n': options.nested_comments = true;                    break;
     case 'e': options.disable_implicit_en_eno = true;            break;
+    case language_profile_option:
+      if (!matiec::parse_language_profile(optarg, &options.language_profile)) {
+        fprintf(stderr,
+                "Unknown language profile: %s (expected legacy or "
+                "iec61131-3:2025-experimental)\n",
+                optarg);
+        errflg++;
+      }
+      break;
     case 'I':
       /* NOTE: To improve the usability under windows:
        *       We delete last char's path if it ends with "\".
@@ -175,12 +194,18 @@ int main(int argc, char **argv) {
       options.generator_options = optarg;
       if (stage4_parse_options(optarg) < 0) errflg++;
       break;
-    case ':':       /* -I, -T, or -O without operand */
-      fprintf(stderr, "Option -%c requires an operand\n", optopt);
+    case ':':       /* an option without its required operand */
+      if (optopt == language_profile_option)
+        fprintf(stderr, "Option --std requires an operand\n");
+      else
+        fprintf(stderr, "Option -%c requires an operand\n", optopt);
       errflg++;
       break;
     case '?':
-      fprintf(stderr, "Unrecognized option: -%c\n", optopt);
+      if (optopt == 0)
+        fprintf(stderr, "Unrecognized long option\n");
+      else
+        fprintf(stderr, "Unrecognized option: -%c\n", optopt);
       errflg++;
       break;
     default:

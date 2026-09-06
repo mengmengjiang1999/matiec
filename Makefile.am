@@ -24,6 +24,7 @@ EXTRA_DIST = \
 	$(TESTS) \
 	tests/characterization/expected.sha256 \
 	tests/characterization/instruction_list.il \
+	tests/cli/profile-fixtures/reference.st \
 	tests/generated_c/runtests \
 	tests/initialization/ok_array_scalar.st \
 	tests/syntax/sfc/sfc.txt \
