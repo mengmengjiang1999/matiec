@@ -237,6 +237,52 @@ expect_failure namespace-visibility "Namespace declaration is inaccessible" \
 expect_failure legacy-namespace "unknown syntax error" \
   "$IEC2C" --std=legacy -y -f -l -p -I "$MATIEC_LIBDIR" "$NAMESPACE_INPUT"
 
+METHOD_INPUT="$SCRIPT_DIR/profile-fixtures/object-method.st"
+METHOD_GENERATED="$TMP_ROOT/method-generated"
+mkdir -p "$METHOD_GENERATED"
+if "$IEC2C" --std=iec61131-3:2025-experimental -f -l -p \
+     -I "$MATIEC_LIBDIR" -T "$METHOD_GENERATED" "$METHOD_INPUT" \
+     >"$TMP_ROOT/method.stdout" 2>"$TMP_ROOT/method.stderr" \
+   && grep -q 'MATIECMETHOD7COUNTER9INCREMENT' "$METHOD_GENERATED/POUS.c" \
+   && "${CC_COMMAND[@]}" -std=c11 -I "$MATIEC_LIBDIR/C" -I "$METHOD_GENERATED" \
+        -c "$METHOD_GENERATED/config.c" -o "$METHOD_GENERATED/config.o" \
+   && "${CC_COMMAND[@]}" -std=c11 -I "$MATIEC_LIBDIR/C" -I "$METHOD_GENERATED" \
+        -c "$METHOD_GENERATED/resource1.c" -o "$METHOD_GENERATED/resource1.o"; then
+  cat >"$METHOD_GENERATED/driver.c" <<'EOF'
+#include <assert.h>
+#include "POUS.h"
+extern METHODDEMO_data__ RESOURCE1__INSTANCE0;
+TIME __CURRENT_TIME = {0, 0};
+void config_init__(void);
+void config_run__(unsigned long tick);
+int main(void) {
+  config_init__();
+  config_run__(0);
+  assert(__GET_VAR(RESOURCE1__INSTANCE0.RESULT,) == 2);
+  return 0;
+}
+EOF
+  if "${CC_COMMAND[@]}" -std=c11 -I "$MATIEC_LIBDIR/C" -I "$METHOD_GENERATED" \
+       "$METHOD_GENERATED/driver.c" "$METHOD_GENERATED/config.o" \
+       "$METHOD_GENERATED/resource1.o" -o "$METHOD_GENERATED/runtime" \
+     && "$METHOD_GENERATED/runtime"; then
+    echo "[ O K ]    experimental-object-method-runtime"
+  else
+    echo "[ERROR]    experimental-object-method-runtime -> runtime behavior failed"
+    error=1
+  fi
+else
+  echo "[ERROR]    experimental-object-method-runtime -> lowering or C build failed"
+  sed -n '1,16p' "$TMP_ROOT/method.stderr"
+  error=1
+fi
+
+expect_failure object-method-private "Only PUBLIC methods are supported" \
+  "$IEC2C" --std=iec61131-3:2025-experimental -y -f -l -p \
+  -I "$MATIEC_LIBDIR" "$SCRIPT_DIR/profile-fixtures/object-method-private.st"
+expect_failure legacy-object-method "unknown syntax error" \
+  "$IEC2C" --std=legacy -y -f -l -p -I "$MATIEC_LIBDIR" "$METHOD_INPUT"
+
 generated_dir="$TMP_ROOT/generated"
 mkdir -p "$generated_dir"
 if "$IEC2C" --std=legacy -f -l -p -I "$MATIEC_LIBDIR" -T "$generated_dir" "$INPUT_FILE" \

@@ -34,6 +34,8 @@ EXTRA_DIST = \
 	tests/cli/profile-fixtures/namespace-using.st \
 	tests/cli/profile-fixtures/namespace-ambiguous.st \
 	tests/cli/profile-fixtures/namespace-internal.st \
+	tests/cli/profile-fixtures/object-method.st \
+	tests/cli/profile-fixtures/object-method-private.st \
 	tests/generated_c/runtests \
 	tests/initialization/ok_array_scalar.st \
 	tests/syntax/sfc/sfc.txt \

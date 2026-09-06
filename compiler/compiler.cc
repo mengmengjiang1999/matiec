@@ -2,6 +2,7 @@
 #include "compiler/compilation_abort.hh"
 #include "compiler/legacy_global_state_adapter.hh"
 #include "compiler/namespace_normalizer.hh"
+#include "compiler/object_method_normalizer.hh"
 #include "compiler/utf8_validation.hh"
 
 #include "absyntax/absyntax.hh"
@@ -80,15 +81,20 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     LegacyGlobalStateAdapter legacy_state(context);
 
     NamespaceNormalizeResult namespace_result;
+    ObjectMethodNormalizeResult method_result;
     TemporarySource normalized_source;
     std::string parser_source_path = context.source_path();
     if (language_profile_is_experimental(options.language_profile)) {
       if (!normalize_experimental_namespace_file(
               context.source_path(), context.diagnostics(), &namespace_result))
         return context.diagnostics().result();
-      if (namespace_result.used_namespaces) {
+      if (!normalize_experimental_object_methods(
+              namespace_result.source, context.source_path(), context.diagnostics(),
+              &method_result))
+        return context.diagnostics().result();
+      if (namespace_result.used_namespaces || method_result.used_methods) {
         std::string error;
-        if (!normalized_source.write(namespace_result.source, &error)) {
+        if (!normalized_source.write(method_result.source, &error)) {
           context.diagnostics().fatal(
               "Cannot create normalized namespace source: " + error);
           return context.diagnostics().result();

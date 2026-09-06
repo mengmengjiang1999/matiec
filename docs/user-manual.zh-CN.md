@@ -51,6 +51,7 @@ Profile 只表示标准版本方向。`-r`、`-R`、`-s`、`-n`、`-a` 等现有
 | `VAR_ACCESS` | 当前不支持 | 对应解析规则在当前前端中未启用 |
 | IEC 61131-3 第 3 版引用 | 可选 | 使用 `-r` 或 `-R` 启用 |
 | 命名空间与限定名 | 实验性部分支持 | 仅 `iec61131-3:2025-experimental`；采用 MATIEC 临时规则 |
+| 面向对象元素 | 实验性部分支持 | 仅支持 FB 的公开方法和静态派发；不支持类、接口、继承 |
 | PLCopen SAFE 类型 | 可选 | 使用 `-s` 启用 |
 
 一个输入文件可以包含多个类型声明、函数、功能块、程序和配置，也可以让使用 ST、IL、文本 SFC 的不同 POU 共存。单个 POU 的正文应采用一种文本表示，不要在同一正文内任意混写 ST 与 IL。
@@ -494,6 +495,31 @@ END_PROGRAM
 实验而定义的行为，并非对 IEC 第四版原文的复述。完整边界见
 [实验性命名空间语义](standards/namespace-semantics.md)。
 
+### 7.5 实验性 Function Block 方法
+
+实验 Profile 支持直接属于 `FUNCTION_BLOCK` 的公开方法：
+
+```iecst
+FUNCTION_BLOCK Counter
+  VAR Count : INT; END_VAR
+  Count := Count;
+
+  METHOD PUBLIC Increment : INT
+    VAR_INPUT Step : INT; END_VAR
+    Count := Count + Step;
+    Increment := Count;
+  END_METHOD
+END_FUNCTION_BLOCK
+
+Result := CounterInstance.Increment(2);
+```
+
+方法可以访问所属 FB 字段；局部变量按普通函数的调用期生命周期处理。调用采用
+静态派发，所属实例以引用方式传入，因此字段修改保留。当前不支持 `CLASS`、
+`INTERFACE`、继承、覆盖、属性、动态派发、重载和非公开方法。内部
+`MATIECMETHOD...` 名称不是稳定 ABI。详见
+[实验性方法语义](standards/object-method-semantics.md)。
+
 ## 8. Structured Text（ST）
 
 ### 8.1 表达式与运算符
@@ -730,6 +756,7 @@ TASK name(SINGLE := data_source, INTERVAL := data_source, PRIORITY := integer);
 - 前端以 IEC 61131-3 第 2 版草案为基础，并非第 3 版全部语法的实现。
 - `VAR_ACCESS` 当前未启用。
 - 命名空间只在实验 Profile 下部分实现，使用 MATIEC 临时语义而非已验证的第四版完整规则。
+- 面向对象能力当前只实现公开 FB 方法的静态派发，不应理解为完整类/接口模型。
 - `REF_TO` 是选择性扩展；默认命令行下不能直接使用。
 - 未知 pragma 虽可能通过解析，但不表示代码生成器会赋予它特定语义。
 - 语法通过不等于目标系统行为已经验证。生成的 C 仍需与目标 PLC 运行时、I/O 映射和调度环境集成测试。
