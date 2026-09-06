@@ -10,4 +10,5 @@ PROGRAM Main
   VAR
     Current : Speed := 7;
   END_VAR
+  Current := Current;
 END_PROGRAM
