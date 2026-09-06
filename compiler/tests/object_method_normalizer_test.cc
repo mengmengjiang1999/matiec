@@ -28,7 +28,7 @@ int main() {
            std::string::npos);
     assert(result.source.find("MATIECSELF.COUNT := MATIECSELF.COUNT + Delta") !=
            std::string::npos);
-    assert(result.source.find("MATIECMETHOD7COUNTER9INCREMENT(C, 2)") !=
+    assert(result.source.find("MATIECMETHOD7COUNTER9INCREMENT(2, C)") !=
            std::string::npos);
   }
   {

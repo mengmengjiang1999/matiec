@@ -33,8 +33,8 @@ Result := CounterInstance.Increment(2);
 
 ## Ownership and ABI
 
-The compiler lowers each method to a legacy function. A hidden first `VAR_IN_OUT`
-parameter named `MATIECSELF` refers to the owner instance; the instance is not
+The compiler lowers each method to a legacy function. A hidden final `VAR_IN_OUT`
+parameter named `MATIECSELF`, placed after ordinary method parameters, refers to the owner instance; the instance is not
 copied. Owner field updates therefore remain visible after the call. A method such
 as `Counter.Increment` receives a deterministic length-prefixed name:
 

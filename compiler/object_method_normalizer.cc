@@ -308,16 +308,18 @@ bool normalize_experimental_object_methods(
     for (const auto &method_entry : method_by_owner_and_name) {
       const MethodBlock &block = *method_entry.second;
       if (uppercase(block.ast.owner) != owner_type) continue;
-      const std::regex call("\\b" + instance + "[ \\t]*\\.[ \\t]*" +
-                                uppercase(block.ast.name) + "[ \\t]*\\(",
-                            std::regex::icase);
       const std::regex zero_call("\\b" + instance + "[ \\t]*\\.[ \\t]*" +
                                      uppercase(block.ast.name) +
                                      "[ \\t]*\\([ \\t]*\\)",
                                  std::regex::icase);
       base = std::regex_replace(base, zero_call,
                                 block.ast.lowered_name + "(" + instance + ")");
-      base = std::regex_replace(base, call, block.ast.lowered_name + "(" + instance + ", ");
+      const std::regex call("\\b" + instance + "[ \\t]*\\.[ \\t]*" +
+                                uppercase(block.ast.name) +
+                                "[ \\t]*\\(([^()]*)\\)",
+                            std::regex::icase);
+      base = std::regex_replace(base, call,
+                                block.ast.lowered_name + "($1, " + instance + ")");
     }
   }
 

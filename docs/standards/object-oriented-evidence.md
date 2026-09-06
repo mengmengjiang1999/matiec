@@ -29,7 +29,7 @@ Sources:
 
 The first increment implements only public methods directly owned by a function
 block. Calls are statically dispatched using the declared function-block type and
-pass the existing owner instance by reference. Method parameters, local variables,
+pass the existing owner instance by reference as a final hidden parameter. Method parameters, local variables,
 return types, expressions, and statements reuse the legacy function rules.
 
 The following remain outside the increment: `CLASS`, `INTERFACE`, `EXTENDS`,
