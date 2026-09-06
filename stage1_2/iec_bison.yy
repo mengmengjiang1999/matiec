@@ -3456,10 +3456,13 @@ ref_spec: /* defined in IEC 61131-3 v3 */
 ref_spec_init: /* defined in IEC 61131-3 v3 */
   ref_spec
 	{$$ = new ref_spec_init_c($1, NULL, locloc(@$));}
-/*  For the moment, we do not support initialising reference data types...
-| ref_spec ASSIGN ... 
-	{$$ = new ref_spec_init_c($1, $3, locloc(@$));}
-*/
+| ref_spec ASSIGN ref_value_null_literal
+	{$$ = new ref_spec_init_c($1, $3, locloc(@$));
+	 if (!runtime_options.iec2025_experimental) {
+	   print_err_msg(locf(@$), locl(@$), "REF_TO initialization is experimental (use --std=iec61131-3:2025-experimental).");
+	   yynerrs++;
+	 }
+	}
 ;
 
 ref_type_decl:  /* defined in IEC 61131-3 v3 */
@@ -8908,8 +8911,6 @@ int stage2__(const char *filename,
 
   return 0;
 }
-
-
 
 
 

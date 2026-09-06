@@ -50,8 +50,8 @@ IEC 官方页面确认 IEC 61131-3:2025 是第 4.0 版，发布日期为 2025-05
 | `TYPE-ELEMENTARY-V2` | BOOL、整数、位串、浮点、旧字符串、日期时间 | 已实现 | 默认 | grammar、标准库、生成 C 测试 | 精确变更未核对 |
 | `TYPE-DERIVED` | 别名、子范围、枚举、数组、结构、定长字符串 | 已实现 | 默认 | grammar、initialization 回归 | 精确变更未核对 |
 | `TYPE-SAFE` | PLCopen `SAFE*` 类型 | 已实现 | `-s` | grammar、CLI 选项 | PLCopen 扩展，不归因于 IEC 2025 |
-| `TYPE-REFERENCE` | `REF_TO`、`REF`、`DREF`、`^`、`NULL` | 部分实现 | `-r` | grammar、生成 C | 第三版来源已在源码注明；2025 细节未核对 |
-| `TYPE-REFERENCE-EXT` | `REF_TO ANY`、派生类型内宽松引用 | 已实现 | `-R` | grammar、CLI 选项 | MATIEC 非标准扩展 |
+| `TYPE-REFERENCE` | `REF_TO`、`REF`、`DREF`、`^`、`NULL` | 部分实现，含实验性空初始化 | `-r`；声明初始化另需实验 Profile | grammar、类型诊断、生成 C 回归 | 生命周期与 2025 精确规则未核对 |
+| `TYPE-REFERENCE-EXT` | `REF_TO ANY`、派生类型内宽松引用 | 已实现 | `-R` | grammar、正反向 CLI 回归 | MATIEC 非标准扩展 |
 | `POU-FUNCTION` | FUNCTION | 已实现 | 默认 | grammar、ST/IL 回归 | 精确变更未核对 |
 | `POU-FB` | FUNCTION_BLOCK 与实例 | 已实现 | 默认 | grammar、initialization 回归 | 精确变更未核对 |
 | `POU-PROGRAM` | PROGRAM | 已实现 | 默认 | grammar、生成 C 回归 | 精确变更未核对 |

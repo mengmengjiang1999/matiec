@@ -149,6 +149,57 @@ else
   error=1
 fi
 
+REFERENCE_NULL="$SCRIPT_DIR/profile-fixtures/reference-null.st"
+REFERENCE_GENERATED="$TMP_ROOT/reference-generated"
+mkdir -p "$REFERENCE_GENERATED"
+if "$IEC2C" --std=iec61131-3:2025-experimental -r -f -l -p \
+     -I "$MATIEC_LIBDIR" -T "$REFERENCE_GENERATED" "$REFERENCE_NULL" \
+     >"$TMP_ROOT/reference-null.stdout" 2>"$TMP_ROOT/reference-null.stderr" \
+   && grep -q 'NULL' "$REFERENCE_GENERATED/POUS.c" \
+   && "${CC_COMMAND[@]}" -std=c99 -I "$MATIEC_LIBDIR/C" -I "$REFERENCE_GENERATED" \
+        -include "$REFERENCE_GENERATED/POUS.h" \
+        -c "$REFERENCE_GENERATED/POUS.c" -o "$REFERENCE_GENERATED/POUS.o"; then
+  echo "[ O K ]    experimental-reference-null-initialization"
+else
+  echo "[ERROR]    experimental-reference-null-initialization -> reference output failed"
+  sed -n '1,12p' "$TMP_ROOT/reference-null.stderr"
+  error=1
+fi
+
+expect_failure legacy-reference-initialization "REF_TO initialization is experimental" \
+  "$IEC2C" --std=legacy -r -f -l -p -I "$MATIEC_LIBDIR" "$REFERENCE_NULL"
+expect_failure incompatible-reference-assignment "Incompatible data types" \
+  "$IEC2C" --std=iec61131-3:2025-experimental -r -f -l -p \
+  -I "$MATIEC_LIBDIR" "$SCRIPT_DIR/profile-fixtures/reference-incompatible.st"
+expect_failure standard-reference-broad-form "use -R option" \
+  "$IEC2C" --std=iec61131-3:2025-experimental -r -y -I "$MATIEC_LIBDIR" \
+  "$SCRIPT_DIR/profile-fixtures/reference-broad-extension.st"
+if "$IEC2C" --std=iec61131-3:2025-experimental -R -y -I "$MATIEC_LIBDIR" \
+     "$SCRIPT_DIR/profile-fixtures/reference-broad-extension.st" \
+     >"$TMP_ROOT/reference-broad.stdout" 2>"$TMP_ROOT/reference-broad.stderr"; then
+  echo "[ O K ]    matiec-reference-broad-extension"
+else
+  echo "[ERROR]    matiec-reference-broad-extension -> -R form was rejected"
+  sed -n '1,12p' "$TMP_ROOT/reference-broad.stderr"
+  error=1
+fi
+REFERENCE_LOCAL_GENERATED="$TMP_ROOT/reference-local-generated"
+mkdir -p "$REFERENCE_LOCAL_GENERATED"
+if "$IEC2C" --std=iec61131-3:2025-experimental -r -f -l -p \
+     -I "$MATIEC_LIBDIR" -T "$REFERENCE_LOCAL_GENERATED" \
+     "$SCRIPT_DIR/profile-fixtures/reference-local-lifetime.st" \
+     >"$TMP_ROOT/reference-local.stdout" 2>"$TMP_ROOT/reference-local.stderr" \
+   && "${CC_COMMAND[@]}" -std=c99 -I "$MATIEC_LIBDIR/C" \
+        -I "$REFERENCE_LOCAL_GENERATED" -include "$REFERENCE_LOCAL_GENERATED/POUS.h" \
+        -c "$REFERENCE_LOCAL_GENERATED/POUS.c" \
+        -o "$REFERENCE_LOCAL_GENERATED/POUS.o"; then
+  echo "[ O K ]    reference-local-lifetime"
+else
+  echo "[ERROR]    reference-local-lifetime -> local reference did not compile"
+  sed -n '1,12p' "$TMP_ROOT/reference-local.stderr"
+  error=1
+fi
+
 generated_dir="$TMP_ROOT/generated"
 mkdir -p "$generated_dir"
 if "$IEC2C" --std=legacy -f -l -p -I "$MATIEC_LIBDIR" -T "$generated_dir" "$INPUT_FILE" \

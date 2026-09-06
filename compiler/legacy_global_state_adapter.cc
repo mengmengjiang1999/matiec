@@ -26,6 +26,8 @@ LegacyGlobalStateAdapter::LegacyGlobalStateAdapter(CompilationContext &context)
   runtime_options.nonliteral_in_array_size = options.nonliteral_array_size;
   runtime_options.utf8_source_and_strings =
       options.language_profile == LanguageProfile::iec61131_3_2025_experimental;
+  runtime_options.iec2025_experimental =
+      options.language_profile == LanguageProfile::iec61131_3_2025_experimental;
   runtime_options.relaxed_datatype_model = options.relaxed_datatype_model;
   runtime_options.includedir = options.include_directory.empty()
                                   ? NULL

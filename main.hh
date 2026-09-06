@@ -52,6 +52,7 @@ typedef struct {
 	bool ref_nonstand_extensions;  /* Allow the use of non-standard extensions to REF_TO datatypes: REF_TO ANY, and REF_TO in struct elements! */
 	bool nonliteral_in_array_size; /* Allow the use of constant non-literals when specifying size of arrays (ARRAY [1..max] OF INT) */
 	bool utf8_source_and_strings; /* Validate UTF-8 source and accept UTF-8 string bytes. */
+	bool iec2025_experimental;    /* Enable evidence-gated experimental language increments. */
 	const char *includedir;        /* Include directory, where included files will be searched for... */
 	
    /* options specific to stage3 */
