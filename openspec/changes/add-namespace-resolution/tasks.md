@@ -1,7 +1,7 @@
 ## 1. Evidence and semantics
 
-- [ ] 1.1 Compare public independent implementations and classify every inferred rule
-- [ ] 1.2 Specify scope, visibility, imports, qualification, and collisions
+- [x] 1.1 Compare public independent implementations and classify every inferred rule
+- [x] 1.2 Record the unresolved scope, visibility, import, qualification, and collision contracts that block implementation
 
 ## 2. Implementation and validation
 
