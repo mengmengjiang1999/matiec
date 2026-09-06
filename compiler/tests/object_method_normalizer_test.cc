@@ -12,8 +12,8 @@ int main() {
         "VAR\nCount : INT;\nEND_VAR\n"
         "Count := Count;\n"
         "METHOD PUBLIC Increment : INT\n"
-        "VAR_INPUT\nStep : INT;\nEND_VAR\n"
-        "Count := Count + Step;\nIncrement := Count;\n"
+        "VAR_INPUT\nDelta : INT;\nEND_VAR\n"
+        "Count := Count + Delta;\nIncrement := Count;\n"
         "END_METHOD\nEND_FUNCTION_BLOCK\n"
         "PROGRAM Main\nVAR\nC : Counter;\nValue : INT;\nEND_VAR\n"
         "Value := C.Increment(2);\nEND_PROGRAM\n";
@@ -26,7 +26,7 @@ int main() {
     assert(result.source.find("METHOD PUBLIC") == std::string::npos);
     assert(result.source.find("FUNCTION MATIECMETHOD7COUNTER9INCREMENT : INT") !=
            std::string::npos);
-    assert(result.source.find("MATIECSELF.COUNT := MATIECSELF.COUNT + Step") !=
+    assert(result.source.find("MATIECSELF.COUNT := MATIECSELF.COUNT + Delta") !=
            std::string::npos);
     assert(result.source.find("MATIECMETHOD7COUNTER9INCREMENT(C, 2)") !=
            std::string::npos);

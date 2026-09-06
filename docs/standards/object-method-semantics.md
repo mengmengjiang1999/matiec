@@ -13,8 +13,8 @@ FUNCTION_BLOCK Counter
   Count := Count;
 
   METHOD PUBLIC Increment : INT
-    VAR_INPUT Step : INT; END_VAR
-    Count := Count + Step;
+    VAR_INPUT Delta : INT; END_VAR
+    Count := Count + Delta;
     Increment := Count;
   END_METHOD
 END_FUNCTION_BLOCK
