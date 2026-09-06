@@ -108,7 +108,7 @@ const std::vector<LanguageFeatureRecord> &language_feature_catalog() {
     {"CONFIG-VAR-ACCESS", "Access variables", Family::configuration, Status::not_implemented, "none", Evidence::unverified, Evidence::unverified, "commented grammar in stage1_2/iec_bison.yy", "", "Syntax and 2025 status require evidence", true},
     {"ED3-NAMESPACE", "Namespaces and qualified names", Family::pou, Status::not_implemented, "none", Evidence::unverified, Evidence::cross_vendor_provisional, "No MATIEC AST or grammar; public vendor material", "", "Normative 2025 behavior is unverified", true},
     {"ED3-OO", "Classes, interfaces, methods and inheritance", Family::pou, Status::not_implemented, "none", Evidence::unverified, Evidence::cross_vendor_provisional, "No MATIEC AST or grammar; public vendor material", "", "Normative 2025 behavior is unverified", true},
-    {"ED4-UTF8", "UTF-8 strings and related functions", Family::datatype, Status::planned, "iec61131-3:2025-experimental", Evidence::unverified, Evidence::official_public, "IEC public 2025 product page", "", "Normative representation and function details are unverified", true}
+    {"ED4-UTF8", "UTF-8 source and STRING literals", Family::datatype, Status::partially_implemented, "iec61131-3:2025-experimental", Evidence::implementation_verified, Evidence::official_public, "compiler/utf8_validation.cc; stage1_2/iec_flex.ll; IEC public 2025 product page", "compiler/tests/utf8_validation_test.cc; tests/cli/runtests", "Normative indexing, normalization, WSTRING representation, and associated function signatures are unverified", false}
   };
   return catalog;
 }

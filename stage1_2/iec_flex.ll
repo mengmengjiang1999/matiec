@@ -143,6 +143,7 @@
 #include "stage1_2_priv.hh"
 #include "../compiler/ast_arena.hh"
 #include "../compiler/compilation_abort.hh"
+#include "../compiler/utf8_validation.hh"
 
 
 /* Variable defined by the bison parser,
@@ -842,6 +843,10 @@ single_byte_character_representation 	$'|\"|{single_byte_char}|{common_character
 
 double_byte_character_string	\"({double_byte_character_representation}*)\"
 single_byte_character_string	'({single_byte_character_representation}*)'
+utf8_non_ascii			[\x80-\xFF]
+utf8_bom			\xEF\xBB\xBF
+utf8_double_byte_character_string	\"(({double_byte_character_representation}|{utf8_non_ascii})*)\"
+utf8_single_byte_character_string	'(({single_byte_character_representation}|{utf8_non_ascii})*)'
 
 
 /************************/
@@ -1892,8 +1897,32 @@ _			/* do nothing - eat it up!*/
 	/*******************************/
 	/* B.1.2.2   Character Strings */
 	/*******************************/
+{utf8_bom} {
+  if (!runtime_options.utf8_source_and_strings ||
+      yylloc.first_line != 1 || yylloc.first_column != 1) {
+    fprintf(stderr, "%s:%d:%d: error: UTF-8 BOM is only accepted at the start of experimental-profile source\n",
+            current_filename, yylloc.first_line, yylloc.first_column);
+    throw matiec::CompilationAbort("Misplaced or disabled UTF-8 BOM", true);
+  }
+}
 {double_byte_character_string} {yylval.ID=matiec::retain_ast_string(yytext); return double_byte_character_string_token;}
 {single_byte_character_string} {yylval.ID=matiec::retain_ast_string(yytext); return single_byte_character_string_token;}
+{utf8_double_byte_character_string} {
+  if (!runtime_options.utf8_source_and_strings) {
+    fprintf(stderr, "%s:%d:%d: error: UTF-8 string literals require --std=iec61131-3:2025-experimental\n",
+            current_filename, yylloc.first_line, yylloc.first_column);
+    throw matiec::CompilationAbort("UTF-8 string literal is disabled", true);
+  }
+  yylval.ID=matiec::retain_ast_string(yytext); return double_byte_character_string_token;
+}
+{utf8_single_byte_character_string} {
+  if (!runtime_options.utf8_source_and_strings) {
+    fprintf(stderr, "%s:%d:%d: error: UTF-8 string literals require --std=iec61131-3:2025-experimental\n",
+            current_filename, yylloc.first_line, yylloc.first_column);
+    throw matiec::CompilationAbort("UTF-8 string literal is disabled", true);
+  }
+  yylval.ID=matiec::retain_ast_string(yytext); return single_byte_character_string_token;
+}
 
 
 	/******************************/
@@ -2028,6 +2057,15 @@ void handle_include_file_(FILE *filehandle, const char *filename) {
   if (include_stack_ptr >= MAX_INCLUDE_DEPTH) {
     fprintf(stderr, "Includes nested too deeply\n");
     throw matiec::CompilationAbort("Includes nested too deeply", true);
+  }
+  if (runtime_options.utf8_source_and_strings) {
+    matiec::Utf8Error error;
+    if (!matiec::validate_utf8_file(filehandle, &error)) {
+      fprintf(stderr, "%s:%lu:%lu: error: malformed UTF-8 source: %s\n",
+              filename, (unsigned long)error.line, (unsigned long)error.column,
+              error.reason.c_str());
+      throw matiec::CompilationAbort("Malformed UTF-8 included source", true);
+    }
   }
   
   yyin = filehandle;

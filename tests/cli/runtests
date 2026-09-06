@@ -101,6 +101,52 @@ compare_profiles sfc "$PROJECT_ROOT/tests/syntax/sfc/sfc.txt"
 compare_profiles configuration "$PROJECT_ROOT/tests/initialization/ok_array_scalar.st"
 compare_profiles reference "$SCRIPT_DIR/profile-fixtures/reference.st" -r
 
+UTF8_INPUT="$SCRIPT_DIR/profile-fixtures/utf8.st"
+UTF8_GENERATED="$TMP_ROOT/utf8-generated"
+mkdir -p "$UTF8_GENERATED"
+if "$IEC2C" --std=iec61131-3:2025-experimental -f -l -p \
+     -I "$MATIEC_LIBDIR" -T "$UTF8_GENERATED" "$UTF8_INPUT" \
+     >"$TMP_ROOT/utf8.stdout" 2>"$TMP_ROOT/utf8.stderr" \
+   && grep -q '\\xE4\\xB8\\xAD\\xE6\\x96\\x87\\xF0\\x9F\\x9A\\x80' \
+        "$UTF8_GENERATED/POUS.c" \
+   && "${CC_COMMAND[@]}" -std=c99 -I "$MATIEC_LIBDIR/C" -I "$UTF8_GENERATED" \
+        -c "$UTF8_GENERATED/POUS.c" -o "$UTF8_GENERATED/POUS.o"; then
+  echo "[ O K ]    experimental-utf8-literal"
+else
+  echo "[ERROR]    experimental-utf8-literal -> UTF-8 literal was not emitted as stable bytes"
+  sed -n '1,12p' "$TMP_ROOT/utf8.stderr"
+  error=1
+fi
+
+expect_failure legacy-utf8-literal "UTF-8 string literals require" \
+  "$IEC2C" --std=legacy -f -l -p -I "$MATIEC_LIBDIR" "$UTF8_INPUT"
+
+MALFORMED_UTF8="$TMP_ROOT/malformed-utf8.st"
+printf 'PROGRAM BAD\nVAR S : STRING := '\''\344\270'\''; END_VAR\nEND_PROGRAM\n' \
+  >"$MALFORMED_UTF8"
+expect_failure malformed-utf8-source "Malformed UTF-8 source" \
+  "$IEC2C" --std=iec61131-3:2025-experimental -f -l -p \
+  -I "$MATIEC_LIBDIR" "$MALFORMED_UTF8"
+
+UTF8_RUNTIME="$TMP_ROOT/utf8-runtime.c"
+cat >"$UTF8_RUNTIME" <<'EOF'
+#include <assert.h>
+#include "iec_std_lib.h"
+int main(void) {
+  STRING value = __STRING_LITERAL(7, "\xE4\xB8\xAD\xF0\x9F\x9A\x80");
+  assert(value.len == 7);
+  assert(value.body[0] == 0xE4 && value.body[6] == 0x80);
+  return 0;
+}
+EOF
+if "${CC_COMMAND[@]}" -std=c99 -I "$MATIEC_LIBDIR/C" "$UTF8_RUNTIME" \
+     -o "$TMP_ROOT/utf8-runtime" && "$TMP_ROOT/utf8-runtime"; then
+  echo "[ O K ]    utf8-runtime-byte-abi"
+else
+  echo "[ERROR]    utf8-runtime-byte-abi -> encoded-byte representation changed"
+  error=1
+fi
+
 generated_dir="$TMP_ROOT/generated"
 mkdir -p "$generated_dir"
 if "$IEC2C" --std=legacy -f -l -p -I "$MATIEC_LIBDIR" -T "$generated_dir" "$INPUT_FILE" \

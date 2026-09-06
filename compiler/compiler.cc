@@ -1,6 +1,7 @@
 #include "compiler/compiler.hh"
 #include "compiler/compilation_abort.hh"
 #include "compiler/legacy_global_state_adapter.hh"
+#include "compiler/utf8_validation.hh"
 
 #include "absyntax/absyntax.hh"
 #include "stage3/stage3.hh"
@@ -15,6 +16,16 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
   }
 
   try {
+    if (language_profile_is_experimental(context.options().language_profile)) {
+      Utf8Error utf8_error;
+      if (!validate_utf8_file(context.source_path(), &utf8_error)) {
+        SourceLocation location{context.source_path(), utf8_error.line,
+                                utf8_error.column, utf8_error.offset};
+        context.diagnostics().error("Malformed UTF-8 source: " + utf8_error.reason,
+                                    {location, location});
+        return context.diagnostics().result();
+      }
+    }
     ActiveAstArenaScope ast_arena_scope(context.ast_arena());
     const CompilerOptions &options = context.options();
     LegacyGlobalStateAdapter legacy_state(context);

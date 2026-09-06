@@ -64,7 +64,7 @@ IEC 官方页面确认 IEC 61131-3:2025 是第 4.0 版，发布日期为 2025-05
 | `CONFIG-VAR-ACCESS` | VAR_ACCESS | 未实现 | — | grammar 中规则被注释 | 未核对 |
 | `ED3-NAMESPACE` | 命名空间和限定名 | 未实现 | — | 无对应 AST/grammar | 第三版公开摘要确认；2025 细节未核对 |
 | `ED3-OO` | CLASS、INTERFACE、METHOD、继承 | 未实现 | — | 无对应 AST/grammar | 第三版公开摘要确认；2025 细节未核对 |
-| `ED4-UTF8` | UTF-8 字符串及相关函数 | 未实现 | — | lexer 明确依赖 ASCII | `official-public`，第四版明确新增 |
+| `ED4-UTF8` | UTF-8 源码与 `STRING` 字面量 | 部分实现 | `iec61131-3:2025-experimental` | 编码验证、lexer、生成 C 与运行回归 | `official-public`；函数签名等细节待核对 |
 
 ## Annex B 未决问题
 
@@ -86,7 +86,7 @@ IEC 公开页面说明 Annex B 包含与 2013 版相比的重要技术变更，�
 
 > The experimental profile evolves toward publicly documented IEC 61131-3:2025 capabilities.
 
-> UTF-8 strings are a publicly confirmed IEC 61131-3:2025 addition and are planned, not yet implemented.
+> UTF-8 strings are a publicly confirmed IEC 61131-3:2025 addition; MATIEC's experimental profile currently implements validated UTF-8 source and byte-encoded `STRING` literals, while normative function details remain unresolved.
 
 项目文档不得在缺少完整证据时使用这些表述：
 

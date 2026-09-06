@@ -529,8 +529,19 @@ class generate_c_base_c: public iterator_visitor_c {
         char c = symbol->value[i];
         if ((c == '\\') || (c == '"'))
           {str += '\\'; str += c; count ++; continue;}
-        if (c != '$')
-          {str += c; count++; continue;}
+        if (c != '$') {
+          const unsigned char byte = static_cast<unsigned char>(c);
+          if (byte >= 0x80) {
+            static const char hex[] = "0123456789ABCDEF";
+            str += "\\x";
+            str += hex[byte >> 4];
+            str += hex[byte & 0x0F];
+          } else {
+            str += c;
+          }
+          count++;
+          continue;
+        }
         /* this should be safe, since the code has passed the syntax parser!! */
         c = symbol->value[++i];
         switch (c) {
@@ -1117,7 +1128,6 @@ void *visit(ref_type_decl_c *symbol) {
 }; /* class generate_c_base_and_typeid_c */
 
 #endif
-
 
 
 
