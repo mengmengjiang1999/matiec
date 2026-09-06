@@ -200,6 +200,43 @@ else
   error=1
 fi
 
+NAMESPACE_INPUT="$SCRIPT_DIR/profile-fixtures/namespace.st"
+NAMESPACE_GENERATED="$TMP_ROOT/namespace-generated"
+mkdir -p "$NAMESPACE_GENERATED"
+if "$IEC2C" --std=iec61131-3:2025-experimental -f -l -p \
+     -I "$MATIEC_LIBDIR" -T "$NAMESPACE_GENERATED" "$NAMESPACE_INPUT" \
+     >"$TMP_ROOT/namespace.stdout" 2>"$TMP_ROOT/namespace.stderr" \
+   && grep -q 'MATIECNS7FACTORY6MOTION5SPEED' "$NAMESPACE_GENERATED/POUS.h" \
+   && grep -q 'MATIECNS7FACTORY6MOTION5CLAMP' "$NAMESPACE_GENERATED/POUS.c" \
+   && "${CC_COMMAND[@]}" -std=c99 -I "$MATIEC_LIBDIR/C" -I "$NAMESPACE_GENERATED" \
+        -include "$NAMESPACE_GENERATED/POUS.h" -c "$NAMESPACE_GENERATED/POUS.c" \
+        -o "$NAMESPACE_GENERATED/POUS.o"; then
+  echo "[ O K ]    experimental-namespace-output"
+else
+  echo "[ERROR]    experimental-namespace-output -> lowering or generated C failed"
+  sed -n '1,12p' "$TMP_ROOT/namespace.stderr"
+  error=1
+fi
+
+if "$IEC2C" --std=iec61131-3:2025-experimental -y -f -l -p \
+     -I "$MATIEC_LIBDIR" "$SCRIPT_DIR/profile-fixtures/namespace-using.st" \
+     >"$TMP_ROOT/namespace-using.stdout" 2>"$TMP_ROOT/namespace-using.stderr"; then
+  echo "[ O K ]    experimental-namespace-using"
+else
+  echo "[ERROR]    experimental-namespace-using -> imported lookup failed"
+  sed -n '1,12p' "$TMP_ROOT/namespace-using.stderr"
+  error=1
+fi
+
+expect_failure namespace-ambiguity "Ambiguous namespace lookup" \
+  "$IEC2C" --std=iec61131-3:2025-experimental -y -f -l -p \
+  -I "$MATIEC_LIBDIR" "$SCRIPT_DIR/profile-fixtures/namespace-ambiguous.st"
+expect_failure namespace-visibility "Namespace declaration is inaccessible" \
+  "$IEC2C" --std=iec61131-3:2025-experimental -y -f -l -p \
+  -I "$MATIEC_LIBDIR" "$SCRIPT_DIR/profile-fixtures/namespace-internal.st"
+expect_failure legacy-namespace "unknown syntax error" \
+  "$IEC2C" --std=legacy -y -f -l -p -I "$MATIEC_LIBDIR" "$NAMESPACE_INPUT"
+
 generated_dir="$TMP_ROOT/generated"
 mkdir -p "$generated_dir"
 if "$IEC2C" --std=legacy -f -l -p -I "$MATIEC_LIBDIR" -T "$generated_dir" "$INPUT_FILE" \

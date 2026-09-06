@@ -2294,11 +2294,15 @@ void include_string(const char *source_code) {include_string_(source_code);}
  * Caller must close the file!
  */
 FILE *parse_file(const char *filename) {
+  return parse_file_as(filename, filename);
+}
+
+FILE *parse_file_as(const char *filename, const char *display_filename) {
   FILE *filehandle = NULL;
 
   if((filehandle = fopen(filename, "r")) != NULL) {
     yyin = filehandle;
-    current_filename = matiec::retain_ast_string(filename);
+    current_filename = matiec::retain_ast_string(display_filename);
     current_tracking = GetNewTracking(yyin);
   }
   return filehandle;

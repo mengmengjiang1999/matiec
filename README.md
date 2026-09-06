@@ -68,9 +68,27 @@ Both tools support an explicit `--std=<profile>` selector:
 | `legacy` | Default. Preserves the existing MATIEC language and generated output. |
 | `iec61131-3:2025-experimental` | Opt-in path for independently implemented features backed by public evidence. It is not a complete or certified conformance claim. |
 
-The experimental profile is currently feature-neutral, so it intentionally accepts
-the same language as `legacy`. Existing switches such as `-r`, `-R`, `-s`, `-n`,
-and `-a` remain independent extensions and are not enabled by selecting a profile.
+The experimental profile currently adds validated UTF-8 source/`STRING` literals,
+reference declaration initialization, and a deliberately provisional MATIEC
+namespace subset. Namespace behavior is documented as a project extension because
+the complete normative 2025 rules are not publicly available. Existing switches
+such as `-r`, `-R`, `-s`, `-n`, and `-a` remain independent extensions and are not
+enabled by selecting a profile.
+
+Namespace quick example:
+
+```iecst
+NAMESPACE Factory.Motion
+TYPE Speed : INT; END_TYPE
+END_NAMESPACE
+
+PROGRAM Main
+  VAR Current : Factory.Motion.Speed; END_VAR
+END_PROGRAM
+```
+
+See the [namespace semantics](docs/standards/namespace-semantics.md) for supported
+syntax, visibility, lookup, and known limits.
 
 ## Quick start
 

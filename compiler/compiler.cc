@@ -1,11 +1,60 @@
 #include "compiler/compiler.hh"
 #include "compiler/compilation_abort.hh"
 #include "compiler/legacy_global_state_adapter.hh"
+#include "compiler/namespace_normalizer.hh"
 #include "compiler/utf8_validation.hh"
 
 #include "absyntax/absyntax.hh"
 #include "stage3/stage3.hh"
 #include "stage4/stage4.hh"
+
+#include <cerrno>
+#include <cstdio>
+#include <cstring>
+#include <string>
+#include <unistd.h>
+
+namespace {
+
+class TemporarySource {
+ public:
+  ~TemporarySource() {
+    if (!path_.empty()) std::remove(path_.c_str());
+  }
+
+  bool write(const std::string &source, std::string *error) {
+    char path[] = "/tmp/matiec-namespace-XXXXXX";
+    const int descriptor = mkstemp(path);
+    if (descriptor < 0) {
+      *error = std::strerror(errno);
+      return false;
+    }
+    path_ = path;
+    std::size_t written = 0;
+    while (written < source.size()) {
+      const ssize_t count = ::write(descriptor, source.data() + written,
+                                    source.size() - written);
+      if (count < 0) {
+        *error = std::strerror(errno);
+        ::close(descriptor);
+        return false;
+      }
+      written += static_cast<std::size_t>(count);
+    }
+    if (::close(descriptor) != 0) {
+      *error = std::strerror(errno);
+      return false;
+    }
+    return true;
+  }
+
+  const std::string &path() const { return path_; }
+
+ private:
+  std::string path_;
+};
+
+}  // namespace
 
 namespace matiec {
 
@@ -30,8 +79,26 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     const CompilerOptions &options = context.options();
     LegacyGlobalStateAdapter legacy_state(context);
 
+    NamespaceNormalizeResult namespace_result;
+    TemporarySource normalized_source;
+    std::string parser_source_path = context.source_path();
+    if (language_profile_is_experimental(options.language_profile)) {
+      if (!normalize_experimental_namespace_file(
+              context.source_path(), context.diagnostics(), &namespace_result))
+        return context.diagnostics().result();
+      if (namespace_result.used_namespaces) {
+        std::string error;
+        if (!normalized_source.write(namespace_result.source, &error)) {
+          context.diagnostics().fatal(
+              "Cannot create normalized namespace source: " + error);
+          return context.diagnostics().result();
+        }
+        parser_source_path = normalized_source.path();
+      }
+    }
+
     symbol_c *tree_root = NULL;
-    if (legacy_state.parse(&tree_root) < 0)
+    if (legacy_state.parse(parser_source_path, context.source_path(), &tree_root) < 0)
       return CompilationResult::failure();
 
     if (options.syntax_only)

@@ -1,0 +1,11 @@
+NAMESPACE INTERNAL Secret
+TYPE
+  Value : INT;
+END_TYPE
+END_NAMESPACE
+
+PROGRAM Main
+  VAR
+    Current : Secret.Value;
+  END_VAR
+END_PROGRAM

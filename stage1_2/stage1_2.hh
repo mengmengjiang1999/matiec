@@ -46,6 +46,8 @@
 
 
 int stage1_2(const char *filename, symbol_c **tree_root);
+int stage1_2(const char *filename, const char *display_filename,
+             symbol_c **tree_root);
 
 
 

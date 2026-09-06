@@ -30,6 +30,10 @@ EXTRA_DIST = \
 	tests/cli/profile-fixtures/reference-broad-extension.st \
 	tests/cli/profile-fixtures/reference-local-lifetime.st \
 	tests/cli/profile-fixtures/utf8.st \
+	tests/cli/profile-fixtures/namespace.st \
+	tests/cli/profile-fixtures/namespace-using.st \
+	tests/cli/profile-fixtures/namespace-ambiguous.st \
+	tests/cli/profile-fixtures/namespace-internal.st \
 	tests/generated_c/runtests \
 	tests/initialization/ok_array_scalar.st \
 	tests/syntax/sfc/sfc.txt \

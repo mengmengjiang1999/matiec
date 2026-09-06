@@ -38,6 +38,12 @@ int LegacyGlobalStateAdapter::parse(symbol_c **tree_root) const {
   return stage1_2(context_.source_path().c_str(), tree_root);
 }
 
+int LegacyGlobalStateAdapter::parse(const std::string &source_path,
+                                    const std::string &display_path,
+                                    symbol_c **tree_root) const {
+  return stage1_2(source_path.c_str(), display_path.c_str(), tree_root);
+}
+
 void LegacyGlobalStateAdapter::initialize_symbol_tables(symbol_c *tree_root) const {
   absyntax_utils_init(tree_root);
 }

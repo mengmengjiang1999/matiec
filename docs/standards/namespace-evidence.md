@@ -40,11 +40,10 @@ The available public sources do not provide enough consistent detail to freeze:
 - linkage spelling and ABI identity for qualified POUs and types;
 - Edition 4 changes relative to Edition 3.
 
-## Implementation gate
+## Provisional implementation decision
 
-`add-namespace-resolution` must remain active and its parser/resolver tasks remain
-unchecked. Choosing any of the unresolved rules would turn a provisional vendor
-behavior into an alleged IEC behavior, contrary to the experimental profile's
-evidence policy. Implementation can resume when an authoritative, legally usable
-source establishes these contracts, or when the project owner explicitly chooses
-a separately named MATIEC namespace extension with its own non-IEC semantics.
+The project owner explicitly chose the second path on 2026-09-06: implement a
+separately documented MATIEC provisional contract under
+`iec61131-3:2025-experimental`. The resulting rules are implementation behavior,
+not alleged IEC requirements. They are specified in `namespace-semantics.md` and
+may change if authoritative, legally usable evidence later contradicts them.

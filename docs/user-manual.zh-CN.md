@@ -9,7 +9,7 @@ MATIEC 的前端主要基于 IEC 61131-3 第 2 版最终草案，并选择性实
 两个命令行工具都接受 `--std=<profile>`：
 
 - `legacy`：默认值，保留现有 MATIEC 语法和输出行为；
-- `iec61131-3:2025-experimental`：面向公开证据所确认的 2025 能力演进。目前增加 UTF-8 源码与 `STRING` 字面量支持；它不是完整或认证符合 IEC 61131-3:2025 的声明。
+- `iec61131-3:2025-experimental`：面向公开证据所确认的 2025 能力演进。目前增加 UTF-8 源码与 `STRING` 字面量、引用声明初始化，以及明确标注为 MATIEC 临时规则的命名空间子集；它不是完整或认证符合 IEC 61131-3:2025 的声明。
 
 例如：
 
@@ -50,6 +50,7 @@ Profile 只表示标准版本方向。`-r`、`-R`、`-s`、`-n`、`-a` 等现有
 | 配置模型 | 支持 | `CONFIGURATION`、`RESOURCE`、`TASK`、程序实例 |
 | `VAR_ACCESS` | 当前不支持 | 对应解析规则在当前前端中未启用 |
 | IEC 61131-3 第 3 版引用 | 可选 | 使用 `-r` 或 `-R` 启用 |
+| 命名空间与限定名 | 实验性部分支持 | 仅 `iec61131-3:2025-experimental`；采用 MATIEC 临时规则 |
 | PLCopen SAFE 类型 | 可选 | 使用 `-s` 启用 |
 
 一个输入文件可以包含多个类型声明、函数、功能块、程序和配置，也可以让使用 ST、IL、文本 SFC 的不同 POU 共存。单个 POU 的正文应采用一种文本表示，不要在同一正文内任意混写 ST 与 IL。
@@ -470,6 +471,29 @@ END_PROGRAM
 
 函数和功能块通常隐式获得 `EN`/`ENO` 参数；`-e` 禁用它们的生成。默认要求 POU 至少包含一个输入、输出或输入输出参数的历史限制可用 `-i` 放宽。
 
+### 7.4 实验性命名空间
+
+命名空间只在 `iec61131-3:2025-experimental` 中启用：
+
+```iecst
+NAMESPACE Factory.Motion
+TYPE Speed : INT; END_TYPE
+END_NAMESPACE
+
+USING Factory.Motion;
+
+PROGRAM Main
+  VAR Current : Speed; END_VAR
+END_PROGRAM
+```
+
+支持点分限定名、`USING` 导入和 `INTERNAL` 可见性。当前命名空间优先，多个
+导入同时命中会报歧义；`INTERNAL` 仅允许同一命名空间树访问。不支持别名、
+重开命名空间、局部名字遮蔽和跨 include 文件拆分命名空间。生成代码会出现
+`MATIECNS...` 形式的临时内部名，该拼写不是稳定 ABI。上述规则是项目为继续
+实验而定义的行为，并非对 IEC 第四版原文的复述。完整边界见
+[实验性命名空间语义](standards/namespace-semantics.md)。
+
 ## 8. Structured Text（ST）
 
 ### 8.1 表达式与运算符
@@ -705,6 +729,7 @@ TASK name(SINGLE := data_source, INTERVAL := data_source, PRIORITY := integer);
 - 本项目直接解析的是文本源，不是 FBD、LD 编辑器文件；XML 或图形工程需由上游工具转换。
 - 前端以 IEC 61131-3 第 2 版草案为基础，并非第 3 版全部语法的实现。
 - `VAR_ACCESS` 当前未启用。
+- 命名空间只在实验 Profile 下部分实现，使用 MATIEC 临时语义而非已验证的第四版完整规则。
 - `REF_TO` 是选择性扩展；默认命令行下不能直接使用。
 - 未知 pragma 虽可能通过解析，但不表示代码生成器会赋予它特定语义。
 - 语法通过不等于目标系统行为已经验证。生成的 C 仍需与目标 PLC 运行时、I/O 映射和调度环境集成测试。

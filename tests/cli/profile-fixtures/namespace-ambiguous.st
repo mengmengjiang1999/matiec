@@ -1,0 +1,20 @@
+NAMESPACE First
+TYPE
+  Value : INT;
+END_TYPE
+END_NAMESPACE
+
+NAMESPACE Second
+TYPE
+  Value : INT;
+END_TYPE
+END_NAMESPACE
+
+USING First;
+USING Second;
+
+PROGRAM Main
+  VAR
+    Current : Value;
+  END_VAR
+END_PROGRAM

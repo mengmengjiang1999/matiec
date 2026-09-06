@@ -8752,7 +8752,8 @@ NULL
 extern const char *INCLUDE_DIRECTORIES[];
 
 
-static int parse_files(const char *libfilename, const char *filename) {
+static int parse_files(const char *libfilename, const char *filename,
+                       const char *display_filename) {
   /* first parse the standard library file... */  
   /*   Do not debug the standard library, even if debug flag is set!
   #if YYDEBUG
@@ -8800,7 +8801,7 @@ static int parse_files(const char *libfilename, const char *filename) {
     yydebug = 1;
   #endif
   FILE *mainfile = NULL;
-  if ((mainfile = parse_file(filename)) == NULL) {
+  if ((mainfile = parse_file_as(filename, display_filename)) == NULL) {
     char *errmsg = strdup2("Error opening main file ", filename);
     perror(errmsg);
     free(errmsg);
@@ -8865,7 +8866,7 @@ static int parse_files(const char *libfilename, const char *filename) {
  *  datatypes will also already be in the library_element_symtable!
  */
 
-int stage2__(const char *filename, 
+int stage2__(const char *filename, const char *display_filename,
              symbol_c **tree_root_ref
             ) {             
   char *libfilename = NULL;
@@ -8886,7 +8887,7 @@ int stage2__(const char *filename,
     // fprintf (stderr, "----> Starting pre-parsing!\n");
     tree_root = NULL;
     set_preparse_state();
-    if (parse_files(libfilename, filename) < 0) {
+    if (parse_files(libfilename, filename, display_filename) < 0) {
       free(libfilename);
       return -1;
     }
@@ -8898,7 +8899,7 @@ int stage2__(const char *filename,
   // fprintf (stderr, "----> Starting normal parsing!\n");
   tree_root = NULL;
   rst_preparse_state();
-  if (parse_files(libfilename, filename) < 0) {
+  if (parse_files(libfilename, filename, display_filename) < 0) {
     free(libfilename);
     return -1;
   }
@@ -8911,7 +8912,6 @@ int stage2__(const char *filename,
 
   return 0;
 }
-
 
 
 

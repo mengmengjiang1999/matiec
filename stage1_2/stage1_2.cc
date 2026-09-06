@@ -230,12 +230,17 @@ char *strdup3(const char *a, const char *b, const char *c) {
 /***********************************************************************/
 /***********************************************************************/
 
-int stage2__(const char *filename, 
+int stage2__(const char *filename, const char *display_filename,
              symbol_c **tree_root_ref
             );
 
 
 int stage1_2(const char *filename, symbol_c **tree_root_ref) {
+  return stage1_2(filename, filename, tree_root_ref);
+}
+
+int stage1_2(const char *filename, const char *display_filename,
+             symbol_c **tree_root_ref) {
       /* NOTE: we only call stage2 (bison - syntax analysis) directly, as stage 2 will itself call stage1 (flex - lexical analysis)
        *       automatically as needed
        */
@@ -249,5 +254,5 @@ int stage1_2(const char *filename, symbol_c **tree_root_ref) {
   library_element_symtable.clear();
   variable_name_symtable.clear();
   direct_variable_symtable.clear();
-  return stage2__(filename, tree_root_ref);
+  return stage2__(filename, display_filename, tree_root_ref);
 }
