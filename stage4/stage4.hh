@@ -44,6 +44,8 @@
 
 #include <sstream>
 
+namespace matiec { class AnalysisStore; }
+
 
 void stage4err(const char *stage4_generator_id, symbol_c *symbol1, symbol_c *symbol2, const char *errmsg, ...);
 
@@ -55,14 +57,17 @@ class stage4out_c {
 
   public:
     explicit stage4out_c(matiec::OutputManager &outputs,
-                         std::string indent_level = "  ");
+                         std::string indent_level = "  ",
+                         const matiec::AnalysisStore *analysis = NULL);
     stage4out_c(matiec::OutputManager &outputs, const char *dir,
                 const char *radix, const char *extension,
-                std::string indent_level = "  ");
+                std::string indent_level = "  ",
+                const matiec::AnalysisStore *analysis = NULL);
     ~stage4out_c(void);
     
     void flush(void);
     matiec::OutputManager &output_manager(void);
+    const matiec::AnalysisStore *analysis_store(void) const;
     
     void enable_output(void);
     void disable_output(void);
@@ -99,6 +104,7 @@ class stage4out_c {
     matiec::OutputSink &sink;
     std::ostringstream buffer;
     std::ostream *out;
+    const matiec::AnalysisStore *analysis;
     
     /* A flag to tell whether to really print to the file, or to ignore any request to print to the file */
     /* This is used to implement the no_code_generation pragmas, that lets the user tell the compiler

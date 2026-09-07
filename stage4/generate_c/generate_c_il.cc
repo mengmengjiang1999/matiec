@@ -23,6 +23,7 @@
  */
 
 #include "generate_c_base.hh"
+#include "../resolution_analysis_access.hh"
 #include "../../util/strdup.hh"
 
 /***********************************************************************/
@@ -689,7 +690,10 @@ void *visit(il_function_call_c *symbol) {
   
   function_call_param_iterator_c function_call_param_iterator(symbol);
 
-  function_declaration_c *f_decl = (function_declaration_c *)symbol->called_function_declaration;
+  const matiec::ResolutionAnalysisRecord *resolution =
+      stage4_resolution_record(s4o, symbol);
+  function_declaration_c *f_decl = resolution == NULL ? NULL :
+      (function_declaration_c *)resolution->declaration;
   if (f_decl == NULL) ERROR;
 
   function_name = symbol->function_name;
@@ -720,7 +724,7 @@ void *visit(il_function_call_c *symbol) {
        */
       char *tmp = (char *)malloc(32); /* enough space for a call with 10^31 (larger than 2^64) input parameters! */
       if (tmp == NULL) ERROR;
-      int res = snprintf(tmp, 32, "%d", symbol->extensible_param_count);
+      int res = snprintf(tmp, 32, "%d", resolution->extensible_parameter_count);
       if ((res >= 32) || (res < 0)) ERROR;
       identifier_c *param_value = new identifier_c(tmp);
       uint_type_name_c *param_type  = new uint_type_name_c();
@@ -1094,7 +1098,10 @@ void *visit(il_formal_funct_call_c *symbol) {
 
   function_call_param_iterator_c function_call_param_iterator(symbol);
 
-  function_declaration_c *f_decl = (function_declaration_c *)symbol->called_function_declaration;
+  const matiec::ResolutionAnalysisRecord *resolution =
+      stage4_resolution_record(s4o, symbol);
+  function_declaration_c *f_decl = resolution == NULL ? NULL :
+      (function_declaration_c *)resolution->declaration;
   if (f_decl == NULL) ERROR;
         
   function_name = symbol->function_name;
@@ -1124,7 +1131,7 @@ void *visit(il_formal_funct_call_c *symbol) {
        */
       char *tmp = (char *)malloc(32); /* enough space for a call with 10^31 (larger than 2^64) input parameters! */
       if (tmp == NULL) ERROR;
-      int res = snprintf(tmp, 32, "%d", symbol->extensible_param_count);
+      int res = snprintf(tmp, 32, "%d", resolution->extensible_parameter_count);
       if ((res >= 32) || (res < 0)) ERROR;
       identifier_c *param_value = new identifier_c(tmp);
       uint_type_name_c *param_type  = new uint_type_name_c();
@@ -1490,7 +1497,9 @@ void *visit(S_operator_c *symbol) {
    */
   
   /* Check whether we must implement the FB call semantics... */
-  if (NULL != symbol->called_fb_declaration)
+  const matiec::ResolutionAnalysisRecord *resolution =
+      stage4_resolution_record(s4o, symbol);
+  if ((resolution != NULL) && (resolution->declaration != NULL))
     return XXX_CAL_operator( "S", this->current_operand);
   
   /* Implement the bit setting semantics... */
@@ -1522,7 +1531,9 @@ void *visit(R_operator_c *symbol) {
    */
   
   /* Check whether we must implement the FB call semantics... */
-  if (NULL != symbol->called_fb_declaration)
+  const matiec::ResolutionAnalysisRecord *resolution =
+      stage4_resolution_record(s4o, symbol);
+  if ((resolution != NULL) && (resolution->declaration != NULL))
     return XXX_CAL_operator( "R", this->current_operand);
   
   /* Implement the bit setting semantics... */

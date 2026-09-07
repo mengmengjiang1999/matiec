@@ -44,16 +44,24 @@
 
 #include "lvalue_check.hh"
 #include "semantic_diagnostic_macros.hh"
+#include "../compiler/analysis_store.hh"
 
 
 lvalue_check_c::lvalue_check_c(symbol_c *ignore,
-                               matiec::DiagnosticEngine &diagnostics)
-    : diagnostics_(diagnostics) {
+                               matiec::DiagnosticEngine &diagnostics,
+                               const matiec::AnalysisStore &analysis)
+    : diagnostics_(diagnostics), analysis_(analysis) {
 	error_count = 0;
 	current_display_error_level = 0;
 	current_il_operand = NULL;
 	search_varfb_instance_type = NULL;
 	search_var_instance_decl = NULL;
+}
+
+symbol_c *lvalue_check_c::resolved_declaration(symbol_c *call) const {
+  const matiec::AnalysisEntry<matiec::ResolutionAnalysisRecord> *entry =
+      analysis_.resolution(call);
+  return entry == NULL ? NULL : entry->value.declaration;
 }
 
 lvalue_check_c::~lvalue_check_c(void) {
@@ -446,7 +454,7 @@ void *lvalue_check_c::visit(il_function_call_c *symbol) {
 	if (NULL == symbol->il_operand_list)  ERROR;
 	((list_c *)symbol->il_operand_list)->insert_element(&param_value, 0);
 
-	check_nonformal_call(symbol, symbol->called_function_declaration);
+	check_nonformal_call(symbol, resolved_declaration(symbol));
 
 	/* Undo the changes to the abstract syntax tree we made above... */
 	((list_c *)symbol->il_operand_list)->remove_element(0);
@@ -473,8 +481,8 @@ void *lvalue_check_c::visit(il_function_call_c *symbol) {
 /* NOTE: The parameter 'called_fb_declaration'is used to pass data between stage 3 and stage4 (although currently it is not used in stage 4 */
 // SYM_REF4(il_fb_call_c, il_call_operator, fb_name, il_operand_list, il_param_list, symbol_c *called_fb_declaration)
 void *lvalue_check_c::visit(il_fb_call_c *symbol) {
-	if (NULL != symbol->il_operand_list)  check_nonformal_call(symbol, symbol->called_fb_declaration);
-	if (NULL != symbol->  il_param_list)     check_formal_call(symbol, symbol->called_fb_declaration);
+	if (NULL != symbol->il_operand_list)  check_nonformal_call(symbol, resolved_declaration(symbol));
+	if (NULL != symbol->  il_param_list)     check_formal_call(symbol, resolved_declaration(symbol));
 	return NULL;
 }
 
@@ -483,7 +491,7 @@ void *lvalue_check_c::visit(il_fb_call_c *symbol) {
 /* NOTE: The parameter 'called_function_declaration' is used to pass data between the stage 3 and stage 4. */
 // SYM_REF2(il_formal_funct_call_c, function_name, il_param_list, symbol_c *called_function_declaration; int extensible_param_count;)
 void *lvalue_check_c::visit(il_formal_funct_call_c *symbol) {
-	check_formal_call(symbol, symbol->called_function_declaration);
+	check_formal_call(symbol, resolved_declaration(symbol));
 	return NULL;
 }
 
@@ -524,8 +532,8 @@ void *lvalue_check_c::visit(R_operator_c *symbol) {
 /***********************/
 // SYM_REF3(function_invocation_c, function_name, formal_param_list, nonformal_param_list, symbol_c *called_function_declaration; int extensible_param_count; std::vector <symbol_c *> candidate_functions;)
 void *lvalue_check_c::visit(function_invocation_c *symbol) {
-	if (NULL != symbol->formal_param_list   )  check_formal_call   (symbol, symbol->called_function_declaration);
-	if (NULL != symbol->nonformal_param_list)  check_nonformal_call(symbol, symbol->called_function_declaration);
+	if (NULL != symbol->formal_param_list   )  check_formal_call   (symbol, resolved_declaration(symbol));
+	if (NULL != symbol->nonformal_param_list)  check_nonformal_call(symbol, resolved_declaration(symbol));
 	return NULL;
 }
 
@@ -549,8 +557,8 @@ void *lvalue_check_c::visit(assignment_statement_c *symbol) {
 /* B 3.2.2 Subprogram Control Statements */
 /*****************************************/
 void *lvalue_check_c::visit(fb_invocation_c *symbol) {
-	if (NULL != symbol->formal_param_list   )  check_formal_call   (symbol, symbol->called_fb_declaration);
-	if (NULL != symbol->nonformal_param_list)  check_nonformal_call(symbol, symbol->called_fb_declaration);
+	if (NULL != symbol->formal_param_list   )  check_formal_call   (symbol, resolved_declaration(symbol));
+	if (NULL != symbol->nonformal_param_list)  check_nonformal_call(symbol, resolved_declaration(symbol));
 	return NULL;
 }
 
@@ -564,7 +572,6 @@ void *lvalue_check_c::visit(for_statement_c *symbol) {
 	control_variables.pop_back();
 	return NULL;
 }
-
 
 
 

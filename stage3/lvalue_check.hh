@@ -35,6 +35,8 @@
 #include "../absyntax_utils/absyntax_utils.hh"
 #include "datatype_functions.hh"
 
+namespace matiec { class AnalysisStore; }
+
 
 /* Expressions on the left hand side of assignment statements have aditional restrictions on their datatype.
  * For example, they cannot be literals, CONSTANT type variables, function invocations, etc...
@@ -55,6 +57,7 @@ class lvalue_check_c: public iterator_visitor_c {
     int error_count;
     int current_display_error_level;
     matiec::SemanticDiagnostics diagnostics_;
+    const matiec::AnalysisStore &analysis_;
     std::vector <token_c *> control_variables;
     symbol_c *current_il_operand;
 
@@ -67,10 +70,12 @@ class lvalue_check_c: public iterator_visitor_c {
     
     void check_formal_call   (symbol_c *f_call, symbol_c *f_decl);
     void check_nonformal_call(symbol_c *f_call, symbol_c *f_decl);
+    symbol_c *resolved_declaration(symbol_c *call) const;
 
 
   public:
-    lvalue_check_c(symbol_c *ignore, matiec::DiagnosticEngine &diagnostics);
+    lvalue_check_c(symbol_c *ignore, matiec::DiagnosticEngine &diagnostics,
+                   const matiec::AnalysisStore &analysis);
     virtual ~lvalue_check_c(void);
     int get_error_count();
 
@@ -137,7 +142,6 @@ class lvalue_check_c: public iterator_visitor_c {
     void *visit(for_statement_c *symbol);
 
 }; /* lvalue_check_c */
-
 
 
 

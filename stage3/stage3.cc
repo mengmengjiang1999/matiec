@@ -159,7 +159,6 @@ static int type_safety(symbol_c *tree_root,
 	if (!publish_selected_datatypes(tree_root, analysis)) return 1;
 	materialize_selected_datatypes(tree_root, analysis);
 	if (!publish_declaration_resolution(tree_root, analysis)) return 1;
-	materialize_declaration_resolution(tree_root, analysis);
 	return print_datatypes_error.get_error_count();
 }
 
@@ -168,8 +167,9 @@ static int type_safety(symbol_c *tree_root,
  * so be sure to call type_safety() before calling this function
  */
 static int lvalue_check(symbol_c *tree_root,
-                        matiec::DiagnosticEngine &diagnostics){
-	lvalue_check_c lvalue_check(tree_root, diagnostics);
+                        matiec::DiagnosticEngine &diagnostics,
+                        const matiec::AnalysisStore &analysis){
+	lvalue_check_c lvalue_check(tree_root, diagnostics, analysis);
 	tree_root->accept(lvalue_check);
 	return lvalue_check.get_error_count();
 }
@@ -256,7 +256,8 @@ int stage3(symbol_c *tree_root, symbol_c **ordered_tree_root,
 		[tree_root](matiec::CompilationContext &pass_context) {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::lvalue,
-			lvalue_check(tree_root, pass_context.diagnostics()));
+			lvalue_check(tree_root, pass_context.diagnostics(),
+			             pass_context.analysis()));
 	});
 	passes.register_pass(matiec::SemanticPassId::array_range,
 		[tree_root](matiec::CompilationContext &pass_context) {

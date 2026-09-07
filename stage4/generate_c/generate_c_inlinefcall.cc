@@ -24,6 +24,7 @@
 
 
 #include "generate_c_base.hh"
+#include "../resolution_analysis_access.hh"
 #include "../../util/strdup.hh"
 
 #define INLINE_RESULT_TEMP_VAR "__res"
@@ -447,7 +448,10 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
 
       function_call_param_iterator_c function_call_param_iterator(symbol);
 
-      function_declaration_c *f_decl = (function_declaration_c *)symbol->called_function_declaration;
+      const matiec::ResolutionAnalysisRecord *resolution =
+          stage4_resolution_record(s4o, symbol);
+      function_declaration_c *f_decl = resolution == NULL ? NULL :
+          (function_declaration_c *)resolution->declaration;
       if (f_decl == NULL) ERROR;
       
       /* determine the base data type returned by the function being called... */
@@ -482,7 +486,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
            */
           char *tmp = (char *)malloc(32); /* enough space for a call with 10^31 (larger than 2^64) input parameters! */
           if (tmp == NULL) ERROR;
-          int res = snprintf(tmp, 32, "%d", symbol->extensible_param_count);
+          int res = snprintf(tmp, 32, "%d", resolution->extensible_parameter_count);
           if ((res >= 32) || (res < 0)) ERROR;
           identifier_c *param_value = new identifier_c(tmp);
           uint_type_name_c *param_type  = new uint_type_name_c();
@@ -615,7 +619,10 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
 
       function_call_param_iterator_c function_call_param_iterator(symbol);
 
-      function_declaration_c *f_decl = (function_declaration_c *)symbol->called_function_declaration;
+      const matiec::ResolutionAnalysisRecord *resolution =
+          stage4_resolution_record(s4o, symbol);
+      function_declaration_c *f_decl = resolution == NULL ? NULL :
+          (function_declaration_c *)resolution->declaration;
       if (f_decl == NULL) ERROR;
 
       /* determine the base data type returned by the function being called... */
@@ -649,7 +656,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
            */
           char *tmp = (char *)malloc(32); /* enough space for a call with 10^31 (larger than 2^64) input parameters! */
           if (tmp == NULL) ERROR;
-          int res = snprintf(tmp, 32, "%d", symbol->extensible_param_count);
+          int res = snprintf(tmp, 32, "%d", resolution->extensible_parameter_count);
           if ((res >= 32) || (res < 0)) ERROR;
           identifier_c *param_value = new identifier_c(tmp);
           uint_type_name_c *param_type  = new uint_type_name_c();
@@ -794,7 +801,10 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
 
       function_call_param_iterator_c function_call_param_iterator(symbol);
 
-      function_declaration_c *f_decl = (function_declaration_c *)symbol->called_function_declaration;
+      const matiec::ResolutionAnalysisRecord *resolution =
+          stage4_resolution_record(s4o, symbol);
+      function_declaration_c *f_decl = resolution == NULL ? NULL :
+          (function_declaration_c *)resolution->declaration;
       if (f_decl == NULL) ERROR;
 
       function_name = symbol->function_name;
@@ -827,7 +837,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
            */
           char *tmp = (char *)malloc(32); /* enough space for a call with 10^31 (larger than 2^64) input parameters! */
           if (tmp == NULL) ERROR;
-          int res = snprintf(tmp, 32, "%d", symbol->extensible_param_count);
+          int res = snprintf(tmp, 32, "%d", resolution->extensible_parameter_count);
           if ((res >= 32) || (res < 0)) ERROR;
           identifier_c *param_value = new identifier_c(tmp);
           uint_type_name_c *param_type  = new uint_type_name_c();

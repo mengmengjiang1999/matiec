@@ -182,8 +182,10 @@ void stage4err(const char *stage4_generator_id, symbol_c *symbol1, symbol_c *sym
 
 
 stage4out_c::stage4out_c(matiec::OutputManager &output_manager,
-                         std::string indent_level)
-    : outputs(output_manager), sink(outputs.standard_output()), out(&buffer) {
+                         std::string indent_level,
+                         const matiec::AnalysisStore *analysis_store)
+    : outputs(output_manager), sink(outputs.standard_output()), out(&buffer),
+      analysis(analysis_store) {
   this->indent_level = indent_level;
   this->indent_spaces = "";
   allow_output = true;
@@ -191,7 +193,8 @@ stage4out_c::stage4out_c(matiec::OutputManager &output_manager,
 
 stage4out_c::stage4out_c(matiec::OutputManager &output_manager, const char *dir,
                          const char *radix, const char *extension,
-                         std::string indent_level)
+                         std::string indent_level,
+                         const matiec::AnalysisStore *analysis_store)
     : outputs(output_manager),
       sink(outputs.create_file([&]() {
   std::string filename(radix);
@@ -204,7 +207,7 @@ stage4out_c::stage4out_c(matiec::OutputManager &output_manager, const char *dir,
   }
   filepath += filename;
   return filepath;
-}())), out(&buffer) {
+}())), out(&buffer), analysis(analysis_store) {
   std::string filename(radix);
   filename += ".";
   filename += extension;
@@ -232,6 +235,10 @@ void stage4out_c::flush(void) {
 
 matiec::OutputManager &stage4out_c::output_manager(void) {
   return outputs;
+}
+
+const matiec::AnalysisStore *stage4out_c::analysis_store(void) const {
+  return analysis;
 }
 
 void stage4out_c::enable_output(void) {
@@ -373,7 +380,7 @@ void delete_code_generator(visitor_c *code_generator);
 
 
 int stage4(symbol_c *tree_root, matiec::CompilationContext &context) {
-  stage4out_c s4o(context.outputs());
+  stage4out_c s4o(context.outputs(), "  ", &context.analysis());
   const char *builddir = context.options().output_directory.empty()
                              ? NULL
                              : context.options().output_directory.c_str();

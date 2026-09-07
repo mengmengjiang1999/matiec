@@ -1,5 +1,6 @@
 #include "compiler/compilation_context.hh"
 #include "stage3/resolution_analysis_store.hh"
+#include "stage4/resolution_analysis_access.hh"
 
 #include <cassert>
 
@@ -29,10 +30,24 @@ int main() {
   call->candidate_functions.clear();
   call->called_function_declaration = nullptr;
   call->extensible_param_count = 0;
+  stage4out_c output(context.outputs(), "  ", &context.analysis());
+  const matiec::ResolutionAnalysisRecord *stored =
+      stage4_resolution_record(output, call);
+  assert(stored != nullptr);
+  assert(stored->candidates.size() == 2);
+  assert(stored->declaration == second);
+  assert(stored->extensible_parameter_count == 3);
+  assert(call->candidate_functions.empty());
+  assert(call->called_function_declaration == nullptr);
+  assert(call->extensible_param_count == 0);
+
   materialize_declaration_resolution(call, context.analysis());
   assert(call->candidate_functions.size() == 2);
   assert(call->called_function_declaration == second);
   assert(call->extensible_param_count == 3);
+
+  stage4out_c detached(context.outputs());
+  assert(stage4_resolution_record(detached, call) == nullptr);
 
   matiec::CompilationContext other;
   matiec::ActiveAstArenaScope other_scope(other.ast_arena());

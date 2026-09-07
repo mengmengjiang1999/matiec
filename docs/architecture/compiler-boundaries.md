@@ -62,7 +62,9 @@ consumers. Invocation declaration resolution is also published after narrowing,
 scope-specific enumeration multimaps after enumeration checking, and named
 generator annotations after successful Stage 4 output. All typed record families
 now have production boundaries; compatibility materializers remain until their
-legacy consumers migrate to direct store access.
+legacy consumers migrate to direct store access. Invocation resolution has crossed
+that boundary: lvalue validation and Stage 4 use typed store lookups, while the
+producer's temporary AST fields remain confined to type-safety processing.
 
 ## Generated output
 

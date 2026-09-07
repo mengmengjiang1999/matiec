@@ -234,7 +234,9 @@ invocation declaration resolution, and scope-specific enumeration tables are
 retained in that store. Named generator annotations are published after successful
 Stage 4 output. All six typed record families now have production boundaries;
 compatibility annotations are materialized only where legacy consumers still
-require them.
+require them. Lvalue validation and Stage 4 read invocation resolution directly
+from the store, so completed resolution results are no longer copied back onto
+the AST for downstream use.
 
 ### Semantics are explicit passes
 

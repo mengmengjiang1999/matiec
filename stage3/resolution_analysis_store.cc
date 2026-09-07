@@ -54,6 +54,13 @@ class publish_resolution_c : public iterator_visitor_c {
   FB_RESOLUTION_VISIT(PT_operator_c)
 #undef FB_RESOLUTION_VISIT
 
+  void *visit(object_method_invocation_c *symbol) override {
+    iterator_visitor_c::visit(symbol);
+    if (symbol->compatibility_invocation != nullptr)
+      symbol->compatibility_invocation->accept(*this);
+    return nullptr;
+  }
+
   bool succeeded() const { return succeeded_; }
 
  private:
@@ -106,6 +113,13 @@ class materialize_resolution_c : public iterator_visitor_c {
   FB_RESOLUTION_VISIT(IN_operator_c)
   FB_RESOLUTION_VISIT(PT_operator_c)
 #undef FB_RESOLUTION_VISIT
+
+  void *visit(object_method_invocation_c *symbol) override {
+    iterator_visitor_c::visit(symbol);
+    if (symbol->compatibility_invocation != nullptr)
+      symbol->compatibility_invocation->accept(*this);
+    return nullptr;
+  }
 
  private:
   const matiec::AnalysisStore &analysis_;
