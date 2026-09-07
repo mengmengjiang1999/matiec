@@ -40,6 +40,8 @@ int main() {
   assert(second.experimental_syntax().namespaces.empty());
   first.experimental_syntax().clear();
   assert(first.experimental_syntax().namespaces.empty());
+  assert(first.analysis().size() == 0);
+  assert(second.analysis().size() == 0);
   assert(first.diagnostics().has_errors());
   assert(!second.diagnostics().has_errors());
   assert(first_output.contents() == "first");

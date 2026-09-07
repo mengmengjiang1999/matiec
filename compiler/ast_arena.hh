@@ -34,6 +34,7 @@ class AstArena {
   void adopt(void *address, void (*destroy)(void *));
   void release(void *address);
 
+  bool owns(const void *address) const;
   std::size_t allocation_count() const;
   void clear();
 

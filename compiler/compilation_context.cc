@@ -4,10 +4,11 @@
 
 namespace matiec {
 
-CompilationContext::CompilationContext() : outputs_(diagnostics_) {}
+CompilationContext::CompilationContext()
+    : outputs_(diagnostics_), analysis_(ast_arena_) {}
 
 CompilationContext::CompilationContext(CompilerOptions options)
-    : options_(std::move(options)), outputs_(diagnostics_) {}
+    : options_(std::move(options)), outputs_(diagnostics_), analysis_(ast_arena_) {}
 
 CompilerOptions &CompilationContext::options() {
   return options_;
@@ -32,6 +33,10 @@ AstArena &CompilationContext::ast_arena() {
 const AstArena &CompilationContext::ast_arena() const {
   return ast_arena_;
 }
+
+AnalysisStore &CompilationContext::analysis() { return analysis_; }
+
+const AnalysisStore &CompilationContext::analysis() const { return analysis_; }
 
 OutputManager &CompilationContext::outputs() {
   return outputs_;

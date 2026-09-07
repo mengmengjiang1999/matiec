@@ -2,6 +2,7 @@
 #define MATIEC_COMPILER_COMPILATION_CONTEXT_HH
 
 #include "ast_arena.hh"
+#include "analysis_store.hh"
 #include "compiler_types.hh"
 #include "diagnostic_engine.hh"
 #include "experimental_syntax_model.hh"
@@ -26,6 +27,9 @@ class CompilationContext {
   AstArena &ast_arena();
   const AstArena &ast_arena() const;
 
+  AnalysisStore &analysis();
+  const AnalysisStore &analysis() const;
+
   OutputManager &outputs();
   const OutputManager &outputs() const;
 
@@ -43,6 +47,7 @@ class CompilationContext {
   DiagnosticEngine diagnostics_;
   OutputManager outputs_;
   AstArena ast_arena_;
+  AnalysisStore analysis_;
   SourceManager sources_;
   ExperimentalSyntaxModel experimental_syntax_;
 };

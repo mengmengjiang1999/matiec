@@ -58,6 +58,10 @@ void AstArena::release(void *address) {
   }
 }
 
+bool AstArena::owns(const void *address) const {
+  return addresses_.find(const_cast<void *>(address)) != addresses_.end();
+}
+
 std::size_t AstArena::allocation_count() const {
   return allocations_.size();
 }

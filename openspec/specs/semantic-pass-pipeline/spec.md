@@ -23,3 +23,14 @@ Individual passes SHALL be invocable in tests with an explicit context and their
 #### Scenario: A pass is tested independently
 - **WHEN** a test supplies a valid AST and required prior analysis state
 - **THEN** the selected pass can execute without invoking the CLI or filesystem output layer
+
+### Requirement: Analysis records are typed and stateful
+
+The analysis store SHALL provide distinct record types for flow, constants,
+datatypes, declaration resolution, enumerations, and generator metadata, and
+SHALL distinguish absent records from invalid records.
+
+#### Scenario: A pass records a negative result
+
+- **WHEN** a semantic pass stores an invalid analysis entry for an arena node
+- **THEN** consumers observe a present invalid entry rather than an absent entry

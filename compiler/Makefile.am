@@ -6,6 +6,7 @@ noinst_LIBRARIES = libcompiler.a
 libcompiler_a_SOURCES = \
 	access_variable_normalizer.cc \
 	access_variable_ast.cc \
+	analysis_store.cc \
 	ast_arena.cc \
 	compilation_abort.cc \
 	compilation_context.cc \
@@ -27,11 +28,14 @@ libcompiler_a_SOURCES = \
 	source_manager.cc \
 	utf8_validation.cc
 
-check_PROGRAMS = access_variable_normalizer_test ast_arena_test compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test language_feature_catalog_test namespace_normalizer_test output_sink_test semantic_pass_test source_manager_test utf8_validation_test
+check_PROGRAMS = access_variable_normalizer_test analysis_store_test ast_arena_test compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test language_feature_catalog_test namespace_normalizer_test output_sink_test semantic_pass_test source_manager_test utf8_validation_test
 TESTS = $(check_PROGRAMS)
 
 access_variable_normalizer_test_SOURCES = tests/access_variable_normalizer_test.cc
 access_variable_normalizer_test_LDADD = libcompiler.a
+
+analysis_store_test_SOURCES = tests/analysis_store_test.cc
+analysis_store_test_LDADD = libcompiler.a
 
 ast_arena_test_SOURCES = tests/ast_arena_test.cc
 ast_arena_test_LDADD = libcompiler.a

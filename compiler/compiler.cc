@@ -20,6 +20,7 @@
 namespace matiec {
 
 CompilationResult Compiler::compile(CompilationContext &context) const {
+  context.analysis().clear();
   context.experimental_syntax().clear();
   if (context.source_path().empty()) {
     context.diagnostics().error("No source path was provided");

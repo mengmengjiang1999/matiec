@@ -54,6 +54,8 @@ int main() {
     assert(std::strcmp(token, "stable-token") == 0);
     assert(std::strcmp(prefix, "prefix") == 0);
     assert(context.ast_arena().allocation_count() == 4);
+    assert(context.ast_arena().owns(first));
+    assert(context.ast_arena().owns(token));
   }
 
   assert(derived_destroyed);
@@ -69,6 +71,7 @@ int main() {
       4, destruction_order, &destruction_count);
   first_context.ast_arena().clear();
   assert(destruction_count == 3);
+  assert(!first_context.ast_arena().owns(nullptr));
   assert(second_context.ast_arena().allocation_count() == 1);
   return 0;
 }

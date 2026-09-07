@@ -21,6 +21,7 @@ compilation. Derived phase permissions SHALL NOT mutate caller-provided options.
 
 - **WHEN** separate contexts compile sources containing different declarations
 - **THEN** each context exposes only the declaration metadata from its own source
+
 ### Requirement: Thin executable boundary
 The command-line executable SHALL translate arguments into compiler options, invoke the compiler API, render diagnostics, and choose the final process status without implementing compiler phases itself.
 
@@ -34,3 +35,18 @@ New compiler functionality MUST NOT introduce mutable process-wide state outside
 #### Scenario: A component needs shared compilation data
 - **WHEN** a compiler component requires options, symbols, diagnostics, or output configuration
 - **THEN** it receives that data through the compilation context or a context-owned service
+
+### Requirement: Context-owned analysis storage
+
+Each compilation context SHALL own an independent typed analysis store and SHALL
+clear that store before a new compilation begins.
+
+#### Scenario: Context is reused
+
+- **WHEN** the same context begins a second compilation
+- **THEN** no analysis record from the previous compilation is observable
+
+#### Scenario: Contexts coexist
+
+- **WHEN** two contexts analyze separate AST arenas
+- **THEN** records written through one context are absent from the other
