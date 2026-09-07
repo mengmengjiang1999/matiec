@@ -250,6 +250,27 @@ void *visit(pragma_c *symbol)                  {return print_token(symbol);}
 /***************************/
 void *visit(library_c *symbol) {return print_list(symbol);}
 
+void *visit(namespace_name_c *symbol) {return print_list(symbol, "", ".");}
+void *visit(namespace_element_list_c *symbol) {return print_list(symbol);}
+void *visit(namespace_public_c *) {return NULL;}
+void *visit(namespace_internal_c *) {s4o.print(" INTERNAL"); return NULL;}
+void *visit(namespace_using_declaration_c *symbol) {
+  s4o.print("USING ");
+  symbol->namespace_name->accept(*this);
+  s4o.print(";\n");
+  return NULL;
+}
+void *visit(namespace_declaration_c *symbol) {
+  s4o.print("NAMESPACE");
+  symbol->visibility->accept(*this);
+  s4o.print(" ");
+  symbol->namespace_name->accept(*this);
+  s4o.print("\n");
+  symbol->elements->accept(*this);
+  s4o.print("END_NAMESPACE\n");
+  return NULL;
+}
+
 /*******************************************/
 /* B 1.1 - Letters, digits and identifiers */
 /*******************************************/
@@ -2202,7 +2223,6 @@ void *visit(continue_statement_c *symbol) {
 
 visitor_c *new_code_generator(stage4out_c *s4o, const char *builddir)  {return new generate_iec_c(s4o);}
 void delete_code_generator(visitor_c *code_generator) {delete code_generator;}
-
 
 
 

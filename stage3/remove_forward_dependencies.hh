@@ -48,6 +48,7 @@
 #include "../absyntax/absyntax.hh"
 #include "../absyntax/visitor.hh"
 #include "../util/symtable.hh"
+#include <map>
 #include <set>
 
 
@@ -79,6 +80,9 @@ class remove_forward_dependencies_c: public search_visitor_c {
     std::set <symbol_c *>        inserted_symbols;     // list of symbols already inserted in the new tree 
     symbol_c       *current_code_generation_pragma;    // points to any currently 'active' enable_code_generation_pragma_c
     find_forward_dependencies_c    *find_forward_dependencies;  
+    std::map<symbol_c *, list_c *> insertion_targets;
+    std::map<namespace_declaration_c *, namespace_element_list_c *> namespace_sources;
+    std::map<namespace_declaration_c *, namespace_element_list_c *> namespace_targets;
 
   public:
      explicit remove_forward_dependencies_c(
@@ -95,6 +99,8 @@ class remove_forward_dependencies_c: public search_visitor_c {
     /* B 0 - Programming Model */
     /***************************/
     void *visit(library_c *symbol);
+    void *visit(namespace_declaration_c *symbol);
+    void *visit(namespace_using_declaration_c *symbol);
     /**************************************/
     /* B.1.5 - Program organization units */
     /**************************************/
@@ -113,4 +119,3 @@ class remove_forward_dependencies_c: public search_visitor_c {
     void *visit(pragma_c *symbol);
 
 };   /* class remove_forward_dependencies_c */
-

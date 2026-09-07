@@ -29,7 +29,8 @@ int main() {
     assert(normalize(source, &diagnostics, &result));
     assert(result.used_namespaces);
     assert(result.declarations.size() == 1);
-    assert(result.source.find("NAMESPACE") == std::string::npos);
+    assert(result.source.find("NAMESPACE Factory.Motion") != std::string::npos);
+    assert(result.source.find("END_NAMESPACE") != std::string::npos);
     assert(result.source.find("MATIECNS7FACTORY6MOTION5SPEED") !=
            std::string::npos);
     assert(result.source.find("MATIECNS7FACTORY6MOTION4READ") !=
@@ -43,6 +44,7 @@ int main() {
         "USING A;\nPROGRAM Main\nVAR X : Value; END_VAR\nEND_PROGRAM\n";
     assert(normalize(source, &diagnostics, &result));
     assert(result.source.find("MATIECNS1A5VALUE") != std::string::npos);
+    assert(result.source.find("USING A;") != std::string::npos);
   }
   {
     matiec::DiagnosticEngine diagnostics;

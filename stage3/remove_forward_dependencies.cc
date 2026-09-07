@@ -117,6 +117,34 @@ class pou_count_c: public search_visitor_c {
 
 symbol_c remove_forward_dependencies_c_null_symbol;
 
+static namespace_name_c *copy_namespace_name(namespace_name_c *source) {
+  namespace_name_c *copy = new namespace_name_c(
+      source->first_line, source->first_column, source->first_file,
+      source->first_order, source->last_line, source->last_column,
+      source->last_file, source->last_order);
+  for (int i = 0; i < source->n; ++i) {
+    token_c *part = dynamic_cast<token_c *>(source->get_element(i));
+    if (part == NULL) ERROR;
+    copy->add_element(new identifier_c(
+        part->value, part->first_line, part->first_column, part->first_file,
+        part->first_order, part->last_line, part->last_column, part->last_file,
+        part->last_order));
+  }
+  return copy;
+}
+
+static symbol_c *copy_namespace_visibility(symbol_c *source) {
+  if (dynamic_cast<namespace_internal_c *>(source) != NULL)
+    return new namespace_internal_c(
+        source->first_line, source->first_column, source->first_file,
+        source->first_order, source->last_line, source->last_column,
+        source->last_file, source->last_order);
+  return new namespace_public_c(
+      source->first_line, source->first_column, source->first_file,
+      source->first_order, source->last_line, source->last_column,
+      source->last_file, source->last_order);
+}
+
 
 
 
@@ -171,8 +199,11 @@ void *remove_forward_dependencies_c::handle_library_symbol(symbol_c *symbol, sym
   if (declared_identifiers.find(name) == declared_identifiers.end())
       declared_identifiers.insert(name, NULL);  // only add if not yet in the symbol table (an overloaded version of this same POU could have been inderted previously!)
   inserted_symbols.insert(symbol);
-  new_tree->add_element(current_code_generation_pragma);  
-  new_tree->add_element(symbol);  
+  list_c *target = new_tree;
+  std::map<symbol_c *, list_c *>::const_iterator found = insertion_targets.find(symbol);
+  if (found != insertion_targets.end()) target = found->second;
+  target->add_element(current_code_generation_pragma);
+  target->add_element(symbol);
   return NULL;
 }
 
@@ -187,6 +218,19 @@ void remove_forward_dependencies_c::print_circ_error(library_c *symbol) {
         &&(  (NULL != dynamic_cast <function_block_declaration_c *>(symbol->get_element(i)))    // and (is a FB  
            ||(NULL != dynamic_cast <      function_declaration_c *>(symbol->get_element(i)))))  //      or a Function)
       STAGE3_ERROR(0, symbol->get_element(i), symbol->get_element(i), "POU (%s) contains a self-reference and/or belongs in a circular referencing loop", get_datatype_info_c::get_id_str(symbol->get_element(i)));
+  for (int i = 0; i < symbol->n; ++i) {
+    namespace_declaration_c *declaration =
+        dynamic_cast<namespace_declaration_c *>(symbol->get_element(i));
+    if (declaration == NULL) continue;
+    namespace_element_list_c *elements = namespace_sources[declaration];
+    for (int member = 0; member < elements->n; ++member) {
+      symbol_c *entry = elements->get_element(member);
+      if (inserted_symbols.find(entry) == inserted_symbols.end() &&
+          (dynamic_cast<function_block_declaration_c *>(entry) != NULL ||
+           dynamic_cast<function_declaration_c *>(entry) != NULL))
+        STAGE3_ERROR(0, entry, entry, "POU (%s) contains a self-reference and/or belongs in a circular referencing loop", get_datatype_info_c::get_id_str(entry));
+    }
+  }
   if (error_count == initial_error_count) ERROR; // We were unable to determine which POUs contain the circular references!!
 }
 
@@ -199,11 +243,47 @@ void remove_forward_dependencies_c::print_circ_error(library_c *symbol) {
 void *remove_forward_dependencies_c::visit(library_c *symbol) {
   /* this method is the expected entry point for this visitor, and implements the main algorithm of the visitor */
   
+  /* Create empty namespace wrappers up front. Their members participate in the
+   * same dependency scan but are inserted back into the matching wrapper. */
+  for (int i = 0; i < symbol->n; ++i) {
+    namespace_declaration_c *declaration =
+        dynamic_cast<namespace_declaration_c *>(symbol->get_element(i));
+    if (declaration == NULL) continue;
+    namespace_element_list_c *source =
+        dynamic_cast<namespace_element_list_c *>(declaration->elements);
+    if (source == NULL) ERROR;
+    namespace_element_list_c *elements = new namespace_element_list_c;
+    namespace_declaration_c *copy = new namespace_declaration_c(
+        copy_namespace_name(dynamic_cast<namespace_name_c *>(declaration->namespace_name)),
+        copy_namespace_visibility(declaration->visibility), elements,
+        declaration->first_line, declaration->first_column, declaration->first_file,
+        declaration->first_order, declaration->last_line, declaration->last_column,
+        declaration->last_file, declaration->last_order);
+    namespace_sources[declaration] = source;
+    namespace_targets[declaration] = elements;
+    new_tree->add_element(copy);
+    for (int member = 0; member < source->n; ++member)
+      insertion_targets[source->get_element(member)] = elements;
+  }
+
   /* first insert all the derived datatype declarations, in the same order by which they are delcared in the original AST */
   /* Since IEC 61131-3 does not allow FBs in arrays or structures, it is actually safe to place all the datatypes before all the POUs! */
   for (int i = 0; i < symbol->n; i++) 
     if (NULL != dynamic_cast <data_type_declaration_c *>(symbol->get_element(i)))
       new_tree->add_element(symbol->get_element(i));  
+    else if (NULL != dynamic_cast <namespace_using_declaration_c *>(symbol->get_element(i)))
+      new_tree->add_element(symbol->get_element(i));
+    else if (namespace_declaration_c *declaration =
+                 dynamic_cast<namespace_declaration_c *>(symbol->get_element(i))) {
+      namespace_element_list_c *source = namespace_sources[declaration];
+      list_c *target = namespace_targets[declaration];
+      for (int member = 0; member < source->n; ++member) {
+        symbol_c *entry = source->get_element(member);
+        if (dynamic_cast<data_type_declaration_c *>(entry) != NULL ||
+            dynamic_cast<namespace_using_declaration_c *>(entry) != NULL)
+          target->add_element(entry);
+      }
+    }
 
   /* now do the POUs, in whatever order is necessary to guarantee no forward references. */    
   long long int old_tree_pou_count = pou_count_c::get_count(symbol);
@@ -221,6 +301,20 @@ void *remove_forward_dependencies_c::visit(library_c *symbol) {
   if (old_tree_pou_count != pou_count_c::get_count(new_tree)) 
     print_circ_error(symbol);
 
+  return NULL;
+}
+
+void *remove_forward_dependencies_c::visit(namespace_declaration_c *symbol) {
+  namespace_element_list_c *source = namespace_sources[symbol];
+  if (source == NULL) ERROR;
+  symbol_c *saved_pragma = current_code_generation_pragma;
+  for (int i = 0; i < source->n; ++i)
+    source->get_element(i)->accept(*this);
+  current_code_generation_pragma = saved_pragma;
+  return NULL;
+}
+
+void *remove_forward_dependencies_c::visit(namespace_using_declaration_c *) {
   return NULL;
 }
 
@@ -268,7 +362,9 @@ void *remove_forward_dependencies_c::visit( enable_code_generation_pragma_c *sym
 void *remove_forward_dependencies_c::visit(pragma_c *symbol) {
   if (1 != cycle_count) return NULL; // only handle unknown pragmas in the first cycle!
   STAGE3_WARNING(symbol, symbol, "Unrecognized pragma. Including the pragma when using the '-p' command line option for 'allow use of forward references' may result in unwanted behaviour.");
-  new_tree->add_element(symbol);
+  list_c *target = new_tree;
+  std::map<symbol_c *, list_c *>::const_iterator found = insertion_targets.find(symbol);
+  if (found != insertion_targets.end()) target = found->second;
+  target->add_element(symbol);
   return NULL;
 }
-

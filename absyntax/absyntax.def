@@ -117,6 +117,16 @@ SYM_TOKEN(pragma_c)
 /* enumvalue_symtable is filled in by enum_declaration_check_c, during stage3 semantic verification, with a list of all enumerated constants declared inside this POU */
 SYM_LIST(library_c, enumvalue_symtable_t enumvalue_symtable;)
 
+/* Provisional IEC 61131-3:2025 namespace structure. Name resolution and
+ * lowering are performed before the legacy parser for now, but the accepted
+ * source structure remains represented in the primary AST. */
+SYM_LIST(namespace_name_c)
+SYM_LIST(namespace_element_list_c)
+SYM_REF0(namespace_public_c)
+SYM_REF0(namespace_internal_c)
+SYM_REF1(namespace_using_declaration_c, namespace_name)
+SYM_REF3(namespace_declaration_c, namespace_name, visibility, elements)
+
 
 /*************************/
 /* B.1 - Common elements */

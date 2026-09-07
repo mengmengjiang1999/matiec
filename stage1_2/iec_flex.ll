@@ -1392,6 +1392,11 @@ DREF	{if (get_opt_ref_standard_extensions()) return DREF;       else{REJECT;}}		
 REF_TO	{if (get_opt_ref_standard_extensions()) return REF_TO;     else{REJECT;}}		/* Keyword in IEC 61131-3 v3 */
 NULL	{if (get_opt_ref_standard_extensions()) return NULL_token; else{REJECT;}}		/* Keyword in IEC 61131-3 v3 */
 
+NAMESPACE	{if (runtime_options.iec2025_experimental) return NAMESPACE; else {REJECT;}}
+END_NAMESPACE	{if (runtime_options.iec2025_experimental) return END_NAMESPACE; else {REJECT;}}
+USING		{if (runtime_options.iec2025_experimental) return USING; else {REJECT;}}
+INTERNAL	{if (runtime_options.iec2025_experimental) return INTERNAL; else {REJECT;}}
+
 EN	return EN;			/* Keyword */
 ENO	return ENO;			/* Keyword */
 

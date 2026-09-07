@@ -495,6 +495,10 @@ END_PROGRAM
 实验而定义的行为，并非对 IEC 第四版原文的复述。完整边界见
 [实验性命名空间语义](standards/namespace-semantics.md)。
 
+编译器会把命名空间、可见性、限定名和 `USING` 保存为主语法树节点；`-p`
+依赖排序不会再丢失这些包装节点。`iec2iec` 会保留命名空间结构，而 `iec2c`
+递归生成其中的声明，只在 C 标识符中暴露上述临时内部名。
+
 ### 7.5 实验性 Function Block 方法
 
 实验 Profile 支持直接属于 `FUNCTION_BLOCK` 的公开方法：

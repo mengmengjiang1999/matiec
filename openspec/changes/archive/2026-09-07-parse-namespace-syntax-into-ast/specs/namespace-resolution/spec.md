@@ -1,18 +1,4 @@
-# namespace-resolution Specification
-
-## Purpose
-
-Define the evidence and isolation rules for MATIEC's provisional experimental
-namespace implementation without presenting vendor-inferred behavior as normative
-IEC 61131-3:2025 semantics.
-## Requirements
-### Requirement: Evidence-backed namespace grammar
-Namespace syntax SHALL NOT be frozen as IEC behavior until its rules have adequate
-public evidence; provisional behavior MUST be labeled accordingly.
-
-#### Scenario: Vendors disagree
-- **WHEN** public implementations expose incompatible namespace syntax
-- **THEN** the project records the disagreement instead of guessing a normative rule
+## MODIFIED Requirements
 
 ### Requirement: Deterministic qualified lookup
 
@@ -49,11 +35,3 @@ The provisional namespace grammar MUST be enabled only by
 
 - **WHEN** a source containing `NAMESPACE` is compiled with the legacy profile
 - **THEN** the legacy parser rejects it
-
-### Requirement: Provisional ABI is explicit
-Qualified declarations SHALL use an injective, deterministic internal spelling and
-documentation MUST identify that spelling as an unstable experimental ABI.
-
-#### Scenario: Generated C uses a qualified declaration
-- **WHEN** a namespaced type or POU reaches C generation
-- **THEN** generated declarations and uses contain the same length-prefixed lowered identifier

@@ -34,6 +34,7 @@ EXTRA_DIST = \
 	tests/cli/profile-fixtures/namespace-using.st \
 	tests/cli/profile-fixtures/namespace-ambiguous.st \
 	tests/cli/profile-fixtures/namespace-internal.st \
+	tests/cli/profile-fixtures/namespace-internal-local.st \
 	tests/cli/profile-fixtures/object-method.st \
 	tests/cli/profile-fixtures/object-method-private.st \
 	compiler/experimental_syntax_model.hh \

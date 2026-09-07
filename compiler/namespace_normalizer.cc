@@ -124,11 +124,6 @@ std::vector<Token> tokenize(std::string_view source) {
   return tokens;
 }
 
-std::size_t line_end(std::string_view source, std::size_t position) {
-  const std::size_t found = source.find('\n', position);
-  return found == std::string_view::npos ? source.size() : found;
-}
-
 bool parse_qualified(const std::vector<Token> &tokens, std::size_t begin,
                      std::size_t *after, std::string *canonical,
                      std::string *display) {
@@ -167,11 +162,6 @@ bool same_tree(const std::string &requester, const std::string &owner) {
       (requester.size() > owner.size() &&
        requester.compare(0, owner.size(), owner) == 0 &&
        requester[owner.size()] == '.');
-}
-
-void blank_line(std::string_view source, const Token &token,
-                std::vector<Replacement> *replacements) {
-  replacements->push_back({token.begin, line_end(source, token.end), ""});
 }
 
 }  // namespace
@@ -235,7 +225,6 @@ bool normalize_experimental_namespaces(std::string_view source,
       }
       for (std::size_t item = statement_index; item < after; ++item)
         syntax_tokens.insert(item);
-      blank_line(source, tokens[statement_index], &replacements);
       scope = canonical;
       index = after - 1;
       continue;
@@ -243,7 +232,6 @@ bool normalize_experimental_namespaces(std::string_view source,
     if (word == "END_NAMESPACE") {
       result->used_namespaces = true;
       syntax_tokens.insert(index);
-      blank_line(source, tokens[index], &replacements);
       if (scope.empty()) {
         diagnostics.error("END_NAMESPACE has no matching NAMESPACE",
                           token_range(tokens[index], source_path));
@@ -275,7 +263,6 @@ bool normalize_experimental_namespaces(std::string_view source,
           syntax_tokens.insert(item);
         index = after - 1;
       }
-      blank_line(source, tokens[statement_index], &replacements);
       continue;
     }
     if (scope.empty()) continue;

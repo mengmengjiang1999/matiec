@@ -2452,6 +2452,19 @@ class generate_c_c: public iterator_visitor_c {
       return NULL;
     }
 
+    void *visit(namespace_name_c *) {return NULL;}
+    void *visit(namespace_element_list_c *symbol) {
+      for (int i = 0; i < symbol->n; ++i)
+        symbol->get_element(i)->accept(*this);
+      return NULL;
+    }
+    void *visit(namespace_public_c *) {return NULL;}
+    void *visit(namespace_internal_c *) {return NULL;}
+    void *visit(namespace_using_declaration_c *) {return NULL;}
+    void *visit(namespace_declaration_c *symbol) {
+      return symbol->elements->accept(*this);
+    }
+
 /*************************/
 /* B.1 - Common elements */
 /*************************/

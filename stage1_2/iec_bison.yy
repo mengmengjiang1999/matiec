@@ -454,6 +454,17 @@ typedef struct YYLTYPE {
 /***************************/
 %type <list>	library
 %type <leaf>	library_element_declaration
+%type <leaf>	namespace_member_declaration
+%type <leaf>	namespace_declaration
+%type <leaf>	namespace_visibility
+%type <leaf>	namespace_using_declaration
+%type <list>	namespace_name
+%type <list>	namespace_element_list
+
+%token NAMESPACE
+%token END_NAMESPACE
+%token USING
+%token INTERNAL
 
 
 /*******************************************/
@@ -1694,6 +1705,51 @@ library_element_declaration:
 | function_block_declaration
 | program_declaration
 | configuration_declaration
+| namespace_declaration
+| namespace_using_declaration
+;
+
+namespace_member_declaration:
+  data_type_declaration
+| function_declaration
+| function_block_declaration
+| program_declaration
+| configuration_declaration
+;
+
+namespace_name:
+  any_identifier
+	{$$ = new namespace_name_c($1, locloc(@$));}
+| namespace_name '.' any_identifier
+	{$$ = $1; $$->add_element($3);}
+;
+
+namespace_visibility:
+  /* empty */
+	{$$ = new namespace_public_c(locloc(@$));}
+| INTERNAL
+	{$$ = new namespace_internal_c(locloc(@$));}
+;
+
+namespace_using_declaration:
+  USING namespace_name ';'
+	{$$ = new namespace_using_declaration_c($2, locloc(@$));}
+;
+
+namespace_element_list:
+  /* empty */
+	{$$ = new namespace_element_list_c(locloc(@$));}
+| namespace_element_list namespace_member_declaration
+	{$$ = $1; $$->add_element($2);}
+| namespace_element_list namespace_using_declaration
+	{$$ = $1; $$->add_element($2);}
+| namespace_element_list any_pragma
+	{$$ = $1; $$->add_element($2);}
+;
+
+namespace_declaration:
+  NAMESPACE namespace_visibility namespace_name namespace_element_list END_NAMESPACE
+	{$$ = new namespace_declaration_c($3, $2, $4, locloc(@$));}
 ;
 
 
@@ -8915,7 +8971,6 @@ int stage2__(const char *filename, const char *display_filename,
 
   return 0;
 }
-
 
 
 
