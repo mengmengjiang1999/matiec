@@ -5,7 +5,7 @@
 #include "absyntax_utils/absyntax_utils.hh"
 #include "compiler/diagnostic_engine.hh"
 #include "compiler/ast_arena.hh"
-#include "compiler/object_method_normalizer.hh"
+#include "compiler/object_method_ast_analysis.hh"
 
 #include <algorithm>
 #include <cctype>
@@ -55,7 +55,7 @@ symbol_c *field_reference(symbol_c *receiver,
 
 class method_call_lowering_c : public iterator_visitor_c {
  public:
-  method_call_lowering_c(const ObjectMethodNormalizeResult &model,
+  method_call_lowering_c(const ObjectMethodAnalysisResult &model,
                          DiagnosticEngine &diagnostics)
       : model_(model), diagnostics_(diagnostics) {}
 
@@ -136,14 +136,14 @@ class method_call_lowering_c : public iterator_visitor_c {
   }
 
  private:
-  const ObjectMethodNormalizeResult &model_;
+  const ObjectMethodAnalysisResult &model_;
   DiagnosticEngine &diagnostics_;
 };
 
 }  // namespace
 
 bool lower_object_method_calls(
-    symbol_c *tree_root, const ObjectMethodNormalizeResult &model,
+    symbol_c *tree_root, const ObjectMethodAnalysisResult &model,
     DiagnosticEngine &diagnostics) {
   if (tree_root == nullptr) return false;
   method_call_lowering_c lowering(model, diagnostics);

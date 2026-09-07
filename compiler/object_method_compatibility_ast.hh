@@ -6,10 +6,10 @@ class symbol_c;
 namespace matiec {
 
 class DiagnosticEngine;
-struct ObjectMethodNormalizeResult;
+struct ObjectMethodAnalysisResult;
 
 bool construct_object_method_compatibility_ast(
-    symbol_c *tree_root, const ObjectMethodNormalizeResult &model,
+    symbol_c *tree_root, const ObjectMethodAnalysisResult &model,
     DiagnosticEngine &diagnostics);
 
 }  // namespace matiec

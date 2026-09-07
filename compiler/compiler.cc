@@ -5,7 +5,7 @@
 #include "compiler/legacy_global_state_adapter.hh"
 #include "compiler/modern_library_normalizer.hh"
 #include "compiler/namespace_normalizer.hh"
-#include "compiler/object_method_normalizer.hh"
+#include "compiler/object_method_ast_analysis.hh"
 #include "compiler/object_method_call_lowering.hh"
 #include "compiler/object_method_compatibility_ast.hh"
 #include "compiler/utf8_validation.hh"
@@ -61,7 +61,7 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     CompilerOptions &options = context.options();
 
     NamespaceNormalizeResult namespace_result;
-    ObjectMethodNormalizeResult method_result;
+    ObjectMethodAnalysisResult method_result;
     AccessVariableNormalizeResult access_result;
     ModernLibraryNormalizeResult modern_library_result;
     bool requires_void_datatype = false;
@@ -70,19 +70,14 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
               source, context.source_path(), context.diagnostics(),
               &namespace_result))
         return context.diagnostics().result();
-      if (!normalize_experimental_object_methods(
-              namespace_result.source, context.source_path(), context.diagnostics(),
-              &method_result))
-        return context.diagnostics().result();
       if (!normalize_experimental_modern_library(
-              method_result.source, context.source_path(), context.diagnostics(),
+              namespace_result.source, context.source_path(), context.diagnostics(),
               &modern_library_result))
         return context.diagnostics().result();
       if (modern_library_result.used_modern_library)
         requires_void_datatype = true;
       ExperimentalSyntaxModel &syntax = context.experimental_syntax();
       syntax.namespaces = namespace_result.declarations;
-      syntax.methods = method_result.methods;
       syntax.library_functions = modern_library_result.functions;
       source = std::move(modern_library_result.source);
     }
@@ -98,11 +93,15 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     if (parse_status < 0)
       return CompilationResult::failure();
 
-    if (language_profile_is_experimental(options.language_profile) &&
-        !analyze_access_variables_from_ast(
-            tree_root, context.diagnostics(), &access_result))
-      return context.diagnostics().result();
-    context.experimental_syntax().access_variables = access_result.declarations;
+    if (language_profile_is_experimental(options.language_profile)) {
+      if (!analyze_access_variables_from_ast(
+              tree_root, context.diagnostics(), &access_result) ||
+          !analyze_object_methods_from_ast(
+              tree_root, context.diagnostics(), &method_result))
+        return context.diagnostics().result();
+      context.experimental_syntax().access_variables = access_result.declarations;
+      context.experimental_syntax().methods = method_result.methods;
+    }
 
     if (language_profile_is_experimental(options.language_profile) &&
         (!construct_object_method_compatibility_ast(

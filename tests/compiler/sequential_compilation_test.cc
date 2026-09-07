@@ -111,6 +111,19 @@ int main() {
   assert(matiec::Compiler().compile(reusable).succeeded());
   assert(reusable.experimental_syntax().library_functions.size() == 1);
   assert(!reusable.options().allow_void_datatype);
+  const std::string method_source =
+      "FUNCTION_BLOCK Counter\nVAR Count : INT; END_VAR\n"
+      "Count := Count;\nMETHOD PUBLIC Read : INT\n"
+      "Read := Count;\nEND_METHOD\nEND_FUNCTION_BLOCK\n"
+      "PROGRAM MethodMain\nVAR C : Counter; Value : INT; END_VAR\n"
+      "Value := C.Read();\nEND_PROGRAM\n";
+  reusable.set_source("memory://method.st", method_source);
+  assert(matiec::Compiler().compile(reusable).succeeded());
+  assert(reusable.experimental_syntax().methods.size() == 1);
+  assert(reusable.experimental_syntax().methods[0].owner == "Counter");
+  assert(reusable.experimental_syntax().methods[0].owner_fields.size() == 1);
+  assert(reusable.experimental_syntax().methods[0].owner_fields[0].first ==
+         "COUNT");
   const std::string access_source =
       "TYPE UserCount : INT; END_TYPE\n"
       "PROGRAM AccessMain\nVAR value : INT; END_VAR\n"

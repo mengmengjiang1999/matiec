@@ -117,9 +117,9 @@ context cannot expose metadata from an earlier source.
 
 These records are a migration boundary, not a second semantic tree. Namespace and
 function-block method declarations and invocations now enter the primary AST. An
-explicit post-parse AST pass constructs method compatibility function declarations
-and binds native calls to them; method source is no longer appended or call text
-rewritten before parsing.
+explicit post-parse AST analysis derives method, field, and receiver metadata before
+compatibility passes construct function declarations and bind native calls; method
+source is not rescanned, appended, or rewritten before parsing.
 Namespace recognition still performs provisional name resolution. Modern library
 syntax still relies on source lowering. Consumers must not treat
 the side model as structural authority, rescan original source, or introduce

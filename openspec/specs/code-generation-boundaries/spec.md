@@ -68,3 +68,13 @@ post-parse AST analysis.
 
 - **WHEN** AST analysis accepts access declarations and C output is requested
 - **THEN** `ACCESS.csv` contains the same deterministic rows as the accepted AST nodes
+
+### Requirement: Object compatibility metadata follows AST analysis
+
+The compiler SHALL construct compatibility declarations and bind method calls only
+from metadata produced by post-parse analysis of the primary AST.
+
+#### Scenario: Compatibility lowering starts
+
+- **WHEN** the parsed AST contains a supported public method and invocation
+- **THEN** AST analysis completes before compatibility declarations or invocations are created

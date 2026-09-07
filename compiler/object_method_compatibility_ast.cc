@@ -5,7 +5,7 @@
 #include "absyntax_utils/add_en_eno_param_decl.hh"
 #include "compiler/ast_arena.hh"
 #include "compiler/diagnostic_engine.hh"
-#include "compiler/object_method_normalizer.hh"
+#include "compiler/object_method_ast_analysis.hh"
 
 #include <algorithm>
 #include <cctype>
@@ -126,7 +126,7 @@ class native_method_collector_c : public iterator_visitor_c {
 };
 
 const ObjectMethodAst *find_model_method(
-    const ObjectMethodNormalizeResult &model,
+    const ObjectMethodAnalysisResult &model,
     function_block_declaration_c *owner,
     object_method_declaration_c *method) {
   token_c *owner_name = dynamic_cast<token_c *>(owner->fblock_name);
@@ -195,7 +195,7 @@ function_declaration_c *make_compatibility_function(
 }  // namespace
 
 bool construct_object_method_compatibility_ast(
-    symbol_c *tree_root, const ObjectMethodNormalizeResult &model,
+    symbol_c *tree_root, const ObjectMethodAnalysisResult &model,
     DiagnosticEngine &diagnostics) {
   library_c *library = dynamic_cast<library_c *>(tree_root);
   if (library == nullptr) return false;

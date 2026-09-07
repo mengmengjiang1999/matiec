@@ -6,10 +6,10 @@ class symbol_c;
 namespace matiec {
 
 class DiagnosticEngine;
-struct ObjectMethodNormalizeResult;
+struct ObjectMethodAnalysisResult;
 
 bool lower_object_method_calls(
-    symbol_c *tree_root, const ObjectMethodNormalizeResult &model,
+    symbol_c *tree_root, const ObjectMethodAnalysisResult &model,
     DiagnosticEngine &diagnostics);
 
 }  // namespace matiec
