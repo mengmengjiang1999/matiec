@@ -39,6 +39,26 @@ int main() {
   assert(!context.analysis().set_datatype(literal, invalid));
   assert(context.analysis().datatype_size() == 1);
 
+  literal->candidate_datatypes.clear();
+  literal->datatype = &shared_candidate;
+  literal->scope = literal;
+  assert(publish_selected_datatypes(literal, context.analysis()));
+  entry = context.analysis().datatype(literal);
+  assert(entry->value.candidates.size() == 1);
+  assert(entry->value.selected == &shared_candidate);
+  assert(entry->value.scope == literal);
+
+  literal->datatype = nullptr;
+  literal->scope = nullptr;
+  materialize_selected_datatypes(literal, context.analysis());
+  assert(literal->datatype == &shared_candidate);
+  assert(literal->scope == literal);
+
+  invalid = entry->value;
+  invalid.scope = foreign;
+  assert(!context.analysis().set_datatype(literal, invalid));
+  assert(context.analysis().datatype(literal)->value.scope == literal);
+
   context.analysis().clear();
   assert(context.analysis().datatype_size() == 0);
   return 0;

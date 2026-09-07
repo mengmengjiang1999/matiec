@@ -150,6 +150,8 @@ static int type_safety(symbol_c *tree_root,
 	tree_root->accept(print_datatypes_error);
 	forced_narrow_candidate_datatypes_c forced_narrow_candidate_datatypes(tree_root);
 	tree_root->accept(forced_narrow_candidate_datatypes);
+	if (!publish_selected_datatypes(tree_root, analysis)) return 1;
+	materialize_selected_datatypes(tree_root, analysis);
 	return print_datatypes_error.get_error_count();
 }
 
