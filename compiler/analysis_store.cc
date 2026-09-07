@@ -56,7 +56,8 @@ bool AnalysisStore::valid(const DatatypeAnalysisRecord &record) const {
 }
 
 bool AnalysisStore::valid(const ResolutionAnalysisRecord &record) const {
-  return owns_all(record.candidates) && owns(record.declaration);
+  return owns_or_is_shared_all(record.candidates) &&
+         owns_or_is_shared(record.declaration);
 }
 
 bool AnalysisStore::valid(const EnumerationAnalysisRecord &record) const {
@@ -129,6 +130,8 @@ std::size_t AnalysisStore::flow_size() const { return flow_.size(); }
 std::size_t AnalysisStore::constant_size() const { return constants_.size(); }
 
 std::size_t AnalysisStore::datatype_size() const { return datatypes_.size(); }
+
+std::size_t AnalysisStore::resolution_size() const { return resolutions_.size(); }
 
 void AnalysisStore::clear() {
   flow_.clear();

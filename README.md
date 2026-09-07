@@ -229,9 +229,10 @@ owned source bytes with an independent diagnostic display name. Destroying the c
 nodes and retained parser strings. Separate contexts support repeated,
 sequential compilations without leaking state between runs.
 
-Semantic flow, constants, datatype candidates, and final datatype/scope
-selections are retained in that store. Compatibility annotations are materialized
-only where legacy semantic checks or generators still require them.
+Semantic flow, constants, datatype candidates, final datatype/scope selections,
+and invocation declaration resolution are retained in that store. Compatibility
+annotations are materialized only where legacy semantic checks or generators
+still require them.
 
 ### Semantics are explicit passes
 

@@ -48,6 +48,7 @@
 #include "constant_folding.hh"
 #include "constant_analysis_store.hh"
 #include "datatype_analysis_store.hh"
+#include "resolution_analysis_store.hh"
 #include "declaration_check.hh"
 #include "enum_declaration_check.hh"
 #include "remove_forward_dependencies.hh"
@@ -152,6 +153,8 @@ static int type_safety(symbol_c *tree_root,
 	tree_root->accept(forced_narrow_candidate_datatypes);
 	if (!publish_selected_datatypes(tree_root, analysis)) return 1;
 	materialize_selected_datatypes(tree_root, analysis);
+	if (!publish_declaration_resolution(tree_root, analysis)) return 1;
+	materialize_declaration_resolution(tree_root, analysis);
 	return print_datatypes_error.get_error_count();
 }
 

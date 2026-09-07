@@ -80,6 +80,7 @@ class AnalysisStore {
   std::size_t flow_size() const;
   std::size_t constant_size() const;
   std::size_t datatype_size() const;
+  std::size_t resolution_size() const;
   void clear();
 
  private:

@@ -58,7 +58,8 @@ CLI adapter in `main.cc` converts the final result to a process exit status.
 boundary. Flow edges are produced directly there; constant values, datatype
 candidate vectors, and final datatype/scope selections are published there at
 their completed phase boundaries and materialized only for unmigrated legacy
-consumers. Declaration resolution, enumeration tables, and generator metadata remain staged migrations
+consumers. Invocation declaration resolution is also published after narrowing.
+Enumeration tables and generator metadata remain staged migrations
 tracked from `docs/decisions/0002-defer-context-owned-analysis-store.md`.
 
 ## Generated output
