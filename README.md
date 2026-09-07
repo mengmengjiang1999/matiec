@@ -138,6 +138,8 @@ make check
 
 A prepared source archive may include generated build files and begin with
 `./configure`; a Git checkout should run `autoreconf --install` first.
+Automake uses `subdir-objects`, so generated objects mirror source directories
+and clean in-tree and out-of-tree builds use the same layout.
 
 </details>
 

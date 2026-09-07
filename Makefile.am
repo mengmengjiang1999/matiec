@@ -90,6 +90,5 @@ sequential_compilation_test_LDADD = $(iec2c_LDADD)
 
 in_memory_generator_test_SOURCES = \
 	tests/compiler/in_memory_generator_test.cc \
-	compiler/compilation_abort.cc \
-	compiler/compilation_context.cc
+	compiler/compilation_abort.cc
 in_memory_generator_test_LDADD = $(iec2c_LDADD)

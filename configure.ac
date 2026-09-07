@@ -6,7 +6,7 @@ AC_INIT([matiec], [0.1], [msousa@fe.up.pt, beremiz-devel@lists.sourceforge.net])
 AC_CONFIG_HEADERS([config/config.h])
 AC_CONFIG_AUX_DIR(config)
 
-AM_INIT_AUTOMAKE([1.16 foreign parallel-tests])
+AM_INIT_AUTOMAKE([1.16 foreign parallel-tests subdir-objects])
 
 # Before checking for CXX and CC, set CFLAGS and CXXFLAGS because they
 # are otherwise initialized to contain -g -O2
