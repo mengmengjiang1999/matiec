@@ -114,6 +114,8 @@ std::size_t AnalysisStore::size() const {
 
 std::size_t AnalysisStore::flow_size() const { return flow_.size(); }
 
+std::size_t AnalysisStore::constant_size() const { return constants_.size(); }
+
 void AnalysisStore::clear() {
   flow_.clear();
   constants_.clear();

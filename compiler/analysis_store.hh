@@ -78,6 +78,7 @@ class AnalysisStore {
 
   std::size_t size() const;
   std::size_t flow_size() const;
+  std::size_t constant_size() const;
   void clear();
 
  private:

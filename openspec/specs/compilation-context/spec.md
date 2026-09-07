@@ -59,3 +59,13 @@ Stored flow records SHALL belong only to the compilation that produced them.
 
 - **WHEN** the second compilation begins on the reused context
 - **THEN** flow records from the first compilation are cleared
+
+### Requirement: Constant results follow compilation lifetime
+
+Published constant records SHALL be cleared before a reused context starts its
+next compilation.
+
+#### Scenario: Context is reused after constant propagation
+
+- **WHEN** a new compilation begins on that context
+- **THEN** constant records produced for the prior AST are no longer observable
