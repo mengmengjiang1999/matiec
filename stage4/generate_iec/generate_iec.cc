@@ -1577,7 +1577,24 @@ void *visit(access_declaration_c *symbol) {
 }
 
 void *visit(access_path_c *symbol) {
-  return symbol->global_var_name->accept(*this);
+  symbol->root_name->accept(*this);
+  return symbol->selectors->accept(*this);
+}
+
+void *visit(access_path_selector_list_c *symbol) {
+  return print_list(symbol, "", "");
+}
+
+void *visit(access_field_selector_c *symbol) {
+  s4o.print(".");
+  return symbol->field_name->accept(*this);
+}
+
+void *visit(access_subscript_selector_c *symbol) {
+  s4o.print("[");
+  symbol->subscript->accept(*this);
+  s4o.print("]");
+  return NULL;
 }
 
 void *visit(read_only_c *) {s4o.print("READ_ONLY"); return NULL;}
@@ -2272,7 +2289,6 @@ void *visit(continue_statement_c *symbol) {
 
 visitor_c *new_code_generator(stage4out_c *s4o, const char *builddir)  {return new generate_iec_c(s4o);}
 void delete_code_generator(visitor_c *code_generator) {delete code_generator;}
-
 
 
 

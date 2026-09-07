@@ -374,6 +374,60 @@ fi
 expect_failure var-access-unresolved "Unresolved VAR_ACCESS target" \
   "$IEC2C" --std=iec61131-3:2025-experimental -f -l -p \
   -I "$MATIEC_LIBDIR" "$SCRIPT_DIR/profile-fixtures/var-access-unresolved.st"
+
+HIERARCHICAL_ACCESS_INPUT="$SCRIPT_DIR/profile-fixtures/var-access-hierarchical.st"
+HIERARCHICAL_ACCESS_GENERATED="$TMP_ROOT/access-hierarchical-generated"
+mkdir -p "$HIERARCHICAL_ACCESS_GENERATED"
+if "$IEC2C" --std=iec61131-3:2025-experimental -f -l -p \
+     -I "$MATIEC_LIBDIR" -T "$HIERARCHICAL_ACCESS_GENERATED" \
+     "$HIERARCHICAL_ACCESS_INPUT" \
+     >"$TMP_ROOT/access-hierarchical.stdout" \
+     2>"$TMP_ROOT/access-hierarchical.stderr" \
+   && grep -q '^HierarchicalAccessConfig,ConfigField,State.Value,INT,READ_WRITE$' \
+        "$HIERARCHICAL_ACCESS_GENERATED/ACCESS.csv" \
+   && grep -q '^HierarchicalAccessConfig,ConfigArray,Values\[2\],INT,READ_ONLY$' \
+        "$HIERARCHICAL_ACCESS_GENERATED/ACCESS.csv" \
+   && grep -q '^HierarchicalAccessConfig,NestedArray,State.Samples\[3\],INT,READ_ONLY$' \
+        "$HIERARCHICAL_ACCESS_GENERATED/ACCESS.csv" \
+   && grep -q '^HierarchicalAccessConfig,ResourceField,Resource1.LocalState.Value,INT,READ_ONLY$' \
+        "$HIERARCHICAL_ACCESS_GENERATED/ACCESS.csv" \
+   && grep -q '^HierarchicalAccessConfig,ProgramField,Resource1.Producer.Snapshot.Value,INT,READ_ONLY$' \
+        "$HIERARCHICAL_ACCESS_GENERATED/ACCESS.csv" \
+   && "$IEC2IEC" --std=iec61131-3:2025-experimental -f -l -p \
+        -I "$MATIEC_LIBDIR" -T "$HIERARCHICAL_ACCESS_GENERATED" \
+        "$HIERARCHICAL_ACCESS_INPUT" \
+        >"$TMP_ROOT/access-hierarchical.normalized" \
+        2>>"$TMP_ROOT/access-hierarchical.stderr" \
+   && grep -q 'NestedArray : State.Samples\[3\] : INT READ_ONLY;' \
+        "$TMP_ROOT/access-hierarchical.normalized" \
+   && grep -q 'ProgramField : Resource1.Producer.Snapshot.Value : INT READ_ONLY;' \
+        "$TMP_ROOT/access-hierarchical.normalized"; then
+  echo "[ O K ]    experimental-var-access-hierarchical"
+else
+  echo "[ERROR]    experimental-var-access-hierarchical -> resolution, metadata, or normalized output failed"
+  sed -n '1,16p' "$TMP_ROOT/access-hierarchical.stderr"
+  error=1
+fi
+
+HIERARCHICAL_ACCESS_INVALID="$SCRIPT_DIR/profile-fixtures/var-access-hierarchical-invalid.st"
+if "$IEC2C" --std=iec61131-3:2025-experimental -f -l -p \
+     -I "$MATIEC_LIBDIR" "$HIERARCHICAL_ACCESS_INVALID" \
+     >"$TMP_ROOT/access-hierarchical-invalid.stdout" \
+     2>"$TMP_ROOT/access-hierarchical-invalid.stderr"; then
+  echo "[ERROR]    experimental-var-access-hierarchical-invalid -> unexpectedly succeeded"
+  error=1
+elif grep -q "Unresolved VAR_ACCESS field 'Missing'" "$TMP_ROOT/access-hierarchical-invalid.stderr" \
+  && grep -q "subscript is not valid" "$TMP_ROOT/access-hierarchical-invalid.stderr" \
+  && grep -q "outside declared bounds" "$TMP_ROOT/access-hierarchical-invalid.stderr" \
+  && grep -q "Unresolved VAR_ACCESS program output: Missing" "$TMP_ROOT/access-hierarchical-invalid.stderr" \
+  && grep -q "type does not match target 'State.Value'" "$TMP_ROOT/access-hierarchical-invalid.stderr"; then
+  echo "[ O K ]    experimental-var-access-hierarchical-invalid"
+else
+  echo "[ERROR]    experimental-var-access-hierarchical-invalid -> expected diagnostics missing"
+  sed -n '1,24p' "$TMP_ROOT/access-hierarchical-invalid.stderr"
+  error=1
+fi
+
 expect_failure legacy-var-access "VAR_ACCESS requires --std=iec61131-3:2025-experimental" \
   "$IEC2C" --std=legacy -y -f -l -p -I "$MATIEC_LIBDIR" "$ACCESS_INPUT"
 

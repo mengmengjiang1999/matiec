@@ -99,7 +99,9 @@ VAR_ACCESS
 END_VAR
 ```
 
-This bounded form exports validated configuration-global aliases to `ACCESS.csv`.
+This bounded form exports validated configuration/resource globals and resource
+program-output paths, including structure fields and constant array subscripts, to
+`ACCESS.csv`.
 See the [access-variable semantics](docs/standards/access-variable-semantics.md) for
 the supported path and direction rules.
 

@@ -9,6 +9,7 @@ bounded MATIEC contract, not a complete IEC 61131-3:2025 conformance claim.
 CONFIGURATION Controller
   VAR_GLOBAL
     Setpoint : INT;
+    Samples : ARRAY [1..4] OF INT;
   END_VAR
 
   (* resource and program configurations *)
@@ -16,6 +17,7 @@ CONFIGURATION Controller
   VAR_ACCESS
     RemoteSetpoint : Setpoint : INT READ_WRITE;
     MonitorSetpoint : Setpoint : INT;
+    MonitorSample : Samples[2] : INT;
   END_VAR
 END_CONFIGURATION
 ```
@@ -23,10 +25,13 @@ END_CONFIGURATION
 Each declaration has the form:
 
 ```text
-exported-name : configuration-global : named-type [READ_ONLY | READ_WRITE];
+exported-name : access-path : named-type [READ_ONLY | READ_WRITE];
 ```
 
-- The target must be a simple `VAR_GLOBAL` declared in the same configuration.
+- The path root may be a same-configuration global, or a resource name followed by
+  a resource global or a program instance and one of its outputs.
+- Structure fields use `.Field`; array elements use constant integer `[index]`
+  selectors, whose rank and declared bounds are checked.
 - Identifiers and type matching are ASCII case-insensitive.
 - The default direction is `READ_ONLY`.
 - `READ_WRITE` cannot target a `VAR_GLOBAL CONSTANT` declaration.
@@ -47,6 +52,7 @@ After successful semantic analysis and code generation, `iec2c` or `iec2iec` wri
 configuration,name,path,type,direction
 Controller,RemoteSetpoint,Setpoint,INT,READ_WRITE
 Controller,MonitorSetpoint,Setpoint,INT,READ_ONLY
+Controller,MonitorSample,Samples[2],INT,READ_ONLY
 ```
 
 The header and column order are the provisional export ABI. No file is produced by
@@ -54,6 +60,7 @@ syntax-only mode or when validation fails.
 
 ## Deferred forms
 
-Resource/program/function-block qualification, direct addresses, fields, array
-elements, and access blocks inside a POU are not implemented. Legacy mode continues
-to reject `VAR_ACCESS`.
+Direct addresses, dynamic array subscripts, function-block member traversal,
+program variables other than outputs, access blocks inside a POU, and runtime
+communication-service binding are not implemented. Legacy mode continues to reject
+`VAR_ACCESS`.

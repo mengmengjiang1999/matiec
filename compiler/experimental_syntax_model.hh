@@ -33,9 +33,16 @@ struct ObjectMethodAst {
 };
 
 struct AccessVariableAst {
+  struct Selector {
+    enum class Kind { field, subscript };
+    Kind kind = Kind::field;
+    std::string spelling;
+  };
+
   std::string configuration;
   std::string name;
   std::string path;
+  std::vector<Selector> selectors;
   std::string type;
   std::string direction;
   SourceRange range;

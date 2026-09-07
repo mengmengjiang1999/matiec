@@ -962,8 +962,17 @@ SYM_LIST(access_declaration_list_c)
 /* access_name ':' access_path ':' type_name [direction] */
 SYM_REF4(access_declaration_c, access_name, access_path, type_name, direction)
 
-/* configuration global variable name */
-SYM_REF1(access_path_c, global_var_name)
+/* root name followed by field/subscript selectors */
+SYM_REF2(access_path_c, root_name, selectors)
+
+/* helper symbol for access_path */
+SYM_LIST(access_path_selector_list_c)
+
+/* '.' field_name */
+SYM_REF1(access_field_selector_c, field_name)
+
+/* '[' subscript ']' */
+SYM_REF1(access_subscript_selector_c, subscript)
 
 SYM_REF0(read_only_c)
 SYM_REF0(read_write_c)

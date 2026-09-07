@@ -144,18 +144,25 @@ int main() {
   assert(reusable.experimental_syntax().methods[0].owner_fields[0].first ==
          "COUNT");
   const std::string access_source =
-      "TYPE UserCount : INT; END_TYPE\n"
+      "TYPE UserCount : INT; "
+      "AccessRecord : STRUCT Value : UserCount; END_STRUCT; END_TYPE\n"
       "PROGRAM AccessMain\nVAR value : INT; END_VAR\n"
       "value := value;\nEND_PROGRAM\n"
       "CONFIGURATION AccessConfig\n"
-      "VAR_GLOBAL Counter : UserCount; END_VAR\n"
+      "VAR_GLOBAL Counter : AccessRecord; END_VAR\n"
       "RESOURCE R ON PLC PROGRAM P : AccessMain; END_RESOURCE\n"
-      "VAR_ACCESS Monitor : Counter : UserCount; END_VAR\n"
+      "VAR_ACCESS Monitor : Counter.Value : UserCount; END_VAR\n"
       "END_CONFIGURATION\n";
   reusable.set_source("memory://access.st", access_source);
   assert(matiec::Compiler().compile(reusable).succeeded());
   assert(reusable.experimental_syntax().access_variables.size() == 1);
   assert(reusable.experimental_syntax().access_variables[0].type == "UserCount");
+  assert(reusable.experimental_syntax().access_variables[0].path ==
+         "Counter.Value");
+  assert(reusable.experimental_syntax().access_variables[0].selectors.size() ==
+         1);
+  assert(reusable.experimental_syntax().access_variables[0].selectors[0].kind ==
+         matiec::AccessVariableAst::Selector::Kind::field);
   reusable.options().language_profile = matiec::LanguageProfile::legacy;
   reusable.set_source("memory://legacy.st", memory_source);
   assert(matiec::Compiler().compile(reusable).succeeded());

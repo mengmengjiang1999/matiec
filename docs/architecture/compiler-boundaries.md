@@ -127,6 +127,11 @@ shadowing are determined from parsed nodes, and compiler-owned declarations are
 then added explicitly to the AST. Consumers must not treat the side model as
 structural authority, rescan original source, or introduce process-wide caches.
 
+Access-variable paths are structural primary-AST nodes: the context model retains
+ordered field/subscript selector metadata, while the post-parse resolver walks
+configuration, resource, program-output, structure, and array declarations before
+publishing the canonical path or `ACCESS.csv` row.
+
 ## Extension rules
 
 - New mutable per-compilation state belongs in `CompilationContext` or one of

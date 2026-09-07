@@ -48,7 +48,7 @@ Profile 只表示标准版本方向。`-r`、`-R`、`-s`、`-n`、`-a` 等现有
 | Function Block Diagram（FBD） | 不直接支持 | 不解析图形化 FBD 输入 |
 | Ladder Diagram（LD） | 不直接支持 | 不解析图形化 LD 输入 |
 | 配置模型 | 支持 | `CONFIGURATION`、`RESOURCE`、`TASK`、程序实例 |
-| `VAR_ACCESS` | 实验性部分支持 | 配置级简单 `VAR_GLOBAL` 路径；导出 `ACCESS.csv` |
+| `VAR_ACCESS` | 实验性部分支持 | 配置/资源全局量、资源程序输出、结构字段和常量数组下标；导出 `ACCESS.csv` |
 | IEC 61131-3 第 3 版引用 | 可选 | 使用 `-r` 或 `-R` 启用 |
 | 命名空间与限定名 | 实验性部分支持 | 仅 `iec61131-3:2025-experimental`；采用 MATIEC 临时规则 |
 | 面向对象元素 | 实验性部分支持 | 仅支持 FB 的公开方法和静态派发；不支持类、接口、继承 |
@@ -755,13 +755,15 @@ Profile 还支持一个受限的配置级 `VAR_ACCESS`：
 VAR_ACCESS
   RemoteSetpoint : Setpoint : INT READ_WRITE;
   MonitorSetpoint : Setpoint : INT;
+  MonitorSample : Device.Samples[2] : INT;
 END_VAR
 ```
 
-这里的 `Setpoint` 必须是在同一 `CONFIGURATION` 中声明的简单 `VAR_GLOBAL`
-名称，类型必须一致；省略方向时默认为 `READ_ONLY`，常量不能声明为
-`READ_WRITE`。成功生成后会在 `-T` 目录写入 `ACCESS.csv`。资源、程序、功能块
-层级路径、直接地址及结构/数组元素仍未实现。完整边界见
+路径可以从同一配置的全局量开始，或以资源名限定资源全局量及程序输出；
+之后可以继续选择结构字段和常量整数数组下标。每一段及最终类型都会校验；
+省略方向时默认为 `READ_ONLY`，常量不能声明为 `READ_WRITE`。成功生成后会在
+`-T` 目录写入 `ACCESS.csv`。直接地址、动态下标、功能块成员遍历和运行时通信
+绑定仍未实现。完整边界见
 [`access-variable-semantics.md`](standards/access-variable-semantics.md)。
 
 ## 12. 会改变语法的命令行开关
@@ -796,7 +798,7 @@ END_VAR
 
 - 本项目直接解析的是文本源，不是 FBD、LD 编辑器文件；XML 或图形工程需由上游工具转换。
 - 前端以 IEC 61131-3 第 2 版草案为基础，并非第 3 版全部语法的实现。
-- `VAR_ACCESS` 仅在实验 Profile 下支持同配置的简单全局变量路径，不支持完整层级路径。
+- `VAR_ACCESS` 仅在实验 Profile 下支持受限的配置/资源/程序输出层级路径；它尚不支持直接地址、动态下标或运行时通信绑定。
 - 命名空间只在实验 Profile 下部分实现，使用 MATIEC 临时语义而非已验证的第四版完整规则。
 - 面向对象能力当前只实现公开 FB 方法的静态派发，不应理解为完整类/接口模型。
 - `REF_TO` 是选择性扩展；默认命令行下不能直接使用。

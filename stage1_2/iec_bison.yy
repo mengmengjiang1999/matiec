@@ -1169,6 +1169,7 @@ typedef struct YYLTYPE {
 %type  <list>	access_declaration_list
 %type  <leaf>	access_declaration
 %type  <leaf>	access_path
+%type  <list>	access_path_selector_list
 // helper symbol for access_path
 %type  <list>	any_fb_name_list
 %type  <leaf>	global_var_reference
@@ -6400,8 +6401,17 @@ access_declaration:
 
 
 access_path:
-  any_identifier
-	{$$ = new access_path_c($1, locloc(@$));}
+  any_identifier access_path_selector_list
+	{$$ = new access_path_c($1, $2, locloc(@$));}
+;
+
+access_path_selector_list:
+  // empty
+	{$$ = new access_path_selector_list_c(locloc(@$));}
+| access_path_selector_list '.' any_identifier
+	{$$ = $1; $$->add_element(new access_field_selector_c($3, locf(@2), locl(@3)));}
+| access_path_selector_list '[' signed_integer ']'
+	{$$ = $1; $$->add_element(new access_subscript_selector_c($3, locf(@2), locl(@4)));}
 ;
 
 // helper symbol for

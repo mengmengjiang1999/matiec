@@ -61,7 +61,7 @@ IEC 官方页面确认 IEC 61131-3:2025 是第 4.0 版，发布日期为 2025-05
 | `LANG-LD-GRAPH` | 图形 LD 输入 | 未实现 | — | README、grammar 边界 | 官方公开为第四版图形语言 |
 | `LANG-FBD-GRAPH` | 图形 FBD 输入 | 未实现 | — | README、grammar 边界 | 官方公开为第四版图形语言 |
 | `CONFIG-RESOURCE-TASK` | CONFIGURATION、RESOURCE、TASK、程序实例 | 已实现 | 默认 | grammar、configuration 回归 | 官方公开保留配置元素；细节未核对 |
-| `CONFIG-VAR-ACCESS` | VAR_ACCESS | 部分实现 | `iec61131-3:2025-experimental` | 原生 AST 后分析、CSV 导出、顺序编译与 CLI 回归 | `cross-vendor-provisional`；仅同配置简单全局路径 |
+| `CONFIG-VAR-ACCESS` | VAR_ACCESS | 部分实现 | `iec61131-3:2025-experimental` | 原生层级路径 AST、逐段解析、CSV 导出、顺序编译与 CLI 回归 | `cross-vendor-provisional`；支持配置/资源全局量、资源程序输出、结构字段和常量数组下标 |
 | `ED3-NAMESPACE` | 命名空间和限定名 | 部分实现 | `iec61131-3:2025-experimental` | 原生 AST 后结构分析、parser 拼写桥、顺序编译与 CLI/生成 C 回归 | `cross-vendor-provisional`；MATIEC 临时规则，2025 规范细节未核对 |
 | `ED3-OO` | 面向对象元素 | 部分实现 | `iec61131-3:2025-experimental` | 原生方法/调用 AST、parser 后元数据与兼容 AST、顺序编译及生成 C 运行回归 | 仅 FB 公开方法静态派发；其他 OO 与 2025 细节未核对 |
 | `ED4-UTF8` | UTF-8 源码与 `STRING` 字面量 | 部分实现 | `iec61131-3:2025-experimental` | 编码验证、lexer、生成 C 与运行回归 | `official-public`；函数签名等细节待核对 |
@@ -93,7 +93,7 @@ IEC 公开页面说明 Annex B 包含与 2013 版相比的重要技术变更，�
 
 > Function-block methods in the experimental profile use a bounded static-dispatch MATIEC contract; classes, interfaces, inheritance, and dynamic dispatch are not implemented.
 
-> Access variables in the experimental profile use a bounded configuration-global alias contract and export metadata to `ACCESS.csv`; hierarchical and direct paths are not implemented.
+> Access variables in the experimental profile use a bounded hierarchical alias contract and export metadata to `ACCESS.csv`; direct addresses, dynamic subscripts, and runtime communication binding are not implemented.
 
 > ASSERT in the experimental profile accepts a standalone BOOL condition and uses a documented released/no-op runtime policy; development notification remains unimplemented.
 
