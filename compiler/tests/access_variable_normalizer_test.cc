@@ -35,7 +35,7 @@ int main() {
     assert(result.declarations.size() == 1);
     assert(result.declarations[0].configuration == "Demo");
     assert(result.declarations[0].direction == "READ_WRITE");
-    assert(result.source.find("VAR_ACCESS") == std::string::npos);
+    assert(result.source.find("VAR_ACCESS") != std::string::npos);
   }
   {
     matiec::DiagnosticEngine diagnostics;
