@@ -56,6 +56,8 @@ class AnalysisStore {
 
   bool set_flow(const symbol_c *key, FlowAnalysisRecord record,
                 AnalysisStatus status = AnalysisStatus::valid);
+  bool add_flow_edge(symbol_c *predecessor, symbol_c *successor,
+                     bool insert_front);
   bool set_constant(const symbol_c *key, ConstantAnalysisRecord record,
                     AnalysisStatus status = AnalysisStatus::valid);
   bool set_datatype(const symbol_c *key, DatatypeAnalysisRecord record,
@@ -75,6 +77,7 @@ class AnalysisStore {
   const AnalysisEntry<GeneratorAnalysisRecord> *generator(const symbol_c *key) const;
 
   std::size_t size() const;
+  std::size_t flow_size() const;
   void clear();
 
  private:

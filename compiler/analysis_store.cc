@@ -6,6 +6,23 @@ namespace matiec {
 
 AnalysisStore::AnalysisStore(const AstArena &arena) : arena_(arena) {}
 
+bool AnalysisStore::add_flow_edge(symbol_c *predecessor, symbol_c *successor,
+                                  bool insert_front) {
+  if (!owns(predecessor) || !owns(successor) || predecessor == nullptr ||
+      successor == nullptr)
+    return false;
+  AnalysisEntry<FlowAnalysisRecord> &previous = flow_[predecessor];
+  AnalysisEntry<FlowAnalysisRecord> &next = flow_[successor];
+  if (insert_front) {
+    previous.value.successors.insert(previous.value.successors.begin(), successor);
+    next.value.predecessors.insert(next.value.predecessors.begin(), predecessor);
+  } else {
+    previous.value.successors.push_back(successor);
+    next.value.predecessors.push_back(predecessor);
+  }
+  return true;
+}
+
 bool AnalysisStore::owns(const symbol_c *node) const {
   return node == nullptr || arena_.owns(node);
 }
@@ -94,6 +111,8 @@ std::size_t AnalysisStore::size() const {
   return flow_.size() + constants_.size() + datatypes_.size() +
          resolutions_.size() + enumerations_.size() + generators_.size();
 }
+
+std::size_t AnalysisStore::flow_size() const { return flow_.size(); }
 
 void AnalysisStore::clear() {
   flow_.clear();

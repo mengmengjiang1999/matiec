@@ -43,6 +43,7 @@
 
 
 #include "../absyntax_utils/absyntax_utils.hh"
+#include "../compiler/analysis_store.hh"
 
 
 class flow_control_analysis_c: public iterator_visitor_c {
@@ -52,13 +53,14 @@ class flow_control_analysis_c: public iterator_visitor_c {
     symbol_c          *prev_il_instruction;
     symbol_c          *curr_il_instruction;
     bool      prev_il_instruction_is_JMP_or_RET;
+    matiec::AnalysisStore &analysis_;
 
   private:
     void link_insert  (symbol_c *prev_instruction, symbol_c *next_instruction);
     void link_pushback(symbol_c *prev_instruction, symbol_c *next_instruction);
 
   public:
-    flow_control_analysis_c(symbol_c *ignore);
+    flow_control_analysis_c(symbol_c *ignore, matiec::AnalysisStore &analysis);
     virtual ~flow_control_analysis_c(void);
 
     /**************************************/
@@ -156,7 +158,6 @@ class flow_control_analysis_c: public iterator_visitor_c {
     // void *visit(il_assign_operator_c *symbol, option, variable_name);
 
 }; // flow_control_analysis_c
-
 
 
 

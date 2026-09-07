@@ -77,9 +77,40 @@ static int declaration_safety(symbol_c *tree_root,
     return declaration_check.get_error_count();
 }
 
-static int flow_control_analysis(symbol_c *tree_root){
-    flow_control_analysis_c flow_control_analysis(tree_root);
+class materialize_flow_compatibility_c : public iterator_visitor_c {
+ public:
+  explicit materialize_flow_compatibility_c(const matiec::AnalysisStore &analysis)
+      : analysis_(analysis) {}
+
+  void assign(symbol_c *symbol, std::vector<symbol_c *> &previous,
+              std::vector<symbol_c *> &next) {
+    const matiec::AnalysisEntry<matiec::FlowAnalysisRecord> *entry =
+        analysis_.flow(symbol);
+    previous = entry == nullptr ? std::vector<symbol_c *>()
+                                : entry->value.predecessors;
+    next = entry == nullptr ? std::vector<symbol_c *>() : entry->value.successors;
+  }
+
+  void *visit(il_instruction_c *symbol) override {
+    assign(symbol, symbol->prev_il_instruction, symbol->next_il_instruction);
+    return iterator_visitor_c::visit(symbol);
+  }
+
+  void *visit(il_simple_instruction_c *symbol) override {
+    assign(symbol, symbol->prev_il_instruction, symbol->next_il_instruction);
+    return iterator_visitor_c::visit(symbol);
+  }
+
+ private:
+  const matiec::AnalysisStore &analysis_;
+};
+
+static int flow_control_analysis(symbol_c *tree_root,
+                                 matiec::AnalysisStore &analysis){
+    flow_control_analysis_c flow_control_analysis(tree_root, analysis);
     tree_root->accept(flow_control_analysis);
+    materialize_flow_compatibility_c compatibility(analysis);
+    tree_root->accept(compatibility);
     return 0;
 }
 
@@ -177,10 +208,10 @@ int stage3(symbol_c *tree_root, symbol_c **ordered_tree_root,
 			enum_declaration_check(tree_root, pass_context.diagnostics()));
 	});
 	passes.register_pass(matiec::SemanticPassId::flow_control,
-		[tree_root](matiec::CompilationContext &) {
+		[tree_root](matiec::CompilationContext &pass_context) {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::flow_control,
-			flow_control_analysis(tree_root));
+			flow_control_analysis(tree_root, pass_context.analysis()));
 	});
 	passes.register_pass(matiec::SemanticPassId::constant_propagation,
 		[tree_root](matiec::CompilationContext &pass_context) {

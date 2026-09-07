@@ -120,7 +120,8 @@
 /* set to 1 to see debug info during execution */
 static int debug = 0;
 
-flow_control_analysis_c::flow_control_analysis_c(symbol_c *ignore) {
+flow_control_analysis_c::flow_control_analysis_c(
+    symbol_c *ignore, matiec::AnalysisStore &analysis) : analysis_(analysis) {
   prev_il_instruction = NULL;
   curr_il_instruction = NULL;
   prev_il_instruction_is_JMP_or_RET = false;
@@ -137,13 +138,9 @@ void flow_control_analysis_c::link_insert(symbol_c *prev_instruction, symbol_c *
 	il_simple_instruction_c *next_b = dynamic_cast<il_simple_instruction_c *>(next_instruction);
 	il_simple_instruction_c *prev_b = dynamic_cast<il_simple_instruction_c *>(prev_instruction);
 	
-	if       (NULL != next_a)  next_a->prev_il_instruction.insert(next_a->prev_il_instruction.begin(), prev_instruction);
-	else if  (NULL != next_b)  next_b->prev_il_instruction.insert(next_b->prev_il_instruction.begin(), prev_instruction);
-	else ERROR;
-	
-	if       (NULL != prev_a)  prev_a->next_il_instruction.insert(prev_a->next_il_instruction.begin(), next_instruction);
-	else if  (NULL != prev_b)  prev_b->next_il_instruction.insert(prev_b->next_il_instruction.begin(), next_instruction);
-	else ERROR;
+	if ((NULL == next_a) && (NULL == next_b)) ERROR;
+	if ((NULL == prev_a) && (NULL == prev_b)) ERROR;
+	if (!analysis_.add_flow_edge(prev_instruction, next_instruction, true)) ERROR;
 }
 
 
@@ -152,8 +149,7 @@ void flow_control_analysis_c::link_pushback(symbol_c *prev_instruction, symbol_c
 	il_instruction_c *prev = dynamic_cast<il_instruction_c *>(prev_instruction);
 	if ((NULL == next) || (NULL == prev)) ERROR;
 
-	next->prev_il_instruction.push_back(prev);
-	prev->next_il_instruction.push_back(next);
+	if (!analysis_.add_flow_edge(prev, next, false)) ERROR;
 }
 
 
@@ -399,4 +395,3 @@ void *flow_control_analysis_c::visit(  JMP_operator_c *symbol) {
 // void *visit(il_assign_operator_c *symbol, variable_name);
 /* Symbol class handled together with function call checks */
 // void *visit(il_assign_operator_c *symbol, option, variable_name);
-
