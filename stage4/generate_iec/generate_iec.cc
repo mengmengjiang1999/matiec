@@ -1493,6 +1493,39 @@ void *visit(global_var_declarations_list_c *symbol) {return print_list(symbol);}
 /*| resource_declaration_list resource_declaration */
 void *visit(resource_declaration_list_c *symbol) {return print_list(symbol);}
 
+void *visit(access_declarations_c *symbol) {
+  s4o.print(s4o.indent_spaces + "VAR_ACCESS\n");
+  s4o.indent_right();
+  symbol->access_declaration_list->accept(*this);
+  s4o.indent_left();
+  s4o.print(s4o.indent_spaces + "END_VAR\n");
+  return NULL;
+}
+
+void *visit(access_declaration_list_c *symbol) {return print_list(symbol);}
+
+void *visit(access_declaration_c *symbol) {
+  s4o.print(s4o.indent_spaces);
+  symbol->access_name->accept(*this);
+  s4o.print(" : ");
+  symbol->access_path->accept(*this);
+  s4o.print(" : ");
+  symbol->type_name->accept(*this);
+  if (symbol->direction != NULL) {
+    s4o.print(" ");
+    symbol->direction->accept(*this);
+  }
+  s4o.print(";\n");
+  return NULL;
+}
+
+void *visit(access_path_c *symbol) {
+  return symbol->global_var_name->accept(*this);
+}
+
+void *visit(read_only_c *) {s4o.print("READ_ONLY"); return NULL;}
+void *visit(read_write_c *) {s4o.print("READ_WRITE"); return NULL;}
+
 
 /*
 RESOURCE resource_name ON resource_type_name
@@ -2169,7 +2202,6 @@ void *visit(continue_statement_c *symbol) {
 
 visitor_c *new_code_generator(stage4out_c *s4o, const char *builddir)  {return new generate_iec_c(s4o);}
 void delete_code_generator(visitor_c *code_generator) {delete code_generator;}
-
 
 
 

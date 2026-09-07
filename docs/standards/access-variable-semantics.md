@@ -32,6 +32,9 @@ exported-name : configuration-global : named-type [READ_ONLY | READ_WRITE];
 - `READ_WRITE` cannot target a `VAR_GLOBAL CONSTANT` declaration.
 - Access names must be unique within their configuration.
 - The declaration exports metadata; it does not create a second runtime variable.
+- Validated declarations remain as explicit access nodes in the compiler AST.
+- `iec2iec` preserves the block and writes an explicit `READ_ONLY` direction when
+  the source omits one.
 
 ## Output contract
 

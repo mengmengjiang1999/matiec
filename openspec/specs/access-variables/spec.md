@@ -13,20 +13,20 @@ uncertainties are recorded.
 - **THEN** the experimental profile continues to reject the construct
 
 ### Requirement: Validated access targets
+
 Enabled access declarations SHALL resolve their targets, check direction and type,
-and preserve required metadata for downstream consumers.
+remain represented in the parsed syntax tree, and preserve required metadata for
+downstream consumers.
 
-#### Scenario: An access path is unresolved
-- **WHEN** its target does not exist or is not visible
-- **THEN** compilation fails with a source-located diagnostic
+#### Scenario: A valid access declaration is parsed
 
-#### Scenario: A valid access declaration is generated
 - **WHEN** a configuration access name targets a same-configuration global with a matching type
-- **THEN** its configuration, name, path, type, and effective direction are exported to `ACCESS.csv`
+- **THEN** its name, path, type, and effective direction exist in the access AST and are exported to `ACCESS.csv`
 
-#### Scenario: Writable access targets a constant
-- **WHEN** a `READ_WRITE` access name targets a constant global
-- **THEN** compilation fails with a source-located diagnostic
+#### Scenario: Normalized IEC is generated
+
+- **WHEN** `iec2iec` processes a valid experimental access declaration
+- **THEN** the output contains an equivalent `VAR_ACCESS` block
 
 ### Requirement: Legacy access-variable isolation
 Access-variable syntax MUST remain unavailable in the legacy profile.

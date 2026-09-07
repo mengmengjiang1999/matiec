@@ -128,7 +128,6 @@ bool normalize_experimental_access_variables(
       std::regex::icase);
 
   const std::vector<Line> lines = split_lines(source);
-  std::vector<bool> removed(lines.size(), false);
   std::map<std::string, GlobalVariable> globals;
   std::set<std::string> access_names;
   std::string configuration;
@@ -185,7 +184,6 @@ bool normalize_experimental_access_variables(
     if (!matches(lines[index].text, access_start, &match)) continue;
 
     result->used_access_variables = true;
-    removed[index] = true;
     if (in_resource) {
       diagnostics.error("VAR_ACCESS is supported only at CONFIGURATION scope",
                         line_range(lines[index], source_path));
@@ -194,7 +192,6 @@ bool normalize_experimental_access_variables(
     bool found_declaration = false;
     std::size_t cursor = index + 1;
     for (; cursor < lines.size(); ++cursor) {
-      removed[cursor] = true;
       std::smatch declaration_match;
       if (matches(lines[cursor].text, var_end, &declaration_match)) break;
       if (lines[cursor].text.find_first_not_of(" \t\r") == std::string::npos)
@@ -252,12 +249,6 @@ bool normalize_experimental_access_variables(
   }
 
   if (diagnostics.has_errors()) return false;
-  std::string normalized;
-  for (std::size_t index = 0; index < lines.size(); ++index) {
-    if (!removed[index]) normalized += lines[index].text;
-    if (lines[index].has_newline) normalized += '\n';
-  }
-  result->source = std::move(normalized);
   return true;
 }
 

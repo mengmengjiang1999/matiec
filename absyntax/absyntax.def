@@ -933,6 +933,21 @@ SYM_LIST(global_var_declarations_list_c)
 /* helper symbol for configuration_declaration */
 SYM_LIST(resource_declaration_list_c)
 
+/* VAR_ACCESS access_declaration_list END_VAR */
+SYM_REF1(access_declarations_c, access_declaration_list)
+
+/* access_declaration ';' */
+SYM_LIST(access_declaration_list_c)
+
+/* access_name ':' access_path ':' type_name [direction] */
+SYM_REF4(access_declaration_c, access_name, access_path, type_name, direction)
+
+/* configuration global variable name */
+SYM_REF1(access_path_c, global_var_name)
+
+SYM_REF0(read_only_c)
+SYM_REF0(read_write_c)
+
 /*
 RESOURCE resource_name ON resource_type_name
    optional_global_var_declarations
