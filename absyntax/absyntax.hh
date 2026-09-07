@@ -123,18 +123,18 @@ class const_value_c {
       public:
       const_value__(void): status(cs_undefined), value(0) {};
       
-      value_type get(void)              {return value;}
+      value_type get(void) const        {return value;}
       void       set(value_type value_) {status = cs_const_value; value = value_;}
       void       set_overflow(void)     {status = cs_overflow   ;}
       void       set_nonconst(void)     {status = cs_non_const  ;}
-      bool       is_valid    (void)     {return (status == cs_const_value);}
-      bool       is_overflow (void)     {return (status == cs_overflow   );}
-      bool       is_nonconst (void)     {return (status == cs_non_const  );}
-      bool       is_undefined(void)     {return (status == cs_undefined  );}
-      bool       is_zero     (void)     {return (is_valid() && (get() == 0));}
+      bool       is_valid    (void) const {return (status == cs_const_value);}
+      bool       is_overflow (void) const {return (status == cs_overflow   );}
+      bool       is_nonconst (void) const {return (status == cs_non_const  );}
+      bool       is_undefined(void) const {return (status == cs_undefined  );}
+      bool       is_zero     (void) const {return (is_valid() && (get() == 0));}
 
       /* comparison operator */
-      bool operator==(const const_value__ cv) {
+      bool operator==(const const_value__ cv) const {
         return (    ((status!=cs_const_value) && (status==cv.status)) 
                  || ((status==cs_const_value) && (value ==cv.value )));
       }
@@ -151,11 +151,11 @@ class const_value_c {
     ~const_value_c(void) {};
     
     /* comparison operator */
-    bool operator==(const const_value_c cv)
+    bool operator==(const const_value_c cv) const
       {return ((_int64==cv._int64) && (_uint64==cv._uint64) && (_real64==cv._real64) && (_bool==cv._bool));}                                                     
       
     /* return true if at least one of the const values (int, real, ...) is a valid const value */
-    bool is_const(void) 
+    bool is_const(void) const
       {return (_int64.is_valid() || _uint64.is_valid() || _real64.is_valid() || _bool.is_valid());}   
 };
 

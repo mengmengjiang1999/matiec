@@ -25,8 +25,16 @@ int main() {
   assert(stored_value._int64.get() == 42);
 
   literal->const_value._int64.set(7);
-  materialize_constant_compatibility(literal, context.analysis());
-  assert(literal->const_value._int64.get() == 42);
+  {
+    matiec::ActiveAnalysisStoreScope analysis_scope(context.analysis());
+    assert(matiec::analysis_constant_value(literal)._int64.get() == 42);
+
+    integer_c transient("9");
+    transient.const_value._int64.set(9);
+    assert(matiec::analysis_constant_value(&transient)._int64.get() == 9);
+  }
+  assert(matiec::active_analysis_store() == nullptr);
+  assert(literal->const_value._int64.get() == 7);
   context.analysis().clear();
   assert(context.analysis().constant_size() == 0);
   return 0;

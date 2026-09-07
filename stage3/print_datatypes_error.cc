@@ -44,6 +44,7 @@
 
 
 #include "print_datatypes_error.hh"
+#include "../compiler/analysis_store.hh"
 #include "datatype_functions.hh"
 
 #include <typeinfo>
@@ -84,7 +85,8 @@ int print_datatypes_error_c::get_error_count() {
 
 
 /* Verify if the datatypes of all symbols in the vector are valid and equal!  */
-static bool are_all_datatypes_equal(std::vector <symbol_c *> &symbol_vect) {
+static bool are_all_datatypes_equal(
+    const std::vector<symbol_c *> &symbol_vect) {
 	if (symbol_vect.size() <= 0) return false;
 
 	bool res = get_datatype_info_c::is_type_valid(symbol_vect[0]->datatype);
@@ -201,7 +203,7 @@ void print_datatypes_error_c::handle_function_invocation(symbol_c *fcall, generi
 					/* We are in a situation where an IL function call is passed the first parameter, which is actually the previous IL instruction */
 					/* However, this is really a fake previous il instruction (see visit(il_instruction_c *) )
 					 * We will iterate through all the real previous IL instructions, and analyse each of them one by one */
-					if (il_instruction_symbol->prev_il_instruction.size() == 0) {
+					if (matiec::analysis_flow_predecessors(il_instruction_symbol).size() == 0) {
 						function_invocation_error = true;
 						STAGE3_ERROR(0, fcall, fcall, "No available data to pass to first parameter of IL function %s. Missing a previous LD instruction?", ((token_c *)fcall_data.function_name)->value);
 					}
@@ -213,8 +215,8 @@ void print_datatypes_error_c::handle_function_invocation(symbol_c *fcall, generi
 					 * narrow algorithm. We leave this untill somebody aks for it...
 					 * So, for now, we simply comment out this code.
 					 */
-					for (unsigned int p = 0; p < il_instruction_symbol->prev_il_instruction.size(); p++) {
-						symbol_c *value = il_instruction_symbol->prev_il_instruction[p];  
+					for (unsigned int p = 0; p < matiec::analysis_flow_predecessors(il_instruction_symbol).size(); p++) {
+						symbol_c *value = matiec::analysis_flow_predecessors(il_instruction_symbol)[p];
 						if (!get_datatype_info_c::is_type_valid(value->datatype)) {
 							function_invocation_error = true;
 							STAGE3_ERROR(0, fcall, fcall, "Data type incompatibility for value passed to first parameter when invoking function '%s'", ((token_c *)fcall_data.function_name)->value);
@@ -267,7 +269,7 @@ void *print_datatypes_error_c::handle_implicit_il_fb_invocation(const char *para
 		return NULL;
 	}
 
-	if (fake_prev_il_instruction->prev_il_instruction.empty()) {
+	if (matiec::analysis_flow_predecessors(fake_prev_il_instruction).empty()) {
 		STAGE3_ERROR(0, il_operator, il_operand, "FB invocation operator '%s' must be preceded by a 'LD' (or equivalent) operator.", param_name);	
 		return NULL;
 	}
@@ -285,7 +287,7 @@ void *print_datatypes_error_c::handle_implicit_il_fb_invocation(const char *para
 		STAGE3_ERROR(0, il_operator, il_operand, "FB called by '%s' operator does not have a parameter named '%s'", param_name, param_name);	
 		return NULL;
 	}
-	if (!are_all_datatypes_equal(fake_prev_il_instruction->prev_il_instruction)) {
+	if (!are_all_datatypes_equal(matiec::analysis_flow_predecessors(fake_prev_il_instruction))) {
 		STAGE3_ERROR(0, il_operator, il_operand, "Data type incompatibility between parameter '%s' and value being passed.", param_name);
 		return NULL;
 	}
@@ -739,7 +741,7 @@ void *print_datatypes_error_c::visit(il_instruction_c *symbol) {
 		/* When handling a il function call, this fake_prev_il_instruction may be used as a standard function call parameter, so it is important that 
 		 * it contain some valid location info so error messages make sense.
 		 */
-		if (symbol->prev_il_instruction.size() > 0) {
+		if (matiec::analysis_flow_predecessors(symbol).size() > 0) {
 			/* since we don't want to copy all that data one variable at a time, we copy it all at once */
 			/* This has the advantage that, if we ever add some more data to the base symbol_c later on, we will not need to
 			 * change the following line to guarantee that the data is copied correctly!
@@ -747,7 +749,7 @@ void *print_datatypes_error_c::visit(il_instruction_c *symbol) {
 			 * In order to only copy the data in the base class symbol_c, we use the tmp_symbol pointer!
 			 * I (mario) have checked with a debugger, and it is working as intended!
 			 */
-			symbol_c *tmp_symbol1 = symbol->prev_il_instruction[0];
+			symbol_c *tmp_symbol1 = matiec::analysis_flow_predecessors(symbol)[0];
 			symbol_c *tmp_symbol2 = &tmp_prev_il_instruction;
 			*tmp_symbol2 = *tmp_symbol1;
 			/* we do not want to copy the datatype variable, so we reset it to NULL */
@@ -762,11 +764,11 @@ void *print_datatypes_error_c::visit(il_instruction_c *symbol) {
 		 * Instead of creating two 'global' (within the class) variables, we create a single il_instruction_c variable (fake_prev_il_instruction),
 		 * and shove that data into this single variable.
 		 */
-		tmp_prev_il_instruction.prev_il_instruction = symbol->prev_il_instruction;
+		tmp_prev_il_instruction.prev_il_instruction = matiec::analysis_flow_predecessors(symbol);
 		intersect_prev_candidate_datatype_lists(&tmp_prev_il_instruction);
-		if (are_all_datatypes_equal(symbol->prev_il_instruction))
-			if (symbol->prev_il_instruction.size() > 0)
-				tmp_prev_il_instruction.datatype = (symbol->prev_il_instruction[0])->datatype;
+		if (are_all_datatypes_equal(matiec::analysis_flow_predecessors(symbol)))
+			if (matiec::analysis_flow_predecessors(symbol).size() > 0)
+				tmp_prev_il_instruction.datatype = (matiec::analysis_flow_predecessors(symbol)[0])->datatype;
 		
 		/* Tell the il_instruction the datatype that it must generate - this was chosen by the next il_instruction (remember: we are iterating backwards!) */
 		fake_prev_il_instruction = &tmp_prev_il_instruction;
@@ -901,7 +903,7 @@ void *print_datatypes_error_c::visit(il_formal_funct_call_c *symbol) {
 
 // SYM_REF1(il_simple_instruction_c, il_simple_instruction, symbol_c *prev_il_instruction;)
 void *print_datatypes_error_c::visit(il_simple_instruction_c *symbol)	{
-  if (symbol->prev_il_instruction.size() > 1) ERROR; /* There should be no labeled insructions inside an IL expression! */
+  if (matiec::analysis_flow_predecessors(symbol).size() > 1) ERROR; /* There should be no labeled insructions inside an IL expression! */
     
   il_instruction_c tmp_prev_il_instruction(NULL, NULL);
 #if 0
@@ -910,9 +912,9 @@ void *print_datatypes_error_c::visit(il_simple_instruction_c *symbol)	{
    * Instead of creating two 'global' (within the class) variables, we create a single il_instruction_c variable (fake_prev_il_instruction),
    * and shove that data into this single variable.
    */
-  if (symbol->prev_il_instruction.size() > 0)
-    tmp_prev_il_instruction.candidate_datatypes = symbol->prev_il_instruction[0]->candidate_datatypes;
-  tmp_prev_il_instruction.prev_il_instruction = symbol->prev_il_instruction;
+  if (matiec::analysis_flow_predecessors(symbol).size() > 0)
+    tmp_prev_il_instruction.candidate_datatypes = matiec::analysis_flow_predecessors(symbol)[0]->candidate_datatypes;
+  tmp_prev_il_instruction.prev_il_instruction = matiec::analysis_flow_predecessors(symbol);
 #endif
   
   /* the print error algorithm will need access to the intersected candidate_datatype lists of all prev_il_instructions, as well as the 
@@ -920,11 +922,11 @@ void *print_datatypes_error_c::visit(il_simple_instruction_c *symbol)	{
    * Instead of creating two 'global' (within the class) variables, we create a single il_instruction_c variable (fake_prev_il_instruction),
    * and shove that data into this single variable.
    */
-  tmp_prev_il_instruction.prev_il_instruction = symbol->prev_il_instruction;
+  tmp_prev_il_instruction.prev_il_instruction = matiec::analysis_flow_predecessors(symbol);
   intersect_prev_candidate_datatype_lists(&tmp_prev_il_instruction);
-  if (are_all_datatypes_equal(symbol->prev_il_instruction))
-    if (symbol->prev_il_instruction.size() > 0)
-      tmp_prev_il_instruction.datatype = (symbol->prev_il_instruction[0])->datatype;
+  if (are_all_datatypes_equal(matiec::analysis_flow_predecessors(symbol)))
+    if (matiec::analysis_flow_predecessors(symbol).size() > 0)
+      tmp_prev_il_instruction.datatype = (matiec::analysis_flow_predecessors(symbol)[0])->datatype;
   
   
    /* copy the candidate_datatypes list */
@@ -934,8 +936,8 @@ void *print_datatypes_error_c::visit(il_simple_instruction_c *symbol)	{
   return NULL;
   
   
-//   if (symbol->prev_il_instruction.size() == 0)  prev_il_instruction = NULL;
-//   else                                          prev_il_instruction = symbol->prev_il_instruction[0];
+//   if (matiec::analysis_flow_predecessors(symbol).size() == 0)  prev_il_instruction = NULL;
+//   else                                          prev_il_instruction = matiec::analysis_flow_predecessors(symbol)[0];
 
 //   symbol->il_simple_instruction->accept(*this);
 //   prev_il_instruction = NULL;
@@ -1298,5 +1300,3 @@ void *print_datatypes_error_c::visit(repeat_statement_c *symbol) {
 	symbol->expression->accept(*this);
 	return NULL;
 }
-
-

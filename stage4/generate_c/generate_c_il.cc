@@ -651,7 +651,7 @@ void *visit(instruction_list_c *symbol) {
 // SYM_REF2(il_instruction_c, label, il_instruction)
 void *visit(il_instruction_c *symbol) {
   /* all previous IL instructions should have the same datatype (checked in stage3), so we get the datatype from the first previous IL instruction we find */
-  implicit_variable_current.datatype = (symbol->prev_il_instruction.empty())? NULL : symbol->prev_il_instruction[0]->datatype;
+  implicit_variable_current.datatype = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_flow_predecessors(symbol)[0]->datatype;
   implicit_variable_result .datatype = symbol->datatype;
   
   if (NULL != symbol->label) {
@@ -1401,7 +1401,7 @@ void *visit(simple_instr_list_c *symbol) {
 // SYM_REF1(il_simple_instruction_c, il_simple_instruction, symbol_c *prev_il_instruction;)
 void *visit(il_simple_instruction_c *symbol) {
   /* all previous IL instructions should have the same datatype (checked in stage3), so we get the datatype from the first previous IL instruction we find */
-  implicit_variable_current.datatype = (symbol->prev_il_instruction.empty())? NULL : symbol->prev_il_instruction[0]->datatype;
+  implicit_variable_current.datatype = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_flow_predecessors(symbol)[0]->datatype;
   implicit_variable_result .datatype = symbol->datatype;
   
   symbol->il_simple_instruction->accept(*this);

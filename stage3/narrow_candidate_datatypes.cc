@@ -54,6 +54,7 @@
 
 
 #include "narrow_candidate_datatypes.hh"
+#include "../compiler/analysis_store.hh"
 #include "datatype_functions.hh"
 #include <typeinfo>
 #include <list>
@@ -110,8 +111,8 @@ static void set_datatype(symbol_c *datatype, symbol_c *symbol) {
 // NOTE: This function is virtual! The forced_narrow_candidate_datatypes_c has a slightly different version of this fuinction!!
 void narrow_candidate_datatypes_c::set_datatype_in_prev_il_instructions(symbol_c *datatype, il_instruction_c *symbol) {
 	if (NULL == symbol) ERROR;
-	for (unsigned int i = 0; i < symbol->prev_il_instruction.size(); i++)
-		set_datatype(datatype, symbol->prev_il_instruction[i]);
+	for (unsigned int i = 0; i < matiec::analysis_flow_predecessors(symbol).size(); i++)
+		set_datatype(datatype, matiec::analysis_flow_predecessors(symbol)[i]);
 }
 
 
@@ -326,7 +327,7 @@ void *narrow_candidate_datatypes_c::narrow_implicit_il_fb_call(symbol_c *il_inst
 		il_operand->accept(*this);
 	}
 
-	if (0 == fake_prev_il_instruction->prev_il_instruction.size()) {
+	if (0 == matiec::analysis_flow_predecessors(fake_prev_il_instruction).size()) {
 		/* This IL implicit FB call (e.g. CLK ton_var) is not preceded by another IL instruction
 		 * (or list of instructions) that will set the IL current/default value.
 		 * We cannot proceed verifying type compatibility of something that does not exist.
@@ -1083,7 +1084,7 @@ void *narrow_candidate_datatypes_c::visit(il_instruction_c *symbol) {
 		 * Instead of creating two 'global' (within the class) variables, we create a single il_instruction_c variable (fake_prev_il_instruction),
 		 * and shove that data into this single variable.
 		 */
-		tmp_prev_il_instruction.prev_il_instruction = symbol->prev_il_instruction;
+		tmp_prev_il_instruction.prev_il_instruction = matiec::analysis_flow_predecessors(symbol);
 		intersect_prev_candidate_datatype_lists(&tmp_prev_il_instruction);
 		/* Tell the il_instruction the datatype that it must generate - this was chosen by the next il_instruction (remember: we are iterating backwards!) */
 		fake_prev_il_instruction = &tmp_prev_il_instruction;
@@ -1261,7 +1262,7 @@ void *narrow_candidate_datatypes_c::visit(simple_instr_list_c *symbol) {
 
 // SYM_REF1(il_simple_instruction_c, il_simple_instruction, symbol_c *prev_il_instruction;)
 void *narrow_candidate_datatypes_c::visit(il_simple_instruction_c *symbol)	{
-  if (symbol->prev_il_instruction.size() > 1) ERROR; /* There should be no labeled insructions inside an IL expression! */
+  if (matiec::analysis_flow_predecessors(symbol).size() > 1) ERROR; /* There should be no labeled insructions inside an IL expression! */
     
   il_instruction_c tmp_prev_il_instruction(NULL, NULL);
   /* the narrow algorithm will need access to the intersected candidate_datatype lists of all prev_il_instructions, as well as the 
@@ -1269,9 +1270,9 @@ void *narrow_candidate_datatypes_c::visit(il_simple_instruction_c *symbol)	{
    * Instead of creating two 'global' (within the class) variables, we create a single il_instruction_c variable (fake_prev_il_instruction),
    * and shove that data into this single variable.
    */
-  if (symbol->prev_il_instruction.size() > 0)
-    tmp_prev_il_instruction.candidate_datatypes = symbol->prev_il_instruction[0]->candidate_datatypes;
-  tmp_prev_il_instruction.prev_il_instruction = symbol->prev_il_instruction;
+  if (matiec::analysis_flow_predecessors(symbol).size() > 0)
+    tmp_prev_il_instruction.candidate_datatypes = matiec::analysis_flow_predecessors(symbol)[0]->candidate_datatypes;
+  tmp_prev_il_instruction.prev_il_instruction = matiec::analysis_flow_predecessors(symbol);
   
    /* copy the candidate_datatypes list */
   fake_prev_il_instruction = &tmp_prev_il_instruction;
@@ -1888,7 +1889,6 @@ void *narrow_candidate_datatypes_c::visit(repeat_statement_c *symbol) {
 		symbol->statement_list->accept(*this);
 	return NULL;
 }
-
 
 
 

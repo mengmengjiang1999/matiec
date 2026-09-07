@@ -23,6 +23,7 @@
  */
 
 #include "datatype_functions.hh"
+#include "../compiler/analysis_store.hh"
 #include "../absyntax_utils/absyntax_utils.hh"
 #include <vector>
 
@@ -436,13 +437,13 @@ void intersect_candidate_datatype_list(symbol_c *list1 /*origin, dest.*/, symbol
 
 /* intersect the candidate_datatype lists of all prev_il_intructions, and set the local candidate_datatype list to the result! */
 void intersect_prev_candidate_datatype_lists(il_instruction_c *symbol) {
-	if (symbol->prev_il_instruction.empty())
+	if (matiec::analysis_flow_predecessors(symbol).empty())
 		return;
-	
-	symbol->candidate_datatypes = symbol->prev_il_instruction[0]->candidate_datatypes;
-	for (unsigned int i = 1; i < symbol->prev_il_instruction.size(); i++) {
-		intersect_candidate_datatype_list(symbol /*origin, dest.*/, symbol->prev_il_instruction[i] /*with*/);
-	}  
+
+	symbol->candidate_datatypes = matiec::analysis_flow_predecessors(symbol)[0]->candidate_datatypes;
+	for (unsigned int i = 1; i < matiec::analysis_flow_predecessors(symbol).size(); i++) {
+		intersect_candidate_datatype_list(symbol /*origin, dest.*/, matiec::analysis_flow_predecessors(symbol)[i] /*with*/);
+	}
 }
 
 

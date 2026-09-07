@@ -84,40 +84,10 @@ static int declaration_safety(symbol_c *tree_root,
     return declaration_check.get_error_count();
 }
 
-class materialize_flow_compatibility_c : public iterator_visitor_c {
- public:
-  explicit materialize_flow_compatibility_c(const matiec::AnalysisStore &analysis)
-      : analysis_(analysis) {}
-
-  void assign(symbol_c *symbol, std::vector<symbol_c *> &previous,
-              std::vector<symbol_c *> &next) {
-    const matiec::AnalysisEntry<matiec::FlowAnalysisRecord> *entry =
-        analysis_.flow(symbol);
-    previous = entry == nullptr ? std::vector<symbol_c *>()
-                                : entry->value.predecessors;
-    next = entry == nullptr ? std::vector<symbol_c *>() : entry->value.successors;
-  }
-
-  void *visit(il_instruction_c *symbol) override {
-    assign(symbol, symbol->prev_il_instruction, symbol->next_il_instruction);
-    return iterator_visitor_c::visit(symbol);
-  }
-
-  void *visit(il_simple_instruction_c *symbol) override {
-    assign(symbol, symbol->prev_il_instruction, symbol->next_il_instruction);
-    return iterator_visitor_c::visit(symbol);
-  }
-
- private:
-  const matiec::AnalysisStore &analysis_;
-};
-
 static int flow_control_analysis(symbol_c *tree_root,
                                  matiec::AnalysisStore &analysis){
     flow_control_analysis_c flow_control_analysis(tree_root, analysis);
     tree_root->accept(flow_control_analysis);
-    materialize_flow_compatibility_c compatibility(analysis);
-    tree_root->accept(compatibility);
     return 0;
 }
 
@@ -131,7 +101,6 @@ static int constant_propagation(symbol_c *tree_root,
     constant_propagation_c constant_propagation(tree_root, diagnostics);
     tree_root->accept(constant_propagation);
     if (!publish_constant_analysis(tree_root, analysis)) return 1;
-    materialize_constant_compatibility(tree_root, analysis);
     return constant_propagation.get_error_count();
 }
 

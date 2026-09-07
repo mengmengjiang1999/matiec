@@ -61,6 +61,7 @@
 
 #include <../main.hh>         /* required for UINT64_MAX, INT64_MAX, INT64_MIN, ... */
 #include "fill_candidate_datatypes.hh"
+#include "../compiler/analysis_store.hh"
 #include "datatype_functions.hh"
 #include <typeinfo>
 #include <list>
@@ -69,9 +70,9 @@
 #include <strings.h>
 
 
-#define GET_CVALUE(dtype, symbol)             ((symbol)->const_value._##dtype.get())
-#define VALID_CVALUE(dtype, symbol)           ((symbol)->const_value._##dtype.is_valid())
-#define IS_OVERFLOW(dtype, symbol)            ((symbol)->const_value._##dtype.is_overflow())
+#define GET_CVALUE(dtype, symbol)             (matiec::analysis_constant_value(symbol)._##dtype.get())
+#define VALID_CVALUE(dtype, symbol)           (matiec::analysis_constant_value(symbol)._##dtype.is_valid())
+#define IS_OVERFLOW(dtype, symbol)            (matiec::analysis_constant_value(symbol)._##dtype.is_overflow())
 
 
 /* set to 1 to see debug info during execution */
@@ -1818,9 +1819,11 @@ void *fill_candidate_datatypes_c::visit(il_instruction_c *symbol) {
 		intersect_prev_candidate_datatype_lists(symbol);
 	} else {
 		il_instruction_c fake_prev_il_instruction = *symbol;
+		fake_prev_il_instruction.prev_il_instruction =
+			matiec::analysis_flow_predecessors(symbol);
 		intersect_prev_candidate_datatype_lists(&fake_prev_il_instruction);
 
-		if (symbol->prev_il_instruction.size() == 0)  prev_il_instruction = NULL;
+		if (matiec::analysis_flow_predecessors(symbol).size() == 0)  prev_il_instruction = NULL;
 		else                                          prev_il_instruction = &fake_prev_il_instruction;
 		symbol->il_instruction->accept(*this);
 		prev_il_instruction = NULL;
@@ -2025,9 +2028,9 @@ void *fill_candidate_datatypes_c::visit(simple_instr_list_c *symbol) {
 
 // SYM_REF1(il_simple_instruction_c, il_simple_instruction, symbol_c *prev_il_instruction;)
 void *fill_candidate_datatypes_c::visit(il_simple_instruction_c *symbol) {
-  if (symbol->prev_il_instruction.size() > 1) ERROR; /* There should be no labeled insructions inside an IL expression! */
-  if (symbol->prev_il_instruction.size() == 0)  prev_il_instruction = NULL;
-  else                                          prev_il_instruction = symbol->prev_il_instruction[0];
+  if (matiec::analysis_flow_predecessors(symbol).size() > 1) ERROR; /* There should be no labeled insructions inside an IL expression! */
+  if (matiec::analysis_flow_predecessors(symbol).size() == 0)  prev_il_instruction = NULL;
+  else                                          prev_il_instruction = matiec::analysis_flow_predecessors(symbol)[0];
   symbol->il_simple_instruction->accept(*this);
   prev_il_instruction = NULL;
 
@@ -2477,6 +2480,3 @@ void *fill_candidate_datatypes_c::visit(repeat_statement_c *symbol) {
 		symbol->statement_list->accept(*this);
 	return NULL;
 }
-
-
-

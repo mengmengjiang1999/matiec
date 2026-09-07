@@ -57,12 +57,15 @@ CLI adapter in `main.cc` converts the final result to a process exit status.
 `CompilationContext::analysis()` is the typed, arena-checked semantic result
 boundary. Flow edges are produced directly there; constant values, datatype
 candidate vectors, and final datatype/scope selections are published there at
-their completed phase boundaries and materialized only for unmigrated legacy
-consumers. Invocation declaration resolution is also published after narrowing,
+their completed phase boundaries. A compilation-scoped active-store guard lets
+legacy-shaped visitors read completed flow and constant records without AST
+copy-back, while missing records fall back to producer-local transient state.
+Datatype records are still materialized for unmigrated consumers. Invocation
+declaration resolution is also published after narrowing,
 scope-specific enumeration multimaps after enumeration checking, and named
 generator annotations are updated live during Stage 4. All typed record families
-now have production boundaries; compatibility materializers remain until their
-legacy consumers migrate to direct store access. Invocation resolution has crossed
+now have production boundaries; compatibility materializers remain only for
+datatype consumers. Flow, constants, and invocation resolution have crossed
 that boundary: lvalue validation and Stage 4 use typed store lookups, while the
 producer's temporary AST fields remain confined to type-safety processing.
 Enumeration lookup tables also remain store-owned after their completed pass,

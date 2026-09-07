@@ -35,6 +35,22 @@ int main() {
   assert(second->prev_il_instruction.empty());
   assert(second->next_il_instruction.empty());
 
+  {
+    matiec::ActiveAnalysisStoreScope analysis_scope(context.analysis());
+    assert(matiec::analysis_flow_predecessors(first).empty());
+    assert(matiec::analysis_flow_successors(first).size() == 1);
+    assert(matiec::analysis_flow_successors(first)[0] == second);
+    assert(matiec::analysis_flow_predecessors(second).size() == 1);
+    assert(matiec::analysis_flow_predecessors(second)[0] == first);
+    assert(matiec::analysis_flow_successors(second).empty());
+
+    il_instruction_c transient(nullptr, nullptr);
+    transient.prev_il_instruction.push_back(first);
+    assert(matiec::analysis_flow_predecessors(&transient).size() == 1);
+    assert(matiec::analysis_flow_predecessors(&transient)[0] == first);
+  }
+  assert(matiec::active_analysis_store() == nullptr);
+
   context.analysis().clear();
   assert(context.analysis().flow_size() == 0);
   return 0;

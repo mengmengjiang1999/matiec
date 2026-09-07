@@ -44,6 +44,7 @@
 #include <unistd.h>
 #include <stdio.h>  /* required for NULL */
 #include "absyntax_utils.hh"
+#include "../compiler/analysis_store.hh"
 #include "../absyntax/visitor.hh"
 
 
@@ -139,7 +140,7 @@ void print_symbol_c::dump_symbol(symbol_c* symbol) {
   fprintf(stderr, "}\t ");         
   
   /* print the const values... */
-  dump_cvalue(symbol->const_value);
+  dump_cvalue(matiec::analysis_constant_value(symbol));
   fprintf(stderr, "\t");
 }
 
@@ -149,22 +150,22 @@ void *print_symbol_c::visit(il_instruction_c *symbol) {
    dump_symbol(symbol);
 
    /* NOTE: std::map.size() returns a size_type, whose type is dependent on compiler/platform. To be portable, we need to do an explicit type cast. */
-  fprintf(stderr, "  prev_il_=%lu ", (unsigned long int)symbol->prev_il_instruction.size());
-  if (symbol->prev_il_instruction.size() == 0)
+  fprintf(stderr, "  prev_il_=%lu ", (unsigned long int)matiec::analysis_flow_predecessors(symbol).size());
+  if (matiec::analysis_flow_predecessors(symbol).size() == 0)
     fprintf(stderr, "(----)");
-  else if (symbol->prev_il_instruction[0]->datatype == NULL)
+  else if (matiec::analysis_flow_predecessors(symbol)[0]->datatype == NULL)
     fprintf(stderr, "(NULL)");
-  else if (!get_datatype_info_c::is_type_valid(symbol->prev_il_instruction[0]->datatype))
+  else if (!get_datatype_info_c::is_type_valid(matiec::analysis_flow_predecessors(symbol)[0]->datatype))
     fprintf(stderr, "(****)");
   else
     fprintf(stderr, "(    )");
 
-  fprintf(stderr, "  next_il_=%lu ", (unsigned long int)symbol->next_il_instruction.size());
-  if (symbol->next_il_instruction.size() == 0)
+  fprintf(stderr, "  next_il_=%lu ", (unsigned long int)matiec::analysis_flow_successors(symbol).size());
+  if (matiec::analysis_flow_successors(symbol).size() == 0)
     fprintf(stderr, "(----)");
-  else if (symbol->next_il_instruction[0]->datatype == NULL)
+  else if (matiec::analysis_flow_successors(symbol)[0]->datatype == NULL)
     fprintf(stderr, "(NULL)");
-  else if (!get_datatype_info_c::is_type_valid(symbol->next_il_instruction[0]->datatype))
+  else if (!get_datatype_info_c::is_type_valid(matiec::analysis_flow_successors(symbol)[0]->datatype))
     fprintf(stderr, "(****)");
   else 
     fprintf(stderr, "(    )");
@@ -236,7 +237,5 @@ void debug_c::print(symbol_c *symbol) {
 void debug_c::print_ast(symbol_c *symbol) {
   print_ast_c::print(symbol);
 }
-
-
 
 

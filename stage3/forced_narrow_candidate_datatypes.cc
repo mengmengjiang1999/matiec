@@ -105,6 +105,7 @@
 
 
 #include "forced_narrow_candidate_datatypes.hh"
+#include "../compiler/analysis_store.hh"
 #include "datatype_functions.hh"
 
 
@@ -144,7 +145,8 @@ void forced_narrow_candidate_datatypes_c::set_datatype_in_prev_il_instructions(s
 
 
 
-void forced_narrow_candidate_datatypes_c::forced_narrow_il_instruction(symbol_c *symbol, std::vector <symbol_c *> &next_il_instruction) {
+void forced_narrow_candidate_datatypes_c::forced_narrow_il_instruction(
+    symbol_c *symbol, const std::vector<symbol_c *> &next_il_instruction) {
   if (NULL == symbol->datatype) {
     if (symbol->candidate_datatypes.empty()) {
       symbol->datatype = &(get_datatype_info_c::invalid_type_name); // This will occur in the situations (a) in the above example
@@ -209,7 +211,7 @@ void *forced_narrow_candidate_datatypes_c::visit(instruction_list_c *symbol) {
 // SYM_REF2(il_instruction_c, label, il_instruction)
 // void *visit(instruction_list_c *symbol);
 void *forced_narrow_candidate_datatypes_c::visit(il_instruction_c *symbol) {
-  forced_narrow_il_instruction(symbol, symbol->next_il_instruction);
+  forced_narrow_il_instruction(symbol, matiec::analysis_flow_successors(symbol));
   
   /* return control to the visit() method of the base class! */
   return narrow_candidate_datatypes_c::visit(symbol);  //  This handles the situations (e) in the above example
@@ -256,7 +258,7 @@ void *forced_narrow_candidate_datatypes_c::visit(il_instruction_c *symbol) {
 
 // SYM_REF1(il_simple_instruction_c, il_simple_instruction, symbol_c *prev_il_instruction;)
 void *forced_narrow_candidate_datatypes_c::visit(il_simple_instruction_c*symbol) {
-  forced_narrow_il_instruction(symbol, symbol->next_il_instruction);
+  forced_narrow_il_instruction(symbol, matiec::analysis_flow_successors(symbol));
   
   /* return control to the visit() method of the base class! */
   return narrow_candidate_datatypes_c::visit(symbol);  //  This handle the situations (e) in the above example
@@ -280,4 +282,3 @@ void *forced_narrow_candidate_datatypes_c::visit(il_simple_instruction_c*symbol)
  * and simply bug out!
  */
 void *forced_narrow_candidate_datatypes_c::visit(statement_list_c *symbol) {return NULL;}
-

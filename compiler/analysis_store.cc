@@ -4,6 +4,12 @@
 
 namespace matiec {
 
+namespace {
+
+thread_local AnalysisStore *current_analysis_store = nullptr;
+
+}  // namespace
+
 AnalysisStore::AnalysisStore(const AstArena &arena) : arena_(arena) {}
 
 bool AnalysisStore::add_flow_edge(symbol_c *predecessor, symbol_c *successor,
@@ -163,6 +169,75 @@ void AnalysisStore::clear() {
   resolutions_.clear();
   enumerations_.clear();
   generators_.clear();
+}
+
+ActiveAnalysisStoreScope::ActiveAnalysisStoreScope(AnalysisStore &analysis)
+    : previous_(current_analysis_store) {
+  current_analysis_store = &analysis;
+}
+
+ActiveAnalysisStoreScope::~ActiveAnalysisStoreScope() {
+  current_analysis_store = previous_;
+}
+
+AnalysisStore *active_analysis_store() { return current_analysis_store; }
+
+const FlowAnalysisRecord *analysis_flow(const symbol_c *symbol) {
+  if (current_analysis_store == nullptr) return nullptr;
+  const AnalysisEntry<FlowAnalysisRecord> *entry =
+      current_analysis_store->flow(symbol);
+  return entry == nullptr ? nullptr : &entry->value;
+}
+
+const std::vector<symbol_c *> &analysis_flow_predecessors(
+    const symbol_c *symbol) {
+  static const std::vector<symbol_c *> empty;
+  if (symbol == nullptr) return empty;
+  const FlowAnalysisRecord *record = analysis_flow(symbol);
+  return record == nullptr ? empty : record->predecessors;
+}
+
+const std::vector<symbol_c *> &analysis_flow_predecessors(
+    const il_instruction_c *symbol) {
+  const FlowAnalysisRecord *record = analysis_flow(symbol);
+  return record == nullptr ? symbol->prev_il_instruction : record->predecessors;
+}
+
+const std::vector<symbol_c *> &analysis_flow_predecessors(
+    const il_simple_instruction_c *symbol) {
+  const FlowAnalysisRecord *record = analysis_flow(symbol);
+  return record == nullptr ? symbol->prev_il_instruction : record->predecessors;
+}
+
+const std::vector<symbol_c *> &analysis_flow_successors(
+    const symbol_c *symbol) {
+  static const std::vector<symbol_c *> empty;
+  if (symbol == nullptr) return empty;
+  const FlowAnalysisRecord *record = analysis_flow(symbol);
+  return record == nullptr ? empty : record->successors;
+}
+
+const std::vector<symbol_c *> &analysis_flow_successors(
+    const il_instruction_c *symbol) {
+  const FlowAnalysisRecord *record = analysis_flow(symbol);
+  return record == nullptr ? symbol->next_il_instruction : record->successors;
+}
+
+const std::vector<symbol_c *> &analysis_flow_successors(
+    const il_simple_instruction_c *symbol) {
+  const FlowAnalysisRecord *record = analysis_flow(symbol);
+  return record == nullptr ? symbol->next_il_instruction : record->successors;
+}
+
+const const_value_c &analysis_constant_value(const symbol_c *symbol) {
+  static const const_value_c empty;
+  if (symbol == nullptr) return empty;
+  if (current_analysis_store != nullptr) {
+    const AnalysisEntry<ConstantAnalysisRecord> *entry =
+        current_analysis_store->constant(symbol);
+    if (entry != nullptr) return entry->value.value;
+  }
+  return symbol->const_value;
 }
 
 }  // namespace matiec

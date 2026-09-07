@@ -45,10 +45,11 @@
 
 #include "case_elements_check.hh"
 #include "semantic_diagnostic_macros.hh"
+#include "../compiler/analysis_store.hh"
 
 
-#define GET_CVALUE(dtype, symbol)             ((symbol)->const_value._##dtype.get())
-#define VALID_CVALUE(dtype, symbol)           ((symbol)->const_value._##dtype.is_valid())
+#define GET_CVALUE(dtype, symbol)             (matiec::analysis_constant_value(symbol)._##dtype.get())
+#define VALID_CVALUE(dtype, symbol)           (matiec::analysis_constant_value(symbol)._##dtype.is_valid())
 
 
 
@@ -161,7 +162,9 @@ void case_elements_check_c::check_symb_symb(symbol_c *s1, symbol_c *s2) {
       || (dynamic_cast<subrange_c *>(s2) != NULL)) 
     return; // only run this test if neither s1 nor s2 are subranges!
   
-  if (   (s1->const_value.is_const() && s2->const_value.is_const() && (s1->const_value == s2->const_value))  // if const, then compare const values (using overloaded '==' operator!)
+  const const_value_c &first = matiec::analysis_constant_value(s1);
+  const const_value_c &second = matiec::analysis_constant_value(s2);
+  if (   (first.is_const() && second.is_const() && (first == second))
       || (compare_identifiers(s1, s2) == 0))  // if token_c, compare tokens! (compare_identifiers() returns 0 when equal tokens!, -1 when either is not token_c)
     STAGE3_WARNING(s1, s2, "Duplicate element found in CASE options.");
 }

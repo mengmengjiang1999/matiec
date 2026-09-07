@@ -5,6 +5,7 @@
 #include "../../absyntax/visitor.hh"
 #include "../../absyntax_utils/absyntax_utils.hh"
 #include "../../compiler/compilation_abort.hh"
+#include "../../compiler/analysis_store.hh"
 #include "../../main.hh"
 #include "../../util/dsymtable.hh"
 #include "../../util/symtable.hh"
@@ -245,8 +246,10 @@ void generate_c_location_list(stage4out_c *s4o_ptr, symbol_c *root);
     throw matiec::CompilationAbort("C code generation failed", true); \
   } while (0)
 
-#define VALID_CVALUE(dtype, symbol) ((symbol)->const_value._##dtype.is_valid())
-#define GET_CVALUE(dtype, symbol) ((symbol)->const_value._##dtype.get())
+#define VALID_CVALUE(dtype, symbol) \
+  (matiec::analysis_constant_value(symbol)._##dtype.is_valid())
+#define GET_CVALUE(dtype, symbol) \
+  (matiec::analysis_constant_value(symbol)._##dtype.get())
 
 #define FB_FUNCTION_SUFFIX "_body__"
 #define FB_INIT_SUFFIX "_init__"

@@ -232,9 +232,11 @@ sequential compilations without leaking state between runs.
 Semantic flow, constants, datatype candidates, final datatype/scope selections,
 invocation declaration resolution, and scope-specific enumeration tables are
 retained in that store. Stage 4 writes and reads named generator annotations there
-as it emits output. All six typed record families now have production boundaries;
-compatibility annotations are materialized only where legacy consumers still
-require them. Lvalue validation and Stage 4 read invocation resolution directly
+as it emits output. All six typed record families now have production boundaries.
+Completed flow edges and constant values are read through compilation-scoped
+typed accessors by semantic passes and Stage 4, so neither family is copied back
+onto AST nodes in production. Producer-local AST scratch remains available for
+transient nodes that have no store record. Lvalue validation and Stage 4 read invocation resolution directly
 from the store, so completed resolution results are no longer copied back onto
 the AST for downstream use. Completed scope-specific enumeration tables likewise
 remain store-owned; no production pass requires their AST compatibility copies.

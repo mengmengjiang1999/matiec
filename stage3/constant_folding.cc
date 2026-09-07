@@ -138,6 +138,7 @@
  */
 
 #include "constant_folding.hh"
+#include "../compiler/analysis_store.hh"
 #include <stdlib.h> /* required for malloc() */
 
 #include <string.h>  /* required for strlen() */
@@ -719,15 +720,15 @@ static void *handle_pow(symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 
 /* If the cvalues of all the prev_il_intructions have the same VALID value, then set the local cvalue to that value, otherwise, set it to NONCONST! */
 #define intersect_prev_CVALUE_(dtype, symbol) {                                                                   \
-	symbol->const_value._##dtype = symbol->prev_il_instruction[0]->const_value._##dtype;                      \
-	for (unsigned int i = 1; i < symbol->prev_il_instruction.size(); i++) {                                   \
-		if (!ISEQUAL_CVALUE(dtype, symbol, symbol->prev_il_instruction[i]))                               \
+	symbol->const_value._##dtype = matiec::analysis_flow_predecessors(symbol)[0]->const_value._##dtype;                      \
+	for (unsigned int i = 1; i < matiec::analysis_flow_predecessors(symbol).size(); i++) {                                   \
+		if (!ISEQUAL_CVALUE(dtype, symbol, matiec::analysis_flow_predecessors(symbol)[i]))                               \
 			{SET_NONCONST(dtype, symbol); break;}                                                     \
 	}                                                                                                         \
 }
 
 static void intersect_prev_cvalues(il_instruction_c *symbol) {
-	if (symbol->prev_il_instruction.empty())
+	if (matiec::analysis_flow_predecessors(symbol).empty())
 		return;
 	intersect_prev_CVALUE_(real64, symbol);
 	intersect_prev_CVALUE_(uint64, symbol);
@@ -953,9 +954,11 @@ void *constant_folding_c::visit(il_instruction_c *symbol) {
 		intersect_prev_cvalues(symbol);
 	} else {
 		il_instruction_c fake_prev_il_instruction = *symbol;
+		fake_prev_il_instruction.prev_il_instruction =
+			matiec::analysis_flow_predecessors(symbol);
 		intersect_prev_cvalues(&fake_prev_il_instruction);
 
-		if (symbol->prev_il_instruction.size() == 0)  prev_il_instruction = NULL;
+		if (matiec::analysis_flow_predecessors(symbol).size() == 0)  prev_il_instruction = NULL;
 		else                                          prev_il_instruction = &fake_prev_il_instruction;
 		symbol->il_instruction->accept(*this);
 		prev_il_instruction = NULL;
@@ -1080,9 +1083,9 @@ void *constant_folding_c::visit(simple_instr_list_c *symbol) {
 
 // SYM_REF1(il_simple_instruction_c, il_simple_instruction, symbol_c *prev_il_instruction;)
 void *constant_folding_c::visit(il_simple_instruction_c *symbol) {
-  if (symbol->prev_il_instruction.size() > 1) ERROR; /* There should be no labeled insructions inside an IL expression! */
-  if (symbol->prev_il_instruction.size() == 0)  prev_il_instruction = NULL;
-  else                                          prev_il_instruction = symbol->prev_il_instruction[0];
+  if (matiec::analysis_flow_predecessors(symbol).size() > 1) ERROR; /* There should be no labeled insructions inside an IL expression! */
+  if (matiec::analysis_flow_predecessors(symbol).size() == 0)  prev_il_instruction = NULL;
+  else                                          prev_il_instruction = matiec::analysis_flow_predecessors(symbol)[0];
   symbol->il_simple_instruction->accept(*this);
   prev_il_instruction = NULL;
 
@@ -2088,4 +2091,3 @@ void *constant_propagation_c::visit(repeat_statement_c *symbol) {
 }
 
 #endif  // DO_CONSTANT_PROPAGATION__
-

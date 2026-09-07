@@ -420,7 +420,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
     // SYM_REF2(il_instruction_c, label, il_instruction)
     void *visit(il_instruction_c *symbol) {
       /* all previous IL instructions should have the same datatype (checked in stage3), so we get the datatype from the first previous IL instruction we find */
-      implicit_variable_current.datatype = (symbol->prev_il_instruction.empty())? NULL : symbol->prev_il_instruction[0]->datatype;
+      implicit_variable_current.datatype = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_flow_predecessors(symbol)[0]->datatype;
       if (NULL != symbol->il_instruction)  symbol->il_instruction->accept(*this); 
       implicit_variable_current.datatype = NULL;
       return NULL;
@@ -763,7 +763,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
     // SYM_REF1(il_simple_instruction_c, il_simple_instruction, symbol_c *prev_il_instruction;)
     void *visit(il_simple_instruction_c *symbol) {
       /* all previous IL instructions should have the same datatype (checked in stage3), so we get the datatype from the first previous IL instruction we find */
-      implicit_variable_current.datatype = (symbol->prev_il_instruction.empty())? NULL : symbol->prev_il_instruction[0]->datatype;
+      implicit_variable_current.datatype = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_flow_predecessors(symbol)[0]->datatype;
       symbol->il_simple_instruction->accept(*this);
       implicit_variable_current.datatype = NULL;
       return NULL;      

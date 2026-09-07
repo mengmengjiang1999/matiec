@@ -128,6 +128,34 @@ class AnalysisStore {
   Table<GeneratorAnalysisRecord> generators_;
 };
 
+class ActiveAnalysisStoreScope {
+ public:
+  explicit ActiveAnalysisStoreScope(AnalysisStore &analysis);
+  ~ActiveAnalysisStoreScope();
+
+  ActiveAnalysisStoreScope(const ActiveAnalysisStoreScope &) = delete;
+  ActiveAnalysisStoreScope &operator=(const ActiveAnalysisStoreScope &) = delete;
+
+ private:
+  AnalysisStore *previous_;
+};
+
+AnalysisStore *active_analysis_store();
+const FlowAnalysisRecord *analysis_flow(const symbol_c *symbol);
+const std::vector<symbol_c *> &analysis_flow_predecessors(
+    const symbol_c *symbol);
+const std::vector<symbol_c *> &analysis_flow_predecessors(
+    const il_instruction_c *symbol);
+const std::vector<symbol_c *> &analysis_flow_predecessors(
+    const il_simple_instruction_c *symbol);
+const std::vector<symbol_c *> &analysis_flow_successors(
+    const symbol_c *symbol);
+const std::vector<symbol_c *> &analysis_flow_successors(
+    const il_instruction_c *symbol);
+const std::vector<symbol_c *> &analysis_flow_successors(
+    const il_simple_instruction_c *symbol);
+const const_value_c &analysis_constant_value(const symbol_c *symbol);
+
 }  // namespace matiec
 
 #endif

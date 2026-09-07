@@ -42,6 +42,7 @@
  *    run the normal process.
  */
 #include "absyntax_utils.hh"
+#include "../compiler/analysis_store.hh"
 
 #include "../main.hh" // required for ERROR() and ERROR_MSG() macros, as well as the runtime_options global variable
 
@@ -695,13 +696,13 @@ bool get_datatype_info_c::is_arraytype_equal_relaxed(symbol_c *first_type, symbo
      *  the get_datatype_info_c::is_type_equal() method is called.
      *  This is why we implement an alternative method in case the subrange limits have not yet been reduced to a cvalue!
      */
-    if (    (subrange_1->lower_limit->const_value._int64.is_valid() || subrange_1->lower_limit->const_value._uint64.is_valid())
-         && (subrange_2->lower_limit->const_value._int64.is_valid() || subrange_2->lower_limit->const_value._uint64.is_valid())
-         && (subrange_1->upper_limit->const_value._int64.is_valid() || subrange_1->upper_limit->const_value._uint64.is_valid())
-         && (subrange_2->upper_limit->const_value._int64.is_valid() || subrange_2->upper_limit->const_value._uint64.is_valid())
-       ) {
-      if (! (subrange_1->lower_limit->const_value == subrange_2->lower_limit->const_value)) return false;
-      if (! (subrange_1->upper_limit->const_value == subrange_2->upper_limit->const_value)) return false;
+    if (    (matiec::analysis_constant_value(subrange_1->lower_limit)._int64.is_valid() || matiec::analysis_constant_value(subrange_1->lower_limit)._uint64.is_valid())
+         && (matiec::analysis_constant_value(subrange_2->lower_limit)._int64.is_valid() || matiec::analysis_constant_value(subrange_2->lower_limit)._uint64.is_valid())
+         && (matiec::analysis_constant_value(subrange_1->upper_limit)._int64.is_valid() || matiec::analysis_constant_value(subrange_1->upper_limit)._uint64.is_valid())
+         && (matiec::analysis_constant_value(subrange_2->upper_limit)._int64.is_valid() || matiec::analysis_constant_value(subrange_2->upper_limit)._uint64.is_valid())
+        ) {
+      if (! (matiec::analysis_constant_value(subrange_1->lower_limit) == matiec::analysis_constant_value(subrange_2->lower_limit))) return false;
+      if (! (matiec::analysis_constant_value(subrange_1->upper_limit) == matiec::analysis_constant_value(subrange_2->upper_limit))) return false;
     } else {
       // NOTE: nocasecmp_c() class is defined in absyntax.hh. nocasecmp_c() instantiates an object, and nocasecmp_c()() uses the () operator on that object. 
       if (! nocasecmp_c()(normalize_subrange_limit(subrange_1->lower_limit), normalize_subrange_limit(subrange_2->lower_limit))) return false;
@@ -1442,7 +1443,6 @@ safedt_type_name_c       get_datatype_info_c::safedt_type_name;
 safedate_type_name_c     get_datatype_info_c::safedate_type_name;
 safetod_type_name_c      get_datatype_info_c::safetod_type_name;
 safetime_type_name_c     get_datatype_info_c::safetime_type_name;
-
 
 
 
