@@ -304,6 +304,11 @@ make check-asan
 make check-ubsan
 ```
 
+GitHub Actions runs both sanitizer suites as independent Linux jobs for every
+push and pull request. The workflow is also available through manual dispatch.
+Linux ASan jobs include leak detection; Apple Clang runs address checks without
+the unsupported LeakSanitizer mode.
+
 The regression suite covers:
 
 - compiler services, diagnostics, AST ownership, and pass metadata;

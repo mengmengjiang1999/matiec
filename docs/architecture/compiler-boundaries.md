@@ -94,6 +94,15 @@ make check-asan
 make check-ubsan
 ```
 
+AddressSanitizer includes leak detection where the compiler runtime supports it.
+Apple Clang does not provide LeakSanitizer, so the macOS local target disables
+leak detection while retaining address checks; Linux keeps leak detection on.
+The scripts copy the source to a temporary directory, regenerate parser sources,
+build, and execute the same regression suite without modifying the developer's
+configured tree. On failure they print both top-level and compiler-unit logs.
+GitHub Actions runs ASan/LSan and UBSan as separate Linux jobs on pushes and pull
+requests; both jobs can also be started manually.
+
 ## Experimental syntax model
 
 `CompilationContext::experimental_syntax()` owns the structured declarations
@@ -107,10 +116,6 @@ lowering remains responsible for feeding the legacy parser today. Later native
 grammar work can replace one recognizer at a time while publishing equivalent
 records through the same context-owned model; consumers must not rescan original
 source or introduce process-wide caches.
-
-AddressSanitizer includes leak detection. The scripts copy the source to a
-temporary directory, regenerate parser sources, build, and execute the same
-regression suite without modifying the developer's configured tree.
 
 ## Extension rules
 

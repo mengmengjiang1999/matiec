@@ -22,12 +22,21 @@ Regression tests MUST create transient output outside tracked source locations a
 - **THEN** generated compiler output and captured streams do not dirty the source worktree
 
 ### Requirement: Cross-environment validation
-The project SHALL validate clean builds and tests on supported GCC/Linux and Clang/macOS environments, with sanitizer coverage available for memory and undefined-behavior checks.
+
+The project SHALL validate clean builds and tests on supported GCC/Linux and
+Clang/macOS environments, and hosted validation SHALL run independent address,
+leak, and undefined-behavior sanitizer jobs.
 
 #### Scenario: A change is validated
-- **WHEN** the automated validation workflow runs for a branch
-- **THEN** each configured environment builds the project from generated build files and executes the regression entry point
 
+- **WHEN** the automated validation workflows run for a push or pull request
+- **THEN** GCC/Linux, Clang/macOS, ASan with leak detection, and UBSan execute the
+  maintained regression entry points and report independent statuses
+
+#### Scenario: A sanitizer job stalls
+
+- **WHEN** a hosted sanitizer build or regression exceeds its configured limit
+- **THEN** the workflow terminates that job and reports a failure
 ### Requirement: Generated output validation
 The regression baseline SHALL verify both that valid IEC input produces expected output artifacts and that generated C can be compiled for representative programs.
 

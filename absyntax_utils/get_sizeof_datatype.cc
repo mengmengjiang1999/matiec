@@ -82,13 +82,14 @@
 #include <string.h>
 #include <limits.h>  // get definition of ULLONG_MAX
 #include <errno.h>
+#include <stdint.h>
 
 #include "../main.hh" // required for ERROR() and ERROR_MSG() macros, and uint64_t and UINT64_MAX
 
 
 
-#define _encode_int(value)   ((void *)(((char *)NULL) + value))
-#define _decode_int(ptr)     (((char *)ptr) - ((char *)NULL))
+#define _encode_int(value)   ((void *)(uintptr_t)(value))
+#define _decode_int(ptr)     ((int)(uintptr_t)(ptr))
 
 
 #if 0   /* We no longer need the code for handling numeric literals. But keep it around for a little while longer... */
