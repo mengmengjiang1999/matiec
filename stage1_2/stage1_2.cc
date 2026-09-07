@@ -231,6 +231,7 @@ char *strdup3(const char *a, const char *b, const char *c) {
 /***********************************************************************/
 
 int stage2__(const char *filename, const char *display_filename,
+             const char *source, size_t source_size,
              symbol_c **tree_root_ref
             );
 
@@ -254,5 +255,15 @@ int stage1_2(const char *filename, const char *display_filename,
   library_element_symtable.clear();
   variable_name_symtable.clear();
   direct_variable_symtable.clear();
-  return stage2__(filename, display_filename, tree_root_ref);
+  return stage2__(filename, display_filename, NULL, 0, tree_root_ref);
+}
+
+int stage1_2_from_source(const char *source, std::size_t source_size,
+                         const char *display_filename,
+                         symbol_c **tree_root_ref) {
+  library_element_symtable.clear();
+  variable_name_symtable.clear();
+  direct_variable_symtable.clear();
+  return stage2__(display_filename, display_filename, source, source_size,
+                  tree_root_ref);
 }

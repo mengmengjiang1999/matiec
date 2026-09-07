@@ -21,7 +21,11 @@ if (!result.succeeded()) {
 ```
 
 The context owns compiler options, diagnostics, generated-output management,
-and the AST arena. Destroying it releases all AST nodes and retained parser
+the source manager, and the AST arena. `set_source_path()` preserves CLI file
+behavior, while `set_source(display_name, bytes)` supplies owned source text
+without a named temporary file. Experimental lowering reaches the legacy parser
+through a replayable anonymous stream; include pragmas remain path-based.
+Destroying the context releases all AST nodes and retained parser
 strings from that compilation. Do not retain AST pointers after the context is
 destroyed.
 

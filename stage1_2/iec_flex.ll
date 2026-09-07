@@ -2308,6 +2308,21 @@ FILE *parse_file_as(const char *filename, const char *display_filename) {
   return filehandle;
 }
 
+FILE *parse_source_as(const char *source, size_t size,
+                      const char *display_filename) {
+  FILE *filehandle = tmpfile();
+  if (filehandle == NULL) return NULL;
+  if (size > 0 && fwrite(source, 1, size, filehandle) != size) {
+    fclose(filehandle);
+    return NULL;
+  }
+  rewind(filehandle);
+  yyin = filehandle;
+  current_filename = matiec::retain_ast_string(display_filename);
+  current_tracking = GetNewTracking(yyin);
+  return filehandle;
+}
+
 
 
 

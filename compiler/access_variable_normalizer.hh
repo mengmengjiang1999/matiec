@@ -33,6 +33,9 @@ bool normalize_experimental_access_variables(
 
 bool reject_legacy_access_variables_in_file(
     const std::string &source_path, DiagnosticEngine &diagnostics);
+bool reject_legacy_access_variables(std::string_view source,
+                                    const std::string &source_path,
+                                    DiagnosticEngine &diagnostics);
 
 bool write_access_variable_metadata(
     const AccessVariableNormalizeResult &result,

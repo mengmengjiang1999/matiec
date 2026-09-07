@@ -42,11 +42,20 @@ const OutputManager &CompilationContext::outputs() const {
 }
 
 void CompilationContext::set_source_path(std::string source_path) {
-  source_path_ = std::move(source_path);
+  sources_.set_file(std::move(source_path));
 }
 
 const std::string &CompilationContext::source_path() const {
-  return source_path_;
+  return sources_.display_name();
 }
+
+void CompilationContext::set_source(std::string display_name,
+                                    std::string source) {
+  sources_.set_memory(std::move(display_name), std::move(source));
+}
+
+SourceManager &CompilationContext::sources() { return sources_; }
+
+const SourceManager &CompilationContext::sources() const { return sources_; }
 
 }  // namespace matiec

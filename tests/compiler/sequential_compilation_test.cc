@@ -42,6 +42,21 @@ matiec::CompilationResult compile_syntax(const std::string &source,
   return result;
 }
 
+matiec::CompilationResult compile_memory(const std::string &source,
+                                         const std::string &library,
+                                         bool pre_parsing,
+                                         matiec::LanguageProfile profile) {
+  matiec::CompilationContext context;
+  context.set_source("memory://main.st", source);
+  context.options().include_directory = library;
+  context.options().syntax_only = true;
+  context.options().pre_parsing = pre_parsing;
+  context.options().language_profile = profile;
+  const matiec::CompilationResult result = matiec::Compiler().compile(context);
+  assert(context.source_path() == "memory://main.st");
+  return result;
+}
+
 }  // namespace
 
 int main() {
@@ -63,5 +78,28 @@ int main() {
   const matiec::CompilationResult valid_with_different_options =
       compile_syntax(valid_source, library, true, true);
   assert(valid_with_different_options.succeeded());
+
+  const std::string memory_source =
+      "PROGRAM MemoryMain\nVAR value : INT; END_VAR\nvalue := 42;\n"
+      "END_PROGRAM\n";
+  assert(compile_memory(memory_source, library, false,
+                        matiec::LanguageProfile::legacy).succeeded());
+  assert(compile_memory(memory_source, library, true,
+                        matiec::LanguageProfile::legacy).succeeded());
+
+  const std::string experimental_source =
+      "PROGRAM MemoryExperimental\nVAR value : BOOL; END_VAR\n"
+      "ASSERT(TRUE);\nEND_PROGRAM\n";
+  assert(compile_memory(
+             experimental_source, library, false,
+             matiec::LanguageProfile::iec61131_3_2025_experimental)
+             .succeeded());
+  assert(!compile_memory("PROGRAM Broken\n", library, false,
+                         matiec::LanguageProfile::legacy).succeeded());
+  const std::string legacy_access =
+      "CONFIGURATION BadAccess\nVAR_ACCESS\n"
+      "Alias : Target : INT;\nEND_VAR\nEND_CONFIGURATION\n";
+  assert(!compile_memory(legacy_access, library, false,
+                         matiec::LanguageProfile::legacy).succeeded());
   return 0;
 }

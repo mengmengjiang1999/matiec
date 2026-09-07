@@ -4,11 +4,15 @@
 TBD - created by archiving change refactor-compiler-architecture. Update Purpose after archive.
 ## Requirements
 ### Requirement: Per-compilation state
-Each compilation SHALL use an explicit context that contains compiler options, diagnostics, source state, symbol state, AST storage, and output configuration for that compilation.
 
-#### Scenario: Two compilations use different options
-- **WHEN** two compilation operations run sequentially with different option sets
-- **THEN** each operation observes only its own options and results
+Each compilation SHALL use an explicit context that contains compiler options,
+diagnostics, source identity and optional source bytes, symbol state, AST storage,
+and output configuration for that compilation.
+
+#### Scenario: Two compilations use different source storage
+
+- **WHEN** one context names a filesystem source and another owns memory source bytes
+- **THEN** each compilation reads only its configured input and reports its own name
 
 ### Requirement: Thin executable boundary
 The command-line executable SHALL translate arguments into compiler options, invoke the compiler API, render diagnostics, and choose the final process status without implementing compiler phases itself.

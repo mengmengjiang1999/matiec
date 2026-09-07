@@ -40,6 +40,8 @@
 #ifndef _STAGE1_2_HH
 #define _STAGE1_2_HH
 
+#include <cstddef>
+
 
 
 /* This file includes the interface through which the main function accesses the stage1_2 services */
@@ -48,6 +50,8 @@
 int stage1_2(const char *filename, symbol_c **tree_root);
 int stage1_2(const char *filename, const char *display_filename,
              symbol_c **tree_root);
+int stage1_2_from_source(const char *source, std::size_t source_size,
+                         const char *display_filename, symbol_c **tree_root);
 
 
 

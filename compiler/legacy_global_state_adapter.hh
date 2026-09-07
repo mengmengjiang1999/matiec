@@ -14,6 +14,8 @@ class LegacyGlobalStateAdapter {
   int parse(symbol_c **tree_root) const;
   int parse(const std::string &source_path, const std::string &display_path,
             symbol_c **tree_root) const;
+  int parse_source(const std::string &source, const std::string &display_path,
+                   symbol_c **tree_root) const;
   void initialize_symbol_tables(symbol_c *tree_root) const;
 
  private:

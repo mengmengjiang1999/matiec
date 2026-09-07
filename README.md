@@ -214,8 +214,9 @@ flowchart LR
 
 ### A compilation is an owned lifetime
 
-`CompilationContext` owns the options, diagnostics, AST arena, source path, and
-output manager for one compilation. Destroying the context releases its AST
+`CompilationContext` owns the options, diagnostics, AST arena, source manager, and
+output manager for one compilation. The source manager accepts either a path or
+owned source bytes with an independent diagnostic display name. Destroying the context releases its AST
 nodes and retained parser strings. Separate contexts support repeated,
 sequential compilations without leaking state between runs.
 
@@ -273,6 +274,15 @@ int main() {
   return result.succeeded() ? 0 : 1;
 }
 ```
+
+Embedding callers can compile source that is already in memory without creating
+a named temporary file:
+
+```cpp
+context.set_source("memory://counter.st", source_text);
+```
+
+Filesystem include pragmas still resolve through `include_directory`.
 
 This is currently a source-level integration API, not a versioned binary ABI.
 AST pointers are context-owned and must not outlive their

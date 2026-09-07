@@ -5,6 +5,7 @@
 #include "compiler_types.hh"
 #include "diagnostic_engine.hh"
 #include "output_manager.hh"
+#include "source_manager.hh"
 
 #include <string>
 
@@ -28,14 +29,17 @@ class CompilationContext {
   const OutputManager &outputs() const;
 
   void set_source_path(std::string source_path);
+  void set_source(std::string display_name, std::string source);
   const std::string &source_path() const;
+  SourceManager &sources();
+  const SourceManager &sources() const;
 
  private:
   CompilerOptions options_;
   DiagnosticEngine diagnostics_;
   OutputManager outputs_;
   AstArena ast_arena_;
-  std::string source_path_;
+  SourceManager sources_;
 };
 
 }  // namespace matiec

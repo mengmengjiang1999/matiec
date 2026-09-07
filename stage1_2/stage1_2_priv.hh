@@ -141,6 +141,8 @@ void include_string(const char *source_code);
  */
 FILE *parse_file(const char *filename);
 FILE *parse_file_as(const char *filename, const char *display_filename);
+FILE *parse_source_as(const char *source, size_t size,
+                      const char *display_filename);
 void reset_lexer_state(void);
 
 
@@ -257,4 +259,3 @@ char *strdup2(const char *a, const char *b);
 
 /* Join three strings together. Allocate space with malloc(3). */
 char *strdup3(const char *a, const char *b, const char *c);
-

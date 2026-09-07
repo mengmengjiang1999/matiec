@@ -66,14 +66,11 @@ bool matches(const std::string &line, const std::regex &pattern,
 
 }  // namespace
 
-bool reject_legacy_access_variables_in_file(
-    const std::string &source_path, DiagnosticEngine &diagnostics) {
-  std::ifstream input(source_path, std::ios::in | std::ios::binary);
-  if (!input) return true;
-  std::ostringstream contents;
-  contents << input.rdbuf();
+bool reject_legacy_access_variables(std::string_view source,
+                                    const std::string &source_path,
+                                    DiagnosticEngine &diagnostics) {
   const std::regex access_start("^[ \\t]*VAR_ACCESS\\b.*$", std::regex::icase);
-  const std::vector<Line> lines = split_lines(contents.str());
+  const std::vector<Line> lines = split_lines(source);
   for (const Line &line : lines) {
     std::smatch match;
     if (!matches(line.text, access_start, &match)) continue;
@@ -83,6 +80,15 @@ bool reject_legacy_access_variables_in_file(
     return false;
   }
   return true;
+}
+
+bool reject_legacy_access_variables_in_file(
+    const std::string &source_path, DiagnosticEngine &diagnostics) {
+  std::ifstream input(source_path, std::ios::in | std::ios::binary);
+  if (!input) return true;
+  std::ostringstream contents;
+  contents << input.rdbuf();
+  return reject_legacy_access_variables(contents.str(), source_path, diagnostics);
 }
 
 bool normalize_experimental_access_variables(

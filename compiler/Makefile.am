@@ -19,9 +19,10 @@ libcompiler_a_SOURCES = \
 	output_sink.cc \
 	semantic_pass.cc \
 	semantic_pass_manager.cc \
+	source_manager.cc \
 	utf8_validation.cc
 
-check_PROGRAMS = access_variable_normalizer_test ast_arena_test compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test language_feature_catalog_test modern_library_normalizer_test namespace_normalizer_test object_method_normalizer_test output_sink_test semantic_pass_test utf8_validation_test
+check_PROGRAMS = access_variable_normalizer_test ast_arena_test compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test language_feature_catalog_test modern_library_normalizer_test namespace_normalizer_test object_method_normalizer_test output_sink_test semantic_pass_test source_manager_test utf8_validation_test
 TESTS = $(check_PROGRAMS)
 
 access_variable_normalizer_test_SOURCES = tests/access_variable_normalizer_test.cc
@@ -58,6 +59,9 @@ output_sink_test_LDADD = libcompiler.a
 
 semantic_pass_test_SOURCES = tests/semantic_pass_test.cc
 semantic_pass_test_LDADD = libcompiler.a
+
+source_manager_test_SOURCES = tests/source_manager_test.cc
+source_manager_test_LDADD = libcompiler.a
 
 utf8_validation_test_SOURCES = tests/utf8_validation_test.cc
 utf8_validation_test_LDADD = libcompiler.a

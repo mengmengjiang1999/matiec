@@ -11,53 +11,7 @@
 #include "stage3/stage3.hh"
 #include "stage4/stage4.hh"
 
-#include <cerrno>
-#include <cstdio>
-#include <cstring>
 #include <string>
-#include <unistd.h>
-
-namespace {
-
-class TemporarySource {
- public:
-  ~TemporarySource() {
-    if (!path_.empty()) std::remove(path_.c_str());
-  }
-
-  bool write(const std::string &source, std::string *error) {
-    char path[] = "/tmp/matiec-namespace-XXXXXX";
-    const int descriptor = mkstemp(path);
-    if (descriptor < 0) {
-      *error = std::strerror(errno);
-      return false;
-    }
-    path_ = path;
-    std::size_t written = 0;
-    while (written < source.size()) {
-      const ssize_t count = ::write(descriptor, source.data() + written,
-                                    source.size() - written);
-      if (count < 0) {
-        *error = std::strerror(errno);
-        ::close(descriptor);
-        return false;
-      }
-      written += static_cast<std::size_t>(count);
-    }
-    if (::close(descriptor) != 0) {
-      *error = std::strerror(errno);
-      return false;
-    }
-    return true;
-  }
-
-  const std::string &path() const { return path_; }
-
- private:
-  std::string path_;
-};
-
-}  // namespace
 
 namespace matiec {
 
@@ -68,13 +22,30 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
   }
 
   try {
-    if (!language_profile_is_experimental(context.options().language_profile) &&
-        !reject_legacy_access_variables_in_file(context.source_path(),
-                                                context.diagnostics()))
-      return context.diagnostics().result();
+    std::string source;
+    const bool needs_source_bytes = context.sources().is_memory_backed() ||
+        language_profile_is_experimental(context.options().language_profile);
+    if (needs_source_bytes) {
+      std::string error;
+      if (!context.sources().load(&source, &error)) {
+        context.diagnostics().error("Cannot load source " +
+                                    context.source_path() + ": " + error);
+        return context.diagnostics().result();
+      }
+    }
+    if (!language_profile_is_experimental(context.options().language_profile)) {
+      const bool accepted = context.sources().is_memory_backed()
+          ? reject_legacy_access_variables(source, context.source_path(),
+                                           context.diagnostics())
+          : reject_legacy_access_variables_in_file(context.source_path(),
+                                                   context.diagnostics());
+      if (!accepted) return context.diagnostics().result();
+    }
     if (language_profile_is_experimental(context.options().language_profile)) {
       Utf8Error utf8_error;
-      if (!validate_utf8_file(context.source_path(), &utf8_error)) {
+      if (!validate_utf8_bytes(
+              reinterpret_cast<const unsigned char *>(source.data()),
+              source.size(), &utf8_error)) {
         SourceLocation location{context.source_path(), utf8_error.line,
                                 utf8_error.column, utf8_error.offset};
         context.diagnostics().error("Malformed UTF-8 source: " + utf8_error.reason,
@@ -89,11 +60,10 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     ObjectMethodNormalizeResult method_result;
     AccessVariableNormalizeResult access_result;
     ModernLibraryNormalizeResult modern_library_result;
-    TemporarySource normalized_source;
-    std::string parser_source_path = context.source_path();
     if (language_profile_is_experimental(options.language_profile)) {
-      if (!normalize_experimental_namespace_file(
-              context.source_path(), context.diagnostics(), &namespace_result))
+      if (!normalize_experimental_namespaces(
+              source, context.source_path(), context.diagnostics(),
+              &namespace_result))
         return context.diagnostics().result();
       if (!normalize_experimental_object_methods(
               namespace_result.source, context.source_path(), context.diagnostics(),
@@ -109,23 +79,16 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
         return context.diagnostics().result();
       if (modern_library_result.used_modern_library)
         options.allow_void_datatype = true;
-      if (namespace_result.used_namespaces || method_result.used_methods ||
-          access_result.used_access_variables ||
-          modern_library_result.used_modern_library) {
-        std::string error;
-        if (!normalized_source.write(modern_library_result.source, &error)) {
-          context.diagnostics().fatal(
-              "Cannot create normalized namespace source: " + error);
-          return context.diagnostics().result();
-        }
-        parser_source_path = normalized_source.path();
-      }
+      source = std::move(modern_library_result.source);
     }
 
     LegacyGlobalStateAdapter legacy_state(context);
 
     symbol_c *tree_root = NULL;
-    if (legacy_state.parse(parser_source_path, context.source_path(), &tree_root) < 0)
+    const int parse_status = needs_source_bytes
+        ? legacy_state.parse_source(source, context.source_path(), &tree_root)
+        : legacy_state.parse(&tree_root);
+    if (parse_status < 0)
       return CompilationResult::failure();
 
     if (options.syntax_only)
