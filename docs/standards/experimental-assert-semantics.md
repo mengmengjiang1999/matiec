@@ -6,9 +6,10 @@ The source form is enabled only by `--std=iec61131-3:2025-experimental`:
 ASSERT(Speed <= MaximumSpeed);
 ```
 
-The first increment requires exactly one standalone call per source line. The input
-must type-check as `BOOL`. The function has no source-level return value and cannot
-be embedded in an expression.
+The call uses ordinary Structured Text function-call grammar, including whitespace,
+newlines, and block comments between tokens. The input must type-check as `BOOL`.
+The function has no source-level return value and cannot be embedded in an
+expression; Stage 3 reports that `VOID` type error.
 
 ## Runtime and lowering
 
@@ -22,9 +23,8 @@ the existing MATIEC void-call machinery only for a compilation unit that uses th
 standard form. The resulting C symbol is an unstable internal ABI and must not be
 called directly by applications.
 
-Comments and string literals are ignored while recognizing calls. Inline block
-comments inside an `ASSERT` call and multiline calls are rejected with
-source-located diagnostics. If the compilation unit declares its own function named
+Comments and string literals are ignored while recognizing calls. If the
+compilation unit declares its own function named
 `ASSERT`, experimental recognition is disabled for that unit and normal legacy name
 resolution applies.
 

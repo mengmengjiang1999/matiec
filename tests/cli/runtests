@@ -354,9 +354,20 @@ else
   error=1
 fi
 
-expect_failure assert-invalid "ASSERT must be a standalone call" \
-  "$IEC2C" --std=iec61131-3:2025-experimental -y -f -l -p \
+expect_failure assert-invalid "Incompatible data types" \
+  "$IEC2C" --std=iec61131-3:2025-experimental -f -l -p \
   -I "$MATIEC_LIBDIR" "$SCRIPT_DIR/profile-fixtures/assert-invalid.st"
+
+if "$IEC2C" --std=iec61131-3:2025-experimental -y -f -l -p \
+     -I "$MATIEC_LIBDIR" "$SCRIPT_DIR/profile-fixtures/assert-multiline.st" \
+     >"$TMP_ROOT/assert-multiline.stdout" \
+     2>"$TMP_ROOT/assert-multiline.stderr"; then
+  echo "[ O K ]    experimental-assert-multiline"
+else
+  echo "[ERROR]    experimental-assert-multiline -> ST formatting was rejected"
+  sed -n '1,12p' "$TMP_ROOT/assert-multiline.stderr"
+  error=1
+fi
 
 generated_dir="$TMP_ROOT/generated"
 mkdir -p "$generated_dir"

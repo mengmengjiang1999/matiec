@@ -2,5 +2,5 @@ PROGRAM InvalidAssert
   VAR
     Value : BOOL;
   END_VAR
-  ASSERT(Value) AND Value;
+  Value := ASSERT(Value);
 END_PROGRAM

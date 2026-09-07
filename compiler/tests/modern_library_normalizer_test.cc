@@ -39,10 +39,33 @@ int main() {
         "ASSERT(Value) AND Value;\nEND_PROGRAM\n";
     matiec::DiagnosticEngine diagnostics;
     matiec::ModernLibraryNormalizeResult result;
-    assert(!matiec::normalize_experimental_modern_library(
+    assert(matiec::normalize_experimental_modern_library(
         source, "invalid.st", diagnostics, &result));
-    assert(diagnostics.diagnostics().front().message.find("standalone") !=
+    assert(result.used_modern_library);
+    assert(!diagnostics.has_errors());
+  }
+  {
+    const std::string source =
+        "PROGRAM Demo\nVAR Value : BOOL; END_VAR\n"
+        "ASSERT (* reason *) (\nValue\n);\nEND_PROGRAM\n";
+    matiec::DiagnosticEngine diagnostics;
+    matiec::ModernLibraryNormalizeResult result;
+    assert(matiec::normalize_experimental_modern_library(
+        source, "multiline.st", diagnostics, &result));
+    assert(result.used_modern_library);
+    assert(result.source.find("ASSERT (* reason *) (\nValue\n);") !=
            std::string::npos);
+  }
+  {
+    const std::string source =
+        "PROGRAM Demo\nVAR Text : STRING; END_VAR\n"
+        "Text := 'ASSERT(FALSE)';\nEND_PROGRAM\n";
+    matiec::DiagnosticEngine diagnostics;
+    matiec::ModernLibraryNormalizeResult result;
+    assert(matiec::normalize_experimental_modern_library(
+        source, "string.st", diagnostics, &result));
+    assert(!result.used_modern_library);
+    assert(result.source == source);
   }
   {
     const std::string source =

@@ -25,13 +25,16 @@ or generated runtime ABI.
 - **THEN** both profiles preserve normal user-function resolution and output
 
 ### Requirement: Experimental assertion contract
-The experimental profile SHALL support standalone `ASSERT(IN : BOOL) : VOID` calls
-with documented lowering and runtime behavior.
 
-#### Scenario: An assertion condition is false
-- **WHEN** an experimental assertion evaluates to false under the released runtime policy
-- **THEN** execution continues without an externally visible notification
+The experimental profile SHALL support `ASSERT(IN : BOOL) : VOID` using ordinary
+Structured Text function-call grammar and documented runtime behavior.
+
+#### Scenario: A standalone assertion spans lines
+
+- **WHEN** whitespace, newlines, or block comments separate the call tokens
+- **THEN** the ST parser accepts the call and evaluates its BOOL argument
 
 #### Scenario: An assertion is embedded in an expression
+
 - **WHEN** experimental source attempts to consume an assertion result
-- **THEN** compilation fails with a source-located diagnostic
+- **THEN** semantic analysis rejects the expression because `ASSERT` returns `VOID`
