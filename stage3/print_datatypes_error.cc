@@ -1145,6 +1145,12 @@ void *print_datatypes_error_c::visit(function_invocation_c *symbol) {
 	return NULL;
 }
 
+void *print_datatypes_error_c::visit(object_method_invocation_c *symbol) {
+	if (symbol->compatibility_invocation == NULL) ERROR;
+	symbol->compatibility_invocation->accept(*this);
+	return NULL;
+}
+
 
 
 /********************/
@@ -1292,6 +1298,5 @@ void *print_datatypes_error_c::visit(repeat_statement_c *symbol) {
 	symbol->expression->accept(*this);
 	return NULL;
 }
-
 
 

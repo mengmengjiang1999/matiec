@@ -31,8 +31,10 @@ int main() {
     assert(result.source.find("MATIECSELFCOUNT := MATIECSELFCOUNT + Delta") !=
            std::string::npos);
     assert(result.source.find("MATIECSELFCOUNT : INT") != std::string::npos);
-    assert(result.source.find("MATIECMETHOD7COUNTER9INCREMENT(2, C.COUNT)") !=
-           std::string::npos);
+    assert(result.source.find("Value := C.Increment(2)") != std::string::npos);
+    assert(result.instance_types.at("C") == "COUNTER");
+    assert(result.methods.front().owner_fields.size() == 1);
+    assert(result.methods.front().owner_fields.front().first == "COUNT");
   }
   {
     const std::string source =

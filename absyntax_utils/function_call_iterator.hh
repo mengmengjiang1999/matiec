@@ -83,6 +83,7 @@ class function_call_iterator_c : public iterator_visitor_c {
   /* B 3.1 - Expressions */
   /***********************/
     void *visit(function_invocation_c *symbol);
+    void *visit(object_method_invocation_c *symbol);
   
   /****************************************/
   /* B.2 - Language IL (Instruction List) */
@@ -100,7 +101,6 @@ class function_call_iterator_c : public iterator_visitor_c {
   void *visit(il_formal_funct_call_c *symbol);
 
 }; // class function_call_iterator_c 
-
 
 
 

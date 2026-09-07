@@ -384,6 +384,7 @@ class fill_candidate_datatypes_c: public iterator_visitor_c {
     void *visit(     neg_expression_c *symbol);
     void *visit(     not_expression_c *symbol);
     void *visit(function_invocation_c *symbol);
+    void *visit(object_method_invocation_c *symbol);
 
     /*********************************/
     /* B 3.2.1 Assignment Statements */
@@ -411,7 +412,6 @@ class fill_candidate_datatypes_c: public iterator_visitor_c {
     void *visit(repeat_statement_c *symbol);
 
 }; // fill_candidate_datatypes_c
-
 
 
 

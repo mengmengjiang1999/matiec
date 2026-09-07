@@ -2340,6 +2340,14 @@ void *fill_candidate_datatypes_c::visit(function_invocation_c *symbol) {
 	return NULL;
 }
 
+void *fill_candidate_datatypes_c::visit(object_method_invocation_c *symbol) {
+	if (symbol->compatibility_invocation == NULL) ERROR;
+	symbol->compatibility_invocation->accept(*this);
+	symbol->candidate_datatypes =
+		symbol->compatibility_invocation->candidate_datatypes;
+	return NULL;
+}
+
 
 
 /********************/
@@ -2469,7 +2477,6 @@ void *fill_candidate_datatypes_c::visit(repeat_statement_c *symbol) {
 		symbol->statement_list->accept(*this);
 	return NULL;
 }
-
 
 
 

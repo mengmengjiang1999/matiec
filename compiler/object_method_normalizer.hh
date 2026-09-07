@@ -3,6 +3,7 @@
 
 #include "compiler/experimental_syntax_model.hh"
 
+#include <map>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -14,6 +15,7 @@ class DiagnosticEngine;
 struct ObjectMethodNormalizeResult {
   std::string source;
   std::vector<ObjectMethodAst> methods;
+  std::map<std::string, std::string> instance_types;
   bool used_methods = false;
 };
 

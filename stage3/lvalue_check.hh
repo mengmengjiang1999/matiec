@@ -119,6 +119,7 @@ class lvalue_check_c: public iterator_visitor_c {
     /* B 3.1 - Expressions */
     /***********************/
     void *visit(function_invocation_c *symbol);
+    void *visit(object_method_invocation_c *symbol);
 
     /*********************************/
     /* B 3.2.1 Assignment Statements */
@@ -136,7 +137,6 @@ class lvalue_check_c: public iterator_visitor_c {
     void *visit(for_statement_c *symbol);
 
 }; /* lvalue_check_c */
-
 
 
 

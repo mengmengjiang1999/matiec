@@ -1243,6 +1243,11 @@ SYM_REF1(not_expression_c, exp)
  */
 SYM_REF3(function_invocation_c, function_name, formal_param_list, nonformal_param_list, symbol_c *called_function_declaration; int extensible_param_count; std::vector <symbol_c *> candidate_functions;)
 
+/* Provisional IEC 61131-3:2025 function-block method invocation. The native
+ * receiver/method boundary is preserved while compatibility_invocation carries
+ * the temporary lowered function call used by the existing semantic pipeline. */
+SYM_REF4(object_method_invocation_c, receiver, method_name, formal_param_list, nonformal_param_list, function_invocation_c *compatibility_invocation = NULL;)
+
 
 /********************/
 /* B 3.2 Statements */

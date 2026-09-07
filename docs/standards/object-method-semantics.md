@@ -38,8 +38,11 @@ visibility, return type, parameter/local declarations, and body. `iec2iec` consu
 that native node and preserves the `METHOD ... END_METHOD` boundary. Dependency
 ordering retains the complete FB node, so `-p` does not detach or flatten methods.
 
-The current semantic and C compatibility path also lowers each method to a legacy
-function. Each owner field is passed
+Method invocations are stored as native receiver-and-method AST nodes. Before
+ordinary datatype analysis, an explicit compatibility pass binds those calls to the
+current legacy function representation; the parser input is not rewritten. The
+current semantic and C compatibility path still lowers each method declaration to a
+legacy function. Each owner field is passed
 after ordinary method parameters through a hidden `VAR_IN_OUT` parameter named
 `MATIECSELF<field>`. The fields remain owned by the caller and are not copied, so
 updates remain visible after the call. Passing fields individually also avoids
@@ -57,8 +60,8 @@ overloads are not supported, so an owner cannot declare the same case-insensitiv
 method name twice.
 
 The provisional normalizer currently recognizes owner declarations whose type is a
-single named type token. More complex declaration forms remain outside this first
-increment.
+single named type token. More complex receiver declaration forms and nested method
+invocations remain outside this increment.
 
 ## Unsupported constructs
 

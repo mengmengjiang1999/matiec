@@ -2042,6 +2042,19 @@ void *visit(function_invocation_c *symbol) {
   return NULL;
 }
 
+void *visit(object_method_invocation_c *symbol) {
+  symbol->receiver->accept(*this);
+  s4o.print(".");
+  symbol->method_name->accept(*this);
+  s4o.print("(");
+  if (symbol->formal_param_list != NULL)
+    symbol->formal_param_list->accept(*this);
+  if (symbol->nonformal_param_list != NULL)
+    symbol->nonformal_param_list->accept(*this);
+  s4o.print(")");
+  return NULL;
+}
+
 /********************/
 /* B 3.2 Statements */
 /********************/
@@ -2257,7 +2270,6 @@ void *visit(continue_statement_c *symbol) {
 
 visitor_c *new_code_generator(stage4out_c *s4o, const char *builddir)  {return new generate_iec_c(s4o);}
 void delete_code_generator(visitor_c *code_generator) {delete code_generator;}
-
 
 
 

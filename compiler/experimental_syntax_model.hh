@@ -4,6 +4,7 @@
 #include "compiler_types.hh"
 
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace matiec {
@@ -27,6 +28,7 @@ struct ObjectMethodAst {
   std::string name;
   std::string return_type;
   std::string lowered_name;
+  std::vector<std::pair<std::string, std::string> > owner_fields;
   SourceRange range;
 };
 

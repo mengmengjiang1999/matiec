@@ -529,6 +529,12 @@ void *lvalue_check_c::visit(function_invocation_c *symbol) {
 	return NULL;
 }
 
+void *lvalue_check_c::visit(object_method_invocation_c *symbol) {
+	if (symbol->compatibility_invocation == NULL) ERROR;
+	symbol->compatibility_invocation->accept(*this);
+	return NULL;
+}
+
 /*********************************/
 /* B 3.2.1 Assignment Statements */
 /*********************************/
@@ -558,7 +564,6 @@ void *lvalue_check_c::visit(for_statement_c *symbol) {
 	control_variables.pop_back();
 	return NULL;
 }
-
 
 
 

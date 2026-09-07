@@ -1688,6 +1688,16 @@ void *narrow_candidate_datatypes_c::visit(function_invocation_c *symbol) {
 	return NULL;
 }
 
+void *narrow_candidate_datatypes_c::visit(object_method_invocation_c *symbol) {
+	if (symbol->compatibility_invocation == NULL) ERROR;
+	symbol->compatibility_invocation->candidate_datatypes =
+		symbol->candidate_datatypes;
+	symbol->compatibility_invocation->datatype = symbol->datatype;
+	symbol->compatibility_invocation->accept(*this);
+	symbol->datatype = symbol->compatibility_invocation->datatype;
+	return NULL;
+}
+
 /********************/
 /* B 3.2 Statements */
 /********************/
@@ -1878,7 +1888,6 @@ void *narrow_candidate_datatypes_c::visit(repeat_statement_c *symbol) {
 		symbol->statement_list->accept(*this);
 	return NULL;
 }
-
 
 
 

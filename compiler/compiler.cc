@@ -5,6 +5,7 @@
 #include "compiler/modern_library_normalizer.hh"
 #include "compiler/namespace_normalizer.hh"
 #include "compiler/object_method_normalizer.hh"
+#include "compiler/object_method_call_lowering.hh"
 #include "compiler/utf8_validation.hh"
 
 #include "absyntax/absyntax.hh"
@@ -99,6 +100,11 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
         : legacy_state.parse(&tree_root);
     if (parse_status < 0)
       return CompilationResult::failure();
+
+    if (language_profile_is_experimental(options.language_profile) &&
+        !lower_object_method_calls(tree_root, method_result,
+                                   context.diagnostics()))
+      return context.diagnostics().result();
 
     if (options.syntax_only)
       return CompilationResult::success();

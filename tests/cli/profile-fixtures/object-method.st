@@ -23,7 +23,7 @@ PROGRAM MethodDemo
     CounterInstance : Counter;
     Result : INT;
   END_VAR
-  Result := CounterInstance.Increment(2);
+  Result := CounterInstance.Increment(Delta := 2);
 END_PROGRAM
 
 CONFIGURATION config

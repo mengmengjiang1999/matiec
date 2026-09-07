@@ -515,6 +515,7 @@ int GetNextChar(char *b, int maxBuffer);
 
 /* we are parsing st code -> flex must not return the EOL tokens!   */
 %s st_state
+%x method_invocation_state
 
 /* we are parsing sfc code -> flex must not return the EOL tokens!  */
 %s sfc_state
@@ -1962,6 +1963,23 @@ _			/* do nothing - eat it up!*/
 	/*****************************************/
 <st_state>{identifier}/({st_whitespace_or_pragma_or_comment})"=>"	{yylval.ID=matiec::retain_ast_string(yytext); return sendto_identifier_token;}
 <il_state>{identifier}/({il_whitespace_or_pragma_or_comment})"=>"	{yylval.ID=matiec::retain_ast_string(yytext); return sendto_identifier_token;}
+<st_state>{identifier}[ \f\t\v]*\.[ \f\t\v]*{identifier}[ \f\t\v]*/"(" {
+  if (!runtime_options.iec2025_experimental) REJECT;
+  const int receiver_length = (int)strcspn(yytext, " \f\t\v.");
+  yyless(receiver_length);
+  BEGIN(method_invocation_state);
+  yylval.ID=matiec::retain_ast_string(yytext);
+  return get_identifier_token(yytext);
+}
+<method_invocation_state>[ \f\t\v]*\.[ \f\t\v]* {return METHOD_DOT;}
+<method_invocation_state>{identifier}[ \f\t\v]* {
+  int length = yyleng;
+  while (length > 0 && strchr(" \f\t\v", yytext[length - 1]) != NULL) --length;
+  yylval.ID=matiec::retain_ast_string(yytext);
+  yylval.ID[length] = '\0';
+  return method_identifier_token;
+}
+<method_invocation_state>"(" {BEGIN(st_state); return '(';}
 {identifier} 				{yylval.ID=matiec::retain_ast_string(yytext);
 					 // printf("returning identifier...: %s, %d\n", yytext, get_identifier_token(yytext));
 					 return get_identifier_token(yytext);}

@@ -1,9 +1,5 @@
-# object-oriented-elements Specification
+## MODIFIED Requirements
 
-## Purpose
-Define the bounded experimental function-block method subset, its deterministic
-lowering ABI, and its isolation from the legacy language profile.
-## Requirements
 ### Requirement: Bounded object-oriented subset
 
 The project SHALL document the exact enabled OO subset, SHALL represent supported
@@ -51,13 +47,3 @@ remain distinct from compatibility lowering.
 
 - **WHEN** `iec2iec` processes a supported method and invocation with dependency ordering enabled
 - **THEN** the function block structurally contains one `METHOD` boundary and the invocation retains its receiver-and-method form
-
-### Requirement: Legacy profile isolation
-
-Method syntax MUST remain unavailable in the legacy profile and method keywords
-MUST NOT become reserved there.
-
-#### Scenario: A method declaration is compiled as legacy source
-
-- **WHEN** source containing `METHOD` is compiled with `--std=legacy`
-- **THEN** the legacy parser rejects it

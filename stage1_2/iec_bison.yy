@@ -1002,6 +1002,8 @@ typedef struct YYLTYPE {
 %type  <list>	var2_init_decl_list
 
 %token <ID>	standard_function_name_token
+%token <ID>	method_identifier_token
+%token METHOD_DOT
 
 %token FUNCTION
 %token END_FUNCTION
@@ -7974,6 +7976,24 @@ function_invocation:
 	 else
 		{$$ = NULL; print_err_msg(locl(@2), locf(@3), "no parameter defined in function invocation of ST expression."); yynerrs++;}
 	}
+| symbolic_variable METHOD_DOT method_identifier_token '(' param_assignment_formal_list ')'
+	{$$ = new object_method_invocation_c($1, new identifier_c($3, locloc(@3)), $5, NULL, locloc(@$));
+	 if (!runtime_options.iec2025_experimental) {
+	   print_err_msg(locf(@1), locl(@6), "method invocation requires --std=iec61131-3:2025-experimental.");
+	   yynerrs++;
+	 }}
+| symbolic_variable METHOD_DOT method_identifier_token '(' param_assignment_nonformal_list ')'
+	{$$ = new object_method_invocation_c($1, new identifier_c($3, locloc(@3)), NULL, $5, locloc(@$));
+	 if (!runtime_options.iec2025_experimental) {
+	   print_err_msg(locf(@1), locl(@6), "method invocation requires --std=iec61131-3:2025-experimental.");
+	   yynerrs++;
+	 }}
+| symbolic_variable METHOD_DOT method_identifier_token '(' ')'
+	{$$ = new object_method_invocation_c($1, new identifier_c($3, locloc(@3)), NULL, NULL, locloc(@$));
+	 if (!runtime_options.iec2025_experimental) {
+	   print_err_msg(locf(@1), locl(@5), "method invocation requires --std=iec61131-3:2025-experimental.");
+	   yynerrs++;
+	 }}
 /* ERROR_CHECK_BEGIN */ 
 | function_name_no_NOT_clashes param_assignment_formal_list ')'
   {$$ = NULL; print_err_msg(locl(@1), locf(@2), "'(' missing after function name in ST expression."); yynerrs++;}
@@ -9024,5 +9044,3 @@ int stage2__(const char *filename, const char *display_filename,
 
   return 0;
 }
-
-

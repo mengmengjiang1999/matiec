@@ -358,6 +358,7 @@ class narrow_candidate_datatypes_c: public iterator_visitor_c {
     void *visit(     neg_expression_c *symbol);
     void *visit(     not_expression_c *symbol);
     void *visit(function_invocation_c *symbol);
+    void *visit(object_method_invocation_c *symbol);
 
     /*********************************/
     /* B 3.2.1 Assignment Statements */
@@ -392,6 +393,5 @@ class narrow_candidate_datatypes_c: public iterator_visitor_c {
 
 
 #endif // #ifndef _NARROW_CANDIDATE_DATATYPES_HH
-
 
 

@@ -524,10 +524,11 @@ Result := CounterInstance.Increment(2);
 `MATIECMETHOD...` 名称不是稳定 ABI。详见
 [实验性方法语义](standards/object-method-semantics.md)。
 
-方法边界、可见性、返回类型、参数/局部变量和方法体会保存在所属 FB 的主语法树
-节点中，`-p` 依赖排序不会拆散它们。`iec2iec` 会输出原生 `METHOD` 结构；当前
-语义检查和 `iec2c` 仍消费由该节点兼容 lowering 得到的函数，以保持现有静态派发
-行为和临时 C ABI。
+方法边界、可见性、返回类型、参数/局部变量、方法体以及
+`实例.方法(参数)` 调用都会保存在主语法树中，`-p` 依赖排序不会拆散它们。
+`iec2iec` 会输出原生 `METHOD` 与调用结构；parser 之后的显式 AST 兼容 pass
+会将调用绑定到临时降低函数，语义检查和 `iec2c` 继续消费该函数，以保持现有
+静态派发行为和临时 C ABI。该过程不再对 parser 输入执行方法调用文本替换。
 
 ### 7.6 实验性标准函数 `ASSERT`
 

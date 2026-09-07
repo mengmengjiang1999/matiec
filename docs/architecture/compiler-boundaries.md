@@ -41,11 +41,14 @@ The compiler executes these boundaries in order:
 
 1. `LegacyGlobalStateAdapter::parse()` runs lexical and syntax analysis inside
    the context's active AST arena.
-2. Legacy symbol-table initialization prepares declaration lookup.
-3. `SemanticPassManager` runs the explicit Stage 3 pass order and stops after a
+2. Experimental AST compatibility passes bind native constructs that still use
+   legacy semantic implementations. Function-block method calls are resolved here
+   without pre-parser source-text replacement.
+3. Legacy symbol-table initialization prepares declaration lookup.
+4. `SemanticPassManager` runs the explicit Stage 3 pass order and stops after a
    failed pass. Pass IDs, prerequisites, and per-pass results are declared in
    `compiler/semantic_pass.hh`.
-4. Stage 4 emits C or IEC text through the context-owned `OutputManager`.
+5. Stage 4 emits C or IEC text through the context-owned `OutputManager`.
 
 Lower layers report through `DiagnosticEngine` and return failures. Only the
 CLI adapter in `main.cc` converts the final result to a process exit status.
@@ -112,12 +115,13 @@ and populates it only after all experimental recognizers succeed, so a reused
 context cannot expose metadata from an earlier source.
 
 These records are a migration boundary, not a second semantic tree. Namespace and
-function-block method structure now enters the primary AST; their recognizers still
-perform provisional name resolution or compatibility lowering and publish
-equivalent records through the context-owned model. Access-variable and modern
-library syntax still relies on source lowering. Consumers must not treat the side
-model as structural authority, rescan original source, or introduce process-wide
-caches.
+function-block method declarations and invocations now enter the primary AST. The
+method recognizer still creates compatibility function declarations, while an
+explicit AST pass binds native calls to those functions without rewriting call text.
+Namespace recognition still performs provisional name resolution. Access-variable
+and modern library syntax still relies on source lowering. Consumers must not treat
+the side model as structural authority, rescan original source, or introduce
+process-wide caches.
 
 ## Extension rules
 

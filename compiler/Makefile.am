@@ -16,6 +16,7 @@ libcompiler_a_SOURCES = \
 	modern_library_normalizer.cc \
 	namespace_normalizer.cc \
 	object_method_normalizer.cc \
+	object_method_call_lowering.cc \
 	output_manager.cc \
 	output_sink.cc \
 	semantic_pass.cc \

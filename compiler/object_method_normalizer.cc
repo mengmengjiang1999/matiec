@@ -131,6 +131,7 @@ bool normalize_experimental_object_methods(
   if (result == nullptr) return false;
   result->source = std::string(source);
   result->methods.clear();
+  result->instance_types.clear();
   result->used_methods = false;
 
   const std::regex fb_start(
@@ -231,6 +232,10 @@ bool normalize_experimental_object_methods(
       break;
     }
     block.end_line = cursor;
+    for (const auto &field : owner_fields) {
+      if (block.locals.count(field.first) == 0)
+        block.ast.owner_fields.push_back(field);
+    }
     blocks.push_back(std::move(block));
     index = cursor;
   }
@@ -246,6 +251,7 @@ bool normalize_experimental_object_methods(
     }
   }
   if (diagnostics.has_errors()) return false;
+  result->instance_types = instance_types;
   if (blocks.empty()) return true;
 
   std::ostringstream generated;
@@ -302,36 +308,6 @@ bool normalize_experimental_object_methods(
   for (std::size_t index = 0; index < lines.size(); ++index) {
     base += lines[index].text;
     if (lines[index].has_newline) base += '\n';
-  }
-
-  for (const auto &entry : instance_types) {
-    const std::string instance = entry.first;
-    const std::string owner_type = entry.second;
-    for (const auto &method_entry : method_by_owner_and_name) {
-      const MethodBlock &block = *method_entry.second;
-      if (uppercase(block.ast.owner) != owner_type) continue;
-      std::string hidden_arguments;
-      for (const auto &field : block.owner_fields) {
-        if (block.locals.count(field.first) != 0) continue;
-        hidden_arguments += (hidden_arguments.empty() ? "" : ", ") +
-                            instance + "." + field.first;
-      }
-      const std::regex zero_call("\\b" + instance + "[ \\t]*\\.[ \\t]*" +
-                                     uppercase(block.ast.name) +
-                                     "[ \\t]*\\([ \\t]*\\)",
-                                 std::regex::icase);
-      base = std::regex_replace(base, zero_call,
-                                block.ast.lowered_name + "(" + hidden_arguments + ")");
-      const std::regex call("\\b" + instance + "[ \\t]*\\.[ \\t]*" +
-                                uppercase(block.ast.name) +
-                                "[ \\t]*\\(([^()]*)\\)",
-                            std::regex::icase);
-      const std::string suffix = hidden_arguments.empty()
-                                     ? ""
-                                     : ", " + hidden_arguments;
-      base = std::regex_replace(base, call,
-                                block.ast.lowered_name + "($1" + suffix + ")");
-    }
   }
 
   result->source = base + generated.str();
