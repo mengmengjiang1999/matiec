@@ -36,31 +36,9 @@
 
 
 
-/* Compiler options, specified at runtime on the command line */
+#include "compiler/parser_state.hh"
 
-typedef struct {
-   /* options specific to stage1_2 */
-	bool allow_void_datatype;      /* Allow declaration of functions returning VOID  */
-	bool allow_missing_var_in;     /* Allow definition and invocation of POUs with no input, output and in_out parameters! */
-	bool disable_implicit_en_eno;  /* Disable the generation of implicit EN and ENO parameters on functions and Function Blocks */
-	bool pre_parsing;              /* Support forward references (Run a pre-parsing phase before the defintive parsing phase that builds the AST) */
-	bool safe_extensions;          /* support SAFE_* datatypes defined in PLCOpen TC5 "Safety Software Technical Specification - Part 1" v1.0 */
-	bool full_token_loc;           /* error messages specify full token location */
-	bool conversion_functions;     /* Create a conversion function for derived datatype */
-	bool nested_comments;          /* Allow the use of nested comments. */
-	bool ref_standard_extensions;  /* Allow the use of REFerences (keywords REF_TO, REF, DREF, ^, NULL). */
-	bool ref_nonstand_extensions;  /* Allow the use of non-standard extensions to REF_TO datatypes: REF_TO ANY, and REF_TO in struct elements! */
-	bool nonliteral_in_array_size; /* Allow the use of constant non-literals when specifying size of arrays (ARRAY [1..max] OF INT) */
-	bool utf8_source_and_strings; /* Validate UTF-8 source and accept UTF-8 string bytes. */
-	bool iec2025_experimental;    /* Enable evidence-gated experimental language increments. */
-	bool register_experimental_assert; /* Seed ASSERT as a profile-owned function name. */
-	const char *includedir;        /* Include directory, where included files will be searched for... */
-	
-   /* options specific to stage3 */
-	bool relaxed_datatype_model;   /* Use the relaxed datatype equivalence model, instead of the default strict equivalence model */
-} runtime_options_t;
-
-extern runtime_options_t runtime_options;
+#define runtime_options (::matiec::active_runtime_options())
 
 
 

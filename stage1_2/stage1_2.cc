@@ -76,57 +76,45 @@ bool get_opt_ref_standard_extensions() {return runtime_options.ref_standard_exte
 /**********************************************************************************************/
 /* whether bison is doing the pre-parsing, where POU bodies and var declarations are ignored! */
 /**********************************************************************************************/
-static bool preparse_state__ = false;
-
-void set_preparse_state(void) {preparse_state__ = true; }
-void rst_preparse_state(void) {preparse_state__ = false;}
-bool get_preparse_state(void) {return preparse_state__;}     // returns true if bison is in preparse state
+void set_preparse_state(void) {matiec::active_parser_state().preparse = true; }
+void rst_preparse_state(void) {matiec::active_parser_state().preparse = false;}
+bool get_preparse_state(void) {return matiec::active_parser_state().preparse;}
 
 
 /****************************************************/
 /* Controlling the entry to the body_state in flex. */
 /****************************************************/
-static int goto_body_state__ = 0;
-
-void cmd_goto_body_state(void) {goto_body_state__ = 1;}
-int  get_goto_body_state(void) {return goto_body_state__;}
-void rst_goto_body_state(void) {goto_body_state__ = 0;}
+void cmd_goto_body_state(void) {matiec::active_parser_state().goto_body = true;}
+int  get_goto_body_state(void) {return matiec::active_parser_state().goto_body;}
+void rst_goto_body_state(void) {matiec::active_parser_state().goto_body = false;}
 
 /*************************************************************/
 /* Controlling the entry to the sfc_qualifier_state in flex. */
 /*************************************************************/
-static int goto_sfc_qualifier_state__ = 0;
-
-void cmd_goto_sfc_qualifier_state(void) {goto_sfc_qualifier_state__ = 1;}
-int  get_goto_sfc_qualifier_state(void) {return goto_sfc_qualifier_state__;}
-void rst_goto_sfc_qualifier_state(void) {goto_sfc_qualifier_state__ = 0;}
+void cmd_goto_sfc_qualifier_state(void) {matiec::active_parser_state().goto_sfc_qualifier = true;}
+int  get_goto_sfc_qualifier_state(void) {return matiec::active_parser_state().goto_sfc_qualifier;}
+void rst_goto_sfc_qualifier_state(void) {matiec::active_parser_state().goto_sfc_qualifier = false;}
 
 /*************************************************************/
 /* Controlling the entry to the sfc_priority_state in flex.  */
 /*************************************************************/
-static int goto_sfc_priority_state__ = 0;
-
-void cmd_goto_sfc_priority_state(void) {goto_sfc_priority_state__ = 1;}
-int  get_goto_sfc_priority_state(void) {return goto_sfc_priority_state__;}
-void rst_goto_sfc_priority_state(void) {goto_sfc_priority_state__ = 0;}
+void cmd_goto_sfc_priority_state(void) {matiec::active_parser_state().goto_sfc_priority = true;}
+int  get_goto_sfc_priority_state(void) {return matiec::active_parser_state().goto_sfc_priority;}
+void rst_goto_sfc_priority_state(void) {matiec::active_parser_state().goto_sfc_priority = false;}
 
 /*************************************************************/
 /* Controlling the entry to the sfc_qualifier_state in flex. */
 /*************************************************************/
-static int goto_task_init_state__ = 0;
-
-void cmd_goto_task_init_state(void) {goto_task_init_state__ = 1;}
-int  get_goto_task_init_state(void) {return goto_task_init_state__;}
-void rst_goto_task_init_state(void) {goto_task_init_state__ = 0;}
+void cmd_goto_task_init_state(void) {matiec::active_parser_state().goto_task_init = true;}
+int  get_goto_task_init_state(void) {return matiec::active_parser_state().goto_task_init;}
+void rst_goto_task_init_state(void) {matiec::active_parser_state().goto_task_init = false;}
 
 /****************************************************************/
 /* Returning to state in flex previously pushed onto the stack. */
 /****************************************************************/
-static int pop_state__ = 0;
-
-void cmd_pop_state(void) {pop_state__ = 1;}
-int  get_pop_state(void) {return pop_state__;}
-void rst_pop_state(void) {pop_state__ = 0;}
+void cmd_pop_state(void) {matiec::active_parser_state().pop_state = true;}
+int  get_pop_state(void) {return matiec::active_parser_state().pop_state;}
+void rst_pop_state(void) {matiec::active_parser_state().pop_state = false;}
 
 
 /*********************************/

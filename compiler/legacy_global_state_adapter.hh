@@ -11,6 +11,7 @@ class LegacyGlobalStateAdapter {
  public:
   LegacyGlobalStateAdapter(CompilationContext &context,
                            const CompilerOptions &options);
+  ~LegacyGlobalStateAdapter();
 
   int parse(symbol_c **tree_root) const;
   int parse(const std::string &source_path, const std::string &display_path,
@@ -21,6 +22,7 @@ class LegacyGlobalStateAdapter {
 
  private:
   CompilationContext &context_;
+  ActiveParserStateScope parser_state_scope_;
 };
 
 }  // namespace matiec

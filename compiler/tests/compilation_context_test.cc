@@ -42,6 +42,21 @@ int main() {
   assert(first.experimental_syntax().namespaces.empty());
   assert(first.analysis().size() == 0);
   assert(second.analysis().size() == 0);
+  first.parser_state().options.pre_parsing = true;
+  first.parser_state().goto_body = true;
+  assert(!second.parser_state().options.pre_parsing);
+  assert(!second.parser_state().goto_body);
+  first.parser_state().reset_transient();
+  assert(!first.parser_state().goto_body);
+  {
+    matiec::ActiveParserStateScope first_scope(first.parser_state());
+    assert(&matiec::active_parser_state() == &first.parser_state());
+    {
+      matiec::ActiveParserStateScope second_scope(second.parser_state());
+      assert(&matiec::active_parser_state() == &second.parser_state());
+    }
+    assert(&matiec::active_parser_state() == &first.parser_state());
+  }
   assert(first.diagnostics().has_errors());
   assert(!second.diagnostics().has_errors());
   assert(first_output.contents() == "first");

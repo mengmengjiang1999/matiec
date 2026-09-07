@@ -4,15 +4,12 @@
 #include "main.hh"
 #include "stage1_2/stage1_2.hh"
 
-/* Process-wide compatibility state consumed by the generated parser and
- * legacy visitors. It is populated only through LegacyGlobalStateAdapter. */
-runtime_options_t runtime_options;
-
 namespace matiec {
 
 LegacyGlobalStateAdapter::LegacyGlobalStateAdapter(
     CompilationContext &context, const CompilerOptions &options)
-    : context_(context) {
+    : context_(context), parser_state_scope_(context.parser_state()) {
+  context_.parser_state().reset_transient();
   runtime_options.allow_void_datatype = options.allow_void_datatype;
   runtime_options.allow_missing_var_in = options.allow_missing_var_in;
   runtime_options.disable_implicit_en_eno = options.disable_implicit_en_eno;
@@ -35,6 +32,8 @@ LegacyGlobalStateAdapter::LegacyGlobalStateAdapter(
                                   ? NULL
                                   : options.include_directory.c_str();
 }
+
+LegacyGlobalStateAdapter::~LegacyGlobalStateAdapter() = default;
 
 int LegacyGlobalStateAdapter::parse(symbol_c **tree_root) const {
   return stage1_2(context_.source_path().c_str(), tree_root);

@@ -7,6 +7,7 @@
 #include "diagnostic_engine.hh"
 #include "experimental_syntax_model.hh"
 #include "output_manager.hh"
+#include "parser_state.hh"
 #include "source_manager.hh"
 
 #include <string>
@@ -30,6 +31,9 @@ class CompilationContext {
   AnalysisStore &analysis();
   const AnalysisStore &analysis() const;
 
+  ParserState &parser_state();
+  const ParserState &parser_state() const;
+
   OutputManager &outputs();
   const OutputManager &outputs() const;
 
@@ -48,6 +52,7 @@ class CompilationContext {
   OutputManager outputs_;
   AstArena ast_arena_;
   AnalysisStore analysis_;
+  ParserState parser_state_;
   SourceManager sources_;
   ExperimentalSyntaxModel experimental_syntax_;
 };

@@ -7,8 +7,6 @@
 
 #include <cassert>
 
-runtime_options_t runtime_options = {};
-
 int main() {
   matiec::DiagnosticEngine diagnostics;
   matiec::MemoryOutputSink memory;

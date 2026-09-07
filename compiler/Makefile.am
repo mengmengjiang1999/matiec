@@ -23,6 +23,7 @@ libcompiler_a_SOURCES = \
 	object_method_compatibility_ast.cc \
 	output_manager.cc \
 	output_sink.cc \
+	parser_state.cc \
 	semantic_pass.cc \
 	semantic_pass_manager.cc \
 	source_manager.cc \

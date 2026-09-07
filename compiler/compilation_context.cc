@@ -38,6 +38,12 @@ AnalysisStore &CompilationContext::analysis() { return analysis_; }
 
 const AnalysisStore &CompilationContext::analysis() const { return analysis_; }
 
+ParserState &CompilationContext::parser_state() { return parser_state_; }
+
+const ParserState &CompilationContext::parser_state() const {
+  return parser_state_;
+}
+
 OutputManager &CompilationContext::outputs() {
   return outputs_;
 }
