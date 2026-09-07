@@ -236,7 +236,8 @@ Stage 4 output. All six typed record families now have production boundaries;
 compatibility annotations are materialized only where legacy consumers still
 require them. Lvalue validation and Stage 4 read invocation resolution directly
 from the store, so completed resolution results are no longer copied back onto
-the AST for downstream use.
+the AST for downstream use. Completed scope-specific enumeration tables likewise
+remain store-owned; no production pass requires their AST compatibility copies.
 
 ### Semantics are explicit passes
 

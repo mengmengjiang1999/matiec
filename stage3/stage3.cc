@@ -63,7 +63,6 @@ static int enum_declaration_check(symbol_c *tree_root,
     tree_root->accept(enum_declaration_check);
     int errors = enum_declaration_check.get_error_count();
     if (!publish_enumeration_analysis(tree_root, analysis)) ++errors;
-    materialize_enumeration_analysis(tree_root, analysis);
     return errors;
 }
 

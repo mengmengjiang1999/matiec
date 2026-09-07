@@ -24,6 +24,11 @@ int main() {
   assert(std::distance(matches.first, matches.second) == 2);
 
   library->enumvalue_symtable.clear();
+  matches = context.analysis().enumeration(library)->value.values.equal_range(
+      "READY");
+  assert(std::distance(matches.first, matches.second) == 2);
+  assert(library->enumvalue_symtable.empty());
+
   materialize_enumeration_analysis(library, context.analysis());
   assert(library->enumvalue_symtable.size() == 2);
 

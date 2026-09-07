@@ -65,6 +65,9 @@ now have production boundaries; compatibility materializers remain until their
 legacy consumers migrate to direct store access. Invocation resolution has crossed
 that boundary: lvalue validation and Stage 4 use typed store lookups, while the
 producer's temporary AST fields remain confined to type-safety processing.
+Enumeration lookup tables also remain store-owned after their completed pass,
+with no production materialization because downstream passes do not read the AST
+compatibility tables.
 
 ## Generated output
 
