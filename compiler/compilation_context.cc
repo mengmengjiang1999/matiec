@@ -58,4 +58,12 @@ SourceManager &CompilationContext::sources() { return sources_; }
 
 const SourceManager &CompilationContext::sources() const { return sources_; }
 
+ExperimentalSyntaxModel &CompilationContext::experimental_syntax() {
+  return experimental_syntax_;
+}
+
+const ExperimentalSyntaxModel &CompilationContext::experimental_syntax() const {
+  return experimental_syntax_;
+}
+
 }  // namespace matiec

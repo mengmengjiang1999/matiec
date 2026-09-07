@@ -4,6 +4,7 @@
 #include "ast_arena.hh"
 #include "compiler_types.hh"
 #include "diagnostic_engine.hh"
+#include "experimental_syntax_model.hh"
 #include "output_manager.hh"
 #include "source_manager.hh"
 
@@ -34,12 +35,16 @@ class CompilationContext {
   SourceManager &sources();
   const SourceManager &sources() const;
 
+  ExperimentalSyntaxModel &experimental_syntax();
+  const ExperimentalSyntaxModel &experimental_syntax() const;
+
  private:
   CompilerOptions options_;
   DiagnosticEngine diagnostics_;
   OutputManager outputs_;
   AstArena ast_arena_;
   SourceManager sources_;
+  ExperimentalSyntaxModel experimental_syntax_;
 };
 
 }  // namespace matiec

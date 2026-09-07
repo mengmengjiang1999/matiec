@@ -94,6 +94,20 @@ make check-asan
 make check-ubsan
 ```
 
+## Experimental syntax model
+
+`CompilationContext::experimental_syntax()` owns the structured declarations
+recognized by the provisional namespace, function-block method, access-variable,
+and modern-library frontends. The compiler clears this model before every compile
+and populates it only after all experimental recognizers succeed, so a reused
+context cannot expose metadata from an earlier source.
+
+These records are a migration boundary, not a second semantic tree. Source
+lowering remains responsible for feeding the legacy parser today. Later native
+grammar work can replace one recognizer at a time while publishing equivalent
+records through the same context-owned model; consumers must not rescan original
+source or introduce process-wide caches.
+
 AddressSanitizer includes leak detection. The scripts copy the source to a
 temporary directory, regenerate parser sources, build, and execute the same
 regression suite without modifying the developer's configured tree.

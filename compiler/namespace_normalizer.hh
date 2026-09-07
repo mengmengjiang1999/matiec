@@ -1,7 +1,7 @@
 #ifndef MATIEC_COMPILER_NAMESPACE_NORMALIZER_HH
 #define MATIEC_COMPILER_NAMESPACE_NORMALIZER_HH
 
-#include "compiler/compiler_types.hh"
+#include "compiler/experimental_syntax_model.hh"
 
 #include <string>
 #include <string_view>
@@ -10,20 +10,6 @@
 namespace matiec {
 
 class DiagnosticEngine;
-
-enum class NamespaceVisibility { public_, internal };
-
-struct NamespaceImportAst {
-  std::string namespace_name;
-  SourceRange range;
-};
-
-struct NamespaceDeclarationAst {
-  std::string name;
-  NamespaceVisibility visibility = NamespaceVisibility::public_;
-  SourceRange range;
-  std::vector<NamespaceImportAst> imports;
-};
 
 struct NamespaceNormalizeResult {
   std::string source;

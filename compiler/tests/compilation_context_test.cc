@@ -16,6 +16,9 @@ int main() {
   second.options().relaxed_datatype_model = true;
   second.options().include_directory = "second-lib";
   second.set_source_path("second.st");
+  matiec::NamespaceDeclarationAst first_namespace;
+  first_namespace.name = "First";
+  first.experimental_syntax().namespaces.push_back(first_namespace);
 
   matiec::MemoryOutputSink &first_output = first.outputs().create_memory();
   matiec::MemoryOutputSink &second_output = second.outputs().create_memory();
@@ -33,6 +36,10 @@ int main() {
   assert(second.options().include_directory == "second-lib");
   assert(first.source_path() == "first.st");
   assert(second.source_path() == "second.st");
+  assert(first.experimental_syntax().namespaces.size() == 1);
+  assert(second.experimental_syntax().namespaces.empty());
+  first.experimental_syntax().clear();
+  assert(first.experimental_syntax().namespaces.empty());
   assert(first.diagnostics().has_errors());
   assert(!second.diagnostics().has_errors());
   assert(first_output.contents() == "first");

@@ -16,6 +16,7 @@
 namespace matiec {
 
 CompilationResult Compiler::compile(CompilationContext &context) const {
+  context.experimental_syntax().clear();
   if (context.source_path().empty()) {
     context.diagnostics().error("No source path was provided");
     return context.diagnostics().result();
@@ -79,6 +80,11 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
         return context.diagnostics().result();
       if (modern_library_result.used_modern_library)
         options.allow_void_datatype = true;
+      ExperimentalSyntaxModel &syntax = context.experimental_syntax();
+      syntax.namespaces = namespace_result.declarations;
+      syntax.methods = method_result.methods;
+      syntax.access_variables = access_result.declarations;
+      syntax.library_functions = modern_library_result.functions;
       source = std::move(modern_library_result.source);
     }
 

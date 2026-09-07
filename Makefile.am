@@ -36,6 +36,7 @@ EXTRA_DIST = \
 	tests/cli/profile-fixtures/namespace-internal.st \
 	tests/cli/profile-fixtures/object-method.st \
 	tests/cli/profile-fixtures/object-method-private.st \
+	compiler/experimental_syntax_model.hh \
 	tests/generated_c/runtests \
 	tests/initialization/ok_array_scalar.st \
 	tests/syntax/sfc/sfc.txt \

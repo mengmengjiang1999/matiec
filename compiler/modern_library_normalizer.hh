@@ -1,7 +1,7 @@
 #ifndef MATIEC_COMPILER_MODERN_LIBRARY_NORMALIZER_HH
 #define MATIEC_COMPILER_MODERN_LIBRARY_NORMALIZER_HH
 
-#include "compiler/compiler_types.hh"
+#include "compiler/experimental_syntax_model.hh"
 
 #include <string>
 #include <string_view>
@@ -10,13 +10,6 @@
 namespace matiec {
 
 class DiagnosticEngine;
-
-struct ModernLibraryFunctionAst {
-  std::string name;
-  std::string source_signature;
-  std::string lowered_name;
-  SourceRange range;
-};
 
 struct ModernLibraryNormalizeResult {
   std::string source;

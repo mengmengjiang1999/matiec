@@ -1,7 +1,7 @@
 #ifndef MATIEC_COMPILER_ACCESS_VARIABLE_NORMALIZER_HH
 #define MATIEC_COMPILER_ACCESS_VARIABLE_NORMALIZER_HH
 
-#include "compiler/compiler_types.hh"
+#include "compiler/experimental_syntax_model.hh"
 
 #include <string>
 #include <string_view>
@@ -11,15 +11,6 @@ namespace matiec {
 
 class DiagnosticEngine;
 class OutputManager;
-
-struct AccessVariableAst {
-  std::string configuration;
-  std::string name;
-  std::string path;
-  std::string type;
-  std::string direction;
-  SourceRange range;
-};
 
 struct AccessVariableNormalizeResult {
   std::string source;

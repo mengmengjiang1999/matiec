@@ -101,5 +101,18 @@ int main() {
       "Alias : Target : INT;\nEND_VAR\nEND_CONFIGURATION\n";
   assert(!compile_memory(legacy_access, library, false,
                          matiec::LanguageProfile::legacy).succeeded());
+
+  matiec::CompilationContext reusable;
+  reusable.options().include_directory = library;
+  reusable.options().syntax_only = true;
+  reusable.options().language_profile =
+      matiec::LanguageProfile::iec61131_3_2025_experimental;
+  reusable.set_source("memory://experimental.st", experimental_source);
+  assert(matiec::Compiler().compile(reusable).succeeded());
+  assert(reusable.experimental_syntax().library_functions.size() == 1);
+  reusable.options().language_profile = matiec::LanguageProfile::legacy;
+  reusable.set_source("memory://legacy.st", memory_source);
+  assert(matiec::Compiler().compile(reusable).succeeded());
+  assert(reusable.experimental_syntax().library_functions.empty());
   return 0;
 }

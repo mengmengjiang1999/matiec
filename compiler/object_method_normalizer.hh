@@ -1,7 +1,7 @@
 #ifndef MATIEC_COMPILER_OBJECT_METHOD_NORMALIZER_HH
 #define MATIEC_COMPILER_OBJECT_METHOD_NORMALIZER_HH
 
-#include "compiler/compiler_types.hh"
+#include "compiler/experimental_syntax_model.hh"
 
 #include <string>
 #include <string_view>
@@ -10,14 +10,6 @@
 namespace matiec {
 
 class DiagnosticEngine;
-
-struct ObjectMethodAst {
-  std::string owner;
-  std::string name;
-  std::string return_type;
-  std::string lowered_name;
-  SourceRange range;
-};
 
 struct ObjectMethodNormalizeResult {
   std::string source;
