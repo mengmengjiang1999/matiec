@@ -54,9 +54,12 @@ The compiler executes these boundaries in order:
 Lower layers report through `DiagnosticEngine` and return failures. Only the
 CLI adapter in `main.cc` converts the final result to a process exit status.
 
-Semantic results are currently stored as AST annotations. Moving them into a
-context-owned analysis store is intentionally deferred and scoped in
-`docs/decisions/0002-defer-context-owned-analysis-store.md`.
+`CompilationContext::analysis()` is the typed, arena-checked semantic result
+boundary. Flow edges are produced directly there; constant values and datatype
+candidate vectors are published there at their completed phase boundaries and
+materialized only for unmigrated legacy consumers. Selected datatypes, declaration
+resolution, enumeration tables, and generator metadata remain staged migrations
+tracked from `docs/decisions/0002-defer-context-owned-analysis-store.md`.
 
 ## Generated output
 

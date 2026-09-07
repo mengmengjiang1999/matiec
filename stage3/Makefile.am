@@ -7,6 +7,7 @@ libstage3_a_SOURCES = \
 	semantic_diagnostics.cc \
 	flow_control_analysis.cc \
 	constant_analysis_store.cc \
+	datatype_analysis_store.cc \
 	fill_candidate_datatypes.cc \
 	narrow_candidate_datatypes.cc \
 	forced_narrow_candidate_datatypes.cc \

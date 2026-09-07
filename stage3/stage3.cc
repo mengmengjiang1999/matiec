@@ -47,6 +47,7 @@
 #include "case_elements_check.hh"
 #include "constant_folding.hh"
 #include "constant_analysis_store.hh"
+#include "datatype_analysis_store.hh"
 #include "declaration_check.hh"
 #include "enum_declaration_check.hh"
 #include "remove_forward_dependencies.hh"
@@ -137,9 +138,12 @@ static int constant_propagation(symbol_c *tree_root,
  * before calling this function
  */
 static int type_safety(symbol_c *tree_root,
-                       matiec::DiagnosticEngine &diagnostics){
+                       matiec::DiagnosticEngine &diagnostics,
+                       matiec::AnalysisStore &analysis){
 	fill_candidate_datatypes_c fill_candidate_datatypes(tree_root);
 	tree_root->accept(fill_candidate_datatypes);
+	if (!publish_datatype_candidates(tree_root, analysis)) return 1;
+	materialize_datatype_candidates(tree_root, analysis);
 	narrow_candidate_datatypes_c narrow_candidate_datatypes(tree_root);
 	tree_root->accept(narrow_candidate_datatypes);
 	print_datatypes_error_c print_datatypes_error(tree_root, diagnostics);
@@ -234,7 +238,8 @@ int stage3(symbol_c *tree_root, symbol_c **ordered_tree_root,
 		[tree_root](matiec::CompilationContext &pass_context) {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::type_safety,
-			type_safety(tree_root, pass_context.diagnostics()));
+			type_safety(tree_root, pass_context.diagnostics(),
+			            pass_context.analysis()));
 	});
 	passes.register_pass(matiec::SemanticPassId::lvalue,
 		[tree_root](matiec::CompilationContext &pass_context) {

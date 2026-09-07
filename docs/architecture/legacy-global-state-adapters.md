@@ -9,25 +9,24 @@ process-wide state is temporarily isolated behind
 
 The adapter currently owns the transition into two legacy areas:
 
-* `runtime_options`, consumed by the generated scanner/parser and existing
-  semantic code, is populated from an effective `CompilerOptions` snapshot
-  when an adapter is created; derived parser permissions never mutate the
-  context's caller-configured options;
-* `stage1_2()` contains the generated parser's pre-parse and definitive-parse
-  state; callers enter it only through `LegacyGlobalStateAdapter::parse()`;
+* the generated scanner/parser reads parser runtime options and transient
+  transition controls through the currently scoped context-owned `ParserState`;
+  derived parser permissions never mutate caller-configured options;
+* `stage1_2()` retains generated scanner buffers, include-stack data, Bison
+  lookahead/error variables, and the pre-parse/definitive-parse driver boundary;
+  callers enter it only through `LegacyGlobalStateAdapter::parse()`;
 * `absyntax_utils_init()` populates the legacy global function, function-block,
   program, type, and enumerated-value symbol tables; callers enter it only
   through `LegacyGlobalStateAdapter::initialize_symbol_tables()`.
 
-The parser boundary also contains the mutable scanner buffers, location and
-include-stack tracking, Bison lookahead/error variables, grammar feature flags,
-and the small pre-parse state machine in `stage1_2.cc`. These variables are
-reset by `stage1_2()` for sequential use, but remain process-wide and are part
-of the same non-reentrant compatibility boundary.
+The remaining parser-boundary variables are reset by `stage1_2()` for sequential
+use, but remain process-wide and are part of the same non-reentrant compatibility
+boundary. Parser options, feature flags, and transient lexer transition controls
+are no longer members of that process-wide state.
 
 This adapter is deliberately synchronous and does not claim thread safety.
-Sequential compilation becomes safe only after parser state, symbol tables,
-and AST storage are reset or context-owned in the later lifetime tasks.
+Sequential compilation is covered by context-reuse regressions; generated scanner
+state and symbol tables still prevent concurrent compilation.
 
 ## AST allocation boundary
 

@@ -1,6 +1,6 @@
 # Decision 0002: Defer the context-owned semantic analysis store
 
-Status: Accepted
+Status: Superseded by incremental Analysis Store migrations
 
 ## Context
 
@@ -73,3 +73,11 @@ more than a thousand annotation access sites. AST nodes remain mutable during
 analysis for now, but their state is confined to one compilation lifetime. The
 later migration has a bounded sequence, measurable entry criteria, and an
 explicit prohibition on compatibility globals.
+
+## Supersession status
+
+The entry criteria were subsequently met. `CompilationContext` now owns an
+arena-checked `AnalysisStore`; flow and constant records have migrated, and
+datatype candidates are published at the fill/narrow boundary. Remaining record
+families continue as separate OpenSpec changes in the dependency order recorded
+above. This document remains the historical rationale for the staged approach.

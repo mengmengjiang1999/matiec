@@ -27,9 +27,20 @@ bool AnalysisStore::owns(const symbol_c *node) const {
   return node == nullptr || arena_.owns(node);
 }
 
+bool AnalysisStore::owns_or_is_shared(const symbol_c *node) const {
+  return owns(node) || (node != nullptr && node->arena_owner_ == nullptr);
+}
+
 bool AnalysisStore::owns_all(const std::vector<symbol_c *> &nodes) const {
   for (symbol_c *node : nodes)
     if (!owns(node)) return false;
+  return true;
+}
+
+bool AnalysisStore::owns_or_is_shared_all(
+    const std::vector<symbol_c *> &nodes) const {
+  for (symbol_c *node : nodes)
+    if (!owns_or_is_shared(node)) return false;
   return true;
 }
 
@@ -40,7 +51,8 @@ bool AnalysisStore::valid(const FlowAnalysisRecord &record) const {
 bool AnalysisStore::valid(const ConstantAnalysisRecord &) const { return true; }
 
 bool AnalysisStore::valid(const DatatypeAnalysisRecord &record) const {
-  return owns_all(record.candidates) && owns(record.selected) && owns(record.scope);
+  return owns_or_is_shared_all(record.candidates) &&
+         owns_or_is_shared(record.selected) && owns(record.scope);
 }
 
 bool AnalysisStore::valid(const ResolutionAnalysisRecord &record) const {
@@ -115,6 +127,8 @@ std::size_t AnalysisStore::size() const {
 std::size_t AnalysisStore::flow_size() const { return flow_.size(); }
 
 std::size_t AnalysisStore::constant_size() const { return constants_.size(); }
+
+std::size_t AnalysisStore::datatype_size() const { return datatypes_.size(); }
 
 void AnalysisStore::clear() {
   flow_.clear();

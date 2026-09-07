@@ -217,13 +217,14 @@ flowchart LR
     Context -. owns .-> Options[CompilerOptions]
     Context -. owns .-> Diagnostics[DiagnosticEngine]
     Context -. owns .-> Arena[AstArena]
+    Context -. owns .-> Analysis[AnalysisStore]
     Context -. owns .-> Output
 ```
 
 ### A compilation is an owned lifetime
 
-`CompilationContext` owns the options, diagnostics, AST arena, source manager, and
-output manager for one compilation. The source manager accepts either a path or
+`CompilationContext` owns the options, diagnostics, AST arena, typed analysis
+store, parser state, source manager, and output manager for one compilation. The source manager accepts either a path or
 owned source bytes with an independent diagnostic display name. Destroying the context releases its AST
 nodes and retained parser strings. Separate contexts support repeated,
 sequential compilations without leaking state between runs.
@@ -254,10 +255,11 @@ available at the generator-component boundary.
 
 ### Legacy code is contained
 
-The generated Flex/Bison frontend still has process-wide compatibility state.
-Access is isolated behind `LegacyGlobalStateAdapter`, reset for sequential use,
-and explicitly documented as non-thread-safe. Parallel compilation in one
-process is not supported yet.
+Parser runtime options and transition controls are context-owned. The generated
+Flex/Bison scanner buffers, include stack, Bison lookahead, and legacy symbol
+tables still have process-wide compatibility state isolated behind
+`LegacyGlobalStateAdapter`; parallel compilation in one process is therefore not
+supported yet.
 
 ## Embed from C++
 

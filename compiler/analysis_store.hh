@@ -79,6 +79,7 @@ class AnalysisStore {
   std::size_t size() const;
   std::size_t flow_size() const;
   std::size_t constant_size() const;
+  std::size_t datatype_size() const;
   void clear();
 
  private:
@@ -93,7 +94,9 @@ class AnalysisStore {
   }
 
   bool owns(const symbol_c *node) const;
+  bool owns_or_is_shared(const symbol_c *node) const;
   bool owns_all(const std::vector<symbol_c *> &nodes) const;
+  bool owns_or_is_shared_all(const std::vector<symbol_c *> &nodes) const;
   bool valid(const FlowAnalysisRecord &record) const;
   bool valid(const ConstantAnalysisRecord &) const;
   bool valid(const DatatypeAnalysisRecord &record) const;
