@@ -62,7 +62,7 @@ bool AnalysisStore::valid(const ResolutionAnalysisRecord &record) const {
 
 bool AnalysisStore::valid(const EnumerationAnalysisRecord &record) const {
   for (const auto &value : record.values)
-    if (!owns(value.second)) return false;
+    if (!owns_or_is_shared(value.second)) return false;
   return true;
 }
 
@@ -132,6 +132,10 @@ std::size_t AnalysisStore::constant_size() const { return constants_.size(); }
 std::size_t AnalysisStore::datatype_size() const { return datatypes_.size(); }
 
 std::size_t AnalysisStore::resolution_size() const { return resolutions_.size(); }
+
+std::size_t AnalysisStore::enumeration_size() const {
+  return enumerations_.size();
+}
 
 void AnalysisStore::clear() {
   flow_.clear();

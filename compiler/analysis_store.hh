@@ -43,7 +43,7 @@ struct ResolutionAnalysisRecord {
 };
 
 struct EnumerationAnalysisRecord {
-  std::map<std::string, symbol_c *> values;
+  symbol_c::enumvalue_symtable_t values;
 };
 
 struct GeneratorAnalysisRecord {
@@ -81,6 +81,7 @@ class AnalysisStore {
   std::size_t constant_size() const;
   std::size_t datatype_size() const;
   std::size_t resolution_size() const;
+  std::size_t enumeration_size() const;
   void clear();
 
  private:

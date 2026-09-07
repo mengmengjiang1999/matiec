@@ -9,6 +9,7 @@ libstage3_a_SOURCES = \
 	constant_analysis_store.cc \
 	datatype_analysis_store.cc \
 	resolution_analysis_store.cc \
+	enumeration_analysis_store.cc \
 	fill_candidate_datatypes.cc \
 	narrow_candidate_datatypes.cc \
 	forced_narrow_candidate_datatypes.cc \

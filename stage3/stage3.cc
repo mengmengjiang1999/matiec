@@ -49,6 +49,7 @@
 #include "constant_analysis_store.hh"
 #include "datatype_analysis_store.hh"
 #include "resolution_analysis_store.hh"
+#include "enumeration_analysis_store.hh"
 #include "declaration_check.hh"
 #include "enum_declaration_check.hh"
 #include "remove_forward_dependencies.hh"
@@ -56,10 +57,14 @@
 
 
 static int enum_declaration_check(symbol_c *tree_root,
-                                  matiec::DiagnosticEngine &diagnostics){
+                                  matiec::DiagnosticEngine &diagnostics,
+                                  matiec::AnalysisStore &analysis){
     enum_declaration_check_c enum_declaration_check(NULL, diagnostics);
     tree_root->accept(enum_declaration_check);
-    return enum_declaration_check.get_error_count();
+    int errors = enum_declaration_check.get_error_count();
+    if (!publish_enumeration_analysis(tree_root, analysis)) ++errors;
+    materialize_enumeration_analysis(tree_root, analysis);
+    return errors;
 }
 
 
@@ -218,7 +223,8 @@ int stage3(symbol_c *tree_root, symbol_c **ordered_tree_root,
 		[tree_root](matiec::CompilationContext &pass_context) {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::enum_declaration,
-			enum_declaration_check(tree_root, pass_context.diagnostics()));
+			enum_declaration_check(tree_root, pass_context.diagnostics(),
+			                       pass_context.analysis()));
 	});
 	passes.register_pass(matiec::SemanticPassId::flow_control,
 		[tree_root](matiec::CompilationContext &pass_context) {
