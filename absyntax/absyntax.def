@@ -806,7 +806,7 @@ SYM_LIST(var_init_decl_list_c)
 /* B 1.5.1 - Functions */
 /***********************/
 /* enumvalue_symtable is filled in by enum_declaration_check_c, during stage3 semantic verification, with a list of all enumerated constants declared inside this POU */
-SYM_REF4(function_declaration_c, derived_function_name, type_name, var_declarations_list, function_body, enumvalue_symtable_t enumvalue_symtable;)
+SYM_REF4(function_declaration_c, derived_function_name, type_name, var_declarations_list, function_body, enumvalue_symtable_t enumvalue_symtable; bool object_method_compatibility = false;)
 
 /* intermediate helper symbol for
  * - function_declaration

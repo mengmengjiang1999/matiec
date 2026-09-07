@@ -115,9 +115,10 @@ and populates it only after all experimental recognizers succeed, so a reused
 context cannot expose metadata from an earlier source.
 
 These records are a migration boundary, not a second semantic tree. Namespace and
-function-block method declarations and invocations now enter the primary AST. The
-method recognizer still creates compatibility function declarations, while an
-explicit AST pass binds native calls to those functions without rewriting call text.
+function-block method declarations and invocations now enter the primary AST. An
+explicit post-parse AST pass constructs method compatibility function declarations
+and binds native calls to them; method source is no longer appended or call text
+rewritten before parsing.
 Namespace recognition still performs provisional name resolution. Access-variable
 and modern library syntax still relies on source lowering. Consumers must not treat
 the side model as structural authority, rescan original source, or introduce

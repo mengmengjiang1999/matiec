@@ -26,11 +26,10 @@ int main() {
     assert(result.source.find("METHOD PUBLIC Increment : INT") !=
            std::string::npos);
     assert(result.source.find("END_METHOD") != std::string::npos);
-    assert(result.source.find("FUNCTION MATIECMETHOD7COUNTER9INCREMENT : INT") !=
+    assert(result.source == source);
+    assert(result.source.find("FUNCTION MATIECMETHOD7COUNTER9INCREMENT : INT") ==
            std::string::npos);
-    assert(result.source.find("MATIECSELFCOUNT := MATIECSELFCOUNT + Delta") !=
-           std::string::npos);
-    assert(result.source.find("MATIECSELFCOUNT : INT") != std::string::npos);
+    assert(result.source.find("MATIECSELFCOUNT") == std::string::npos);
     assert(result.source.find("Value := C.Increment(2)") != std::string::npos);
     assert(result.instance_types.at("C") == "COUNTER");
     assert(result.methods.front().owner_fields.size() == 1);

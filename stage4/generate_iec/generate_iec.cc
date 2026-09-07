@@ -144,7 +144,8 @@ void print_const_value(symbol_c *symbol) {
 
 void *print_token(token_c *token) {
   print_const_value(token);
-  return s4o.print(token->value);
+  return s4o.print(token->source_value == NULL ? token->value
+                                               : token->source_value);
 }
 
 
@@ -1211,6 +1212,7 @@ void *visit(var_init_decl_list_c *symbol) {
 /* B 1.5.1 - Functions */
 /***********************/
 void *visit(function_declaration_c *symbol) {
+  if (symbol->object_method_compatibility) return NULL;
   s4o.print("FUNCTION ");
   symbol->derived_function_name->accept(*this);
   s4o.print(" : ");
@@ -2270,7 +2272,6 @@ void *visit(continue_statement_c *symbol) {
 
 visitor_c *new_code_generator(stage4out_c *s4o, const char *builddir)  {return new generate_iec_c(s4o);}
 void delete_code_generator(visitor_c *code_generator) {delete code_generator;}
-
 
 
 

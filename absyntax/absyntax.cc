@@ -86,6 +86,7 @@ token_c::token_c(const char *value,
                  int ll, int lc, const char *lfile, long int lorder)
   :symbol_c(fl, fc, ffile, forder, ll, lc, lfile, lorder) {
   this->value = value;
+  this->source_value = NULL;
   this->token = this; // every token is its own reference token.
 //  printf("New token: %s\n", value);
 }
@@ -414,6 +415,5 @@ void *class_name_c::accept(visitor_c &visitor) {return visitor.visit(this);}
 #undef SYM_REF4
 #undef SYM_REF5
 #undef SYM_REF6
-
 
 

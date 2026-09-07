@@ -35,22 +35,28 @@ support for unimplemented or unverified elements.
 
 Enabled OO constructs SHALL have deterministic ownership, layout, dispatch, and C
 generation behavior covered by runtime tests while native method syntax and calls
-remain distinct from compatibility lowering.
+remain distinct from compatibility lowering. Compatibility declarations SHALL be
+constructed from the primary AST without appending generated source to parser input.
 
 #### Scenario: A method is statically dispatched
 
 - **WHEN** an instance invokes a supported public method
-- **THEN** an explicit AST compatibility pass binds the call and generated C calls the deterministic owner-and-method symbol exactly once
+- **THEN** explicit AST compatibility passes construct and bind the deterministic owner-and-method function representation exactly once
 
 #### Scenario: A bounded method updates owner state
 
 - **WHEN** a supported public method reads or writes a field of its owning function block
-- **THEN** generated C passes the affected caller-owned fields by reference and preserves the update
+- **THEN** the compatibility AST passes the affected caller-owned fields by reference and preserves the update
+
+#### Scenario: Method source remains authoritative
+
+- **WHEN** experimental source declares a supported method
+- **THEN** parser input retains the user method text and no generated compatibility function text is appended
 
 #### Scenario: Normalized IEC is generated
 
 - **WHEN** `iec2iec` processes a supported method and invocation with dependency ordering enabled
-- **THEN** the function block structurally contains one `METHOD` boundary and the invocation retains its receiver-and-method form
+- **THEN** output contains one owner-contained `METHOD` boundary, retains the native invocation, and omits synthetic compatibility declarations
 
 ### Requirement: Legacy profile isolation
 

@@ -6,6 +6,7 @@
 #include "compiler/namespace_normalizer.hh"
 #include "compiler/object_method_normalizer.hh"
 #include "compiler/object_method_call_lowering.hh"
+#include "compiler/object_method_compatibility_ast.hh"
 #include "compiler/utf8_validation.hh"
 
 #include "absyntax/absyntax.hh"
@@ -102,9 +103,11 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
       return CompilationResult::failure();
 
     if (language_profile_is_experimental(options.language_profile) &&
-        !lower_object_method_calls(tree_root, method_result,
-                                   context.diagnostics()))
-      return context.diagnostics().result();
+        (!construct_object_method_compatibility_ast(
+             tree_root, method_result, context.diagnostics()) ||
+         !lower_object_method_calls(tree_root, method_result,
+                                    context.diagnostics())))
+        return context.diagnostics().result();
 
     if (options.syntax_only)
       return CompilationResult::success();

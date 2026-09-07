@@ -261,6 +261,10 @@ class token_c: public symbol_c {
 
     /* the value of the symbol. */
     const char *value;
+    /* Original spelling retained when a compatibility AST pass assigns a
+     * lowered semantic name. Generators that preserve source structure may
+     * prefer this value when it is non-NULL. */
+    const char *source_value;
 
   public:
     token_c(const char *value, 

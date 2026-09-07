@@ -7,7 +7,6 @@
 #include <map>
 #include <regex>
 #include <set>
-#include <sstream>
 #include <utility>
 
 namespace matiec {
@@ -23,8 +22,6 @@ struct Line {
 
 struct MethodBlock {
   ObjectMethodAst ast;
-  std::size_t begin_line = 0;
-  std::size_t end_line = 0;
   std::map<std::string, std::string> owner_fields;
   std::set<std::string> locals;
 };
@@ -76,51 +73,6 @@ std::string lowered_method_name(const std::string &owner,
 bool match_line(const std::string &line, const std::regex &pattern,
                 std::smatch *match) {
   return std::regex_match(line, *match, pattern);
-}
-
-std::string rewrite_identifiers(const std::string &text,
-                                const std::map<std::string, std::string> &names) {
-  std::string output;
-  bool in_comment = false;
-  char quote = 0;
-  for (std::size_t pos = 0; pos < text.size();) {
-    if (in_comment) {
-      if (pos + 1 < text.size() && text[pos] == '*' && text[pos + 1] == ')') {
-        output += "*)"; pos += 2; in_comment = false;
-      } else {
-        output += text[pos++];
-      }
-      continue;
-    }
-    if (quote != 0) {
-      output += text[pos];
-      if (text[pos] == '$' && pos + 1 < text.size()) output += text[++pos];
-      else if (text[pos] == quote) quote = 0;
-      ++pos;
-      continue;
-    }
-    if (pos + 1 < text.size() && text[pos] == '(' && text[pos + 1] == '*') {
-      output += "(*"; pos += 2; in_comment = true; continue;
-    }
-    if (text[pos] == '\'' || text[pos] == '"') {
-      quote = text[pos]; output += text[pos++]; continue;
-    }
-    const unsigned char ch = static_cast<unsigned char>(text[pos]);
-    if (std::isalpha(ch) != 0 || ch == '_') {
-      const std::size_t begin = pos++;
-      while (pos < text.size()) {
-        const unsigned char next = static_cast<unsigned char>(text[pos]);
-        if (std::isalnum(next) == 0 && next != '_') break;
-        ++pos;
-      }
-      const std::string word = text.substr(begin, pos - begin);
-      const auto replacement = names.find(uppercase(word));
-      output += replacement == names.end() ? word : replacement->second;
-    } else {
-      output += text[pos++];
-    }
-  }
-  return output;
 }
 
 }  // namespace
@@ -209,7 +161,6 @@ bool normalize_experimental_object_methods(
     block.ast.return_type = trim(match[3].str());
     block.ast.lowered_name = lowered_method_name(owner, block.ast.name);
     block.ast.range = line_range(lines[index], source_path);
-    block.begin_line = index;
     block.owner_fields = owner_fields;
 
     bool in_method_vars = false;
@@ -231,7 +182,6 @@ bool normalize_experimental_object_methods(
                         line_range(lines[index], source_path));
       break;
     }
-    block.end_line = cursor;
     for (const auto &field : owner_fields) {
       if (block.locals.count(field.first) == 0)
         block.ast.owner_fields.push_back(field);
@@ -252,65 +202,6 @@ bool normalize_experimental_object_methods(
   }
   if (diagnostics.has_errors()) return false;
   result->instance_types = instance_types;
-  if (blocks.empty()) return true;
-
-  std::ostringstream generated;
-  for (const MethodBlock &block : blocks) {
-    generated << "\nFUNCTION " << block.ast.lowered_name << " : "
-              << block.ast.return_type << "\n";
-    std::string interface_declarations;
-    std::string body;
-    std::size_t line = block.begin_line + 1;
-    while (line < block.end_line) {
-      const std::string heading = uppercase(trim(lines[line].text));
-      if (heading.empty()) {
-        interface_declarations += lines[line].text +
-            (lines[line].has_newline ? "\n" : "");
-        ++line;
-        continue;
-      }
-      if (heading != "VAR_INPUT" && heading != "VAR_OUTPUT" &&
-          heading != "VAR_IN_OUT")
-        break;
-      for (; line < block.end_line; ++line) {
-        interface_declarations += lines[line].text +
-            (lines[line].has_newline ? "\n" : "");
-        std::smatch declaration_match;
-        if (match_line(lines[line].text, var_end, &declaration_match)) {
-          ++line;
-          break;
-        }
-      }
-    }
-    for (; line < block.end_line; ++line)
-      body += lines[line].text + (lines[line].has_newline ? "\n" : "");
-    std::map<std::string, std::string> names;
-    names[uppercase(block.ast.name)] = block.ast.lowered_name;
-    std::vector<std::pair<std::string, std::string> > hidden_fields;
-    for (const auto &field : block.owner_fields) {
-      if (block.locals.count(field.first) == 0) {
-        names[field.first] = "MATIECSELF" + field.first;
-        hidden_fields.push_back(field);
-      }
-    }
-    generated << rewrite_identifiers(interface_declarations, names);
-    if (!hidden_fields.empty()) {
-      generated << "  VAR_IN_OUT\n";
-      for (const auto &field : hidden_fields)
-        generated << "    MATIECSELF" << field.first << " : "
-                  << field.second << ";\n";
-      generated << "  END_VAR\n";
-    }
-    generated << rewrite_identifiers(body, names) << "END_FUNCTION\n";
-  }
-
-  std::string base;
-  for (std::size_t index = 0; index < lines.size(); ++index) {
-    base += lines[index].text;
-    if (lines[index].has_newline) base += '\n';
-  }
-
-  result->source = base + generated.str();
   return true;
 }
 

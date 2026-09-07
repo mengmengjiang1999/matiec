@@ -17,6 +17,7 @@ libcompiler_a_SOURCES = \
 	namespace_normalizer.cc \
 	object_method_normalizer.cc \
 	object_method_call_lowering.cc \
+	object_method_compatibility_ast.cc \
 	output_manager.cc \
 	output_sink.cc \
 	semantic_pass.cc \
