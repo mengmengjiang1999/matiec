@@ -2,6 +2,7 @@
 #define MATIEC_STAGE4_GENERATE_C_BASE_HH
 
 #include "generate_c_internal.hh"
+#include "../generator_analysis_access.hh"
 
 /*
  *  matiec - a compiler for the programming languages defined in IEC 61131-3
@@ -1022,9 +1023,10 @@ void *visit(enumerated_value_c *symbol) {}
 
 /*  identifier ':' array_spec_init */
 void *visit(array_type_declaration_c *symbol) {
-  int implicit_id_count = symbol->anotations_map.count("generate_c_annotaton__implicit_type_id");
-  if (1 != implicit_id_count) ERROR;
-  return symbol->anotations_map["generate_c_annotaton__implicit_type_id"]->accept(*this);
+  symbol_c *implicit_id = stage4_generator_symbol(
+      s4o, symbol, "generate_c_annotaton__implicit_type_id");
+  if (implicit_id == NULL) ERROR;
+  return implicit_id->accept(*this);
 }
 
 
@@ -1032,17 +1034,18 @@ void *visit(array_type_declaration_c *symbol) {
 /* array_specification [ASSIGN array_initialization] */
 /* array_initialization may be NULL ! */
 void *visit(array_spec_init_c *symbol) {
-  int implicit_id_count = symbol->anotations_map.count("generate_c_annotaton__implicit_type_id");
-  if (1 == implicit_id_count) return symbol->anotations_map["generate_c_annotaton__implicit_type_id"]->accept(*this);
-  if (0 == implicit_id_count) return symbol->datatype->accept(*this);
-  return NULL;
+  symbol_c *implicit_id = stage4_generator_symbol(
+      s4o, symbol, "generate_c_annotaton__implicit_type_id");
+  if (implicit_id != NULL) return implicit_id->accept(*this);
+  return symbol->datatype->accept(*this);
 }
 
 /* ARRAY '[' array_subrange_list ']' OF non_generic_type_name */
 void *visit(array_specification_c *symbol) {
-  int implicit_id_count = symbol->anotations_map.count("generate_c_annotaton__implicit_type_id");
-  if (1 != implicit_id_count) ERROR;
-  return symbol->anotations_map["generate_c_annotaton__implicit_type_id"]->accept(*this);
+  symbol_c *implicit_id = stage4_generator_symbol(
+      s4o, symbol, "generate_c_annotaton__implicit_type_id");
+  if (implicit_id == NULL) ERROR;
+  return implicit_id->accept(*this);
 }
 
 
@@ -1069,13 +1072,13 @@ void *visit(initialized_structure_c *symbol) {return symbol->structure_type_name
 /* ref_spec:  REF_TO (non_generic_type_name | function_block_type_name) */
 // SYM_REF1(ref_spec_c, type_name)
 void *visit(ref_spec_c *symbol) { 
-  int implicit_id_count = symbol->anotations_map.count("generate_c_annotaton__implicit_type_id");
-  if (implicit_id_count  > 1) ERROR;
-  if (implicit_id_count == 1) {
+  symbol_c *implicit_id = stage4_generator_symbol(
+      s4o, symbol, "generate_c_annotaton__implicit_type_id");
+  if (implicit_id != NULL) {
       /* this is part of an implicitly declared datatype (i.e. inside a variable decaration), for which an equivalent C datatype
        * has already been defined. So, we simly print out the id of that C datatpe...
        */
-    return symbol->anotations_map["generate_c_annotaton__implicit_type_id"]->accept(*this);
+    return implicit_id->accept(*this);
   }
   /* This is NOT part of an implicitly declared datatype (i.e. we are being called from an visit(ref_type_decl_c *),
    * through the visit(ref_spec_init_c*)), so we need to simply print out the name of the datatype we reference to.
@@ -1099,10 +1102,9 @@ void *visit(ref_spec_init_c *symbol) {
    *       we will keep track of the datatypes that have already been declared, and henceforth
    *       only declare the datatypes that have not been previously defined.
    */
-  int implicit_id_count = symbol->anotations_map.count("generate_c_annotaton__implicit_type_id");
-  if (1  < implicit_id_count) ERROR;
-  if (1 == implicit_id_count)
-    return symbol->anotations_map["generate_c_annotaton__implicit_type_id"]->accept(*this);
+  symbol_c *implicit_id = stage4_generator_symbol(
+      s4o, symbol, "generate_c_annotaton__implicit_type_id");
+  if (implicit_id != NULL) return implicit_id->accept(*this);
   return symbol->ref_spec->accept(*this); // this is probably pointing to an ***_identifier_c !!
 }
 
@@ -1118,9 +1120,8 @@ void *visit(ref_type_decl_c *symbol) {
    *       we will keep track of the datatypes that have already been declared, and henceforth
    *       only declare the datatypes that have not been previously defined.
    */
-  int implicit_id_count = symbol->anotations_map.count("generate_c_annotaton__implicit_type_id");
-  if (0 != implicit_id_count) ERROR;
-  //symbol->anotations_map["generate_c_annotaton__implicit_type_id"]->accept(generate_c_base);
+  if (stage4_generator_symbol(s4o, symbol,
+      "generate_c_annotaton__implicit_type_id") != NULL) ERROR;
   return symbol->ref_type_name->accept(*this);
 }
 
@@ -1128,7 +1129,6 @@ void *visit(ref_type_decl_c *symbol) {
 }; /* class generate_c_base_and_typeid_c */
 
 #endif
-
 
 
 

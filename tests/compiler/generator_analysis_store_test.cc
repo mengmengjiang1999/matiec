@@ -1,4 +1,5 @@
 #include "compiler/compilation_context.hh"
+#include "stage4/generator_analysis_access.hh"
 #include "stage4/generator_analysis_store.hh"
 
 #include <cassert>
@@ -9,9 +10,13 @@ int main() {
   integer_c *literal = context.ast_arena().make<integer_c>("42");
   identifier_c *implicit_type =
       context.ast_arena().make<identifier_c>("__implicit_1");
-  literal->anotations_map["implicit_type"] = implicit_type;
+  stage4out_c output(context.outputs(), "  ", &context.analysis());
+  assert(stage4_set_generator_symbol(output, literal, "implicit_type",
+                                     implicit_type));
+  assert(stage4_generator_symbol(output, literal, "implicit_type") ==
+         implicit_type);
+  assert(literal->anotations_map.empty());
 
-  assert(publish_generator_analysis(literal, context.analysis()));
   assert(context.analysis().generator_size() == 1);
   const matiec::AnalysisEntry<matiec::GeneratorAnalysisRecord> *entry =
       context.analysis().generator(literal);
@@ -19,9 +24,14 @@ int main() {
   assert(entry->value.symbols.size() == 1);
   assert(entry->value.symbols.at("implicit_type") == implicit_type);
 
-  literal->anotations_map.clear();
   materialize_generator_analysis(literal, context.analysis());
   assert(literal->anotations_map.at("implicit_type") == implicit_type);
+
+  stage4out_c detached(context.outputs());
+  assert(!stage4_set_generator_symbol(detached, literal, "detached",
+                                      implicit_type));
+  assert(stage4_generator_symbol(detached, literal, "implicit_type") ==
+         nullptr);
 
   matiec::CompilationContext other;
   matiec::ActiveAstArenaScope other_scope(other.ast_arena());
@@ -29,6 +39,7 @@ int main() {
   matiec::GeneratorAnalysisRecord invalid = entry->value;
   invalid.symbols["foreign"] = foreign;
   assert(!context.analysis().set_generator(literal, invalid));
+  assert(!context.analysis().set_generator_symbol(literal, "foreign", foreign));
   assert(context.analysis().generator(literal)->value.symbols.size() == 1);
 
   context.analysis().clear();

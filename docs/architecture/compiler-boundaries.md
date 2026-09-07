@@ -60,14 +60,15 @@ candidate vectors, and final datatype/scope selections are published there at
 their completed phase boundaries and materialized only for unmigrated legacy
 consumers. Invocation declaration resolution is also published after narrowing,
 scope-specific enumeration multimaps after enumeration checking, and named
-generator annotations after successful Stage 4 output. All typed record families
+generator annotations are updated live during Stage 4. All typed record families
 now have production boundaries; compatibility materializers remain until their
 legacy consumers migrate to direct store access. Invocation resolution has crossed
 that boundary: lvalue validation and Stage 4 use typed store lookups, while the
 producer's temporary AST fields remain confined to type-safety processing.
 Enumeration lookup tables also remain store-owned after their completed pass,
 with no production materialization because downstream passes do not read the AST
-compatibility tables.
+compatibility tables. Generator visitors exchange implicit-type identifiers
+through typed records and do not publish or materialize AST annotation maps.
 
 ## Generated output
 

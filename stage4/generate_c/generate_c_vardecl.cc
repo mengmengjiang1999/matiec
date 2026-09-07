@@ -206,13 +206,13 @@ class generate_c_array_initialization_c: public generate_c_base_and_typeid_c {
           if (array_default_value == NULL) ERROR;
           break;
         case typedecl_am: {
-            int implicit_id_count = symbol->anotations_map.count("generate_c_annotaton__implicit_type_id");
-            if (implicit_id_count  > 1) ERROR;
-            if (implicit_id_count == 1)
+            symbol_c *implicit_id = stage4_generator_symbol(
+                s4o, symbol, "generate_c_annotaton__implicit_type_id");
+            if (implicit_id != NULL)
                 /* this is part of an implicitly declared datatype (i.e. inside a variable decaration), for which an equivalent C datatype
                  * has already been defined. So, we simly print out the id of that C datatpe...
                  */
-              symbol->anotations_map["generate_c_annotaton__implicit_type_id"]->accept(*this);
+              implicit_id->accept(*this);
             else
               symbol->non_generic_type_name->accept(*this);
             break;

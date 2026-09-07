@@ -560,9 +560,14 @@ void *visit(array_type_declaration_c *symbol) {
   current_typedefinition = none_td;
 
 end:  
-  symbol                 ->anotations_map["generate_c_annotaton__implicit_type_id"] = id;
-  symbol->datatype       ->anotations_map["generate_c_annotaton__implicit_type_id"] = id;
-  symbol->array_spec_init->anotations_map["generate_c_annotaton__implicit_type_id"] = id; // probably not needed, bu let's play safe.
+  /* Synthetic declarations used during Stage 4 are stack-owned and are not
+   * retained. Arena-owned participants receive the reusable identifier. */
+  stage4_set_generator_symbol(s4o, symbol,
+      "generate_c_annotaton__implicit_type_id", id);
+  stage4_set_generator_symbol(s4o, symbol->datatype,
+      "generate_c_annotaton__implicit_type_id", id);
+  stage4_set_generator_symbol(s4o, symbol->array_spec_init,
+      "generate_c_annotaton__implicit_type_id", id);
   
   return NULL;
 }
@@ -1023,12 +1028,13 @@ void *visit(direct_variable_c *symbol) {
  */
 class generate_c_implicit_typedecl_c: public iterator_visitor_c {
   private:
+    stage4out_c &s4o;
     generate_c_typedecl_c *generate_c_typedecl_;
     generate_c_typedecl_c  generate_c_typedecl_local;
     symbol_c *prefix;
   public:
-    generate_c_implicit_typedecl_c(stage4out_c *s4o, generate_c_typedecl_c *generate_c_typedecl=NULL) 
-      : generate_c_typedecl_local(s4o) {
+    generate_c_implicit_typedecl_c(stage4out_c *s4o_ptr, generate_c_typedecl_c *generate_c_typedecl=NULL)
+      : s4o(*s4o_ptr), generate_c_typedecl_local(s4o_ptr) {
         generate_c_typedecl_ = generate_c_typedecl;
         if (NULL == generate_c_typedecl_) 
           generate_c_typedecl_ = &generate_c_typedecl_local;
@@ -1060,7 +1066,8 @@ class generate_c_implicit_typedecl_c: public iterator_visitor_c {
       ref_spec_init_c   ref_spec(symbol, NULL);
       ref_type_decl_c   ref_decl(id, &ref_spec);
       ref_decl.accept(*generate_c_typedecl_);
-      symbol->anotations_map["generate_c_annotaton__implicit_type_id"] = id;
+      if (!stage4_set_generator_symbol(s4o, symbol,
+              "generate_c_annotaton__implicit_type_id", id)) ERROR;
       return NULL;
     }
 
@@ -1070,10 +1077,11 @@ class generate_c_implicit_typedecl_c: public iterator_visitor_c {
     // SYM_REF2(ref_spec_init_c, ref_spec, ref_initialization)
     void *visit(ref_spec_init_c *symbol) {
       symbol->ref_spec->accept(*this); //--> always calls ref_spec_c or derived_datatype_identifier_c
-      int implicit_id_count = symbol->ref_spec->anotations_map.count("generate_c_annotaton__implicit_type_id");
-      if (implicit_id_count  > 1) ERROR;
-      if (implicit_id_count == 1)
-        symbol->anotations_map["generate_c_annotaton__implicit_type_id"] = symbol->ref_spec->anotations_map["generate_c_annotaton__implicit_type_id"];
+      symbol_c *implicit_id = stage4_generator_symbol(
+          s4o, symbol->ref_spec, "generate_c_annotaton__implicit_type_id");
+      if (implicit_id != NULL &&
+          !stage4_set_generator_symbol(s4o, symbol,
+              "generate_c_annotaton__implicit_type_id", implicit_id)) ERROR;
       return NULL;
     }
 
@@ -1091,10 +1099,12 @@ class generate_c_implicit_typedecl_c: public iterator_visitor_c {
     /* array_initialization may be NULL ! */
     void *visit(array_spec_init_c *symbol) {
       symbol->array_specification->accept(*this); //--> always calls array_specification_c or derived_datatype_identifier_c
-      int implicit_id_count = symbol->array_specification->anotations_map.count("generate_c_annotaton__implicit_type_id");
-      if (implicit_id_count  > 1) ERROR;
-      if (implicit_id_count == 1)
-        symbol->anotations_map["generate_c_annotaton__implicit_type_id"] = symbol->array_specification->anotations_map["generate_c_annotaton__implicit_type_id"];
+      symbol_c *implicit_id = stage4_generator_symbol(
+          s4o, symbol->array_specification,
+          "generate_c_annotaton__implicit_type_id");
+      if (implicit_id != NULL &&
+          !stage4_set_generator_symbol(s4o, symbol,
+              "generate_c_annotaton__implicit_type_id", implicit_id)) ERROR;
       return NULL;
     }
 
@@ -1111,7 +1121,8 @@ class generate_c_implicit_typedecl_c: public iterator_visitor_c {
       array_decl.datatype = symbol->datatype;
       array_spec.datatype = symbol->datatype;
       array_decl.accept(*generate_c_typedecl_);
-      symbol->anotations_map["generate_c_annotaton__implicit_type_id"] = id;
+      if (!stage4_set_generator_symbol(s4o, symbol,
+              "generate_c_annotaton__implicit_type_id", id)) ERROR;
       return NULL;
     }
     
@@ -1185,4 +1196,3 @@ visitor_c &generate_c_type_generators_c::implicit_declarations(void) {
 visitor_c *new_generate_c_implicit_typedecl_generator(stage4out_c *s4o_ptr) {
   return new generate_c_implicit_typedecl_c(s4o_ptr);
 }
-

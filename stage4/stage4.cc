@@ -183,7 +183,7 @@ void stage4err(const char *stage4_generator_id, symbol_c *symbol1, symbol_c *sym
 
 stage4out_c::stage4out_c(matiec::OutputManager &output_manager,
                          std::string indent_level,
-                         const matiec::AnalysisStore *analysis_store)
+                         matiec::AnalysisStore *analysis_store)
     : outputs(output_manager), sink(outputs.standard_output()), out(&buffer),
       analysis(analysis_store) {
   this->indent_level = indent_level;
@@ -194,7 +194,7 @@ stage4out_c::stage4out_c(matiec::OutputManager &output_manager,
 stage4out_c::stage4out_c(matiec::OutputManager &output_manager, const char *dir,
                          const char *radix, const char *extension,
                          std::string indent_level,
-                         const matiec::AnalysisStore *analysis_store)
+                         matiec::AnalysisStore *analysis_store)
     : outputs(output_manager),
       sink(outputs.create_file([&]() {
   std::string filename(radix);
@@ -238,6 +238,10 @@ matiec::OutputManager &stage4out_c::output_manager(void) {
 }
 
 const matiec::AnalysisStore *stage4out_c::analysis_store(void) const {
+  return analysis;
+}
+
+matiec::AnalysisStore *stage4out_c::mutable_analysis_store(void) {
   return analysis;
 }
 
@@ -394,8 +398,6 @@ int stage4(symbol_c *tree_root, matiec::CompilationContext &context) {
 
   s4o.flush();
   if (context.outputs().has_errors()) return -1;
-  if (!publish_generator_analysis(tree_root, context.analysis())) return -1;
-  materialize_generator_analysis(tree_root, context.analysis());
 
   return 0;
 }

@@ -107,6 +107,14 @@ bool AnalysisStore::set_generator(const symbol_c *key,
   return set(generators_, key, std::move(record), status);
 }
 
+bool AnalysisStore::set_generator_symbol(const symbol_c *key,
+                                         const std::string &name,
+                                         symbol_c *value) {
+  if (key == nullptr || !owns(key) || !owns_or_is_shared(value)) return false;
+  generators_[key].value.symbols[name] = value;
+  return true;
+}
+
 const AnalysisEntry<FlowAnalysisRecord> *AnalysisStore::flow(
     const symbol_c *key) const { return find(flow_, key); }
 const AnalysisEntry<ConstantAnalysisRecord> *AnalysisStore::constant(
@@ -119,6 +127,15 @@ const AnalysisEntry<EnumerationAnalysisRecord> *AnalysisStore::enumeration(
     const symbol_c *key) const { return find(enumerations_, key); }
 const AnalysisEntry<GeneratorAnalysisRecord> *AnalysisStore::generator(
     const symbol_c *key) const { return find(generators_, key); }
+
+symbol_c *AnalysisStore::generator_symbol(const symbol_c *key,
+                                          const std::string &name) const {
+  const AnalysisEntry<GeneratorAnalysisRecord> *entry = generator(key);
+  if (entry == nullptr) return nullptr;
+  std::map<std::string, symbol_c *>::const_iterator value =
+      entry->value.symbols.find(name);
+  return value == entry->value.symbols.end() ? nullptr : value->second;
+}
 
 std::size_t AnalysisStore::size() const {
   return flow_.size() + constants_.size() + datatypes_.size() +

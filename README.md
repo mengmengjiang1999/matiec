@@ -231,13 +231,15 @@ sequential compilations without leaking state between runs.
 
 Semantic flow, constants, datatype candidates, final datatype/scope selections,
 invocation declaration resolution, and scope-specific enumeration tables are
-retained in that store. Named generator annotations are published after successful
-Stage 4 output. All six typed record families now have production boundaries;
+retained in that store. Stage 4 writes and reads named generator annotations there
+as it emits output. All six typed record families now have production boundaries;
 compatibility annotations are materialized only where legacy consumers still
 require them. Lvalue validation and Stage 4 read invocation resolution directly
 from the store, so completed resolution results are no longer copied back onto
 the AST for downstream use. Completed scope-specific enumeration tables likewise
 remain store-owned; no production pass requires their AST compatibility copies.
+Generator annotations also remain off the AST in production and need no
+post-generation publish/materialize cycle.
 
 ### Semantics are explicit passes
 

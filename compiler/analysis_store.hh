@@ -68,6 +68,8 @@ class AnalysisStore {
                        AnalysisStatus status = AnalysisStatus::valid);
   bool set_generator(const symbol_c *key, GeneratorAnalysisRecord record,
                      AnalysisStatus status = AnalysisStatus::valid);
+  bool set_generator_symbol(const symbol_c *key, const std::string &name,
+                            symbol_c *value);
 
   const AnalysisEntry<FlowAnalysisRecord> *flow(const symbol_c *key) const;
   const AnalysisEntry<ConstantAnalysisRecord> *constant(const symbol_c *key) const;
@@ -75,6 +77,8 @@ class AnalysisStore {
   const AnalysisEntry<ResolutionAnalysisRecord> *resolution(const symbol_c *key) const;
   const AnalysisEntry<EnumerationAnalysisRecord> *enumeration(const symbol_c *key) const;
   const AnalysisEntry<GeneratorAnalysisRecord> *generator(const symbol_c *key) const;
+  symbol_c *generator_symbol(const symbol_c *key,
+                             const std::string &name) const;
 
   std::size_t size() const;
   std::size_t flow_size() const;
