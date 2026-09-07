@@ -28,7 +28,6 @@ int main() {
         "Value := Factory.Motion.Read(Value);\nEND_PROGRAM\n";
     assert(normalize(source, &diagnostics, &result));
     assert(result.used_namespaces);
-    assert(result.declarations.size() == 1);
     assert(result.source.find("NAMESPACE Factory.Motion") != std::string::npos);
     assert(result.source.find("END_NAMESPACE") != std::string::npos);
     assert(result.source.find("MATIECNS7FACTORY6MOTION5SPEED") !=

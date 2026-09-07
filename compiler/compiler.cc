@@ -4,6 +4,7 @@
 #include "compiler/compilation_abort.hh"
 #include "compiler/legacy_global_state_adapter.hh"
 #include "compiler/modern_library_normalizer.hh"
+#include "compiler/namespace_ast_analysis.hh"
 #include "compiler/namespace_normalizer.hh"
 #include "compiler/object_method_ast_analysis.hh"
 #include "compiler/object_method_call_lowering.hh"
@@ -61,6 +62,7 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     CompilerOptions &options = context.options();
 
     NamespaceNormalizeResult namespace_result;
+    NamespaceAnalysisResult namespace_analysis;
     ObjectMethodAnalysisResult method_result;
     AccessVariableNormalizeResult access_result;
     ModernLibraryNormalizeResult modern_library_result;
@@ -77,7 +79,6 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
       if (modern_library_result.used_modern_library)
         requires_void_datatype = true;
       ExperimentalSyntaxModel &syntax = context.experimental_syntax();
-      syntax.namespaces = namespace_result.declarations;
       syntax.library_functions = modern_library_result.functions;
       source = std::move(modern_library_result.source);
     }
@@ -96,10 +97,13 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     if (language_profile_is_experimental(options.language_profile)) {
       if (!analyze_access_variables_from_ast(
               tree_root, context.diagnostics(), &access_result) ||
+          !analyze_namespaces_from_ast(
+              tree_root, context.diagnostics(), &namespace_analysis) ||
           !analyze_object_methods_from_ast(
               tree_root, context.diagnostics(), &method_result))
         return context.diagnostics().result();
       context.experimental_syntax().access_variables = access_result.declarations;
+      context.experimental_syntax().namespaces = namespace_analysis.declarations;
       context.experimental_syntax().methods = method_result.methods;
     }
 

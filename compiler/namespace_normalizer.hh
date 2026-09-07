@@ -13,7 +13,6 @@ class DiagnosticEngine;
 
 struct NamespaceNormalizeResult {
   std::string source;
-  std::vector<NamespaceDeclarationAst> declarations;
   bool used_namespaces = false;
 };
 

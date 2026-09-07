@@ -172,7 +172,6 @@ bool normalize_experimental_namespaces(std::string_view source,
                                        NamespaceNormalizeResult *result) {
   if (result == nullptr) return false;
   result->source = std::string(source);
-  result->declarations.clear();
   result->used_namespaces = false;
 
   const std::vector<Token> tokens = tokenize(source);
@@ -180,6 +179,7 @@ bool normalize_experimental_namespaces(std::string_view source,
   std::map<std::string, NamespaceVisibility> namespaces;
   std::map<std::string, std::vector<std::string> > imports;
   std::map<std::string, Symbol> symbols;
+  std::vector<NamespaceDeclarationAst> declarations;
   std::set<std::size_t> declaration_tokens;
   std::set<std::size_t> syntax_tokens;
   std::vector<Replacement> replacements;
@@ -221,7 +221,7 @@ bool normalize_experimental_namespaces(std::string_view source,
         declaration.name = display;
         declaration.visibility = visibility;
         declaration.range = token_range(tokens[cursor], source_path);
-        result->declarations.push_back(std::move(declaration));
+        declarations.push_back(std::move(declaration));
       }
       for (std::size_t item = statement_index; item < after; ++item)
         syntax_tokens.insert(item);
@@ -252,7 +252,7 @@ bool normalize_experimental_namespaces(std::string_view source,
       } else {
         imports[scope].push_back(canonical);
         if (!scope.empty()) {
-          for (NamespaceDeclarationAst &declaration : result->declarations) {
+          for (NamespaceDeclarationAst &declaration : declarations) {
             if (uppercase(declaration.name) == scope) {
               declaration.imports.push_back(
                   {display, token_range(tokens[cursor], source_path)});

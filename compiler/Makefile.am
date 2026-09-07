@@ -15,6 +15,7 @@ libcompiler_a_SOURCES = \
 	legacy_global_state_adapter.cc \
 	language_feature_catalog.cc \
 	modern_library_normalizer.cc \
+	namespace_ast_analysis.cc \
 	namespace_normalizer.cc \
 	object_method_ast_analysis.cc \
 	object_method_call_lowering.cc \

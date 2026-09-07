@@ -120,8 +120,9 @@ function-block method declarations and invocations now enter the primary AST. An
 explicit post-parse AST analysis derives method, field, and receiver metadata before
 compatibility passes construct function declarations and bind native calls; method
 source is not rescanned, appended, or rewritten before parsing.
-Namespace recognition still performs provisional name resolution. Modern library
-syntax still relies on source lowering. Consumers must not treat
+Namespace structure and metadata now come from post-parse AST analysis; a bounded
+pre-parse spelling bridge remains for legacy lexer symbol classification. Modern
+library syntax still relies on source lowering. Consumers must not treat
 the side model as structural authority, rescan original source, or introduce
 process-wide caches.
 

@@ -111,6 +111,18 @@ int main() {
   assert(matiec::Compiler().compile(reusable).succeeded());
   assert(reusable.experimental_syntax().library_functions.size() == 1);
   assert(!reusable.options().allow_void_datatype);
+  const std::string namespace_source =
+      "NAMESPACE Factory.Motion\n"
+      "TYPE Speed : INT; END_TYPE\nEND_NAMESPACE\n"
+      "USING Factory.Motion;\n"
+      "PROGRAM NamespaceMain\nVAR Value : Factory.Motion.Speed; END_VAR\n"
+      "Value := Value;\nEND_PROGRAM\n";
+  reusable.set_source("memory://namespace.st", namespace_source);
+  assert(matiec::Compiler().compile(reusable).succeeded());
+  assert(reusable.experimental_syntax().namespaces.size() == 1);
+  assert(reusable.experimental_syntax().namespaces[0].name == "Factory.Motion");
+  assert(reusable.experimental_syntax().namespaces[0].visibility ==
+         matiec::NamespaceVisibility::public_);
   const std::string method_source =
       "FUNCTION_BLOCK Counter\nVAR Count : INT; END_VAR\n"
       "Count := Count;\nMETHOD PUBLIC Read : INT\n"

@@ -40,12 +40,11 @@ this first subset.
 
 ## Lowering and generated output
 
-The experimental front end first validates namespace declarations into a
-context-owned resolution model. It preserves the validated structural syntax for
-the main parser, which creates native nodes for namespace declarations, visibility,
-qualified namespace names, contained declarations, and `USING` directives.
-Semantic visitors and `-p` dependency ordering retain those wrappers. The resolver
-still lowers each qualified declaration before parsing to a deterministic identifier
+The main parser creates native nodes for namespace declarations, visibility,
+qualified namespace names, contained declarations, and `USING` directives. A
+post-parse analysis validates that structure and exclusively populates the
+context-owned namespace metadata. Semantic visitors and `-p` dependency ordering
+retain those wrappers. A legacy parser spelling bridge still lowers each qualified declaration before parsing to a deterministic identifier
 made from length-prefixed segments. For example, `Factory.Motion.Speed` becomes:
 
 ```text
@@ -55,7 +54,9 @@ MATIECNS7FACTORY6MOTION5SPEED
 Generated C emits no namespace wrapper, but recursively consumes its declarations;
 `iec2iec` preserves the wrapper and `USING` structure. Both outputs currently expose
 the lowered spelling. It is an experimental implementation detail, not a stable
-external ABI. The original source filename and line are retained for parser
+external ABI. The bridge exists only because the legacy lexer classifies declarations
+and uses by their flattened spelling; it is not the structural metadata authority.
+The original source filename and line are retained for parser
 diagnostics, although columns after a length-changing lowered name may differ from
 the original source column.
 
@@ -63,5 +64,5 @@ the original source column.
 
 Aliases, namespace reopening, local shadowing, nested block syntax, import
 transitivity, and a stable public ABI spelling are not implemented. Includes are
-still handled by the legacy parser; namespace resolution currently analyzes the
+still handled by the legacy parser; the namespace parser bridge currently analyzes the
 entry source file, so namespace declarations must not be split across include files.

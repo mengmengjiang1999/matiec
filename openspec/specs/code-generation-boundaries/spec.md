@@ -78,3 +78,13 @@ from metadata produced by post-parse analysis of the primary AST.
 
 - **WHEN** the parsed AST contains a supported public method and invocation
 - **THEN** AST analysis completes before compatibility declarations or invocations are created
+
+### Requirement: Namespace side metadata mirrors parsed structure
+
+Namespace side metadata SHALL mirror primary AST structure and SHALL NOT be copied
+from a pre-parse recognizer.
+
+#### Scenario: Parsing succeeds
+
+- **WHEN** the experimental parser accepts namespace wrappers and imports
+- **THEN** the namespace analysis result is derived from those parsed nodes before semantic generation
