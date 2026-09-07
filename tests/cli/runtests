@@ -420,6 +420,12 @@ fi
 expect_failure assert-invalid "Incompatible data types" \
   "$IEC2C" --std=iec61131-3:2025-experimental -f -l -p \
   -I "$MATIEC_LIBDIR" "$SCRIPT_DIR/profile-fixtures/assert-invalid.st"
+if ! grep -q 'assert-invalid.st:5' "$TMP_ROOT/assert-invalid.stderr"; then
+  echo "[ERROR]    assert-invalid-source-location -> diagnostic was displaced from user source"
+  error=1
+else
+  echo "[ O K ]    assert-invalid-source-location"
+fi
 
 if "$IEC2C" --std=iec61131-3:2025-experimental -y -f -l -p \
      -I "$MATIEC_LIBDIR" "$SCRIPT_DIR/profile-fixtures/assert-multiline.st" \

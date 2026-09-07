@@ -542,9 +542,10 @@ ASSERT(Speed <= MaximumSpeed);
 当前实现会对条件求值，然后继续执行；无论结果真假都不产生外部通知。这是明确
 记录的发布态 no-op 策略。调用采用普通 ST 函数调用格式，可以跨行并在记号间
 包含块注释；它不能嵌入表达式，也不能取得 `VOID` 返回值。
-前端会为使用该调用的编译单元注入实验性 `VOID` 声明；生成的 C 名称不是源码 API
-或稳定 ABI。legacy Profile 不做此转换，所以已有项目自定义的表达式函数
-`ASSERT` 保持不变。详见
+实验 Profile 会在 parser 边界注册函数名，并在解析后为实际使用该调用的编译单元
+构造编译器自有的 `VOID` AST 声明；用户源码不会被注入或改写，诊断位置保持原样。
+生成的 C 名称不是源码 API 或稳定 ABI。legacy Profile 不注册该名称；两个 Profile
+都会保留项目自定义的表达式函数 `ASSERT`，且不会额外添加内建声明。详见
 [实验性 ASSERT 语义](standards/experimental-assert-semantics.md)。
 
 ## 8. Structured Text（ST）

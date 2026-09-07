@@ -28,6 +28,8 @@ LegacyGlobalStateAdapter::LegacyGlobalStateAdapter(
       options.language_profile == LanguageProfile::iec61131_3_2025_experimental;
   runtime_options.iec2025_experimental =
       options.language_profile == LanguageProfile::iec61131_3_2025_experimental;
+  runtime_options.register_experimental_assert =
+      options.language_profile == LanguageProfile::iec61131_3_2025_experimental;
   runtime_options.relaxed_datatype_model = options.relaxed_datatype_model;
   runtime_options.includedir = options.include_directory.empty()
                                   ? NULL

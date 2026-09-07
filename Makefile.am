@@ -12,6 +12,7 @@ TESTS_ENVIRONMENT = \
 	SEQUENTIAL_VALID_INPUT='$(abs_top_srcdir)/tests/initialization/ok_array_scalar.st'
 
 TESTS = \
+	modern_library_registry_test \
 	sequential_compilation_test \
 	in_memory_generator_test \
 	tests/generated_c/runtests \
@@ -83,7 +84,11 @@ iec2c_SOURCES = main.cc
 
 iec2iec_SOURCES = main.cc
 
-check_PROGRAMS = sequential_compilation_test in_memory_generator_test
+check_PROGRAMS = modern_library_registry_test sequential_compilation_test in_memory_generator_test
+
+modern_library_registry_test_SOURCES = \
+	tests/compiler/modern_library_registry_test.cc
+modern_library_registry_test_LDADD = $(iec2c_LDADD)
 
 sequential_compilation_test_SOURCES = \
 	tests/compiler/sequential_compilation_test.cc

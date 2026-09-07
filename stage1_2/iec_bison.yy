@@ -103,6 +103,8 @@ void yyerror (const char *error_msg);
 #include "create_enumtype_conversion_functions.hh"
 #include "../compiler/ast_arena.hh"
 
+#include <cctype>
+
 #include "../absyntax_utils/add_en_eno_param_decl.hh"	/* required for  add_en_eno_param_decl_c */
 
 /* an ugly hack!!
@@ -163,6 +165,23 @@ void yyerror (const char *error_msg);
 
 
 #include "../main.hh" // required for ERROR() and ERROR_MSG() macros.
+
+static bool is_profile_assert_invocation(symbol_c *symbol) {
+  function_invocation_c *invocation =
+      dynamic_cast<function_invocation_c *>(symbol);
+  token_c *name = invocation == NULL
+      ? NULL : dynamic_cast<token_c *>(invocation->function_name);
+  if (!runtime_options.register_experimental_assert || name == NULL ||
+      strlen(name->value) != 6)
+    return false;
+  const char expected[] = "ASSERT";
+  for (size_t index = 0; index < 6; ++index) {
+    if (std::toupper(static_cast<unsigned char>(name->value[index])) !=
+        expected[index])
+      return false;
+  }
+  return true;
+}
 
 
 
@@ -8041,7 +8060,8 @@ statement:
 	{ /* This is a non-standard extension (calling a function outside an ST expression!) */
 	  /* Only allow this if command line option has been selected...                     */
 	  $$ = $1; 
-	  if (!runtime_options.allow_void_datatype) {
+	  if (!runtime_options.allow_void_datatype &&
+	      !is_profile_assert_invocation($1)) {
 	    print_err_msg(locf(@1), locl(@1), "Function invocation in ST code is not allowed outside an expression. To allow this non-standard syntax, activate the apropriate command line option."); 
 	    yynerrs++;
 	  }

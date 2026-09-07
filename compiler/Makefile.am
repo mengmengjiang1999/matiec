@@ -14,7 +14,7 @@ libcompiler_a_SOURCES = \
 	diagnostic_engine.cc \
 	legacy_global_state_adapter.cc \
 	language_feature_catalog.cc \
-	modern_library_normalizer.cc \
+	modern_library_registry.cc \
 	namespace_ast_analysis.cc \
 	namespace_normalizer.cc \
 	object_method_ast_analysis.cc \
@@ -27,7 +27,7 @@ libcompiler_a_SOURCES = \
 	source_manager.cc \
 	utf8_validation.cc
 
-check_PROGRAMS = access_variable_normalizer_test ast_arena_test compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test language_feature_catalog_test modern_library_normalizer_test namespace_normalizer_test output_sink_test semantic_pass_test source_manager_test utf8_validation_test
+check_PROGRAMS = access_variable_normalizer_test ast_arena_test compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test language_feature_catalog_test namespace_normalizer_test output_sink_test semantic_pass_test source_manager_test utf8_validation_test
 TESTS = $(check_PROGRAMS)
 
 access_variable_normalizer_test_SOURCES = tests/access_variable_normalizer_test.cc
@@ -50,9 +50,6 @@ diagnostic_engine_test_LDADD = libcompiler.a
 
 language_feature_catalog_test_SOURCES = tests/language_feature_catalog_test.cc
 language_feature_catalog_test_LDADD = libcompiler.a
-
-modern_library_normalizer_test_SOURCES = tests/modern_library_normalizer_test.cc
-modern_library_normalizer_test_LDADD = libcompiler.a
 
 namespace_normalizer_test_SOURCES = tests/namespace_normalizer_test.cc
 namespace_normalizer_test_LDADD = libcompiler.a

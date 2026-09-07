@@ -110,7 +110,14 @@ int main() {
   reusable.set_source("memory://experimental.st", experimental_source);
   assert(matiec::Compiler().compile(reusable).succeeded());
   assert(reusable.experimental_syntax().library_functions.size() == 1);
+  assert(reusable.experimental_syntax().library_functions[0].range.begin.line ==
+         3);
   assert(!reusable.options().allow_void_datatype);
+  reusable.set_source("memory://experimental-void.st",
+                      "FUNCTION UserVoid : VOID\nEND_FUNCTION\n");
+  assert(!matiec::Compiler().compile(reusable).succeeded());
+  reusable.set_source("memory://experimental.st", experimental_source);
+  assert(matiec::Compiler().compile(reusable).succeeded());
   const std::string namespace_source =
       "NAMESPACE Factory.Motion\n"
       "TYPE Speed : INT; END_TYPE\nEND_NAMESPACE\n"

@@ -43,8 +43,8 @@ The compiler executes these boundaries in order:
    the context's active AST arena.
 2. Experimental AST analysis and compatibility passes validate native constructs
    that still use legacy semantic implementations. Access-variable metadata is
-   collected here, and function-block method calls are resolved without
-   pre-parser source-text replacement.
+   collected here, function-block method calls are resolved, and profile-owned
+   library declarations are registered as AST without source-text injection.
 3. Legacy symbol-table initialization prepares declaration lookup.
 4. `SemanticPassManager` runs the explicit Stage 3 pass order and stops after a
    failed pass. Pass IDs, prerequisites, and per-pass results are declared in
@@ -122,9 +122,10 @@ compatibility passes construct function declarations and bind native calls; meth
 source is not rescanned, appended, or rewritten before parsing.
 Namespace structure and metadata now come from post-parse AST analysis; a bounded
 pre-parse spelling bridge remains for legacy lexer symbol classification. Modern
-library syntax still relies on source lowering. Consumers must not treat
-the side model as structural authority, rescan original source, or introduce
-process-wide caches.
+library names use a narrow profile-aware lexer registration bridge; use and
+shadowing are determined from parsed nodes, and compiler-owned declarations are
+then added explicitly to the AST. Consumers must not treat the side model as
+structural authority, rescan original source, or introduce process-wide caches.
 
 ## Extension rules
 

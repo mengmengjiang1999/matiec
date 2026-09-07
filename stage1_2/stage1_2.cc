@@ -255,6 +255,9 @@ int stage1_2(const char *filename, const char *display_filename,
   library_element_symtable.clear();
   variable_name_symtable.clear();
   direct_variable_symtable.clear();
+  if (runtime_options.register_experimental_assert)
+    library_element_symtable.insert("ASSERT",
+                                    prev_declared_derived_function_name_token);
   return stage2__(filename, display_filename, NULL, 0, tree_root_ref);
 }
 
@@ -264,6 +267,9 @@ int stage1_2_from_source(const char *source, std::size_t source_size,
   library_element_symtable.clear();
   variable_name_symtable.clear();
   direct_variable_symtable.clear();
+  if (runtime_options.register_experimental_assert)
+    library_element_symtable.insert("ASSERT",
+                                    prev_declared_derived_function_name_token);
   return stage2__(display_filename, display_filename, source, source_size,
                   tree_root_ref);
 }

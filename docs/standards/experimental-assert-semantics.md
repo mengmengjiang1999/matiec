@@ -18,14 +18,14 @@ execution without an externally visible notification. This is the deterministic
 "released/no-op" policy for the experimental runtime; a future development-mode
 diagnostic hook can be added without changing the source signature.
 
-The experimental front end injects a profile-owned `VOID` declaration and enables
-the existing MATIEC void-call machinery only for a compilation unit that uses the
-standard form. The resulting C symbol is an unstable internal ABI and must not be
-called directly by applications.
+The experimental parser registers the profile-owned function name without
+rewriting source bytes. After parsing, an AST registry discovers the call and adds
+a compiler-owned `VOID` declaration before semantic analysis. The resulting C
+symbol is an unstable internal ABI and must not be called directly by applications.
 
-Comments and string literals are ignored while recognizing calls. If the
-compilation unit declares its own function named
-`ASSERT`, experimental recognition is disabled for that unit and normal legacy name
+Because calls are discovered from parsed nodes, comments and string literals are
+never mistaken for calls. If the compilation unit declares its own function named
+`ASSERT`, no compiler-owned declaration is added and normal user-function name
 resolution applies.
 
 Legacy mode is not rewritten. Existing projects that declare and use their own

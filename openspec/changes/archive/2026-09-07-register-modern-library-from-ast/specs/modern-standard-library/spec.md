@@ -1,9 +1,5 @@
-# modern-standard-library Specification
+## MODIFIED Requirements
 
-## Purpose
-Define evidence, signature, runtime, test, and compatibility requirements for
-profile-owned additions to MATIEC's standard-library surface.
-## Requirements
 ### Requirement: Traceable library entries
 
 Every new or changed experimental library function SHALL record its evidence,

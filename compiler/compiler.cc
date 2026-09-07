@@ -3,7 +3,7 @@
 #include "compiler/access_variable_ast.hh"
 #include "compiler/compilation_abort.hh"
 #include "compiler/legacy_global_state_adapter.hh"
-#include "compiler/modern_library_normalizer.hh"
+#include "compiler/modern_library_registry.hh"
 #include "compiler/namespace_ast_analysis.hh"
 #include "compiler/namespace_normalizer.hh"
 #include "compiler/object_method_ast_analysis.hh"
@@ -65,27 +65,16 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     NamespaceAnalysisResult namespace_analysis;
     ObjectMethodAnalysisResult method_result;
     AccessVariableNormalizeResult access_result;
-    ModernLibraryNormalizeResult modern_library_result;
-    bool requires_void_datatype = false;
+    ModernLibraryRegistrationResult modern_library_result;
     if (language_profile_is_experimental(options.language_profile)) {
       if (!normalize_experimental_namespaces(
               source, context.source_path(), context.diagnostics(),
               &namespace_result))
         return context.diagnostics().result();
-      if (!normalize_experimental_modern_library(
-              namespace_result.source, context.source_path(), context.diagnostics(),
-              &modern_library_result))
-        return context.diagnostics().result();
-      if (modern_library_result.used_modern_library)
-        requires_void_datatype = true;
-      ExperimentalSyntaxModel &syntax = context.experimental_syntax();
-      syntax.library_functions = modern_library_result.functions;
-      source = std::move(modern_library_result.source);
+      source = std::move(namespace_result.source);
     }
 
-    CompilerOptions parser_options = options;
-    if (requires_void_datatype) parser_options.allow_void_datatype = true;
-    LegacyGlobalStateAdapter legacy_state(context, parser_options);
+    LegacyGlobalStateAdapter legacy_state(context, options);
 
     symbol_c *tree_root = NULL;
     const int parse_status = needs_source_bytes
@@ -95,7 +84,10 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
       return CompilationResult::failure();
 
     if (language_profile_is_experimental(options.language_profile)) {
-      if (!analyze_access_variables_from_ast(
+      if (!register_experimental_modern_library_from_ast(
+              tree_root, options.disable_implicit_en_eno,
+              context.diagnostics(), &modern_library_result) ||
+          !analyze_access_variables_from_ast(
               tree_root, context.diagnostics(), &access_result) ||
           !analyze_namespaces_from_ast(
               tree_root, context.diagnostics(), &namespace_analysis) ||
@@ -105,6 +97,8 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
       context.experimental_syntax().access_variables = access_result.declarations;
       context.experimental_syntax().namespaces = namespace_analysis.declarations;
       context.experimental_syntax().methods = method_result.methods;
+      context.experimental_syntax().library_functions =
+          modern_library_result.functions;
     }
 
     if (language_profile_is_experimental(options.language_profile) &&
