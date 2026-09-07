@@ -77,7 +77,8 @@ explicit prohibition on compatibility globals.
 ## Supersession status
 
 The entry criteria were subsequently met. `CompilationContext` now owns an
-arena-checked `AnalysisStore`; flow and constant records have migrated, and
-datatype candidates are published at the fill/narrow boundary. Remaining record
-families continue as separate OpenSpec changes in the dependency order recorded
-above. This document remains the historical rationale for the staged approach.
+arena-checked `AnalysisStore`; flow, constant, datatype, resolution, enumeration,
+and generator record families all have production publication boundaries.
+Compatibility materializers remain for consumers that still access AST annotation
+fields directly. This document remains the historical rationale for the staged
+approach; removing those compatibility fields is separate follow-up work.

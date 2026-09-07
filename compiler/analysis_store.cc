@@ -68,7 +68,7 @@ bool AnalysisStore::valid(const EnumerationAnalysisRecord &record) const {
 
 bool AnalysisStore::valid(const GeneratorAnalysisRecord &record) const {
   for (const auto &value : record.symbols)
-    if (!owns(value.second)) return false;
+    if (!owns_or_is_shared(value.second)) return false;
   return true;
 }
 
@@ -136,6 +136,8 @@ std::size_t AnalysisStore::resolution_size() const { return resolutions_.size();
 std::size_t AnalysisStore::enumeration_size() const {
   return enumerations_.size();
 }
+
+std::size_t AnalysisStore::generator_size() const { return generators_.size(); }
 
 void AnalysisStore::clear() {
   flow_.clear();

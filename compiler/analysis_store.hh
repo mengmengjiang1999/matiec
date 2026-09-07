@@ -82,6 +82,7 @@ class AnalysisStore {
   std::size_t datatype_size() const;
   std::size_t resolution_size() const;
   std::size_t enumeration_size() const;
+  std::size_t generator_size() const;
   void clear();
 
  private:

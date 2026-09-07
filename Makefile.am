@@ -18,6 +18,7 @@ TESTS = \
 	datatype_analysis_store_test \
 	resolution_analysis_store_test \
 	enumeration_analysis_store_test \
+	generator_analysis_store_test \
 	sequential_compilation_test \
 	in_memory_generator_test \
 	tests/generated_c/runtests \
@@ -89,7 +90,7 @@ iec2c_SOURCES = main.cc
 
 iec2iec_SOURCES = main.cc
 
-check_PROGRAMS = modern_library_registry_test flow_analysis_store_test constant_analysis_store_test datatype_analysis_store_test resolution_analysis_store_test enumeration_analysis_store_test sequential_compilation_test in_memory_generator_test
+check_PROGRAMS = modern_library_registry_test flow_analysis_store_test constant_analysis_store_test datatype_analysis_store_test resolution_analysis_store_test enumeration_analysis_store_test generator_analysis_store_test sequential_compilation_test in_memory_generator_test
 
 modern_library_registry_test_SOURCES = \
 	tests/compiler/modern_library_registry_test.cc
@@ -114,6 +115,10 @@ resolution_analysis_store_test_LDADD = $(iec2c_LDADD)
 enumeration_analysis_store_test_SOURCES = \
 	tests/compiler/enumeration_analysis_store_test.cc
 enumeration_analysis_store_test_LDADD = $(iec2c_LDADD)
+
+generator_analysis_store_test_SOURCES = \
+	tests/compiler/generator_analysis_store_test.cc
+generator_analysis_store_test_LDADD = $(iec2c_LDADD)
 
 sequential_compilation_test_SOURCES = \
 	tests/compiler/sequential_compilation_test.cc

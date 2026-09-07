@@ -231,8 +231,10 @@ sequential compilations without leaking state between runs.
 
 Semantic flow, constants, datatype candidates, final datatype/scope selections,
 invocation declaration resolution, and scope-specific enumeration tables are
-retained in that store. Compatibility annotations are materialized only where
-legacy semantic checks or generators still require them.
+retained in that store. Named generator annotations are published after successful
+Stage 4 output. All six typed record families now have production boundaries;
+compatibility annotations are materialized only where legacy consumers still
+require them.
 
 ### Semantics are explicit passes
 

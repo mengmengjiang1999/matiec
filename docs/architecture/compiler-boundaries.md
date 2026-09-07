@@ -59,9 +59,10 @@ boundary. Flow edges are produced directly there; constant values, datatype
 candidate vectors, and final datatype/scope selections are published there at
 their completed phase boundaries and materialized only for unmigrated legacy
 consumers. Invocation declaration resolution is also published after narrowing,
-and scope-specific enumeration multimaps are published after enumeration checking.
-Generator metadata remains a staged migration
-tracked from `docs/decisions/0002-defer-context-owned-analysis-store.md`.
+scope-specific enumeration multimaps after enumeration checking, and named
+generator annotations after successful Stage 4 output. All typed record families
+now have production boundaries; compatibility materializers remain until their
+legacy consumers migrate to direct store access.
 
 ## Generated output
 
