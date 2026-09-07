@@ -1,9 +1,5 @@
-# object-oriented-elements Specification
+## MODIFIED Requirements
 
-## Purpose
-Define the bounded experimental function-block method subset, its deterministic
-lowering ABI, and its isolation from the legacy language profile.
-## Requirements
 ### Requirement: Bounded object-oriented subset
 
 The project SHALL document the exact enabled OO subset, SHALL represent supported

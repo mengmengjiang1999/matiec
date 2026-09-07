@@ -1259,8 +1259,42 @@ void *visit(function_block_declaration_c *symbol) {
   symbol->var_declarations->accept(*this);
   s4o.print("\n");
   symbol->fblock_body->accept(*this);
+  symbol->methods->accept(*this);
   s4o.indent_left();
   s4o.print(s4o.indent_spaces + "END_FUNCTION_BLOCK\n\n\n");
+  return NULL;
+}
+
+void *visit(object_method_declaration_list_c *symbol) {return print_list(symbol);}
+void *visit(object_method_public_c *) {s4o.print(" PUBLIC"); return NULL;}
+void *visit(object_method_private_c *) {s4o.print(" PRIVATE"); return NULL;}
+void *visit(object_method_protected_c *) {s4o.print(" PROTECTED"); return NULL;}
+void *visit(object_method_internal_c *) {s4o.print(" INTERNAL"); return NULL;}
+void *visit(object_method_header_c *symbol) {
+  s4o.print(s4o.indent_spaces + "METHOD");
+  symbol->visibility->accept(*this);
+  s4o.print(" ");
+  symbol->method_name->accept(*this);
+  return NULL;
+}
+void *visit(object_method_declaration_c *symbol) {
+  symbol->header->accept(*this);
+  s4o.print(" : ");
+  symbol->type_name->accept(*this);
+  s4o.print("\n");
+  s4o.indent_right();
+  var_declarations_list_c *declarations =
+      dynamic_cast<var_declarations_list_c *>(symbol->var_declarations);
+  if (declarations == NULL) ERROR;
+  for (int i = 0; i < declarations->n; ++i) {
+    symbol_c *declaration = declarations->get_element(i);
+    if (dynamic_cast<function_var_decls_c *>(declaration) != NULL)
+      s4o.print(s4o.indent_spaces);
+    declaration->accept(*this);
+  }
+  symbol->method_body->accept(*this);
+  s4o.indent_left();
+  s4o.print(s4o.indent_spaces + "END_METHOD\n");
   return NULL;
 }
 
@@ -2223,8 +2257,6 @@ void *visit(continue_statement_c *symbol) {
 
 visitor_c *new_code_generator(stage4out_c *s4o, const char *builddir)  {return new generate_iec_c(s4o);}
 void delete_code_generator(visitor_c *code_generator) {delete code_generator;}
-
-
 
 
 

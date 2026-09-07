@@ -9,7 +9,11 @@ FUNCTION_BLOCK Counter
     VAR_INPUT
       Delta : INT;
     END_VAR
-    Count := Count + Delta;
+    VAR
+      Amount : INT;
+    END_VAR
+    Amount := Delta;
+    Count := Count + Amount;
     Increment := Count;
   END_METHOD
 END_FUNCTION_BLOCK

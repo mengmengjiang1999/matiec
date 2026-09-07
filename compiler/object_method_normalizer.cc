@@ -248,11 +248,8 @@ bool normalize_experimental_object_methods(
   if (diagnostics.has_errors()) return false;
   if (blocks.empty()) return true;
 
-  std::vector<bool> removed(lines.size(), false);
   std::ostringstream generated;
   for (const MethodBlock &block : blocks) {
-    for (std::size_t line = block.begin_line; line <= block.end_line; ++line)
-      removed[line] = true;
     generated << "\nFUNCTION " << block.ast.lowered_name << " : "
               << block.ast.return_type << "\n";
     std::string interface_declarations;
@@ -303,12 +300,8 @@ bool normalize_experimental_object_methods(
 
   std::string base;
   for (std::size_t index = 0; index < lines.size(); ++index) {
-    if (removed[index]) {
-      if (lines[index].has_newline) base += '\n';
-    } else {
-      base += lines[index].text;
-      if (lines[index].has_newline) base += '\n';
-    }
+    base += lines[index].text;
+    if (lines[index].has_newline) base += '\n';
   }
 
   for (const auto &entry : instance_types) {

@@ -33,7 +33,13 @@ Result := CounterInstance.Increment(2);
 
 ## Ownership and ABI
 
-The compiler lowers each method to a legacy function. Each owner field is passed
+The primary AST stores each method beneath its owning function block, including
+visibility, return type, parameter/local declarations, and body. `iec2iec` consumes
+that native node and preserves the `METHOD ... END_METHOD` boundary. Dependency
+ordering retains the complete FB node, so `-p` does not detach or flatten methods.
+
+The current semantic and C compatibility path also lowers each method to a legacy
+function. Each owner field is passed
 after ordinary method parameters through a hidden `VAR_IN_OUT` parameter named
 `MATIECSELF<field>`. The fields remain owned by the caller and are not copied, so
 updates remain visible after the call. Passing fields individually also avoids
@@ -44,9 +50,11 @@ such as `Counter.Increment` receives a deterministic length-prefixed name:
 MATIECMETHOD7COUNTER9INCREMENT
 ```
 
-This spelling is visible in generated C and `iec2iec` output but is an unstable
-experimental ABI. Method overloads are not supported, so an owner cannot declare
-the same case-insensitive method name twice.
+This spelling is visible in generated C and in the compatibility function that may
+follow the native FB in full `iec2iec` output, but it is an unstable experimental
+ABI. The native method itself remains structurally visible exactly once. Method
+overloads are not supported, so an owner cannot declare the same case-insensitive
+method name twice.
 
 The provisional normalizer currently recognizes owner declarations whose type is a
 single named type token. More complex declaration forms remain outside this first

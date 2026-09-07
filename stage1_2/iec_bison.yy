@@ -1015,12 +1015,17 @@ typedef struct YYLTYPE {
 %type  <leaf>	standard_function_block_name
 %type  <leaf>	derived_function_block_name
 %type  <leaf>	function_block_declaration
+%type  <leaf>	object_method_declaration
+%type  <leaf>	object_method_header
+%type  <leaf>	object_method_visibility
 %type  <leaf>	other_var_declarations
 %type  <leaf>	temp_var_decls
 %type  <leaf>	non_retentive_var_decls
 %type  <leaf>	function_block_body
 /* intermediate helper symbol for function_declaration */
 %type  <list>	io_OR_other_var_declarations_list
+%type  <list>	object_method_declaration_list
+%type  <list>	object_method_var_declarations_list
 /* intermediate helper symbol for temp_var_decls */
 %type  <list>	temp_var_decls_list
 
@@ -1028,6 +1033,11 @@ typedef struct YYLTYPE {
 
 %token FUNCTION_BLOCK
 %token END_FUNCTION_BLOCK
+%token METHOD
+%token END_METHOD
+%token PUBLIC
+%token PRIVATE
+%token PROTECTED
 %token VAR_TEMP
 // %token END_VAR
 %token VAR
@@ -5311,8 +5321,8 @@ function_block_declaration:
 	 else                         {print_err_msg(locl(@1), locf(@3), "FUNCTION_BLOCK with no variable declarations and no body."); yynerrs++;}
 	 }
 /* POST_PARSING: The rules expected to be applied after the preparser runs. Will only run if pre-parsing command line option is ON. */
-| FUNCTION_BLOCK prev_declared_derived_function_block_name io_OR_other_var_declarations_list function_block_body END_FUNCTION_BLOCK
-	{$$ = new function_block_declaration_c($2, $3, $4, locloc(@$));
+| FUNCTION_BLOCK prev_declared_derived_function_block_name io_OR_other_var_declarations_list function_block_body object_method_declaration_list END_FUNCTION_BLOCK
+	{$$ = new function_block_declaration_c($2, $3, $4, $5, locloc(@$));
 	 if (!runtime_options.disable_implicit_en_eno) add_en_eno_param_decl_c::add_to($$); /* add EN and ENO declarations, if not already there */
 	 /* Clear the variable_name_symtable. Since we have finished parsing the function block,
 	  * the variable names are now out of scope, so are no longer valid!
@@ -5321,8 +5331,8 @@ function_block_declaration:
 	 direct_variable_symtable.pop();
 	}
 /* STANDARD_PARSING: The rules expected to be applied in single-phase parsing. Will only run if pre-parsing command line option is OFF. */
-| FUNCTION_BLOCK derived_function_block_name io_OR_other_var_declarations_list function_block_body END_FUNCTION_BLOCK
-	{$$ = new function_block_declaration_c($2, $3, $4, locloc(@$));
+| FUNCTION_BLOCK derived_function_block_name io_OR_other_var_declarations_list function_block_body object_method_declaration_list END_FUNCTION_BLOCK
+	{$$ = new function_block_declaration_c($2, $3, $4, $5, locloc(@$));
 	 library_element_symtable.insert($2, prev_declared_derived_function_block_name_token);
 	 if (!runtime_options.disable_implicit_en_eno) add_en_eno_param_decl_c::add_to($$); /* add EN and ENO declarations, if not already there */
 	 /* Clear the variable_name_symtable. Since we have finished parsing the function block,
@@ -5349,6 +5359,49 @@ function_block_declaration:
 | FUNCTION_BLOCK error END_FUNCTION_BLOCK
 	{$$ = NULL; print_err_msg(locf(@2), locl(@2), "unknown error in function block declaration."); yyerrok;}
 /* ERROR_CHECK_END */
+;
+
+object_method_declaration_list:
+  /* empty */
+	{$$ = new object_method_declaration_list_c(locloc(@$));}
+| object_method_declaration_list object_method_declaration
+	{$$ = $1; $$->add_element($2);}
+;
+
+object_method_visibility:
+  /* empty */
+	{$$ = new object_method_public_c(locloc(@$));}
+| PUBLIC
+	{$$ = new object_method_public_c(locloc(@$));}
+| PRIVATE
+	{$$ = new object_method_private_c(locloc(@$));}
+| PROTECTED
+	{$$ = new object_method_protected_c(locloc(@$));}
+| INTERNAL
+	{$$ = new object_method_internal_c(locloc(@$));}
+;
+
+object_method_header:
+  METHOD object_method_visibility
+	{variable_name_symtable.push(); direct_variable_symtable.push();}
+  any_identifier
+	{$$ = new object_method_header_c($2, $4, locloc(@$));
+	 variable_name_symtable.insert($4, prev_declared_variable_name_token);}
+;
+
+object_method_var_declarations_list:
+  /* empty */
+	{$$ = new var_declarations_list_c(locloc(@$));}
+| object_method_var_declarations_list io_var_declarations
+	{$$ = $1; $$->add_element($2);}
+| object_method_var_declarations_list function_var_decls
+	{$$ = $1; $$->add_element($2);}
+;
+
+object_method_declaration:
+  object_method_header ':' non_generic_type_name object_method_var_declarations_list function_body END_METHOD
+	{$$ = new object_method_declaration_c($1, $3, $4, $5, locloc(@$));
+	 variable_name_symtable.pop(); direct_variable_symtable.pop();}
 ;
 
 
@@ -8971,6 +9024,5 @@ int stage2__(const char *filename, const char *display_filename,
 
   return 0;
 }
-
 
 

@@ -2465,6 +2465,16 @@ class generate_c_c: public iterator_visitor_c {
       return symbol->elements->accept(*this);
     }
 
+    /* Native method nodes are preserved for structural consumers. The current C
+     * ABI is emitted only from the compatibility-lowered function nodes. */
+    void *visit(object_method_declaration_list_c *) {return NULL;}
+    void *visit(object_method_public_c *) {return NULL;}
+    void *visit(object_method_private_c *) {return NULL;}
+    void *visit(object_method_protected_c *) {return NULL;}
+    void *visit(object_method_internal_c *) {return NULL;}
+    void *visit(object_method_header_c *) {return NULL;}
+    void *visit(object_method_declaration_c *) {return NULL;}
+
 /*************************/
 /* B.1 - Common elements */
 /*************************/

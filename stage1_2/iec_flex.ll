@@ -499,6 +499,9 @@ int GetNextChar(char *b, int maxBuffer);
 /* This is not exclusive (%x) as we must be able to parse the identifier and data types of a function/FB */
 %s header_state
 
+/* method headers are line-bounded by the validated experimental subset */
+%s method_header_state
+
 /* we are parsing a function, program or function block sequence of VAR..END_VAR delcarations */
 %x vardecl_list_state 
 /* a substate of the vardecl_list_state: we are inside a specific VAR .. END_VAR */
@@ -1199,6 +1202,10 @@ VAR_CONFIG{st_whitespace_char}		|
 VAR_ACCESS{st_whitespace_char}		|
 VAR{st_whitespace_char}			unput_text(0); yy_push_state(vardecl_state); //printf("\nChanging to vardecl_state\n");
 
+METHOD{st_whitespace_char}		{if (runtime_options.iec2025_experimental) {BEGIN(method_header_state); return METHOD;} else {REJECT;}}
+
+END_METHOD{st_whitespace}		{if (runtime_options.iec2025_experimental) return END_METHOD; else {REJECT;}}
+
 END_FUNCTION{st_whitespace}		unput_text(0); BEGIN(INITIAL);
 END_FUNCTION_BLOCK{st_whitespace}	unput_text(0); BEGIN(INITIAL);
 END_PROGRAM{st_whitespace}		unput_text(0); BEGIN(INITIAL);
@@ -1213,6 +1220,8 @@ END_PROGRAM{st_whitespace}		unput_text(0); BEGIN(INITIAL);
 				/* anything else, just change to body_state! */
 .				unput_text(0); yy_push_state(body_state); //printf("\nChanging to body_state\n");
 }
+
+<method_header_state>[ \f\t\v]*\r?\n[ \f\t\v]*	BEGIN(vardecl_list_state);
 
 
 	/* vardecl_list_state -> pop to $previous_state (vardecl_list_state) */
@@ -1253,6 +1262,7 @@ INITIAL_STEP			{ if (isempty_bodystate_buffer())	{unput_text(0); del_bodystate_b
 END_ACTION			| /* execute the next rule's action, i.e. fall-through! */
 END_FUNCTION			|
 END_FUNCTION_BLOCK		|
+END_METHOD			|
 END_TRANSITION   		|
 END_PROGRAM			{ append_bodystate_buffer(yytext); unput_bodystate_buffer(); BEGIN(il_state); /*printf("returning start_IL_body_token\n");*/ return start_IL_body_token;}
 .|\n				{ append_bodystate_buffer(yytext);
@@ -1277,6 +1287,8 @@ REPEAT				{ if (isempty_bodystate_buffer())	{unput_text(0); del_bodystate_buffer
 <il_state,st_state>{
 END_FUNCTION		yy_pop_state(); unput_text(0);
 END_FUNCTION_BLOCK	yy_pop_state(); unput_text(0);
+METHOD			{if (runtime_options.iec2025_experimental) {yy_pop_state(); unput_text(0);} else {REJECT;}}
+END_METHOD		{if (runtime_options.iec2025_experimental) {yy_pop_state(); unput_text(0);} else {REJECT;}}
 END_PROGRAM		yy_pop_state(); unput_text(0);
 END_TRANSITION		yy_pop_state(); unput_text(0);
 END_ACTION		yy_pop_state(); unput_text(0);
@@ -1300,7 +1312,7 @@ END_CONFIGURATION	BEGIN(INITIAL); return END_CONFIGURATION;
 	/* NOTE: pragmas are handled right at the beginning... */
 
 	/* The whitespace */
-<INITIAL,header_state,config_state,vardecl_state,st_state,sfc_state,task_init_state,sfc_qualifier_state>{st_whitespace}	/* Eat any whitespace */
+<INITIAL,header_state,method_header_state,config_state,vardecl_state,st_state,sfc_state,task_init_state,sfc_qualifier_state>{st_whitespace}	/* Eat any whitespace */
 <il_state>{il_whitespace}		/* Eat any whitespace */
  /* NOTE: Due to the need of having the following rule have higher priority,
   *        the following rule was moved to an earlier position in this file.
@@ -1396,6 +1408,11 @@ NAMESPACE	{if (runtime_options.iec2025_experimental) return NAMESPACE; else {REJ
 END_NAMESPACE	{if (runtime_options.iec2025_experimental) return END_NAMESPACE; else {REJECT;}}
 USING		{if (runtime_options.iec2025_experimental) return USING; else {REJECT;}}
 INTERNAL	{if (runtime_options.iec2025_experimental) return INTERNAL; else {REJECT;}}
+METHOD		{if (runtime_options.iec2025_experimental) return METHOD; else {REJECT;}}
+END_METHOD	{if (runtime_options.iec2025_experimental) return END_METHOD; else {REJECT;}}
+PUBLIC		{if (runtime_options.iec2025_experimental) return PUBLIC; else {REJECT;}}
+PRIVATE		{if (runtime_options.iec2025_experimental) return PRIVATE; else {REJECT;}}
+PROTECTED	{if (runtime_options.iec2025_experimental) return PROTECTED; else {REJECT;}}
 
 EN	return EN;			/* Keyword */
 ENO	return ENO;			/* Keyword */

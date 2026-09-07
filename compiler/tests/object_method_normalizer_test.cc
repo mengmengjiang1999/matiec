@@ -23,7 +23,9 @@ int main() {
         source, "method.st", diagnostics, &result));
     assert(result.used_methods);
     assert(result.methods.size() == 1);
-    assert(result.source.find("METHOD PUBLIC") == std::string::npos);
+    assert(result.source.find("METHOD PUBLIC Increment : INT") !=
+           std::string::npos);
+    assert(result.source.find("END_METHOD") != std::string::npos);
     assert(result.source.find("FUNCTION MATIECMETHOD7COUNTER9INCREMENT : INT") !=
            std::string::npos);
     assert(result.source.find("MATIECSELFCOUNT := MATIECSELFCOUNT + Delta") !=

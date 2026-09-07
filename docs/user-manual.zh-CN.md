@@ -524,6 +524,11 @@ Result := CounterInstance.Increment(2);
 `MATIECMETHOD...` 名称不是稳定 ABI。详见
 [实验性方法语义](standards/object-method-semantics.md)。
 
+方法边界、可见性、返回类型、参数/局部变量和方法体会保存在所属 FB 的主语法树
+节点中，`-p` 依赖排序不会拆散它们。`iec2iec` 会输出原生 `METHOD` 结构；当前
+语义检查和 `iec2c` 仍消费由该节点兼容 lowering 得到的函数，以保持现有静态派发
+行为和临时 C ABI。
+
 ### 7.6 实验性标准函数 `ASSERT`
 
 实验 Profile 支持把一个布尔条件写成独立断言语句：

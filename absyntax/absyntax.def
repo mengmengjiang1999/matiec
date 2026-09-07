@@ -825,9 +825,19 @@ SYM_LIST(var2_init_decl_list_c)
 /*****************************/
 /* B 1.5.2 - Function Blocks */
 /*****************************/
-/*  FUNCTION_BLOCK derived_function_block_name io_OR_other_var_declarations function_block_body END_FUNCTION_BLOCK */
+/*  FUNCTION_BLOCK derived_function_block_name io_OR_other_var_declarations function_block_body {object_method_declaration} END_FUNCTION_BLOCK */
 /* enumvalue_symtable is filled in by enum_declaration_check_c, during stage3 semantic verification, with a list of all enumerated constants declared inside this POU */
-SYM_REF3(function_block_declaration_c, fblock_name, var_declarations, fblock_body, enumvalue_symtable_t enumvalue_symtable;)
+SYM_REF4(function_block_declaration_c, fblock_name, var_declarations, fblock_body, methods, enumvalue_symtable_t enumvalue_symtable;)
+
+/* Provisional IEC 61131-3:2025 function-block method structure. Method
+ * execution semantics are still provided by compatibility lowering. */
+SYM_LIST(object_method_declaration_list_c)
+SYM_REF0(object_method_public_c)
+SYM_REF0(object_method_private_c)
+SYM_REF0(object_method_protected_c)
+SYM_REF0(object_method_internal_c)
+SYM_REF2(object_method_header_c, visibility, method_name)
+SYM_REF4(object_method_declaration_c, header, type_name, var_declarations, method_body)
 
 /* intermediate helper symbol for function_declaration */
 /*  { io_var_declarations | other_var_declarations }   */

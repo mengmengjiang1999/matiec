@@ -111,11 +111,13 @@ and modern-library frontends. The compiler clears this model before every compil
 and populates it only after all experimental recognizers succeed, so a reused
 context cannot expose metadata from an earlier source.
 
-These records are a migration boundary, not a second semantic tree. Source
-lowering remains responsible for feeding the legacy parser today. Later native
-grammar work can replace one recognizer at a time while publishing equivalent
-records through the same context-owned model; consumers must not rescan original
-source or introduce process-wide caches.
+These records are a migration boundary, not a second semantic tree. Namespace and
+function-block method structure now enters the primary AST; their recognizers still
+perform provisional name resolution or compatibility lowering and publish
+equivalent records through the context-owned model. Access-variable and modern
+library syntax still relies on source lowering. Consumers must not treat the side
+model as structural authority, rescan original source, or introduce process-wide
+caches.
 
 ## Extension rules
 
