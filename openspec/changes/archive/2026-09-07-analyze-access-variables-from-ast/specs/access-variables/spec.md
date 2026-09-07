@@ -1,16 +1,4 @@
-# access-variables Specification
-
-## Purpose
-Define the evidence boundary, validation rules, exported metadata, and legacy
-isolation for the bounded experimental access-variable subset.
-## Requirements
-### Requirement: Evidence-backed access declarations
-Access-variable syntax and semantics SHALL be enabled only after their source and
-uncertainties are recorded.
-
-#### Scenario: Only a historical commented rule is available
-- **WHEN** no adequate public semantic evidence exists
-- **THEN** the experimental profile continues to reject the construct
+## MODIFIED Requirements
 
 ### Requirement: Validated access targets
 
@@ -38,10 +26,3 @@ experimental pre-parse source scan.
 
 - **WHEN** an access AST refers to a missing, mismatched, or forbidden target
 - **THEN** compilation fails with a source-ranged diagnostic before generation
-
-### Requirement: Legacy access-variable isolation
-Access-variable syntax MUST remain unavailable in the legacy profile.
-
-#### Scenario: A legacy source declares an access block
-- **WHEN** source containing `VAR_ACCESS` is compiled with `--std=legacy`
-- **THEN** compilation terminates with a profile-specific diagnostic

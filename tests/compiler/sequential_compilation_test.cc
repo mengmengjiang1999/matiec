@@ -111,6 +111,19 @@ int main() {
   assert(matiec::Compiler().compile(reusable).succeeded());
   assert(reusable.experimental_syntax().library_functions.size() == 1);
   assert(!reusable.options().allow_void_datatype);
+  const std::string access_source =
+      "TYPE UserCount : INT; END_TYPE\n"
+      "PROGRAM AccessMain\nVAR value : INT; END_VAR\n"
+      "value := value;\nEND_PROGRAM\n"
+      "CONFIGURATION AccessConfig\n"
+      "VAR_GLOBAL Counter : UserCount; END_VAR\n"
+      "RESOURCE R ON PLC PROGRAM P : AccessMain; END_RESOURCE\n"
+      "VAR_ACCESS Monitor : Counter : UserCount; END_VAR\n"
+      "END_CONFIGURATION\n";
+  reusable.set_source("memory://access.st", access_source);
+  assert(matiec::Compiler().compile(reusable).succeeded());
+  assert(reusable.experimental_syntax().access_variables.size() == 1);
+  assert(reusable.experimental_syntax().access_variables[0].type == "UserCount");
   reusable.options().language_profile = matiec::LanguageProfile::legacy;
   reusable.set_source("memory://legacy.st", memory_source);
   assert(matiec::Compiler().compile(reusable).succeeded());

@@ -356,6 +356,8 @@ if "$IEC2C" --std=iec61131-3:2025-experimental -f -l -p \
         "$ACCESS_GENERATED/ACCESS.csv" \
    && grep -q '^AccessConfig,MonitorSetpoint,Setpoint,INT,READ_ONLY$' \
         "$ACCESS_GENERATED/ACCESS.csv" \
+   && grep -q '^AccessConfig,MonitorCounter,Counter,AccessCount,READ_ONLY$' \
+        "$ACCESS_GENERATED/ACCESS.csv" \
    && "$IEC2IEC" --std=iec61131-3:2025-experimental -f -l -p \
         -I "$MATIEC_LIBDIR" -T "$ACCESS_GENERATED" "$ACCESS_INPUT" \
         >"$TMP_ROOT/access.normalized" 2>>"$TMP_ROOT/access.stderr" \

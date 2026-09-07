@@ -1,3 +1,7 @@
+TYPE
+  AccessCount : INT;
+END_TYPE
+
 PROGRAM AccessDemo
   VAR
     Value : INT;
@@ -8,6 +12,7 @@ END_PROGRAM
 CONFIGURATION AccessConfig
   VAR_GLOBAL
     Setpoint : INT := 7;
+    Counter : AccessCount := 3;
   END_VAR
 
   RESOURCE Resource1 ON PLC
@@ -18,5 +23,6 @@ CONFIGURATION AccessConfig
   VAR_ACCESS
     RemoteSetpoint : Setpoint : INT READ_WRITE;
     MonitorSetpoint : Setpoint : INT;
+    MonitorCounter : Counter : AccessCount;
   END_VAR
 END_CONFIGURATION

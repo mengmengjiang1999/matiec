@@ -41,9 +41,10 @@ The compiler executes these boundaries in order:
 
 1. `LegacyGlobalStateAdapter::parse()` runs lexical and syntax analysis inside
    the context's active AST arena.
-2. Experimental AST compatibility passes bind native constructs that still use
-   legacy semantic implementations. Function-block method calls are resolved here
-   without pre-parser source-text replacement.
+2. Experimental AST analysis and compatibility passes validate native constructs
+   that still use legacy semantic implementations. Access-variable metadata is
+   collected here, and function-block method calls are resolved without
+   pre-parser source-text replacement.
 3. Legacy symbol-table initialization prepares declaration lookup.
 4. `SemanticPassManager` runs the explicit Stage 3 pass order and stops after a
    failed pass. Pass IDs, prerequisites, and per-pass results are declared in
@@ -119,8 +120,8 @@ function-block method declarations and invocations now enter the primary AST. An
 explicit post-parse AST pass constructs method compatibility function declarations
 and binds native calls to them; method source is no longer appended or call text
 rewritten before parsing.
-Namespace recognition still performs provisional name resolution. Access-variable
-and modern library syntax still relies on source lowering. Consumers must not treat
+Namespace recognition still performs provisional name resolution. Modern library
+syntax still relies on source lowering. Consumers must not treat
 the side model as structural authority, rescan original source, or introduce
 process-wide caches.
 

@@ -5,6 +5,7 @@ AM_CPPFLAGS = -I$(top_srcdir)
 noinst_LIBRARIES = libcompiler.a
 libcompiler_a_SOURCES = \
 	access_variable_normalizer.cc \
+	access_variable_ast.cc \
 	ast_arena.cc \
 	compilation_abort.cc \
 	compilation_context.cc \

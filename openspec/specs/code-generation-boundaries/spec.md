@@ -58,3 +58,13 @@ or emitted as duplicate IEC structure.
 
 - **WHEN** the primary AST contains a supported method and bound invocation
 - **THEN** C generation emits the deterministic lowered implementation and call path from explicit compatibility AST nodes
+
+### Requirement: Access metadata follows AST analysis
+
+The compiler SHALL generate access metadata only from declarations accepted by the
+post-parse AST analysis.
+
+#### Scenario: CSV metadata is emitted
+
+- **WHEN** AST analysis accepts access declarations and C output is requested
+- **THEN** `ACCESS.csv` contains the same deterministic rows as the accepted AST nodes

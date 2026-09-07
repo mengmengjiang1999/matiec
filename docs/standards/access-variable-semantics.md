@@ -33,6 +33,8 @@ exported-name : configuration-global : named-type [READ_ONLY | READ_WRITE];
 - Access names must be unique within their configuration.
 - The declaration exports metadata; it does not create a second runtime variable.
 - Validated declarations remain as explicit access nodes in the compiler AST.
+- Validation and CSV metadata are derived from those nodes after parsing; the
+  experimental frontend does not rescan or rewrite `VAR_ACCESS` source text.
 - `iec2iec` preserves the block and writes an explicit `READ_ONLY` direction when
   the source omits one.
 

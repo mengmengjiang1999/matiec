@@ -13,14 +13,9 @@ class DiagnosticEngine;
 class OutputManager;
 
 struct AccessVariableNormalizeResult {
-  std::string source;
   std::vector<AccessVariableAst> declarations;
   bool used_access_variables = false;
 };
-
-bool normalize_experimental_access_variables(
-    std::string_view source, const std::string &source_path,
-    DiagnosticEngine &diagnostics, AccessVariableNormalizeResult *result);
 
 bool reject_legacy_access_variables_in_file(
     const std::string &source_path, DiagnosticEngine &diagnostics);

@@ -1,5 +1,6 @@
 #include "compiler/compiler.hh"
 #include "compiler/access_variable_normalizer.hh"
+#include "compiler/access_variable_ast.hh"
 #include "compiler/compilation_abort.hh"
 #include "compiler/legacy_global_state_adapter.hh"
 #include "compiler/modern_library_normalizer.hh"
@@ -73,12 +74,8 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
               namespace_result.source, context.source_path(), context.diagnostics(),
               &method_result))
         return context.diagnostics().result();
-      if (!normalize_experimental_access_variables(
-              method_result.source, context.source_path(), context.diagnostics(),
-              &access_result))
-        return context.diagnostics().result();
       if (!normalize_experimental_modern_library(
-              access_result.source, context.source_path(), context.diagnostics(),
+              method_result.source, context.source_path(), context.diagnostics(),
               &modern_library_result))
         return context.diagnostics().result();
       if (modern_library_result.used_modern_library)
@@ -86,7 +83,6 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
       ExperimentalSyntaxModel &syntax = context.experimental_syntax();
       syntax.namespaces = namespace_result.declarations;
       syntax.methods = method_result.methods;
-      syntax.access_variables = access_result.declarations;
       syntax.library_functions = modern_library_result.functions;
       source = std::move(modern_library_result.source);
     }
@@ -101,6 +97,12 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
         : legacy_state.parse(&tree_root);
     if (parse_status < 0)
       return CompilationResult::failure();
+
+    if (language_profile_is_experimental(options.language_profile) &&
+        !analyze_access_variables_from_ast(
+            tree_root, context.diagnostics(), &access_result))
+      return context.diagnostics().result();
+    context.experimental_syntax().access_variables = access_result.declarations;
 
     if (language_profile_is_experimental(options.language_profile) &&
         (!construct_object_method_compatibility_ast(
