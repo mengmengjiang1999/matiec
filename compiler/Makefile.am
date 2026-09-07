@@ -6,6 +6,7 @@ noinst_LIBRARIES = libcompiler.a
 libcompiler_a_SOURCES = \
 	access_variable_normalizer.cc \
 	ast_arena.cc \
+	compilation_abort.cc \
 	compilation_context.cc \
 	compiler.cc \
 	compiler_types.cc \
@@ -31,7 +32,8 @@ access_variable_normalizer_test_LDADD = libcompiler.a
 ast_arena_test_SOURCES = tests/ast_arena_test.cc
 ast_arena_test_LDADD = libcompiler.a
 
-compilation_abort_test_SOURCES = tests/compilation_abort_test.cc compilation_abort.cc
+compilation_abort_test_SOURCES = tests/compilation_abort_test.cc
+compilation_abort_test_LDADD = libcompiler.a
 
 compilation_context_test_SOURCES = tests/compilation_context_test.cc
 compilation_context_test_LDADD = libcompiler.a

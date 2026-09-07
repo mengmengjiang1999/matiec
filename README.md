@@ -140,6 +140,10 @@ A prepared source archive may include generated build files and begin with
 `./configure`; a Git checkout should run `autoreconf --install` first.
 Automake uses `subdir-objects`, so generated objects mirror source directories
 and clean in-tree and out-of-tree builds use the same layout.
+The generated scanner provides its own `yywrap()` callback; no external Flex
+runtime library is required by the compiler link.
+Shared compiler support is built once in `libcompiler.a`; executable and test
+targets do not compile private copies across recursive build directories.
 
 </details>
 

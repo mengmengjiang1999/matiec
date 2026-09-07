@@ -77,18 +77,16 @@ iec2iec_LDADD = compiler/libcompiler.a \
 	absyntax/libabsyntax.a \
 	absyntax_utils/libabsyntax_utils.a
 
-iec2c_SOURCES = main.cc compiler/compilation_abort.cc
+iec2c_SOURCES = main.cc
 
-iec2iec_SOURCES = main.cc compiler/compilation_abort.cc
+iec2iec_SOURCES = main.cc
 
 check_PROGRAMS = sequential_compilation_test in_memory_generator_test
 
 sequential_compilation_test_SOURCES = \
-	tests/compiler/sequential_compilation_test.cc \
-	compiler/compilation_abort.cc
+	tests/compiler/sequential_compilation_test.cc
 sequential_compilation_test_LDADD = $(iec2c_LDADD)
 
 in_memory_generator_test_SOURCES = \
-	tests/compiler/in_memory_generator_test.cc \
-	compiler/compilation_abort.cc
+	tests/compiler/in_memory_generator_test.cc
 in_memory_generator_test_LDADD = $(iec2c_LDADD)

@@ -4,12 +4,22 @@
 TBD - created by archiving change refactor-compiler-architecture. Update Purpose after archive.
 ## Requirements
 ### Requirement: Reproducible clean build
-The project SHALL support regeneration, configuration, compilation, and regression testing from a clean checkout using documented tool versions and commands.
+
+The project SHALL support regeneration, configuration, compilation, and regression
+testing from a clean checkout using documented tool versions and commands, with an
+explicit lexer callback ownership policy.
 
 #### Scenario: Linux clean build
-- **WHEN** a supported Linux environment follows the documented bootstrap commands
-- **THEN** both compiler executables build and the regression suite passes without relying on pre-existing objects
 
+- **WHEN** a supported Linux environment follows the documented bootstrap commands
+- **THEN** both compiler executables build and the regression suite passes without
+  relying on pre-existing objects
+
+#### Scenario: Build files discover the lexer
+
+- **WHEN** Autoconf checks for Flex or a compatible lexer generator
+- **THEN** it uses the scanner's own `yywrap()` implementation without requiring
+  an external lexer support library
 ### Requirement: Explicit language and warning policy
 
 The build SHALL declare its C and C++ language modes, distinguish project warnings
@@ -33,6 +43,7 @@ for source files below the current makefile directory.
 - **WHEN** the service implementation is already provided by `libcompiler.a`
 - **THEN** the test target links that library instead of compiling a duplicate
   implementation object
+
 ### Requirement: Repository version metadata
 Compiler version output SHALL derive revision metadata from Git when available and SHALL remain usable from source archives without Git metadata.
 
