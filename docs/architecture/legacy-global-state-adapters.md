@@ -10,8 +10,9 @@ process-wide state is temporarily isolated behind
 The adapter currently owns the transition into two legacy areas:
 
 * `runtime_options`, consumed by the generated scanner/parser and existing
-  semantic code, is populated exclusively from `CompilerOptions` when an
-  adapter is created;
+  semantic code, is populated from an effective `CompilerOptions` snapshot
+  when an adapter is created; derived parser permissions never mutate the
+  context's caller-configured options;
 * `stage1_2()` contains the generated parser's pre-parse and definitive-parse
   state; callers enter it only through `LegacyGlobalStateAdapter::parse()`;
 * `absyntax_utils_init()` populates the legacy global function, function-block,

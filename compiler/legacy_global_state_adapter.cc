@@ -10,9 +10,9 @@ runtime_options_t runtime_options;
 
 namespace matiec {
 
-LegacyGlobalStateAdapter::LegacyGlobalStateAdapter(CompilationContext &context)
+LegacyGlobalStateAdapter::LegacyGlobalStateAdapter(
+    CompilationContext &context, const CompilerOptions &options)
     : context_(context) {
-  const CompilerOptions &options = context_.options();
   runtime_options.allow_void_datatype = options.allow_void_datatype;
   runtime_options.allow_missing_var_in = options.allow_missing_var_in;
   runtime_options.disable_implicit_en_eno = options.disable_implicit_en_eno;

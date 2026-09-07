@@ -9,7 +9,8 @@ namespace matiec {
 
 class LegacyGlobalStateAdapter {
  public:
-  explicit LegacyGlobalStateAdapter(CompilationContext &context);
+  LegacyGlobalStateAdapter(CompilationContext &context,
+                           const CompilerOptions &options);
 
   int parse(symbol_c **tree_root) const;
   int parse(const std::string &source_path, const std::string &display_path,

@@ -61,6 +61,7 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     ObjectMethodNormalizeResult method_result;
     AccessVariableNormalizeResult access_result;
     ModernLibraryNormalizeResult modern_library_result;
+    bool requires_void_datatype = false;
     if (language_profile_is_experimental(options.language_profile)) {
       if (!normalize_experimental_namespaces(
               source, context.source_path(), context.diagnostics(),
@@ -79,7 +80,7 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
               &modern_library_result))
         return context.diagnostics().result();
       if (modern_library_result.used_modern_library)
-        options.allow_void_datatype = true;
+        requires_void_datatype = true;
       ExperimentalSyntaxModel &syntax = context.experimental_syntax();
       syntax.namespaces = namespace_result.declarations;
       syntax.methods = method_result.methods;
@@ -88,7 +89,9 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
       source = std::move(modern_library_result.source);
     }
 
-    LegacyGlobalStateAdapter legacy_state(context);
+    CompilerOptions parser_options = options;
+    if (requires_void_datatype) parser_options.allow_void_datatype = true;
+    LegacyGlobalStateAdapter legacy_state(context, parser_options);
 
     symbol_c *tree_root = NULL;
     const int parse_status = needs_source_bytes

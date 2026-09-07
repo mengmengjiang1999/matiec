@@ -110,9 +110,15 @@ int main() {
   reusable.set_source("memory://experimental.st", experimental_source);
   assert(matiec::Compiler().compile(reusable).succeeded());
   assert(reusable.experimental_syntax().library_functions.size() == 1);
+  assert(!reusable.options().allow_void_datatype);
   reusable.options().language_profile = matiec::LanguageProfile::legacy;
   reusable.set_source("memory://legacy.st", memory_source);
   assert(matiec::Compiler().compile(reusable).succeeded());
   assert(reusable.experimental_syntax().library_functions.empty());
+  assert(!reusable.options().allow_void_datatype);
+  reusable.set_source("memory://legacy-void.st",
+                      "FUNCTION LegacyVoid : VOID\nEND_FUNCTION\n");
+  assert(!matiec::Compiler().compile(reusable).succeeded());
+  assert(!reusable.options().allow_void_datatype);
   return 0;
 }

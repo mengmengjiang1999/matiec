@@ -8,12 +8,14 @@ TBD - created by archiving change refactor-compiler-architecture. Update Purpose
 Each compilation SHALL use an explicit context that contains compiler options,
 diagnostics, source identity and optional source bytes, structured experimental
 syntax metadata, symbol state, AST storage, and output configuration for that
-compilation.
+compilation. Derived phase permissions SHALL NOT mutate caller-provided options.
 
-#### Scenario: A context is reused
+#### Scenario: A context is reused across profiles
 
-- **WHEN** a context begins another compilation after an experimental or failed run
-- **THEN** its experimental syntax model is cleared before new source is inspected
+- **WHEN** an experimental compilation derives permission for a built-in `VOID`
+  function and the same context is then used for legacy source
+- **THEN** the configured option remains unchanged and legacy parsing does not
+  inherit the derived permission
 
 #### Scenario: Two contexts recognize experimental declarations
 
