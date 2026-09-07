@@ -317,7 +317,7 @@ void *print_datatypes_error_c::handle_implicit_il_fb_invocation(const char *para
 /* B 1.2.1 - Numeric Literals */
 /******************************/
 void *print_datatypes_error_c::visit(real_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for ANY_REAL data type.");
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_REAL data type not valid in this location.");
@@ -326,7 +326,7 @@ void *print_datatypes_error_c::visit(real_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(integer_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for ANY_INT data type.");
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_INT data type not valid in this location.");
@@ -335,7 +335,7 @@ void *print_datatypes_error_c::visit(integer_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(neg_real_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for ANY_REAL data type.");
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_REAL data type not valid in this location.");
@@ -344,7 +344,7 @@ void *print_datatypes_error_c::visit(neg_real_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(neg_integer_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for ANY_INT data type.");
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_INT data type not valid in this location.");
@@ -353,7 +353,7 @@ void *print_datatypes_error_c::visit(neg_integer_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(binary_integer_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for ANY_INT data type.");
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_INT data type not valid in this location.");
@@ -362,7 +362,7 @@ void *print_datatypes_error_c::visit(binary_integer_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(octal_integer_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for ANY_INT data type.");
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_INT data type not valid in this location.");
@@ -371,7 +371,7 @@ void *print_datatypes_error_c::visit(octal_integer_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(hex_integer_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for ANY_INT data type.");
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_INT data type not valid in this location.");
@@ -380,7 +380,7 @@ void *print_datatypes_error_c::visit(hex_integer_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(integer_literal_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for %s data type.", get_datatype_info_c::get_id_str(symbol->type));
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_INT data type not valid in this location.");
@@ -389,7 +389,7 @@ void *print_datatypes_error_c::visit(integer_literal_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(real_literal_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for %s data type.", get_datatype_info_c::get_id_str(symbol->type));
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_REAL data type not valid in this location.");
@@ -398,7 +398,7 @@ void *print_datatypes_error_c::visit(real_literal_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(bit_string_literal_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for %s data type.", get_datatype_info_c::get_id_str(symbol->type));
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_BIT data type not valid in this location.");
@@ -407,7 +407,7 @@ void *print_datatypes_error_c::visit(bit_string_literal_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(boolean_literal_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Value is not valid for %s data type.", get_datatype_info_c::get_id_str(symbol->type));
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_BOOL data type not valid in this location.");
@@ -416,7 +416,7 @@ void *print_datatypes_error_c::visit(boolean_literal_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(boolean_true_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Value is not valid for ANY_BOOL data type.");
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_BOOL data type not valid in this location.");
@@ -425,7 +425,7 @@ void *print_datatypes_error_c::visit(boolean_true_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(boolean_false_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Value is not valid for ANY_BOOL data type.");
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_BOOL data type not valid in this location.");
@@ -437,7 +437,7 @@ void *print_datatypes_error_c::visit(boolean_false_c *symbol) {
 /* B.1.2.2   Character Strings */
 /*******************************/
 void *print_datatypes_error_c::visit(double_byte_character_string_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for WSTRING data type.");
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "WSTRING data type not valid in this location.");
@@ -446,7 +446,7 @@ void *print_datatypes_error_c::visit(double_byte_character_string_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(single_byte_character_string_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for STRING data type.");
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "STRING data type not valid in this location.");
@@ -461,7 +461,7 @@ void *print_datatypes_error_c::visit(single_byte_character_string_c *symbol) {
 /* B 1.2.3.1 - Duration */
 /************************/
 void *print_datatypes_error_c::visit(duration_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Invalid syntax for TIME data type.");
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "TIME data type not valid in this location.");
@@ -473,7 +473,7 @@ void *print_datatypes_error_c::visit(duration_c *symbol) {
 /* B 1.2.3.2 - Time of day and Date */
 /************************************/
 void *print_datatypes_error_c::visit(time_of_day_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Invalid syntax for TOD data type.");
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "TOD data type not valid in this location.");
@@ -482,7 +482,7 @@ void *print_datatypes_error_c::visit(time_of_day_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(date_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Invalid syntax for DATE data type.");
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "DATE data type not valid in this location.");
@@ -491,7 +491,7 @@ void *print_datatypes_error_c::visit(date_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(date_and_time_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Invalid syntax for DT data type.");
 	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
 		STAGE3_ERROR(4, symbol, symbol, "DT data type not valid in this location.");
@@ -521,7 +521,7 @@ void *print_datatypes_error_c::visit(simple_spec_init_c *symbol) {
 
 
 void *print_datatypes_error_c::visit(enumerated_value_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0)
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0)
 		STAGE3_ERROR(0, symbol, symbol, "Ambiguous enumerate value or Variable not declared in this scope.");
 	return NULL;
 }
@@ -558,7 +558,7 @@ void *print_datatypes_error_c::visit(structure_element_initialization_c *symbol)
 /* B 1.4 - Variables */
 /*********************/
 void *print_datatypes_error_c::visit(symbolic_variable_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0)
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0)
 		STAGE3_ERROR(0, symbol, symbol, "Variable not declared in this scope.");
 	return NULL;
 }
@@ -567,7 +567,7 @@ void *print_datatypes_error_c::visit(symbolic_variable_c *symbol) {
 /* B 1.4.1 - Directly Represented Variables */
 /********************************************/
 void *print_datatypes_error_c::visit(direct_variable_c *symbol) {
-	if (symbol->candidate_datatypes.size() == 0) ERROR;
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0) ERROR;
 	if (!get_datatype_info_c::is_type_valid(symbol->datatype))
 		STAGE3_ERROR(4, symbol, symbol, "Direct variable has incompatible data type with expression.");
 	return NULL;
@@ -583,7 +583,7 @@ void *print_datatypes_error_c::visit(array_variable_c *symbol) {
 	/* Please read the comments in the array_variable_c and structured_variable_c visitors in the fill_candidate_datatypes.cc file! */
 	symbol->subscripted_variable->accept(*this); 
 	
-	if (symbol->candidate_datatypes.size() == 0)
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0)
 		STAGE3_ERROR(0, symbol, symbol, "Array variable not declared in this scope.");
 	
 	/* recursively call the subscript list to print any errors in the expressions used in the subscript...*/
@@ -617,7 +617,7 @@ void *print_datatypes_error_c::visit(structured_variable_c *symbol) {
 	/* Please read the comments in the array_variable_c and structured_variable_c visitors in the fill_candidate_datatypes.cc file! */
 	symbol->record_variable->accept(*this);
 	
-	if (symbol->candidate_datatypes.size() == 0)
+	if (matiec::analysis_datatype_candidates(symbol).size() == 0)
 		STAGE3_ERROR(0, symbol, symbol, "Undeclared structured (or FB) variable, or non-existant field (variable) in structure (FB).");
 	return NULL;
 }
@@ -913,7 +913,9 @@ void *print_datatypes_error_c::visit(il_simple_instruction_c *symbol)	{
    * and shove that data into this single variable.
    */
   if (matiec::analysis_flow_predecessors(symbol).size() > 0)
-    tmp_prev_il_instruction.candidate_datatypes = matiec::analysis_flow_predecessors(symbol)[0]->candidate_datatypes;
+    tmp_prev_il_instruction.candidate_datatypes =
+        matiec::analysis_datatype_candidates(
+            matiec::analysis_flow_predecessors(symbol)[0]);
   tmp_prev_il_instruction.prev_il_instruction = matiec::analysis_flow_predecessors(symbol);
 #endif
   
@@ -955,7 +957,7 @@ void *print_datatypes_error_c::visit(il_simple_instruction_c *symbol)	{
 void *print_datatypes_error_c::print_binary_operator_errors(const char *il_operator, symbol_c *symbol, bool deprecated_operation) {
 	if (NULL == il_operand) {
 		STAGE3_ERROR(0, symbol, symbol, "Missing operand for %s operator.", il_operator);		// message (a)
-	} else if ((symbol->candidate_datatypes.size() == 0) && (il_operand->candidate_datatypes.size() > 0)) {
+	} else if ((matiec::analysis_datatype_candidates(symbol).size() == 0) && (matiec::analysis_datatype_candidates(il_operand).size() > 0)) {
 		STAGE3_ERROR(0, symbol, symbol, "Data type mismatch for '%s' operator.", il_operator);		// message (b)
 	} else if (NULL == symbol->datatype) {  // do NOT use !get_datatype_info_c::is_type_valid() here!
 		STAGE3_WARNING(symbol, symbol, "Result of '%s' operation is never used.", il_operator);		// message (c)
@@ -978,7 +980,7 @@ void *print_datatypes_error_c::visit(NOT_operator_c *symbol) {
 	 */
 	if (il_operand != NULL) {
 		STAGE3_ERROR(0, symbol, symbol, "'NOT' operator may not have an operand.");
-	} else if (symbol->candidate_datatypes.size() == 0)
+	} else if (matiec::analysis_datatype_candidates(symbol).size() == 0)
 		STAGE3_ERROR(0, symbol, symbol, "Data type mismatch for 'NOT' operator.");
 	return NULL;
 }
@@ -1057,7 +1059,7 @@ void *print_datatypes_error_c::visit(JMPCN_operator_c *symbol) {return handle_co
 void *print_datatypes_error_c::visit(deref_operator_c  *symbol) {
 	symbol->exp->accept(*this);
 	/* we should really check whether the expression is merely a variable. For now, leave it for the future! */
-	if ((symbol->candidate_datatypes.size() == 0) && (symbol->exp->candidate_datatypes.size() > 0))
+	if ((matiec::analysis_datatype_candidates(symbol).size() == 0) && (matiec::analysis_datatype_candidates(symbol->exp).size() > 0))
 		STAGE3_ERROR(0, symbol, symbol, "^ operator must be preceded by a value of type REF_TO.");
 	return NULL;
 }
@@ -1066,7 +1068,7 @@ void *print_datatypes_error_c::visit(deref_operator_c  *symbol) {
 void *print_datatypes_error_c::visit(deref_expression_c  *symbol) {
 	symbol->exp->accept(*this);
 	/* we should really check whether the expression is merely a variable. For now, leave it for the future! */
-	if ((symbol->candidate_datatypes.size() == 0) && (symbol->exp->candidate_datatypes.size() > 0))
+	if ((matiec::analysis_datatype_candidates(symbol).size() == 0) && (matiec::analysis_datatype_candidates(symbol->exp).size() > 0))
 		STAGE3_ERROR(0, symbol, symbol, "DREF operator must be used with a value of type REF_TO.");
 	return NULL;
 }
@@ -1075,7 +1077,7 @@ void *print_datatypes_error_c::visit(deref_expression_c  *symbol) {
 void *print_datatypes_error_c::visit(  ref_expression_c  *symbol) {
 	symbol->exp->accept(*this);
 	/* we should really check whether the expression is merely a variable. For now, leave it for the future! */
-	if ((symbol->candidate_datatypes.size() == 0) && (symbol->exp->candidate_datatypes.size() > 0))
+	if ((matiec::analysis_datatype_candidates(symbol).size() == 0) && (matiec::analysis_datatype_candidates(symbol->exp).size() > 0))
 		STAGE3_ERROR(0, symbol, symbol, "REF operator must be used with a variable.");
 	return NULL;
 }
@@ -1084,9 +1086,9 @@ void *print_datatypes_error_c::visit(  ref_expression_c  *symbol) {
 void *print_datatypes_error_c::print_binary_expression_errors(const char *operation, symbol_c *symbol, symbol_c *l_expr, symbol_c *r_expr, bool deprecated_operation) {
 	l_expr->accept(*this);
 	r_expr->accept(*this);
-	if ((symbol->candidate_datatypes.size() == 0) 		&&
-		(l_expr->candidate_datatypes.size() > 0)	&&
-		(r_expr->candidate_datatypes.size() > 0))
+	if ((matiec::analysis_datatype_candidates(symbol).size() == 0) 		&&
+		(matiec::analysis_datatype_candidates(l_expr).size() > 0)	&&
+		(matiec::analysis_datatype_candidates(r_expr).size() > 0))
 		STAGE3_ERROR(0, symbol, symbol, "Data type mismatch for '%s' expression.", operation);
         if (deprecated_operation)
                 STAGE3_WARNING(symbol, symbol, "Deprecated operation for '%s' expression.", operation);
@@ -1113,8 +1115,8 @@ void *print_datatypes_error_c::visit( power_expression_c *symbol) {return print_
 
 void *print_datatypes_error_c::visit(neg_expression_c *symbol) {
 	symbol->exp->accept(*this);
-	if ((symbol->candidate_datatypes.size() == 0)      &&
-		(symbol->exp->candidate_datatypes.size() > 0))
+	if ((matiec::analysis_datatype_candidates(symbol).size() == 0)      &&
+		(matiec::analysis_datatype_candidates(symbol->exp).size() > 0))
 		STAGE3_ERROR(0, symbol, symbol, "Invalid data type for 'NEG' expression.");
 	return NULL;
 }
@@ -1122,8 +1124,8 @@ void *print_datatypes_error_c::visit(neg_expression_c *symbol) {
 
 void *print_datatypes_error_c::visit(not_expression_c *symbol) {
 	symbol->exp->accept(*this);
-	if ((symbol->candidate_datatypes.size() == 0)      &&
-		(symbol->exp->candidate_datatypes.size() > 0))
+	if ((matiec::analysis_datatype_candidates(symbol).size() == 0)      &&
+		(matiec::analysis_datatype_candidates(symbol->exp).size() > 0))
 		STAGE3_ERROR(0, symbol, symbol, "Invalid data type for 'NOT' expression.");
 	return NULL;
 }
@@ -1167,8 +1169,8 @@ void *print_datatypes_error_c::visit(assignment_statement_c *symbol) {
 	symbol->r_exp->accept(*this);
 	if ((!get_datatype_info_c::is_type_valid(symbol->l_exp->datatype)) &&
 	    (!get_datatype_info_c::is_type_valid(symbol->r_exp->datatype)) &&
-	    (symbol->l_exp->candidate_datatypes.size() > 0)	&&
-	    (symbol->r_exp->candidate_datatypes.size() > 0))
+	    (matiec::analysis_datatype_candidates(symbol->l_exp).size() > 0)	&&
+	    (matiec::analysis_datatype_candidates(symbol->r_exp).size() > 0))
 		STAGE3_ERROR(0, symbol, symbol, "Incompatible data types for ':=' operation.");
 	return NULL;
 }
@@ -1207,7 +1209,7 @@ void *print_datatypes_error_c::visit(fb_invocation_c *symbol) {
 void *print_datatypes_error_c::visit(if_statement_c *symbol) {
 	symbol->expression->accept(*this);
 	if ((!get_datatype_info_c::is_type_valid(symbol->expression->datatype)) &&
-	    (symbol->expression->candidate_datatypes.size() > 0)) {
+	    (matiec::analysis_datatype_candidates(symbol->expression).size() > 0)) {
 		STAGE3_ERROR(0, symbol->expression, symbol->expression, "Invalid data type for 'IF' condition (should be BOOL).");
 	}
 	if (NULL != symbol->statement_list)
@@ -1222,7 +1224,7 @@ void *print_datatypes_error_c::visit(if_statement_c *symbol) {
 void *print_datatypes_error_c::visit(elseif_statement_c *symbol) {
 	symbol->expression->accept(*this);
 	if ((!get_datatype_info_c::is_type_valid(symbol->expression->datatype)) &&
-	    (symbol->expression->candidate_datatypes.size() > 0)) {
+	    (matiec::analysis_datatype_candidates(symbol->expression).size() > 0)) {
 		STAGE3_ERROR(0, symbol->expression, symbol->expression, "Invalid data type for 'ELSIF' condition (should be BOOL).");
 	}
 	if (NULL != symbol->statement_list)
@@ -1234,7 +1236,7 @@ void *print_datatypes_error_c::visit(elseif_statement_c *symbol) {
 void *print_datatypes_error_c::visit(case_statement_c *symbol) {
 	symbol->expression->accept(*this);
 	if ((!get_datatype_info_c::is_type_valid(symbol->expression->datatype)) &&
-	    (symbol->expression->candidate_datatypes.size() > 0)) {
+	    (matiec::analysis_datatype_candidates(symbol->expression).size() > 0)) {
 		STAGE3_ERROR(0, symbol->expression, symbol->expression, "'CASE' quantity not an integer or enumerated.");
 	}
 	symbol->case_element_list->accept(*this);
@@ -1253,23 +1255,23 @@ void *print_datatypes_error_c::visit(for_statement_c *symbol) {
 	symbol->end_expression->accept(*this);
 	/* Control variable */
 	if ((!get_datatype_info_c::is_type_valid(symbol->control_variable->datatype)) &&
-	    (symbol->control_variable->candidate_datatypes.size() > 0)) {
+	    (matiec::analysis_datatype_candidates(symbol->control_variable).size() > 0)) {
 		STAGE3_ERROR(0, symbol->control_variable, symbol->control_variable, "Invalid data type for 'FOR' control variable.");
 	}
 	/* BEG expression */
 	if ((!get_datatype_info_c::is_type_valid(symbol->beg_expression->datatype)) &&
-	    (symbol->beg_expression->candidate_datatypes.size() > 0)) {
+	    (matiec::analysis_datatype_candidates(symbol->beg_expression).size() > 0)) {
 		STAGE3_ERROR(0, symbol->beg_expression, symbol->beg_expression, "Invalid data type for 'FOR' begin expression.");
 	}
 	/* END expression */
 	if ((!get_datatype_info_c::is_type_valid(symbol->end_expression->datatype)) &&
-	    (symbol->end_expression->candidate_datatypes.size() > 0)) {
+	    (matiec::analysis_datatype_candidates(symbol->end_expression).size() > 0)) {
 		STAGE3_ERROR(0, symbol->end_expression, symbol->end_expression, "Invalid data type for 'FOR' end expression.");
 	}
 	/* BY expression */
 	if ((NULL != symbol->by_expression) &&
 	    (!get_datatype_info_c::is_type_valid(symbol->by_expression->datatype)) &&
-	    (symbol->end_expression->candidate_datatypes.size() > 0)) {
+	    (matiec::analysis_datatype_candidates(symbol->end_expression).size() > 0)) {
 		STAGE3_ERROR(0, symbol->by_expression, symbol->by_expression, "Invalid data type for 'FOR' by expression.");
 	}
 	/* DO statement */

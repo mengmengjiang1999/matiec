@@ -148,12 +148,12 @@ void forced_narrow_candidate_datatypes_c::set_datatype_in_prev_il_instructions(s
 void forced_narrow_candidate_datatypes_c::forced_narrow_il_instruction(
     symbol_c *symbol, const std::vector<symbol_c *> &next_il_instruction) {
   if (NULL == symbol->datatype) {
-    if (symbol->candidate_datatypes.empty()) {
+    if (matiec::analysis_datatype_candidates(symbol).empty()) {
       symbol->datatype = &(get_datatype_info_c::invalid_type_name); // This will occur in the situations (a) in the above example
       // return NULL; // No need to return control to the visit() method of the base class... But we do so, just to be safe (called at the end of this function)!
     } else {
       if (next_il_instruction.empty()) {
-        symbol->datatype = symbol->candidate_datatypes[0]; // This will occur in the situations (b) in the above example
+        symbol->datatype = matiec::analysis_datatype_candidates(symbol)[0]; // This will occur in the situations (b) in the above example
       } else {
         symbol_c *next_datatype = NULL;
 
@@ -163,7 +163,7 @@ void forced_narrow_candidate_datatypes_c::forced_narrow_il_instruction(
             next_datatype = next_il_instruction[i]->datatype;
         if (get_datatype_info_c::is_type_valid(next_datatype)) {
           //  This will occur in the situations (c) in the above example
-          symbol->datatype = symbol->candidate_datatypes[0]; 
+          symbol->datatype = matiec::analysis_datatype_candidates(symbol)[0];
         } else {
           //  This will occur in the situations (d) in the above example
           // it is not possible to determine the exact situation in the current pass, so we can't do anything just yet. Leave it for the next time around!

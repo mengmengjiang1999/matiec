@@ -120,22 +120,26 @@ void print_symbol_c::dump_symbol(symbol_c* symbol) {
     fprintf(stderr, "(%s)", symbol->token->value);
 
   fprintf(stderr, "\t  datatype=");
-  if (NULL == symbol->datatype)
+  if (NULL == matiec::analysis_selected_datatype(symbol))
     fprintf(stderr, "NULL\t\t");
   else {
-    fprintf(stderr, "%s", symbol->datatype->absyntax_cname());
+    fprintf(stderr, "%s",
+            matiec::analysis_selected_datatype(symbol)->absyntax_cname());
   }
   fprintf(stderr, "\t<-{");
-  if (symbol->candidate_datatypes.size() == 0) {
+  const std::vector<symbol_c *> &candidates =
+      matiec::analysis_datatype_candidates(symbol);
+  if (candidates.size() == 0) {
     fprintf(stderr, "\t\t\t\t\t");
-  } else if (symbol->candidate_datatypes.size() <= 2) {
+  } else if (candidates.size() <= 2) {
     for (unsigned int i = 0; i < 2; i++)
-      if (i < symbol->candidate_datatypes.size())
-        fprintf(stderr, " %s,", symbol->candidate_datatypes[i]->absyntax_cname());
+      if (i < candidates.size())
+        fprintf(stderr, " %s,", candidates[i]->absyntax_cname());
       else
         fprintf(stderr, "\t\t\t");
   } else {
-    fprintf(stderr, "(%lu)\t\t\t\t\t", (unsigned long int)symbol->candidate_datatypes.size());
+    fprintf(stderr, "(%lu)\t\t\t\t\t",
+            (unsigned long int)candidates.size());
   }
   fprintf(stderr, "}\t ");         
   
@@ -153,9 +157,12 @@ void *print_symbol_c::visit(il_instruction_c *symbol) {
   fprintf(stderr, "  prev_il_=%lu ", (unsigned long int)matiec::analysis_flow_predecessors(symbol).size());
   if (matiec::analysis_flow_predecessors(symbol).size() == 0)
     fprintf(stderr, "(----)");
-  else if (matiec::analysis_flow_predecessors(symbol)[0]->datatype == NULL)
+  else if (matiec::analysis_selected_datatype(
+               matiec::analysis_flow_predecessors(symbol)[0]) == NULL)
     fprintf(stderr, "(NULL)");
-  else if (!get_datatype_info_c::is_type_valid(matiec::analysis_flow_predecessors(symbol)[0]->datatype))
+  else if (!get_datatype_info_c::is_type_valid(
+               matiec::analysis_selected_datatype(
+                   matiec::analysis_flow_predecessors(symbol)[0])))
     fprintf(stderr, "(****)");
   else
     fprintf(stderr, "(    )");
@@ -163,9 +170,12 @@ void *print_symbol_c::visit(il_instruction_c *symbol) {
   fprintf(stderr, "  next_il_=%lu ", (unsigned long int)matiec::analysis_flow_successors(symbol).size());
   if (matiec::analysis_flow_successors(symbol).size() == 0)
     fprintf(stderr, "(----)");
-  else if (matiec::analysis_flow_successors(symbol)[0]->datatype == NULL)
+  else if (matiec::analysis_selected_datatype(
+               matiec::analysis_flow_successors(symbol)[0]) == NULL)
     fprintf(stderr, "(NULL)");
-  else if (!get_datatype_info_c::is_type_valid(matiec::analysis_flow_successors(symbol)[0]->datatype))
+  else if (!get_datatype_info_c::is_type_valid(
+               matiec::analysis_selected_datatype(
+                   matiec::analysis_flow_successors(symbol)[0])))
     fprintf(stderr, "(****)");
   else 
     fprintf(stderr, "(    )");
@@ -237,5 +247,4 @@ void debug_c::print(symbol_c *symbol) {
 void debug_c::print_ast(symbol_c *symbol) {
   print_ast_c::print(symbol);
 }
-
 

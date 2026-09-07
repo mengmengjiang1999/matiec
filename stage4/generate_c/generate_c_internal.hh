@@ -119,9 +119,9 @@ class analyse_variable_c: public search_visitor_c {
 
     static bool is_complex_type(symbol_c *symbol) {
       if (NULL == symbol) ERROR;
-      if (!get_datatype_info_c::is_type_valid(symbol->datatype)) return false;
-      return (get_datatype_info_c::is_structure(symbol->datatype)
-           || get_datatype_info_c::is_array(symbol->datatype));
+      if (!get_datatype_info_c::is_type_valid(matiec::analysis_selected_datatype(symbol))) return false;
+      return (get_datatype_info_c::is_structure(matiec::analysis_selected_datatype(symbol))
+           || get_datatype_info_c::is_array(matiec::analysis_selected_datatype(symbol)));
     }
 
     static symbol_c *find_first_nonfb(symbol_c *symbol) {
@@ -132,19 +132,19 @@ class analyse_variable_c: public search_visitor_c {
 
     static bool contains_complex_type(symbol_c *symbol) {
       if (NULL == symbol) ERROR;
-      if (!get_datatype_info_c::is_type_valid(symbol->datatype)) ERROR;
+      if (!get_datatype_info_c::is_type_valid(matiec::analysis_selected_datatype(symbol))) ERROR;
       symbol_c *first_non_fb = find_first_nonfb(symbol);
-      return is_complex_type(first_non_fb->datatype);
+      return is_complex_type(matiec::analysis_selected_datatype(first_non_fb));
     }
 
     static search_var_instance_decl_c::vt_t first_nonfb_vardecltype(symbol_c *symbol, symbol_c *scope) {
       if (NULL == symbol) ERROR;
-      if (!get_datatype_info_c::is_type_valid(symbol->datatype)) ERROR;
+      if (!get_datatype_info_c::is_type_valid(matiec::analysis_selected_datatype(symbol))) ERROR;
 
       analyse_variable_c visitor;
       symbol_c *first_non_fb = (symbol_c *)symbol->accept(visitor);
       if (NULL != visitor.last_fb) {
-        scope = visitor.last_fb->datatype;
+        scope = matiec::analysis_selected_datatype(visitor.last_fb);
         symbol = visitor.first_non_fb_identifier;
       }
 
@@ -153,8 +153,8 @@ class analyse_variable_c: public search_visitor_c {
     }
 
     void *visit(symbolic_variable_c *symbol) {
-      if (!get_datatype_info_c::is_type_valid(symbol->datatype)) ERROR;
-      if (!get_datatype_info_c::is_function_block(symbol->datatype)) {
+      if (!get_datatype_info_c::is_type_valid(matiec::analysis_selected_datatype(symbol))) ERROR;
+      if (!get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(symbol))) {
         first_non_fb_identifier = symbol;
         return (void *)symbol;
       }
@@ -166,8 +166,8 @@ class analyse_variable_c: public search_visitor_c {
       symbol_c *res = (symbol_c *)symbol->record_variable->accept(*this);
       if (NULL != res) return res;
 
-      if (!get_datatype_info_c::is_type_valid(symbol->datatype)) ERROR;
-      if (!get_datatype_info_c::is_function_block(symbol->datatype)) {
+      if (!get_datatype_info_c::is_type_valid(matiec::analysis_selected_datatype(symbol))) ERROR;
+      if (!get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(symbol))) {
         first_non_fb_identifier = symbol->field_selector;
         return (void *)symbol;
       }

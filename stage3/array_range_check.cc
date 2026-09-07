@@ -274,7 +274,9 @@ void *array_range_check_c::visit(array_initial_elements_list_c *symbol) {
 	 * Note that narrow_candidate_datatypes_c always sets it to the array's base type declaration.
 	 */
 	array_specification_c *array_spec = NULL;
-	if (NULL != symbol->datatype) array_spec = dynamic_cast<array_specification_c *>(symbol->datatype);
+	if (NULL != matiec::analysis_selected_datatype(symbol))
+		array_spec = dynamic_cast<array_specification_c *>(
+			matiec::analysis_selected_datatype(symbol));
 	if (NULL == array_spec) return NULL;
 
 	/* Determine how many elements the array may store, i.e. the product of all its dimensions.

@@ -155,6 +155,12 @@ const std::vector<symbol_c *> &analysis_flow_successors(
 const std::vector<symbol_c *> &analysis_flow_successors(
     const il_simple_instruction_c *symbol);
 const const_value_c &analysis_constant_value(const symbol_c *symbol);
+const DatatypeAnalysisRecord *analysis_datatype(const symbol_c *symbol);
+const std::vector<symbol_c *> &analysis_datatype_candidates(
+    const symbol_c *symbol);
+symbol_c *analysis_selected_datatype(const symbol_c *symbol);
+symbol_c *analysis_scope(const symbol_c *symbol);
+bool refresh_analysis_datatype_candidates(symbol_c *symbol);
 
 }  // namespace matiec
 

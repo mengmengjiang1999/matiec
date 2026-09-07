@@ -736,7 +736,7 @@ class generate_c_pous_c {
        *       so it is safe for stage 4 to assume that this return variable will never be needed
        *       if the function's return type is VOID.
        */
-      if (!get_datatype_info_c::is_VOID(symbol->type_name->datatype)) { // only print return variable if return datatype is not VOID
+      if (!get_datatype_info_c::is_VOID(matiec::analysis_selected_datatype(symbol->type_name))) { // only print return variable if return datatype is not VOID
         s4o.print(s4o.indent_spaces);
         symbol->type_name->accept(print_base); /* return type */
         s4o.print(" ");
@@ -767,7 +767,7 @@ class generate_c_pous_c {
         s4o.print(s4o.indent_spaces + "*__ENO = __BOOL_LITERAL(FALSE);\n");
         s4o.indent_left();
         s4o.print(s4o.indent_spaces + "}\n");
-        if (!get_datatype_info_c::is_VOID(symbol->type_name->datatype)) { // only print return variable if return datatype is not VOID
+        if (!get_datatype_info_c::is_VOID(matiec::analysis_selected_datatype(symbol->type_name))) { // only print return variable if return datatype is not VOID
           s4o.print(s4o.indent_spaces + "return ");
           symbol->derived_function_name->accept(print_base);
           s4o.print(";\n");
@@ -790,7 +790,7 @@ class generate_c_pous_c {
       vardecl->print(symbol->var_declarations_list);
       delete vardecl;
       
-      if (!get_datatype_info_c::is_VOID(symbol->type_name->datatype)) { // only print 'return <fname>' if return datatype is not VOID
+      if (!get_datatype_info_c::is_VOID(matiec::analysis_selected_datatype(symbol->type_name))) { // only print 'return <fname>' if return datatype is not VOID
         s4o.print(s4o.indent_spaces + "return ");
         symbol->derived_function_name->accept(print_base);
         s4o.print(";\n");

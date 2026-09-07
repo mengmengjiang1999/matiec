@@ -240,4 +240,41 @@ const const_value_c &analysis_constant_value(const symbol_c *symbol) {
   return symbol->const_value;
 }
 
+const DatatypeAnalysisRecord *analysis_datatype(const symbol_c *symbol) {
+  if (current_analysis_store == nullptr) return nullptr;
+  const AnalysisEntry<DatatypeAnalysisRecord> *entry =
+      current_analysis_store->datatype(symbol);
+  return entry == nullptr ? nullptr : &entry->value;
+}
+
+const std::vector<symbol_c *> &analysis_datatype_candidates(
+    const symbol_c *symbol) {
+  static const std::vector<symbol_c *> empty;
+  if (symbol == nullptr) return empty;
+  const DatatypeAnalysisRecord *record = analysis_datatype(symbol);
+  return record == nullptr ? symbol->candidate_datatypes : record->candidates;
+}
+
+symbol_c *analysis_selected_datatype(const symbol_c *symbol) {
+  if (symbol == nullptr) return nullptr;
+  const DatatypeAnalysisRecord *record = analysis_datatype(symbol);
+  return record == nullptr ? symbol->datatype : record->selected;
+}
+
+symbol_c *analysis_scope(const symbol_c *symbol) {
+  if (symbol == nullptr) return nullptr;
+  const DatatypeAnalysisRecord *record = analysis_datatype(symbol);
+  return record == nullptr ? symbol->scope : record->scope;
+}
+
+bool refresh_analysis_datatype_candidates(symbol_c *symbol) {
+  if (current_analysis_store == nullptr || symbol == nullptr) return false;
+  DatatypeAnalysisRecord record;
+  const AnalysisEntry<DatatypeAnalysisRecord> *entry =
+      current_analysis_store->datatype(symbol);
+  if (entry != nullptr) record = entry->value;
+  record.candidates = symbol->candidate_datatypes;
+  return current_analysis_store->set_datatype(symbol, std::move(record));
+}
+
 }  // namespace matiec

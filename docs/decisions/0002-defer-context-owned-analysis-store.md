@@ -79,9 +79,9 @@ explicit prohibition on compatibility globals.
 The entry criteria were subsequently met. `CompilationContext` now owns an
 arena-checked `AnalysisStore`; flow, constant, datatype, resolution, enumeration,
 and generator record families all have production publication boundaries.
-Compatibility materializers remain only for datatype consumers. Completed flow,
-constant, resolution, enumeration, and generator records no longer require
-production AST copy-back. Flow and constant consumers use a narrowly scoped
+Compatibility materializers are no longer used by production. Completed flow,
+constant, datatype, resolution, enumeration, and generator records no longer
+require AST copy-back. Legacy-shaped consumers use a narrowly scoped
 thread-local active-store guard that is installed and restored by the compiler;
 this supersedes the original prohibition above while preserving nested context
 isolation. This document remains the historical rationale for the staged

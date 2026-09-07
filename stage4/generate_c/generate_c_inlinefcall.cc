@@ -240,8 +240,8 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
     void *print_getter(symbol_c *symbol) {
       unsigned int vartype = search_var_instance_decl->get_vartype(symbol);
       if (vartype == search_var_instance_decl_c::external_vt) {
-        if (!get_datatype_info_c::is_type_valid    (symbol->datatype)) ERROR;
-        if ( get_datatype_info_c::is_function_block(symbol->datatype))
+        if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(symbol))) ERROR;
+        if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(symbol)))
           s4o.print(GET_EXTERNAL_FB);
         else
           s4o.print(GET_EXTERNAL);
@@ -267,8 +267,8 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
                        symbol_c* value) {
       unsigned int vartype = search_var_instance_decl->get_vartype(symbol);
       if (vartype == search_var_instance_decl_c::external_vt) {
-        if (!get_datatype_info_c::is_type_valid    (symbol->datatype)) ERROR;
-        if ( get_datatype_info_c::is_function_block(symbol->datatype))
+        if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(symbol))) ERROR;
+        if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(symbol)))
           s4o.print(SET_EXTERNAL_FB);
          else
           s4o.print(SET_EXTERNAL);
@@ -420,7 +420,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
     // SYM_REF2(il_instruction_c, label, il_instruction)
     void *visit(il_instruction_c *symbol) {
       /* all previous IL instructions should have the same datatype (checked in stage3), so we get the datatype from the first previous IL instruction we find */
-      implicit_variable_current.datatype = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_flow_predecessors(symbol)[0]->datatype;
+      implicit_variable_current.datatype = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_selected_datatype(matiec::analysis_flow_predecessors(symbol)[0]);
       if (NULL != symbol->il_instruction)  symbol->il_instruction->accept(*this); 
       implicit_variable_current.datatype = NULL;
       return NULL;
@@ -763,7 +763,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
     // SYM_REF1(il_simple_instruction_c, il_simple_instruction, symbol_c *prev_il_instruction;)
     void *visit(il_simple_instruction_c *symbol) {
       /* all previous IL instructions should have the same datatype (checked in stage3), so we get the datatype from the first previous IL instruction we find */
-      implicit_variable_current.datatype = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_flow_predecessors(symbol)[0]->datatype;
+      implicit_variable_current.datatype = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_selected_datatype(matiec::analysis_flow_predecessors(symbol)[0]);
       symbol->il_simple_instruction->accept(*this);
       implicit_variable_current.datatype = NULL;
       return NULL;      

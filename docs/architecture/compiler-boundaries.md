@@ -60,13 +60,15 @@ candidate vectors, and final datatype/scope selections are published there at
 their completed phase boundaries. A compilation-scoped active-store guard lets
 legacy-shaped visitors read completed flow and constant records without AST
 copy-back, while missing records fall back to producer-local transient state.
-Datatype records are still materialized for unmigrated consumers. Invocation
+Candidate filling publishes its completed vectors for narrowing; selected
+datatypes and scopes are published after narrowing for later semantic checks and
+Stage 4. Neither datatype boundary performs production AST copy-back. Invocation
 declaration resolution is also published after narrowing,
 scope-specific enumeration multimaps after enumeration checking, and named
 generator annotations are updated live during Stage 4. All typed record families
-now have production boundaries; compatibility materializers remain only for
-datatype consumers. Flow, constants, and invocation resolution have crossed
-that boundary: lvalue validation and Stage 4 use typed store lookups, while the
+now have production boundaries and none uses a production compatibility
+materializer. Flow, constants, datatypes, and invocation resolution have crossed
+that boundary: downstream semantic checks and Stage 4 use typed store lookups, while the
 producer's temporary AST fields remain confined to type-safety processing.
 Enumeration lookup tables also remain store-owned after their completed pass,
 with no production materialization because downstream passes do not read the AST

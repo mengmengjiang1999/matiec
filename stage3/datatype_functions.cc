@@ -440,7 +440,8 @@ void intersect_prev_candidate_datatype_lists(il_instruction_c *symbol) {
 	if (matiec::analysis_flow_predecessors(symbol).empty())
 		return;
 
-	symbol->candidate_datatypes = matiec::analysis_flow_predecessors(symbol)[0]->candidate_datatypes;
+	symbol->candidate_datatypes = matiec::analysis_datatype_candidates(
+		matiec::analysis_flow_predecessors(symbol)[0]);
 	for (unsigned int i = 1; i < matiec::analysis_flow_predecessors(symbol).size(); i++) {
 		intersect_candidate_datatype_list(symbol /*origin, dest.*/, matiec::analysis_flow_predecessors(symbol)[i] /*with*/);
 	}

@@ -117,7 +117,6 @@ static int type_safety(symbol_c *tree_root,
 	fill_candidate_datatypes_c fill_candidate_datatypes(tree_root);
 	tree_root->accept(fill_candidate_datatypes);
 	if (!publish_datatype_candidates(tree_root, analysis)) return 1;
-	materialize_datatype_candidates(tree_root, analysis);
 	narrow_candidate_datatypes_c narrow_candidate_datatypes(tree_root);
 	tree_root->accept(narrow_candidate_datatypes);
 	print_datatypes_error_c print_datatypes_error(tree_root, diagnostics);
@@ -125,7 +124,6 @@ static int type_safety(symbol_c *tree_root,
 	forced_narrow_candidate_datatypes_c forced_narrow_candidate_datatypes(tree_root);
 	tree_root->accept(forced_narrow_candidate_datatypes);
 	if (!publish_selected_datatypes(tree_root, analysis)) return 1;
-	materialize_selected_datatypes(tree_root, analysis);
 	if (!publish_declaration_resolution(tree_root, analysis)) return 1;
 	return print_datatypes_error.get_error_count();
 }
