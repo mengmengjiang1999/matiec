@@ -241,12 +241,10 @@ records directly; IL instruction nodes no longer store edge vectors and the AST
 base no longer stores constant values. Candidate filling and narrowing likewise
 update datatype records directly, and the AST base contains no candidate,
 selected-type, or declaration-scope annotations. Context-owned transient flow,
-constant, and datatype records cover stack-local and immutable shared helpers.
-Lvalue validation and Stage 4 read invocation resolution directly
-from the store, so completed resolution results are no longer copied back onto
-the AST for downstream use. Completed scope-specific enumeration tables likewise
-remain store-owned; no production pass requires their AST compatibility copies.
-Generator annotations also remain off the AST in production and need no
+constant, datatype, resolution, and enumeration records cover stack-local and
+immutable shared helpers. Resolution filling/narrowing and enumeration checking
+update those records directly; lvalue validation and Stage 4 consume them without
+AST fields or publication walks. Generator annotations remain off the AST and need no
 post-generation publish/materialize cycle. Whole-tree compatibility
 materializers have been removed, so typed records are the only completed-result
 interface.
@@ -400,7 +398,6 @@ ownership, or memory-lifetime changes.
 ## Roadmap boundaries
 
 - Reentrant generated frontend and parallel in-process compilation
-- Removal of resolution, enumeration, and generator compatibility annotations from AST nodes
 - Explicit analysis dependencies without an active-store compatibility scope
 - Versioned embedding API/ABI
 - Direct graphical FBD and LD input
@@ -411,10 +408,9 @@ defined by the tests and [OpenSpec requirements](openspec/specs/).
 
 Context-owned semantic analysis storage is complete: all six typed record
 families have production boundaries and completed results stay in the
-`AnalysisStore`. Flow, constant, and datatype annotations have also been removed
-from the AST. The remaining annotation work removes resolution, enumeration, and
-generator producer-local fields and their compatibility access path; it does not
-introduce another result store.
+`AnalysisStore`. All semantic and generator result fields have been removed from
+the AST. The remaining cleanup replaces the scoped active-store compatibility
+path with explicit analysis dependencies; it does not introduce another result store.
 
 ## Project origin and license
 

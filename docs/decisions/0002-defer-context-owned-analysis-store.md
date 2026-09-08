@@ -86,8 +86,7 @@ thread-local active-store guard that is installed and restored by the compiler;
 this supersedes the original prohibition above while preserving nested context
 isolation. This document remains the historical rationale for the staged
 approach. Test-only materializers have also been removed. Flow vectors, constant
-values, datatype candidates, selections, and scopes no longer occupy AST fields;
-their producers update persistent or transient context records directly. The
-remaining follow-up removes resolution, enumeration, and generator compatibility
-fields and finally the scoped active-store bridge. This does not reopen the
-completed result-store design.
+values, datatype candidates/selections/scopes, resolution, enumeration, and
+generator metadata no longer occupy AST fields; their producers update persistent
+or transient context records directly. The remaining follow-up removes the scoped
+active-store bridge. This does not reopen the completed result-store design.

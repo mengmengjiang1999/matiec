@@ -64,10 +64,9 @@ Candidate filling updates typed vectors used by narrowing; narrowing updates
 selected datatypes and scopes used by later semantic checks and Stage 4. The AST
 base class contains none of those datatype-analysis fields or constant values,
 and IL instruction nodes contain no flow-edge vectors. Transient tables are
-cleared with the store. Invocation
-declaration resolution is also published after narrowing,
-scope-specific enumeration multimaps after enumeration checking, and named
-generator annotations are updated live during Stage 4. All typed record families
+cleared with the store. Invocation declaration resolution and scope-specific
+enumeration multimaps are updated live by their producers, and named generator
+annotations are updated live during Stage 4. All typed record families
 now have production boundaries and none uses a production compatibility
 materializer. Flow, constants, datatypes, and invocation resolution have crossed
 that boundary: downstream semantic checks and Stage 4 use typed store lookups, while the
@@ -78,10 +77,9 @@ compatibility tables. Generator visitors exchange implicit-type identifiers
 through typed records and do not publish or materialize AST annotation maps.
 No whole-tree compatibility materializer remains in the compiler or its tests;
 focused tests verify record authority directly.
-The result-store migration is complete and flow, constant, and datatype producer
-annotations have left the AST. Removing resolution, enumeration, and generator
-compatibility fields and replacing the scoped active-store bridge with explicit
-analysis dependencies are the remaining cleanup boundaries.
+The result-store migration is complete and all semantic/generator result fields
+have left the AST. Replacing the scoped active-store bridge with explicit analysis
+dependencies is the remaining cleanup boundary.
 
 ## Generated output
 

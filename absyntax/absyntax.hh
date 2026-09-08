@@ -83,6 +83,12 @@ symbol_c *&analysis_scope_ref(symbol_c *symbol);
 symbol_c *analysis_scope(const symbol_c *symbol);
 const const_value_c &analysis_constant_value(const symbol_c *symbol);
 const_value_c &analysis_constant_value_mut(symbol_c *symbol);
+std::vector<symbol_c *> &analysis_resolution_candidates_mut(symbol_c *symbol);
+const std::vector<symbol_c *> &analysis_resolution_candidates(const symbol_c *symbol);
+symbol_c *&analysis_resolution_declaration_ref(symbol_c *symbol);
+symbol_c *analysis_resolution_declaration(const symbol_c *symbol);
+int &analysis_extensible_parameter_count_ref(symbol_c *symbol);
+int analysis_extensible_parameter_count(const symbol_c *symbol);
 }
 
 
@@ -241,6 +247,33 @@ class symbol_c {
      * They will be declared only inside the symbols that require them (have a look at absyntax.def)
      */
     typedef std::multimap<std::string, symbol_c *, nocasecmp_c> enumvalue_symtable_t;
+    enumvalue_symtable_t &enumvalue_symtable();
+    const enumvalue_symtable_t &enumvalue_symtable() const;
+
+    std::vector<symbol_c *> &candidate_functions() {
+      return matiec::analysis_resolution_candidates_mut(this);
+    }
+    const std::vector<symbol_c *> &candidate_functions() const {
+      return matiec::analysis_resolution_candidates(this);
+    }
+    symbol_c *&called_function_declaration() {
+      return matiec::analysis_resolution_declaration_ref(this);
+    }
+    symbol_c *called_function_declaration() const {
+      return matiec::analysis_resolution_declaration(this);
+    }
+    symbol_c *&called_fb_declaration() {
+      return matiec::analysis_resolution_declaration_ref(this);
+    }
+    symbol_c *called_fb_declaration() const {
+      return matiec::analysis_resolution_declaration(this);
+    }
+    int &extensible_param_count() {
+      return matiec::analysis_extensible_parameter_count_ref(this);
+    }
+    int extensible_param_count() const {
+      return matiec::analysis_extensible_parameter_count(this);
+    }
     
     /*
      * Annotations produced during stage 4
@@ -249,8 +282,6 @@ class symbol_c {
      * possible use would quickly get out of hand.
      * We therefore simply add a map, that each stage 4 may use for all its needs.
      */
-    typedef std::map<std::string, symbol_c *> anotations_map_t;
-    anotations_map_t anotations_map;
     
 
   public:

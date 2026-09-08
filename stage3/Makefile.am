@@ -6,8 +6,6 @@ libstage3_a_SOURCES = \
 	stage3.cc \
 	semantic_diagnostics.cc \
 	flow_control_analysis.cc \
-	resolution_analysis_store.cc \
-	enumeration_analysis_store.cc \
 	fill_candidate_datatypes.cc \
 	narrow_candidate_datatypes.cc \
 	forced_narrow_candidate_datatypes.cc \

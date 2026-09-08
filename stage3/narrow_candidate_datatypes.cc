@@ -287,7 +287,7 @@ void narrow_candidate_datatypes_c::narrow_function_invocation(symbol_c *fcall, g
 	 *       able to print out any error messages related to the parameters being passed in this function
 	 *       invocation.
 	 */
-	/* if (NULL == symbol->called_function_declaration) ERROR; */
+	/* if (NULL == symbol->called_function_declaration()) ERROR; */
 	if (matiec::analysis_datatype_candidates(fcall).size() == 1) {
 		/* If only one function declaration, then we use that (even if symbol->datatypes == NULL)
 		 * so we can check for errors in the expressions used to pass parameters in this
@@ -376,7 +376,7 @@ void *narrow_candidate_datatypes_c::narrow_implicit_il_fb_call(symbol_c *il_inst
 	 * The above will be done by the visit(il_fb_call_c *) method, so we must make sure to
 	 * correctly set up the il_fb_call.datatype() variable!
 	 */
-	il_fb_call.called_fb_declaration = called_fb_declaration;
+	il_fb_call.called_fb_declaration() = called_fb_declaration;
 	il_fb_call.accept(*this);
 
 	/* set the required datatype of the previous IL instruction! */
@@ -1138,9 +1138,9 @@ void *narrow_candidate_datatypes_c::visit(il_function_call_c *symbol) {
 		/* fcall_param.nonformal_operand_list      = */ symbol->il_operand_list,
 		/* fcall_param.formal_operand_list         = */ NULL,
 		/* enum {POU_FB, POU_function} POU_type    = */ generic_function_call_t::POU_function,
-		/* fcall_param.candidate_functions         = */ symbol->candidate_functions,
-		/* fcall_param.called_function_declaration = */ symbol->called_function_declaration,
-		/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count
+		/* fcall_param.candidate_functions         = */ symbol->candidate_functions(),
+		/* fcall_param.called_function_declaration = */ symbol->called_function_declaration(),
+		/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count()
 	};
 
 	narrow_function_invocation(symbol, fcall_param);
@@ -1210,7 +1210,7 @@ void *narrow_candidate_datatypes_c::visit(il_jump_operation_c *symbol) {
 /* NOTE: The parameter 'called_fb_declaration'is used to pass data between stage 3 and stage4 */
 // SYM_REF4(il_fb_call_c, il_call_operator, fb_name, il_operand_list, il_param_list, symbol_c *called_fb_declaration)
 void *narrow_candidate_datatypes_c::visit(il_fb_call_c *symbol) {
-	symbol_c *fb_decl = symbol->called_fb_declaration;
+	symbol_c *fb_decl = symbol->called_fb_declaration();
 
 	/* Although a call to a non-declared FB is a semantic error, this is currently caught by stage 2! */
 	if (NULL == fb_decl) ERROR;
@@ -1233,9 +1233,9 @@ void *narrow_candidate_datatypes_c::visit(il_formal_funct_call_c *symbol) {
 		/* fcall_param.nonformal_operand_list      = */ NULL,
 		/* fcall_param.formal_operand_list         = */ symbol->il_param_list,
 		/* enum {POU_FB, POU_function} POU_type    = */ generic_function_call_t::POU_function,
-		/* fcall_param.candidate_functions         = */ symbol->candidate_functions,
-		/* fcall_param.called_function_declaration = */ symbol->called_function_declaration,
-		/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count
+		/* fcall_param.candidate_functions         = */ symbol->candidate_functions(),
+		/* fcall_param.called_function_declaration = */ symbol->called_function_declaration(),
+		/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count()
 	};
 
 	narrow_function_invocation(symbol, fcall_param);
@@ -1489,17 +1489,17 @@ void *narrow_candidate_datatypes_c::visit( STN_operator_c *symbol)  {return narr
 /* So, we merely set the desired datatype of the previous il instruction */
 void *narrow_candidate_datatypes_c::visit( NOT_operator_c *symbol)  {set_datatype_in_prev_il_instructions(symbol->datatype(), fake_prev_il_instruction);return NULL;}
 
-void *narrow_candidate_datatypes_c::visit(   S_operator_c *symbol)  {return narrow_S_and_R_operator   (symbol, "S",   symbol->called_fb_declaration);}
-void *narrow_candidate_datatypes_c::visit(   R_operator_c *symbol)  {return narrow_S_and_R_operator   (symbol, "R",   symbol->called_fb_declaration);}
+void *narrow_candidate_datatypes_c::visit(   S_operator_c *symbol)  {return narrow_S_and_R_operator   (symbol, "S",   symbol->called_fb_declaration());}
+void *narrow_candidate_datatypes_c::visit(   R_operator_c *symbol)  {return narrow_S_and_R_operator   (symbol, "R",   symbol->called_fb_declaration());}
 
-void *narrow_candidate_datatypes_c::visit(  S1_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "S1",  symbol->called_fb_declaration);}
-void *narrow_candidate_datatypes_c::visit(  R1_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "R1",  symbol->called_fb_declaration);}
-void *narrow_candidate_datatypes_c::visit( CLK_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "CLK", symbol->called_fb_declaration);}
-void *narrow_candidate_datatypes_c::visit(  CU_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "CU",  symbol->called_fb_declaration);}
-void *narrow_candidate_datatypes_c::visit(  CD_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "CD",  symbol->called_fb_declaration);}
-void *narrow_candidate_datatypes_c::visit(  PV_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "PV",  symbol->called_fb_declaration);}
-void *narrow_candidate_datatypes_c::visit(  IN_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "IN",  symbol->called_fb_declaration);}
-void *narrow_candidate_datatypes_c::visit(  PT_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "PT",  symbol->called_fb_declaration);}
+void *narrow_candidate_datatypes_c::visit(  S1_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "S1",  symbol->called_fb_declaration());}
+void *narrow_candidate_datatypes_c::visit(  R1_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "R1",  symbol->called_fb_declaration());}
+void *narrow_candidate_datatypes_c::visit( CLK_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "CLK", symbol->called_fb_declaration());}
+void *narrow_candidate_datatypes_c::visit(  CU_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "CU",  symbol->called_fb_declaration());}
+void *narrow_candidate_datatypes_c::visit(  CD_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "CD",  symbol->called_fb_declaration());}
+void *narrow_candidate_datatypes_c::visit(  PV_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "PV",  symbol->called_fb_declaration());}
+void *narrow_candidate_datatypes_c::visit(  IN_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "IN",  symbol->called_fb_declaration());}
+void *narrow_candidate_datatypes_c::visit(  PT_operator_c *symbol)  {return narrow_implicit_il_fb_call(symbol, "PT",  symbol->called_fb_declaration());}
 
 void *narrow_candidate_datatypes_c::visit( AND_operator_c *symbol)  {return narrow_binary_operator(widen_AND_table, symbol);}
 void *narrow_candidate_datatypes_c::visit(  OR_operator_c *symbol)  {return narrow_binary_operator( widen_OR_table, symbol);}
@@ -1682,9 +1682,9 @@ void *narrow_candidate_datatypes_c::visit(function_invocation_c *symbol) {
 		/* fcall_param.nonformal_operand_list      = */ symbol->nonformal_param_list,
 		/* fcall_param.formal_operand_list         = */ symbol->formal_param_list,
 		/* enum {POU_FB, POU_function} POU_type    = */ generic_function_call_t::POU_function,
-		/* fcall_param.candidate_functions         = */ symbol->candidate_functions,
-		/* fcall_param.called_function_declaration = */ symbol->called_function_declaration,
-		/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count
+		/* fcall_param.candidate_functions         = */ symbol->candidate_functions(),
+		/* fcall_param.called_function_declaration = */ symbol->called_function_declaration(),
+		/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count()
 	};
 
 	narrow_function_invocation(symbol, fcall_param);
@@ -1728,7 +1728,7 @@ void *narrow_candidate_datatypes_c::visit(assignment_statement_c *symbol) {
 /*****************************************/
 
 void *narrow_candidate_datatypes_c::visit(fb_invocation_c *symbol) {
-	/* Note: We do not use the symbol->called_fb_declaration value (set in fill_candidate_datatypes_c)
+	/* Note: We do not use the symbol->called_fb_declaration() value (set in fill_candidate_datatypes_c)
 	 *       because we try to identify any other datatype errors in the expressions used in the
 	 *       parameters to the FB call (e.g.  fb_var(var1 * 56 + func(var * 43)) )
 	 *       even it the call to the FB is invalid.

@@ -38,6 +38,7 @@
 #include <string.h>
 
 #include "absyntax.hh"
+#include "../compiler/analysis_store.hh"
 #include "../compiler/ast_arena.hh"
 //#include "../stage1_2/iec.hh" /* required for BOGUS_TOKEN_ID, etc... */
 #include "visitor.hh"
@@ -413,4 +414,11 @@ void *class_name_c::accept(visitor_c &visitor) {return visitor.visit(this);}
 #undef SYM_REF4
 #undef SYM_REF5
 #undef SYM_REF6
+symbol_c::enumvalue_symtable_t &symbol_c::enumvalue_symtable() {
+  return matiec::analysis_enumeration_values_mut(this);
+}
+
+const symbol_c::enumvalue_symtable_t &symbol_c::enumvalue_symtable() const {
+  return matiec::analysis_enumeration_values(this);
+}
 

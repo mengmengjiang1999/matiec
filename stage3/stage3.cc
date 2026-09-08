@@ -46,8 +46,6 @@
 #include "array_range_check.hh"
 #include "case_elements_check.hh"
 #include "constant_folding.hh"
-#include "resolution_analysis_store.hh"
-#include "enumeration_analysis_store.hh"
 #include "declaration_check.hh"
 #include "enum_declaration_check.hh"
 #include "remove_forward_dependencies.hh"
@@ -59,9 +57,8 @@ static int enum_declaration_check(symbol_c *tree_root,
                                   matiec::AnalysisStore &analysis){
     enum_declaration_check_c enum_declaration_check(NULL, diagnostics);
     tree_root->accept(enum_declaration_check);
-    int errors = enum_declaration_check.get_error_count();
-    if (!publish_enumeration_analysis(tree_root, analysis)) ++errors;
-    return errors;
+    if (!analysis.validate_enumerations()) return 1;
+    return enum_declaration_check.get_error_count();
 }
 
 
@@ -120,7 +117,7 @@ static int type_safety(symbol_c *tree_root,
 	forced_narrow_candidate_datatypes_c forced_narrow_candidate_datatypes(tree_root);
 	tree_root->accept(forced_narrow_candidate_datatypes);
 	if (!analysis.validate_datatypes()) return 1;
-	if (!publish_declaration_resolution(tree_root, analysis)) return 1;
+	if (!analysis.validate_resolutions()) return 1;
 	return print_datatypes_error.get_error_count();
 }
 

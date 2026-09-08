@@ -207,7 +207,7 @@ int enum_declaration_check_c::get_error_count() {return error_count;}
 /* B 0 - Programming Model */
 /***************************/
 void *enum_declaration_check_c::visit(library_c *symbol) {
-  global_enumvalue_symtable = &(symbol->enumvalue_symtable);
+  global_enumvalue_symtable = &(symbol->enumvalue_symtable());
   iterator_visitor_c::visit(symbol); // fall back to base class
   return NULL;
 }
@@ -227,7 +227,7 @@ void *enum_declaration_check_c::visit(data_type_declaration_c *symbol) {
 /* B 1.5.1 Functions */
 /*********************/
 void *enum_declaration_check_c::visit(function_declaration_c *symbol) {
-  populate_enumvalue_symtable->populate(&(symbol->enumvalue_symtable), symbol->var_declarations_list);
+  populate_enumvalue_symtable->populate(&(symbol->enumvalue_symtable()), symbol->var_declarations_list);
   return NULL;
 }
 
@@ -235,7 +235,7 @@ void *enum_declaration_check_c::visit(function_declaration_c *symbol) {
 /* B 1.5.2 Function blocks */
 /***************************/
 void *enum_declaration_check_c::visit(function_block_declaration_c *symbol) {
-  populate_enumvalue_symtable->populate(&(symbol->enumvalue_symtable), symbol->var_declarations);
+  populate_enumvalue_symtable->populate(&(symbol->enumvalue_symtable()), symbol->var_declarations);
   return NULL;
 }
 
@@ -243,7 +243,7 @@ void *enum_declaration_check_c::visit(function_block_declaration_c *symbol) {
 /* B 1.5.3 - Programs */
 /**********************/
 void *enum_declaration_check_c::visit(program_declaration_c *symbol) {
-  populate_enumvalue_symtable->populate(&(symbol->enumvalue_symtable), symbol->var_declarations);
+  populate_enumvalue_symtable->populate(&(symbol->enumvalue_symtable()), symbol->var_declarations);
   return NULL;
 }
 
@@ -252,10 +252,10 @@ void *enum_declaration_check_c::visit(program_declaration_c *symbol) {
 /********************************/
 void *enum_declaration_check_c::visit(configuration_declaration_c *symbol) {
   if (NULL != symbol->global_var_declarations)
-    populate_enumvalue_symtable->populate(&(symbol->enumvalue_symtable), symbol->global_var_declarations);
+    populate_enumvalue_symtable->populate(&(symbol->enumvalue_symtable()), symbol->global_var_declarations);
   if (NULL != symbol->resource_declarations)
     /* May reference either a list of resource_declaration_c, or a single_resource_declaration_c */
-    populate_enumvalue_symtable->populate(&(symbol->enumvalue_symtable), symbol->resource_declarations);
+    populate_enumvalue_symtable->populate(&(symbol->enumvalue_symtable()), symbol->resource_declarations);
   
   return NULL;
 }
@@ -263,7 +263,7 @@ void *enum_declaration_check_c::visit(configuration_declaration_c *symbol) {
 
 void *enum_declaration_check_c::visit(resource_declaration_c *symbol) {
   if (NULL != symbol->global_var_declarations)
-    populate_enumvalue_symtable->populate(&(symbol->enumvalue_symtable), symbol->global_var_declarations);
+    populate_enumvalue_symtable->populate(&(symbol->enumvalue_symtable()), symbol->global_var_declarations);
   return NULL;
 }
 

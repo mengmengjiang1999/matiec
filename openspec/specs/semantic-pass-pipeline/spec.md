@@ -131,33 +131,31 @@ and downstream passes SHALL consume those fields without AST storage.
 
 ### Requirement: Declaration resolution is context-owned
 
-After datatype narrowing completes, the compiler SHALL publish function and
-function-block invocation resolution into the active context's typed Analysis Store.
-Completed resolution SHALL remain in that store without an AST copy-back API.
+Datatype filling and narrowing SHALL update invocation resolution directly in
+the active context's typed Analysis Store. Persistent and transient working
+records SHALL replace AST fields and no publication traversal SHALL be required.
 
 #### Scenario: An overloaded function call is resolved
 
 - **WHEN** narrowing selects a declaration from an ordered candidate list
-- **THEN** the resolution record preserves the candidates, selected declaration,
-  and extensible parameter count
+- **THEN** the live resolution record preserves candidates, declaration, and extensible parameter count
 
 #### Scenario: An implicit IL function-block operator is resolved
 
 - **WHEN** semantic analysis identifies its function-block declaration
-- **THEN** that declaration is published for the operator node
+- **THEN** that declaration is retained in the operator's live resolution record
 
 ### Requirement: Enumeration analysis is context-owned
 
-After enumeration declaration checking completes, the compiler SHALL publish each
-enumeration scope's case-insensitive multimap into the active context's Analysis Store.
-Completed enumeration records SHALL remain in that store without an AST copy-back
-API.
+Enumeration declaration checking SHALL update each scope's case-insensitive
+multimap directly in the active context's Analysis Store. Persistent and
+transient working records SHALL replace AST tables and no publication traversal
+SHALL be required.
 
 #### Scenario: Multiple enum types reuse a value spelling
 
-- **WHEN** a scope table contains multiple declarations under the same
-  case-insensitive key
-- **THEN** the store record preserves every entry
+- **WHEN** a scope table contains multiple declarations under the same case-insensitive key
+- **THEN** the live store record preserves every entry
 
 ### Requirement: Downstream semantic passes consume resolution records
 
@@ -171,22 +169,19 @@ resolved invocation declarations from the active context's Analysis Store.
   requiring a materialized AST resolution field
 
 ### Requirement: Enumeration results remain store-owned after their pass
+
 The semantic pipeline SHALL retain completed scope-specific enumeration lookup
-tables in the active compilation context's Analysis Store without materializing
-those records back onto AST compatibility fields in production.
+tables in the active compilation context's Analysis Store without AST fields.
 
-#### Scenario: Later passes follow enumeration publication
+#### Scenario: Later passes follow enumeration checking
 
-- **WHEN** enumeration checking completes and publishes its typed records
-- **THEN** the pipeline continues without copying the records back to scope AST
-  enum tables
+- **WHEN** enumeration checking completes and validates its typed records
+- **THEN** the pipeline continues without copying records to scope AST nodes
 
-#### Scenario: Typed lookup remains available without AST state
+#### Scenario: Typed lookup remains available
 
-- **WHEN** an AST scope compatibility table is empty after enumeration results
-  have been published
-- **THEN** case-insensitive typed record lookup still returns every matching enum
-  declaration
+- **WHEN** a later consumer performs case-insensitive enum lookup
+- **THEN** the typed record returns every matching declaration
 
 ### Requirement: Completed flow and constants are consumed from typed records
 
@@ -213,14 +208,14 @@ Store without AST compatibility storage or production materialization.
 
 The compiler SHALL expose completed constant, datatype, resolution, enumeration,
 and generator results through typed Analysis Store records and SHALL NOT provide
-whole-tree APIs that copy those completed records onto AST compatibility fields.
+AST compatibility result fields or whole-tree materialization APIs.
 
 #### Scenario: A focused record test verifies completed analysis
 
-- **WHEN** a test completes producer updates for a node
-- **THEN** it reads the result directly from its typed record without invoking a materializer
+- **WHEN** a test completes producer updates for a record family
+- **THEN** it reads the completed result directly from the typed record
 
-#### Scenario: A compiler component needs completed analysis
+#### Scenario: Stage 4 exchanges generator metadata
 
-- **WHEN** a production or test component consumes a completed record family
-- **THEN** no public materialization declaration is available as an alternate result path
+- **WHEN** a generator writes or reads named metadata
+- **THEN** it uses the generator record without an AST annotation map

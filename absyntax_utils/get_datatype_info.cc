@@ -143,11 +143,7 @@ class get_datatype_id_c: null_visitor_c {
     void *visit(string_type_declaration_c     *symbol)  {return symbol->string_type_name;}
     /* ref_type_decl: identifier ':' ref_spec_init */
     void *visit(ref_type_decl_c               *symbol)  {return symbol->ref_type_name;}
-    /* NOTE: DO NOT place any code here that references symbol->anotations_map["generate_c_annotaton__implicit_type_id"] !!
-     *       All anotations in the symbol->anotations_map[] are considered a stage4 construct. In the above example,
-     *       That anotation is specific to the generate_c stage4 code, and must therefore NOT be referenced
-     *       in the absyntax_utils code, as this last code should be independent of the stage4 version!
-     */ 
+    /* Keep this utility independent of generator-owned AnalysisStore records. */
 
     /*****************************/
     /* B 1.5.2 - Function Blocks */
@@ -272,11 +268,7 @@ class get_datatype_id_str_c: public null_visitor_c {
     void *visit(string_type_declaration_c     *symbol)  {return symbol->string_type_name->accept(*this);}
     /* ref_type_decl: identifier ':' ref_spec_init */
     void *visit(ref_type_decl_c               *symbol)  {return symbol->ref_type_name->accept(*this);}
-    /* NOTE: DO NOT place any code here that references symbol->anotations_map["generate_c_annotaton__implicit_type_id"] !!
-     *       All anotations in the symbol->anotations_map[] are considered a stage4 construct. In the above example,
-     *       That anotation is specific to the generate_c stage4 code, and must therefore NOT be referenced
-     *       in the absyntax_utils code, as this last code should be independent of the stage4 version!
-     */ 
+    /* Keep this utility independent of generator-owned AnalysisStore records. */
     
     /***********************/
     /* B 1.5.1 - Functions */
@@ -1443,6 +1435,5 @@ safedt_type_name_c       get_datatype_info_c::safedt_type_name;
 safedate_type_name_c     get_datatype_info_c::safedate_type_name;
 safetod_type_name_c      get_datatype_info_c::safetod_type_name;
 safetime_type_name_c     get_datatype_info_c::safetime_type_name;
-
 
 

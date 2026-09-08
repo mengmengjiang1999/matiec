@@ -812,9 +812,9 @@ void *print_datatypes_error_c::visit(il_function_call_c *symbol) {
 		/* fcall_param.nonformal_operand_list      = */ symbol->il_operand_list,
 		/* fcall_param.formal_operand_list         = */ NULL,
 		/* enum {POU_FB, POU_function} POU_type    = */ generic_function_call_t::POU_function,
-		/* fcall_param.candidate_functions         = */ symbol->candidate_functions,
-		/* fcall_param.called_function_declaration = */ symbol->called_function_declaration,
-		/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count
+		/* fcall_param.candidate_functions         = */ symbol->candidate_functions(),
+		/* fcall_param.called_function_declaration = */ symbol->called_function_declaration(),
+		/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count()
 	};
 
 /* TODO: check what error message (if any) the compiler will give out if this function invocation
@@ -869,7 +869,7 @@ void *print_datatypes_error_c::visit(il_fb_call_c *symbol) {
 		/* fcall_param.formal_operand_list         = */ symbol->il_param_list,
 		/* enum {POU_FB, POU_function} POU_type    = */ generic_function_call_t::POU_FB,
 		/* fcall_param.candidate_functions         = */ candidate_functions,             /* will not be used, but must provide a reference to be able to compile */
-		/* fcall_param.called_function_declaration = */ symbol->called_fb_declaration,
+		/* fcall_param.called_function_declaration = */ symbol->called_fb_declaration(),
 		/* fcall_param.extensible_param_count      = */ extensible_param_count           /* will not be used, but must provide a reference to be able to compile */
 	};
 
@@ -888,9 +888,9 @@ void *print_datatypes_error_c::visit(il_formal_funct_call_c *symbol) {
 		/* fcall_param.nonformal_operand_list      = */ NULL,
 		/* fcall_param.formal_operand_list         = */ symbol->il_param_list,
 		/* enum {POU_FB, POU_function} POU_type    = */ generic_function_call_t::POU_function,
-		/* fcall_param.candidate_functions         = */ symbol->candidate_functions,
-		/* fcall_param.called_function_declaration = */ symbol->called_function_declaration,
-		/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count
+		/* fcall_param.candidate_functions         = */ symbol->candidate_functions(),
+		/* fcall_param.called_function_declaration = */ symbol->called_function_declaration(),
+		/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count()
 	};
 
 	handle_function_invocation(symbol, fcall_param);
@@ -986,23 +986,23 @@ void *print_datatypes_error_c::visit(NOT_operator_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(S_operator_c *symbol) {
-	if (NULL != symbol->called_fb_declaration) /* FB call semantics */  return handle_implicit_il_fb_invocation("S", symbol, symbol->called_fb_declaration);
+	if (NULL != symbol->called_fb_declaration()) /* FB call semantics */  return handle_implicit_il_fb_invocation("S", symbol, symbol->called_fb_declaration());
 	else                                       /* Reset   semantics */  return print_binary_operator_errors    ("S", symbol);
 }
 
 void *print_datatypes_error_c::visit(R_operator_c *symbol) {
-	if (NULL != symbol->called_fb_declaration) /* FB call semantics */  return handle_implicit_il_fb_invocation("R", symbol, symbol->called_fb_declaration);
+	if (NULL != symbol->called_fb_declaration()) /* FB call semantics */  return handle_implicit_il_fb_invocation("R", symbol, symbol->called_fb_declaration());
 	else                                       /* Reset   semantics */  return print_binary_operator_errors    ("R", symbol);
 }
 
-void *print_datatypes_error_c::visit( S1_operator_c *symbol) {return handle_implicit_il_fb_invocation( "S1", symbol, symbol->called_fb_declaration);}
-void *print_datatypes_error_c::visit( R1_operator_c *symbol) {return handle_implicit_il_fb_invocation( "R1", symbol, symbol->called_fb_declaration);}
-void *print_datatypes_error_c::visit(CLK_operator_c *symbol) {return handle_implicit_il_fb_invocation("CLK", symbol, symbol->called_fb_declaration);}
-void *print_datatypes_error_c::visit( CU_operator_c *symbol) {return handle_implicit_il_fb_invocation( "CU", symbol, symbol->called_fb_declaration);}
-void *print_datatypes_error_c::visit( CD_operator_c *symbol) {return handle_implicit_il_fb_invocation( "CD", symbol, symbol->called_fb_declaration);}
-void *print_datatypes_error_c::visit( PV_operator_c *symbol) {return handle_implicit_il_fb_invocation( "PV", symbol, symbol->called_fb_declaration);}
-void *print_datatypes_error_c::visit( IN_operator_c *symbol) {return handle_implicit_il_fb_invocation( "IN", symbol, symbol->called_fb_declaration);}
-void *print_datatypes_error_c::visit( PT_operator_c *symbol) {return handle_implicit_il_fb_invocation( "PT", symbol, symbol->called_fb_declaration);}
+void *print_datatypes_error_c::visit( S1_operator_c *symbol) {return handle_implicit_il_fb_invocation( "S1", symbol, symbol->called_fb_declaration());}
+void *print_datatypes_error_c::visit( R1_operator_c *symbol) {return handle_implicit_il_fb_invocation( "R1", symbol, symbol->called_fb_declaration());}
+void *print_datatypes_error_c::visit(CLK_operator_c *symbol) {return handle_implicit_il_fb_invocation("CLK", symbol, symbol->called_fb_declaration());}
+void *print_datatypes_error_c::visit( CU_operator_c *symbol) {return handle_implicit_il_fb_invocation( "CU", symbol, symbol->called_fb_declaration());}
+void *print_datatypes_error_c::visit( CD_operator_c *symbol) {return handle_implicit_il_fb_invocation( "CD", symbol, symbol->called_fb_declaration());}
+void *print_datatypes_error_c::visit( PV_operator_c *symbol) {return handle_implicit_il_fb_invocation( "PV", symbol, symbol->called_fb_declaration());}
+void *print_datatypes_error_c::visit( IN_operator_c *symbol) {return handle_implicit_il_fb_invocation( "IN", symbol, symbol->called_fb_declaration());}
+void *print_datatypes_error_c::visit( PT_operator_c *symbol) {return handle_implicit_il_fb_invocation( "PT", symbol, symbol->called_fb_declaration());}
 
 void *print_datatypes_error_c::visit( AND_operator_c *symbol) {return print_binary_operator_errors("AND" , symbol);}
 void *print_datatypes_error_c::visit(  OR_operator_c *symbol) {return print_binary_operator_errors( "OR" , symbol);}
@@ -1140,9 +1140,9 @@ void *print_datatypes_error_c::visit(function_invocation_c *symbol) {
 		/* fcall_param.nonformal_operand_list      = */ symbol->nonformal_param_list,
 		/* fcall_param.formal_operand_list         = */ symbol->formal_param_list,
 		/* enum {POU_FB, POU_function} POU_type    = */ generic_function_call_t::POU_function,
-		/* fcall_param.candidate_functions         = */ symbol->candidate_functions,
-		/* fcall_param.called_function_declaration = */ symbol->called_function_declaration,
-		/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count
+		/* fcall_param.candidate_functions         = */ symbol->candidate_functions(),
+		/* fcall_param.called_function_declaration = */ symbol->called_function_declaration(),
+		/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count()
 	};
 
 	handle_function_invocation(symbol, fcall_param);
@@ -1193,7 +1193,7 @@ void *print_datatypes_error_c::visit(fb_invocation_c *symbol) {
 		/* fcall_param.formal_operand_list         = */ symbol->formal_param_list,
 		/* enum {POU_FB, POU_function} POU_type    = */ generic_function_call_t::POU_FB,
 		/* fcall_param.candidate_functions         = */ candidate_functions,             /* will not be used, but must provide a reference to be able to compile */
-		/* fcall_param.called_function_declaration = */ symbol->called_fb_declaration,
+		/* fcall_param.called_function_declaration = */ symbol->called_fb_declaration(),
 		/* fcall_param.extensible_param_count      = */ extensible_param_count           /* will not be used, but must provide a reference to be able to compile */
 	};
 

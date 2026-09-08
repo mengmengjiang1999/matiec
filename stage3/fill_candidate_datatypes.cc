@@ -650,7 +650,7 @@ void *fill_candidate_datatypes_c::handle_S_and_R_operator(symbol_c *symbol, cons
 	if (symbol->candidate_datatypes().size() == 0) {
 		handle_implicit_il_fb_call(symbol,  operator_str, called_fb_declaration);
 		/* If it is also not a valid FB call, make sure the candidate_datatypes is empty (handle_implicit_il_fb_call may leave it non-empty!!) */
-		/* From here on out, all later code will consider the symbol->called_fb_declaration being NULL as an indication that this operator must use the
+		/* From here on out, all later code will consider the symbol->called_fb_declaration() being NULL as an indication that this operator must use the
 		 * Set/Reset semantics, so we must also guarantee that the remainder of the state of this symbol is compatible with that assumption!
 		 */
 		if (NULL == called_fb_declaration)
@@ -1876,9 +1876,9 @@ void *fill_candidate_datatypes_c::visit(il_function_call_c *symbol) {
 			/* fcall_param.nonformal_operand_list      = */ symbol->il_operand_list,
 			/* fcall_param.formal_operand_list         = */ NULL,
 			/* enum {POU_FB, POU_function} POU_type    = */ generic_function_call_t::POU_function,
-			/* fcall_param.candidate_functions         = */ symbol->candidate_functions,
-			/* fcall_param.called_function_declaration = */ symbol->called_function_declaration,
-			/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count
+			/* fcall_param.candidate_functions         = */ symbol->candidate_functions(),
+			/* fcall_param.called_function_declaration = */ symbol->called_function_declaration(),
+			/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count()
 		};
 		handle_function_call(symbol, fcall_param);
 
@@ -1964,7 +1964,7 @@ void *fill_candidate_datatypes_c::visit(il_fb_call_c *symbol) {
 	 * we have a datat type incompatibility error, so setting it to the correct fb_decl is actually safe,
 	 * as the compiler will never reach the compilation stage!
 	 */
-	symbol->called_fb_declaration = fb_decl;
+	symbol->called_fb_declaration() = fb_decl;
 
 	/* Let the il_call_operator (CAL, CALC, or CALCN) determine the candidate datatypes of the il_fb_call_c... */
 	/* NOTE: We ignore whether the call is 'compatible' or not when filling in the candidate datatypes list.
@@ -1993,9 +1993,9 @@ void *fill_candidate_datatypes_c::visit(il_formal_funct_call_c *symbol) {
 		/* fcall_param.nonformal_operand_list      = */ NULL,
 		/* fcall_param.formal_operand_list         = */ symbol->il_param_list,
 		/* enum {POU_FB, POU_function} POU_type    = */ generic_function_call_t::POU_function,
-		/* fcall_param.candidate_functions         = */ symbol->candidate_functions,
-		/* fcall_param.called_function_declaration = */ symbol->called_function_declaration,
-		/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count
+		/* fcall_param.candidate_functions         = */ symbol->candidate_functions(),
+		/* fcall_param.called_function_declaration = */ symbol->called_function_declaration(),
+		/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count()
 	};
 	handle_function_call(symbol, fcall_param);
 
@@ -2120,17 +2120,17 @@ void *fill_candidate_datatypes_c::visit(NOT_operator_c *symbol) {
 }
 
 
-void *fill_candidate_datatypes_c::visit(   S_operator_c *symbol) {return handle_S_and_R_operator   (symbol,   "S", symbol->called_fb_declaration);}
-void *fill_candidate_datatypes_c::visit(   R_operator_c *symbol) {return handle_S_and_R_operator   (symbol,   "R", symbol->called_fb_declaration);}
+void *fill_candidate_datatypes_c::visit(   S_operator_c *symbol) {return handle_S_and_R_operator   (symbol,   "S", symbol->called_fb_declaration());}
+void *fill_candidate_datatypes_c::visit(   R_operator_c *symbol) {return handle_S_and_R_operator   (symbol,   "R", symbol->called_fb_declaration());}
 
-void *fill_candidate_datatypes_c::visit(  S1_operator_c *symbol) {return handle_implicit_il_fb_call(symbol,  "S1", symbol->called_fb_declaration);}
-void *fill_candidate_datatypes_c::visit(  R1_operator_c *symbol) {return handle_implicit_il_fb_call(symbol,  "R1", symbol->called_fb_declaration);}
-void *fill_candidate_datatypes_c::visit( CLK_operator_c *symbol) {return handle_implicit_il_fb_call(symbol, "CLK", symbol->called_fb_declaration);}
-void *fill_candidate_datatypes_c::visit(  CU_operator_c *symbol) {return handle_implicit_il_fb_call(symbol,  "CU", symbol->called_fb_declaration);}
-void *fill_candidate_datatypes_c::visit(  CD_operator_c *symbol) {return handle_implicit_il_fb_call(symbol,  "CD", symbol->called_fb_declaration);}
-void *fill_candidate_datatypes_c::visit(  PV_operator_c *symbol) {return handle_implicit_il_fb_call(symbol,  "PV", symbol->called_fb_declaration);}
-void *fill_candidate_datatypes_c::visit(  IN_operator_c *symbol) {return handle_implicit_il_fb_call(symbol,  "IN", symbol->called_fb_declaration);}
-void *fill_candidate_datatypes_c::visit(  PT_operator_c *symbol) {return handle_implicit_il_fb_call(symbol,  "PT", symbol->called_fb_declaration);}
+void *fill_candidate_datatypes_c::visit(  S1_operator_c *symbol) {return handle_implicit_il_fb_call(symbol,  "S1", symbol->called_fb_declaration());}
+void *fill_candidate_datatypes_c::visit(  R1_operator_c *symbol) {return handle_implicit_il_fb_call(symbol,  "R1", symbol->called_fb_declaration());}
+void *fill_candidate_datatypes_c::visit( CLK_operator_c *symbol) {return handle_implicit_il_fb_call(symbol, "CLK", symbol->called_fb_declaration());}
+void *fill_candidate_datatypes_c::visit(  CU_operator_c *symbol) {return handle_implicit_il_fb_call(symbol,  "CU", symbol->called_fb_declaration());}
+void *fill_candidate_datatypes_c::visit(  CD_operator_c *symbol) {return handle_implicit_il_fb_call(symbol,  "CD", symbol->called_fb_declaration());}
+void *fill_candidate_datatypes_c::visit(  PV_operator_c *symbol) {return handle_implicit_il_fb_call(symbol,  "PV", symbol->called_fb_declaration());}
+void *fill_candidate_datatypes_c::visit(  IN_operator_c *symbol) {return handle_implicit_il_fb_call(symbol,  "IN", symbol->called_fb_declaration());}
+void *fill_candidate_datatypes_c::visit(  PT_operator_c *symbol) {return handle_implicit_il_fb_call(symbol,  "PT", symbol->called_fb_declaration());}
 
 void *fill_candidate_datatypes_c::visit( AND_operator_c *symbol) {return handle_binary_operator(widen_AND_table, symbol, prev_il_instruction, il_operand);}
 void *fill_candidate_datatypes_c::visit(  OR_operator_c *symbol) {return handle_binary_operator( widen_OR_table, symbol, prev_il_instruction, il_operand);}
@@ -2332,9 +2332,9 @@ void *fill_candidate_datatypes_c::visit(function_invocation_c *symbol) {
 			  nonformal_operand_list:       symbol->nonformal_param_list,
 			  formal_operand_list:          symbol->formal_param_list,
 			  POU_type:                     generic_function_call_t::POU_function,
-			  candidate_functions:          symbol->candidate_functions,
-			  called_function_declaration:  symbol->called_function_declaration,
-			  extensible_param_count:       symbol->extensible_param_count
+			  candidate_functions:          symbol->candidate_functions(),
+			  called_function_declaration:  symbol->called_function_declaration(),
+			  extensible_param_count:       symbol->extensible_param_count()
 	};
 
 	handle_function_call(symbol, fcall_param);
@@ -2397,7 +2397,7 @@ void *fill_candidate_datatypes_c::visit(fb_invocation_c *symbol) {
 	 * we have a datat type incompatibility error, so setting it to the correct fb_decl is actually safe,
 	 * as the compiler will never reach the compilation stage!
 	 */
-	symbol->called_fb_declaration = fb_decl;
+	symbol->called_fb_declaration() = fb_decl;
 
 	if (debug) std::cout << "FB [] ==> "  << symbol->candidate_datatypes().size() << " result.\n";
 	return NULL;

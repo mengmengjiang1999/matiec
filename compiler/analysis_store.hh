@@ -78,6 +78,14 @@ class AnalysisStore {
   const DatatypeAnalysisRecord *datatype_working(
       const symbol_c *key) const;
   bool validate_datatypes() const;
+  ResolutionAnalysisRecord &resolution_working(symbol_c *key);
+  const ResolutionAnalysisRecord *resolution_working(
+      const symbol_c *key) const;
+  EnumerationAnalysisRecord &enumeration_working(symbol_c *key);
+  const EnumerationAnalysisRecord *enumeration_working(
+      const symbol_c *key) const;
+  bool validate_resolutions() const;
+  bool validate_enumerations() const;
 
   const AnalysisEntry<FlowAnalysisRecord> *flow(const symbol_c *key) const;
   const AnalysisEntry<ConstantAnalysisRecord> *constant(const symbol_c *key) const;
@@ -137,7 +145,11 @@ class AnalysisStore {
   std::unordered_map<const symbol_c *, DatatypeAnalysisRecord>
       transient_datatypes_;
   Table<ResolutionAnalysisRecord> resolutions_;
+  std::unordered_map<const symbol_c *, ResolutionAnalysisRecord>
+      transient_resolutions_;
   Table<EnumerationAnalysisRecord> enumerations_;
+  std::unordered_map<const symbol_c *, EnumerationAnalysisRecord>
+      transient_enumerations_;
   Table<GeneratorAnalysisRecord> generators_;
 };
 
@@ -179,6 +191,16 @@ symbol_c *analysis_selected_datatype(const symbol_c *symbol);
 symbol_c *&analysis_selected_datatype_ref(symbol_c *symbol);
 symbol_c *analysis_scope(const symbol_c *symbol);
 symbol_c *&analysis_scope_ref(symbol_c *symbol);
+std::vector<symbol_c *> &analysis_resolution_candidates_mut(symbol_c *symbol);
+const std::vector<symbol_c *> &analysis_resolution_candidates(
+    const symbol_c *symbol);
+symbol_c *&analysis_resolution_declaration_ref(symbol_c *symbol);
+symbol_c *analysis_resolution_declaration(const symbol_c *symbol);
+int &analysis_extensible_parameter_count_ref(symbol_c *symbol);
+int analysis_extensible_parameter_count(const symbol_c *symbol);
+symbol_c::enumvalue_symtable_t &analysis_enumeration_values_mut(symbol_c *symbol);
+const symbol_c::enumvalue_symtable_t &analysis_enumeration_values(
+    const symbol_c *symbol);
 
 }  // namespace matiec
 

@@ -14,7 +14,6 @@ int main() {
                                      implicit_type));
   assert(stage4_generator_symbol(output, literal, "implicit_type") ==
          implicit_type);
-  assert(literal->anotations_map.empty());
 
   assert(context.analysis().generator_size() == 1);
   const matiec::AnalysisEntry<matiec::GeneratorAnalysisRecord> *entry =
@@ -23,7 +22,6 @@ int main() {
   assert(entry->value.symbols.size() == 1);
   assert(entry->value.symbols.at("implicit_type") == implicit_type);
 
-  assert(literal->anotations_map.empty());
 
   stage4out_c detached(context.outputs());
   assert(!stage4_set_generator_symbol(detached, literal, "detached",

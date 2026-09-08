@@ -170,6 +170,46 @@ bool AnalysisStore::validate_datatypes() const {
   return true;
 }
 
+ResolutionAnalysisRecord &AnalysisStore::resolution_working(symbol_c *key) {
+  if (key != nullptr && arena_.owns(key)) return resolutions_[key].value;
+  return transient_resolutions_[key];
+}
+
+const ResolutionAnalysisRecord *AnalysisStore::resolution_working(
+    const symbol_c *key) const {
+  const AnalysisEntry<ResolutionAnalysisRecord> *persistent = resolution(key);
+  if (persistent != nullptr) return &persistent->value;
+  std::unordered_map<const symbol_c *, ResolutionAnalysisRecord>::const_iterator
+      transient = transient_resolutions_.find(key);
+  return transient == transient_resolutions_.end() ? nullptr : &transient->second;
+}
+
+EnumerationAnalysisRecord &AnalysisStore::enumeration_working(symbol_c *key) {
+  if (key != nullptr && arena_.owns(key)) return enumerations_[key].value;
+  return transient_enumerations_[key];
+}
+
+const EnumerationAnalysisRecord *AnalysisStore::enumeration_working(
+    const symbol_c *key) const {
+  const AnalysisEntry<EnumerationAnalysisRecord> *persistent = enumeration(key);
+  if (persistent != nullptr) return &persistent->value;
+  std::unordered_map<const symbol_c *, EnumerationAnalysisRecord>::const_iterator
+      transient = transient_enumerations_.find(key);
+  return transient == transient_enumerations_.end() ? nullptr : &transient->second;
+}
+
+bool AnalysisStore::validate_resolutions() const {
+  for (const auto &entry : resolutions_)
+    if (!valid(entry.second.value)) return false;
+  return true;
+}
+
+bool AnalysisStore::validate_enumerations() const {
+  for (const auto &entry : enumerations_)
+    if (!valid(entry.second.value)) return false;
+  return true;
+}
+
 const AnalysisEntry<FlowAnalysisRecord> *AnalysisStore::flow(
     const symbol_c *key) const { return find(flow_, key); }
 const AnalysisEntry<ConstantAnalysisRecord> *AnalysisStore::constant(
@@ -219,7 +259,9 @@ void AnalysisStore::clear() {
   datatypes_.clear();
   transient_datatypes_.clear();
   resolutions_.clear();
+  transient_resolutions_.clear();
   enumerations_.clear();
+  transient_enumerations_.clear();
   generators_.clear();
 }
 
@@ -345,6 +387,60 @@ symbol_c *analysis_scope(const symbol_c *symbol) {
 symbol_c *&analysis_scope_ref(symbol_c *symbol) {
   assert(current_analysis_store != nullptr && symbol != nullptr);
   return current_analysis_store->datatype_working(symbol).scope;
+}
+
+std::vector<symbol_c *> &analysis_resolution_candidates_mut(symbol_c *symbol) {
+  assert(current_analysis_store != nullptr && symbol != nullptr);
+  return current_analysis_store->resolution_working(symbol).candidates;
+}
+
+const std::vector<symbol_c *> &analysis_resolution_candidates(
+    const symbol_c *symbol) {
+  static const std::vector<symbol_c *> empty;
+  if (current_analysis_store == nullptr || symbol == nullptr) return empty;
+  const ResolutionAnalysisRecord *record =
+      current_analysis_store->resolution_working(symbol);
+  return record == nullptr ? empty : record->candidates;
+}
+
+symbol_c *&analysis_resolution_declaration_ref(symbol_c *symbol) {
+  assert(current_analysis_store != nullptr && symbol != nullptr);
+  return current_analysis_store->resolution_working(symbol).declaration;
+}
+
+symbol_c *analysis_resolution_declaration(const symbol_c *symbol) {
+  if (current_analysis_store == nullptr || symbol == nullptr) return nullptr;
+  const ResolutionAnalysisRecord *record =
+      current_analysis_store->resolution_working(symbol);
+  return record == nullptr ? nullptr : record->declaration;
+}
+
+int &analysis_extensible_parameter_count_ref(symbol_c *symbol) {
+  assert(current_analysis_store != nullptr && symbol != nullptr);
+  return current_analysis_store->resolution_working(symbol)
+      .extensible_parameter_count;
+}
+
+int analysis_extensible_parameter_count(const symbol_c *symbol) {
+  if (current_analysis_store == nullptr || symbol == nullptr) return 0;
+  const ResolutionAnalysisRecord *record =
+      current_analysis_store->resolution_working(symbol);
+  return record == nullptr ? 0 : record->extensible_parameter_count;
+}
+
+symbol_c::enumvalue_symtable_t &analysis_enumeration_values_mut(
+    symbol_c *symbol) {
+  assert(current_analysis_store != nullptr && symbol != nullptr);
+  return current_analysis_store->enumeration_working(symbol).values;
+}
+
+const symbol_c::enumvalue_symtable_t &analysis_enumeration_values(
+    const symbol_c *symbol) {
+  static const symbol_c::enumvalue_symtable_t empty;
+  if (current_analysis_store == nullptr || symbol == nullptr) return empty;
+  const EnumerationAnalysisRecord *record =
+      current_analysis_store->enumeration_working(symbol);
+  return record == nullptr ? empty : record->values;
 }
 
 }  // namespace matiec
