@@ -42,6 +42,7 @@ trap cleanup EXIT
 mkdir -p "$SOURCE_COPY"
 cp -R "$PROJECT_ROOT/." "$SOURCE_COPY"
 find "$SOURCE_COPY" -type f \( -name '*.o' -o -name '*.a' -o -name '*.Po' \) -delete
+find "$SOURCE_COPY" -type d -name '.deps' -prune -exec rm -rf {} +
 rm -f "$SOURCE_COPY/iec2c" "$SOURCE_COPY/iec2iec"
 rm -f "$SOURCE_COPY/stage1_2/iec_flex.cc" \
   "$SOURCE_COPY/stage1_2/iec_bison.cc" \

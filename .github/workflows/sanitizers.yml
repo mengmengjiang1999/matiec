@@ -18,9 +18,9 @@ jobs:
       matrix:
         include:
           - name: AddressSanitizer and LeakSanitizer
-            target: asan
+            sanitizer: address
           - name: UndefinedBehaviorSanitizer
-            target: ubsan
+            sanitizer: undefined
     steps:
       - name: Check out source
         uses: actions/checkout@v6
@@ -31,4 +31,4 @@ jobs:
           sudo apt-get install --yes autoconf automake bison flex g++ libfl-dev make
 
       - name: Run sanitizer regressions
-        run: make check-${{ matrix.target }}
+        run: tests/sanitizers/runtests ${{ matrix.sanitizer }}
