@@ -31,7 +31,7 @@
  *
  */
 
-/* NOTE: The algorithm implemented here assumes that the symbol_c.candidate_datatype, and the symbol_c.datatype 
+/* NOTE: The algorithm implemented here assumes that the symbol_c.candidate_datatype, and the symbol_c.datatype()
  *       annotations have already been apropriately filled in!
  *       BEFORE running this visitor, be sure to CALL the fill_candidate_datatypes_c, and the narrow_candidate_datatypes_c visitors!
  */
@@ -89,9 +89,9 @@ static bool are_all_datatypes_equal(
     const std::vector<symbol_c *> &symbol_vect) {
 	if (symbol_vect.size() <= 0) return false;
 
-	bool res = get_datatype_info_c::is_type_valid(symbol_vect[0]->datatype);
+	bool res = get_datatype_info_c::is_type_valid(symbol_vect[0]->datatype());
 	for (unsigned int i = 1; i < symbol_vect.size(); i++)
-		res &= get_datatype_info_c::is_type_equal(symbol_vect[i-1]->datatype, symbol_vect[i]->datatype);	
+		res &= get_datatype_info_c::is_type_equal(symbol_vect[i-1]->datatype(), symbol_vect[i]->datatype());
 	return res;
 }
 
@@ -105,7 +105,7 @@ typedef struct {
   symbol_c *nonformal_operand_list,
   symbol_c *   formal_operand_list,
 
-  std::vector <symbol_c *> &candidate_functions,  
+  std::vector <symbol_c *> &candidate_functions,
   symbol_c &*called_function_declaration,
   int      &extensible_param_count
 } generic_function_call_t;
@@ -120,7 +120,7 @@ void print_datatypes_error_c::handle_function_invocation(symbol_c *fcall, generi
 	if (generic_function_call_t::POU_function == fcall_data.POU_type)  POU_str = "function";
 	if (NULL == POU_str) ERROR;
 
-	if ((NULL != fcall_data.formal_operand_list) && (NULL != fcall_data.nonformal_operand_list)) 
+	if ((NULL != fcall_data.formal_operand_list) && (NULL != fcall_data.nonformal_operand_list))
 		ERROR;
 
 	symbol_c *f_decl = fcall_data.called_function_declaration;
@@ -142,7 +142,7 @@ void print_datatypes_error_c::handle_function_invocation(symbol_c *fcall, generi
 			function_param_iterator_c fp_iterator(f_decl);
 			while ((param_name = fcp_iterator.next_f()) != NULL) {
 				param_value = fcp_iterator.get_current_value();
-				
+
 				/* Check if there are duplicate parameter values */
 				if(fcp_iterator.search_f(param_name) != param_value) {
 					function_invocation_error = true;
@@ -155,7 +155,7 @@ void print_datatypes_error_c::handle_function_invocation(symbol_c *fcall, generi
 					function_invocation_error = true;
 					STAGE3_ERROR(0, param_name, param_name, "Invalid parameter '%s' when invoking %s '%s'", ((token_c *)param_name)->value, POU_str, ((token_c *)fcall_data.function_name)->value);
 					continue; /* jump to next parameter */
-				} 
+				}
 
 				/* check whether direction (IN, OUT, IN_OUT) and assignment types (:= , =>) are compatible !!! */
 				/* Obtaining the assignment direction:  := (assign_in) or => (assign_out) */
@@ -177,7 +177,7 @@ void print_datatypes_error_c::handle_function_invocation(symbol_c *fcall, generi
 					}
 				} else ERROR;
 
-				if (!get_datatype_info_c::is_type_valid(param_value->datatype)) {
+				if (!get_datatype_info_c::is_type_valid(param_value->datatype())) {
 					function_invocation_error = true;
 					STAGE3_ERROR(0, param_value, param_value, "Data type incompatibility between parameter '%s' and value being passed, when invoking %s '%s'", ((token_c *)param_name)->value, POU_str, ((token_c *)fcall_data.function_name)->value);
 					continue; /* jump to next parameter */
@@ -193,7 +193,7 @@ void print_datatypes_error_c::handle_function_invocation(symbol_c *fcall, generi
 				/* This handle_function_invocation() will be called to handle IL function calls, where the first parameter comes from the previous IL instruction.
 				 * In this case, the previous IL instruction will be artifically (and temporarily) added to the begining ot the parameter list
 				 * so we (in this function) can handle this situation like all the other function calls.
-				 * However, 
+				 * However,
 				 *     a) if NO previous IL function exists, then we get a fake previous IL function, with no location data (i.e. not found anywhere in the source code.
 				 *     b) the function call may actually have several prev IL instructions (if several JMP instructions jump directly to the il function call).
 				 * In order to handle these situations gracefully, we first check whether the first parameter is really an IL istruction!
@@ -209,22 +209,22 @@ void print_datatypes_error_c::handle_function_invocation(symbol_c *fcall, generi
 					}
 #if 0
 					/* NOTE: We currently comment out this code...
-					 * This does not currently work, since the narrow operation is currently done on the intersection 
+					 * This does not currently work, since the narrow operation is currently done on the intersection
 					 * of all the previous IL instructions, so we currently either accept them all, or none at all.
-					 * In order to be able to produce these user freindly error messages, we will need to update the 
+					 * In order to be able to produce these user freindly error messages, we will need to update the
 					 * narrow algorithm. We leave this untill somebody aks for it...
 					 * So, for now, we simply comment out this code.
 					 */
 					for (unsigned int p = 0; p < matiec::analysis_flow_predecessors(il_instruction_symbol).size(); p++) {
 						symbol_c *value = matiec::analysis_flow_predecessors(il_instruction_symbol)[p];
-						if (!get_datatype_info_c::is_type_valid(value->datatype)) {
+						if (!get_datatype_info_c::is_type_valid(value->datatype())) {
 							function_invocation_error = true;
 							STAGE3_ERROR(0, fcall, fcall, "Data type incompatibility for value passed to first parameter when invoking function '%s'", ((token_c *)fcall_data.function_name)->value);
 							STAGE3_ERROR(0, value, value, "This is the IL instruction producing the incompatible data type to first parameter of function '%s'", ((token_c *)fcall_data.function_name)->value);
 						}
 					}
 #else
-					if (!get_datatype_info_c::is_type_valid(il_instruction_symbol->datatype)) {
+					if (!get_datatype_info_c::is_type_valid(il_instruction_symbol->datatype())) {
 						function_invocation_error = true;
 						STAGE3_ERROR(0, fcall, fcall, "Data type incompatibility between value in IL 'accumulator' and first parameter of function '%s'", ((token_c *)fcall_data.function_name)->value);
 					}
@@ -233,7 +233,7 @@ void print_datatypes_error_c::handle_function_invocation(symbol_c *fcall, generi
 						/* when handling a IL function call, and an error is found in the first parameter, then we bug out and do not print out any more error messages. */
 						return;
 				} else {
-					if (!get_datatype_info_c::is_type_valid(param_value->datatype)) {
+					if (!get_datatype_info_c::is_type_valid(param_value->datatype())) {
 						function_invocation_error = true;
 						STAGE3_ERROR(0, param_value, param_value, "Data type incompatibility for value passed in position %d when invoking %s '%s'", i, POU_str, ((token_c *)fcall_data.function_name)->value);
 					}
@@ -250,7 +250,7 @@ void print_datatypes_error_c::handle_function_invocation(symbol_c *fcall, generi
 	if (function_invocation_error) {
 		/* No compatible function exists */
 		STAGE3_ERROR(2, fcall, fcall, "Invalid parameters when invoking %s '%s'", POU_str, ((token_c *)fcall_data.function_name)->value);
-	} 
+	}
 
 	return;
 }
@@ -263,14 +263,14 @@ void *print_datatypes_error_c::handle_implicit_il_fb_invocation(const char *para
 		return NULL;
 	}
 	// il_operand->accept(*this);  // NOT required. The il_simple_operation_c already visits it!!
-	
+
 	if (NULL == called_fb_declaration) {
 		STAGE3_ERROR(0, il_operator, il_operand, "Invalid FB call: operand is not a FB instance.");
 		return NULL;
 	}
 
 	if (matiec::analysis_flow_predecessors(fake_prev_il_instruction).empty()) {
-		STAGE3_ERROR(0, il_operator, il_operand, "FB invocation operator '%s' must be preceded by a 'LD' (or equivalent) operator.", param_name);	
+		STAGE3_ERROR(0, il_operator, il_operand, "FB invocation operator '%s' must be preceded by a 'LD' (or equivalent) operator.", param_name);
 		return NULL;
 	}
 
@@ -284,21 +284,21 @@ void *print_datatypes_error_c::handle_implicit_il_fb_invocation(const char *para
 		*        this (CLK, PT, IN, CU, ...) parameter may just have been defined as OUT or INOUT,
 		*        which will not work for an implicit FB call!
 		*/
-		STAGE3_ERROR(0, il_operator, il_operand, "FB called by '%s' operator does not have a parameter named '%s'", param_name, param_name);	
+		STAGE3_ERROR(0, il_operator, il_operand, "FB called by '%s' operator does not have a parameter named '%s'", param_name, param_name);
 		return NULL;
 	}
 	if (!are_all_datatypes_equal(matiec::analysis_flow_predecessors(fake_prev_il_instruction))) {
 		STAGE3_ERROR(0, il_operator, il_operand, "Data type incompatibility between parameter '%s' and value being passed.", param_name);
 		return NULL;
 	}
-	
+
 
 	/* NOTE: The error_level currently being used for errors in variables/constants etc... is rather high.
 	 *       However, in the case of an implicit FB call, if the datatype of the operand == NULL, this may be
 	 *       the __only__ indication of an error! So we test it here again, to make sure thtis error will really
 	 *       be printed out!
 	 */
-	if (!get_datatype_info_c::is_type_valid(il_operand->datatype)) {
+	if (!get_datatype_info_c::is_type_valid(il_operand->datatype())) {
 		/* Note: the case of (NULL == fb_declaration) was already caught above! */
 // 		if (NULL != fb_declaration) {
 			STAGE3_ERROR(0, il_operator, il_operator, "Invalid FB call: Datatype incompatibility between the FB's '%s' parameter and value being passed, or paramater '%s' is not a 'VAR_INPUT' parameter.", param_name, param_name);
@@ -319,7 +319,7 @@ void *print_datatypes_error_c::handle_implicit_il_fb_invocation(const char *para
 void *print_datatypes_error_c::visit(real_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for ANY_REAL data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_REAL data type not valid in this location.");
 	}
 	return NULL;
@@ -328,7 +328,7 @@ void *print_datatypes_error_c::visit(real_c *symbol) {
 void *print_datatypes_error_c::visit(integer_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for ANY_INT data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_INT data type not valid in this location.");
 	}
 	return NULL;
@@ -337,7 +337,7 @@ void *print_datatypes_error_c::visit(integer_c *symbol) {
 void *print_datatypes_error_c::visit(neg_real_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for ANY_REAL data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_REAL data type not valid in this location.");
 	}
 	return NULL;
@@ -346,7 +346,7 @@ void *print_datatypes_error_c::visit(neg_real_c *symbol) {
 void *print_datatypes_error_c::visit(neg_integer_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for ANY_INT data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_INT data type not valid in this location.");
 	}
 	return NULL;
@@ -355,7 +355,7 @@ void *print_datatypes_error_c::visit(neg_integer_c *symbol) {
 void *print_datatypes_error_c::visit(binary_integer_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for ANY_INT data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_INT data type not valid in this location.");
 	}
 	return NULL;
@@ -364,7 +364,7 @@ void *print_datatypes_error_c::visit(binary_integer_c *symbol) {
 void *print_datatypes_error_c::visit(octal_integer_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for ANY_INT data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_INT data type not valid in this location.");
 	}
 	return NULL;
@@ -373,7 +373,7 @@ void *print_datatypes_error_c::visit(octal_integer_c *symbol) {
 void *print_datatypes_error_c::visit(hex_integer_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for ANY_INT data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_INT data type not valid in this location.");
 	}
 	return NULL;
@@ -382,7 +382,7 @@ void *print_datatypes_error_c::visit(hex_integer_c *symbol) {
 void *print_datatypes_error_c::visit(integer_literal_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for %s data type.", get_datatype_info_c::get_id_str(symbol->type));
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_INT data type not valid in this location.");
 	}
 	return NULL;
@@ -391,7 +391,7 @@ void *print_datatypes_error_c::visit(integer_literal_c *symbol) {
 void *print_datatypes_error_c::visit(real_literal_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for %s data type.", get_datatype_info_c::get_id_str(symbol->type));
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_REAL data type not valid in this location.");
 	}
 	return NULL;
@@ -400,7 +400,7 @@ void *print_datatypes_error_c::visit(real_literal_c *symbol) {
 void *print_datatypes_error_c::visit(bit_string_literal_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for %s data type.", get_datatype_info_c::get_id_str(symbol->type));
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_BIT data type not valid in this location.");
 	}
 	return NULL;
@@ -409,7 +409,7 @@ void *print_datatypes_error_c::visit(bit_string_literal_c *symbol) {
 void *print_datatypes_error_c::visit(boolean_literal_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Value is not valid for %s data type.", get_datatype_info_c::get_id_str(symbol->type));
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_BOOL data type not valid in this location.");
 	}
 	return NULL;
@@ -418,7 +418,7 @@ void *print_datatypes_error_c::visit(boolean_literal_c *symbol) {
 void *print_datatypes_error_c::visit(boolean_true_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Value is not valid for ANY_BOOL data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_BOOL data type not valid in this location.");
 	}
 	return NULL;
@@ -427,7 +427,7 @@ void *print_datatypes_error_c::visit(boolean_true_c *symbol) {
 void *print_datatypes_error_c::visit(boolean_false_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Value is not valid for ANY_BOOL data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "ANY_BOOL data type not valid in this location.");
 	}
 	return NULL;
@@ -439,7 +439,7 @@ void *print_datatypes_error_c::visit(boolean_false_c *symbol) {
 void *print_datatypes_error_c::visit(double_byte_character_string_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for WSTRING data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "WSTRING data type not valid in this location.");
 	}
 	return NULL;
@@ -448,7 +448,7 @@ void *print_datatypes_error_c::visit(double_byte_character_string_c *symbol) {
 void *print_datatypes_error_c::visit(single_byte_character_string_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Numerical value exceeds range for STRING data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "STRING data type not valid in this location.");
 	}
 	return NULL;
@@ -463,7 +463,7 @@ void *print_datatypes_error_c::visit(single_byte_character_string_c *symbol) {
 void *print_datatypes_error_c::visit(duration_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Invalid syntax for TIME data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "TIME data type not valid in this location.");
 	}
 	return NULL;
@@ -475,7 +475,7 @@ void *print_datatypes_error_c::visit(duration_c *symbol) {
 void *print_datatypes_error_c::visit(time_of_day_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Invalid syntax for TOD data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "TOD data type not valid in this location.");
 	}
 	return NULL;
@@ -484,7 +484,7 @@ void *print_datatypes_error_c::visit(time_of_day_c *symbol) {
 void *print_datatypes_error_c::visit(date_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Invalid syntax for DATE data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "DATE data type not valid in this location.");
 	}
 	return NULL;
@@ -493,7 +493,7 @@ void *print_datatypes_error_c::visit(date_c *symbol) {
 void *print_datatypes_error_c::visit(date_and_time_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) {
 		STAGE3_ERROR(0, symbol, symbol, "Invalid syntax for DT data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		STAGE3_ERROR(4, symbol, symbol, "DT data type not valid in this location.");
 	}
 	return NULL;
@@ -506,12 +506,12 @@ void *print_datatypes_error_c::visit(date_and_time_c *symbol) {
 /* B 1.3.3 - Derived data types */
 /********************************/
 void *print_datatypes_error_c::visit(simple_spec_init_c *symbol) {
-	if (!get_datatype_info_c::is_type_valid(symbol->simple_specification->datatype)) {
+	if (!get_datatype_info_c::is_type_valid(symbol->simple_specification->datatype())) {
 		STAGE3_ERROR(0, symbol->simple_specification, symbol->simple_specification, "Invalid data type.");
 	} else if (NULL != symbol->constant) {
-		if (!get_datatype_info_c::is_type_valid(symbol->constant->datatype))
+		if (!get_datatype_info_c::is_type_valid(symbol->constant->datatype()))
 			STAGE3_ERROR(0, symbol->constant, symbol->constant, "Initial value has incompatible data type.");
-	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype)) {
+	} else if (!get_datatype_info_c::is_type_valid(symbol->datatype())) {
 		ERROR; /* If we have an error here, then we must also have an error in one of
 		        * the two previous tests. If we reach this point, some strange error is ocurring!
 			*/
@@ -537,9 +537,9 @@ void *print_datatypes_error_c::visit(array_initial_elements_list_c *symbol) {
 	/* To reduce the number of error messages, we keep quiet whenever whoever we are the initial
 	 * value of (e.g. a structure element initialization) will be reporting this same error.
 	 */
-	if ((NULL != symbol->parent) && !get_datatype_info_c::is_type_valid(symbol->parent->datatype))
+	if ((NULL != symbol->parent) && !get_datatype_info_c::is_type_valid(symbol->parent->datatype()))
 		return NULL;
-	if (!get_datatype_info_c::is_type_valid(symbol->datatype))
+	if (!get_datatype_info_c::is_type_valid(symbol->datatype()))
 		STAGE3_ERROR(0, symbol, symbol, "Initial value is not compatible with the data type stored in the array.");
 	return NULL;
 }
@@ -547,13 +547,13 @@ void *print_datatypes_error_c::visit(array_initial_elements_list_c *symbol) {
 
 void *print_datatypes_error_c::visit(structure_element_initialization_c *symbol) {
 	symbol->value->accept(*this);
-	if (!get_datatype_info_c::is_type_valid(symbol->datatype))
-		STAGE3_ERROR(0, symbol, symbol, "Initialization element identifier (%s) is not declared in referenced structure/FB scope, or is set to value of incompatible datatype.", 
+	if (!get_datatype_info_c::is_type_valid(symbol->datatype()))
+		STAGE3_ERROR(0, symbol, symbol, "Initialization element identifier (%s) is not declared in referenced structure/FB scope, or is set to value of incompatible datatype.",
 			                        symbol->structure_element_name->token->value);
 	return NULL;
 }
 
-    
+
 /*********************/
 /* B 1.4 - Variables */
 /*********************/
@@ -568,7 +568,7 @@ void *print_datatypes_error_c::visit(symbolic_variable_c *symbol) {
 /********************************************/
 void *print_datatypes_error_c::visit(direct_variable_c *symbol) {
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0) ERROR;
-	if (!get_datatype_info_c::is_type_valid(symbol->datatype))
+	if (!get_datatype_info_c::is_type_valid(symbol->datatype()))
 		STAGE3_ERROR(4, symbol, symbol, "Direct variable has incompatible data type with expression.");
 	return NULL;
 }
@@ -581,11 +581,11 @@ void *print_datatypes_error_c::visit(direct_variable_c *symbol) {
 void *print_datatypes_error_c::visit(array_variable_c *symbol) {
 	/* the subscripted variable may be a structure or another array variable, that must also be visisted! */
 	/* Please read the comments in the array_variable_c and structured_variable_c visitors in the fill_candidate_datatypes.cc file! */
-	symbol->subscripted_variable->accept(*this); 
-	
+	symbol->subscripted_variable->accept(*this);
+
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0)
 		STAGE3_ERROR(0, symbol, symbol, "Array variable not declared in this scope.");
-	
+
 	/* recursively call the subscript list to print any errors in the expressions used in the subscript...*/
 	symbol->subscript_list->accept(*this);
 	return NULL;
@@ -598,7 +598,7 @@ void *print_datatypes_error_c::visit(subscript_list_c *symbol) {
 		int start_error_count = error_count;
 		symbol->get_element(i)->accept(*this);
 		/* The following error message will only get printed if the current_display_error_level is set higher than 0! */
-		if ((start_error_count == error_count) && (!get_datatype_info_c::is_type_valid(symbol->get_element(i)->datatype)))
+		if ((start_error_count == error_count) && (!get_datatype_info_c::is_type_valid(symbol->get_element(i)->datatype())))
 			STAGE3_ERROR(0, symbol, symbol, "Invalid data type for array subscript field.");
 	}
 	return NULL;
@@ -616,7 +616,7 @@ void *print_datatypes_error_c::visit(structured_variable_c *symbol) {
 	/* the record variable may be another structure or even an array variable, that must also be visisted! */
 	/* Please read the comments in the array_variable_c and structured_variable_c visitors in the fill_candidate_datatypes.cc file! */
 	symbol->record_variable->accept(*this);
-	
+
 	if (matiec::analysis_datatype_candidates(symbol).size() == 0)
 		STAGE3_ERROR(0, symbol, symbol, "Undeclared structured (or FB) variable, or non-existant field (variable) in structure (FB).");
 	return NULL;
@@ -642,11 +642,11 @@ void *print_datatypes_error_c::visit(location_c *symbol) {
 void *print_datatypes_error_c::visit(located_var_decl_c *symbol) {
   symbol->located_var_spec_init->accept(*this);
   /* It does not make sense to call symbol->location->accept(*this). The check is done right here if the following if() */
-  // symbol->location->accept(*this); 
-  if ((get_datatype_info_c::is_type_valid(symbol->located_var_spec_init->datatype)) && (!get_datatype_info_c::is_type_valid(symbol->location->datatype)))
+  // symbol->location->accept(*this);
+  if ((get_datatype_info_c::is_type_valid(symbol->located_var_spec_init->datatype())) && (!get_datatype_info_c::is_type_valid(symbol->location->datatype())))
     STAGE3_ERROR(0, symbol, symbol, "Bit size of data type is incompatible with bit size of location.");
   return NULL;
-}  
+}
 
 
 /************************************/
@@ -705,7 +705,7 @@ void *print_datatypes_error_c::visit(transition_condition_c *symbol) {
 	if (symbol->transition_condition_il != NULL)   symbol->transition_condition_il->accept(*this);
 	if (symbol->transition_condition_st != NULL)   symbol->transition_condition_st->accept(*this);
 
-	if (!get_datatype_info_c::is_type_valid(symbol->datatype))
+	if (!get_datatype_info_c::is_type_valid(symbol->datatype()))
 		STAGE3_ERROR(0, symbol, symbol, "Transition condition has invalid data type (should be BOOL).");
 	return NULL;
 }
@@ -735,10 +735,10 @@ void *print_datatypes_error_c::visit(il_instruction_c *symbol) {
 	if (NULL != symbol->il_instruction) {
 		il_instruction_c tmp_prev_il_instruction(NULL, NULL);
 #if 0
-		/* NOTE: The following is currently no longer needed. Since the following code is actually cool, 
+		/* NOTE: The following is currently no longer needed. Since the following code is actually cool,
 		 * we don't delete it, but simply comment it out. It might just come in handy later on...
 		 */
-		/* When handling a il function call, this fake_prev_il_instruction may be used as a standard function call parameter, so it is important that 
+		/* When handling a il function call, this fake_prev_il_instruction may be used as a standard function call parameter, so it is important that
 		 * it contain some valid location info so error messages make sense.
 		 */
 		if (matiec::analysis_flow_predecessors(symbol).size() > 0) {
@@ -753,13 +753,13 @@ void *print_datatypes_error_c::visit(il_instruction_c *symbol) {
 			symbol_c *tmp_symbol2 = &tmp_prev_il_instruction;
 			*tmp_symbol2 = *tmp_symbol1;
 			/* we do not want to copy the datatype variable, so we reset it to NULL */
-			tmp_prev_il_instruction.datatype = NULL;
-			/* We don't need to worry about the candidate_datatype list (which we don't want to copy just yet), since that will 
+			tmp_prev_il_instruction.datatype() = NULL;
+			/* We don't need to worry about the candidate_datatype list (which we don't want to copy just yet), since that will
 			 * be reset to the correct value when we call intersect_prev_candidate_datatype_lists() later on...
 			 */
 		}
 #endif
-		/* the print error algorithm will need access to the intersected candidate_datatype lists of all prev_il_instructions, as well as the 
+		/* the print error algorithm will need access to the intersected candidate_datatype lists of all prev_il_instructions, as well as the
 		 * list of the prev_il_instructions.
 		 * Instead of creating two 'global' (within the class) variables, we create a single il_instruction_c variable (fake_prev_il_instruction),
 		 * and shove that data into this single variable.
@@ -768,8 +768,8 @@ void *print_datatypes_error_c::visit(il_instruction_c *symbol) {
 		intersect_prev_candidate_datatype_lists(&tmp_prev_il_instruction);
 		if (are_all_datatypes_equal(matiec::analysis_flow_predecessors(symbol)))
 			if (matiec::analysis_flow_predecessors(symbol).size() > 0)
-				tmp_prev_il_instruction.datatype = (matiec::analysis_flow_predecessors(symbol)[0])->datatype;
-		
+				tmp_prev_il_instruction.datatype() = (matiec::analysis_flow_predecessors(symbol)[0])->datatype();
+
 		/* Tell the il_instruction the datatype that it must generate - this was chosen by the next il_instruction (remember: we are iterating backwards!) */
 		fake_prev_il_instruction = &tmp_prev_il_instruction;
 		symbol->il_instruction->accept(*this);
@@ -821,7 +821,7 @@ void *print_datatypes_error_c::visit(il_function_call_c *symbol) {
  * is not preceded by a LD operator (or another equivalent operator or list of operators).
  */
 	handle_function_invocation(symbol, fcall_param);
-	
+
 	/* We now undo those changes to the abstract syntax tree made above! */
 	((list_c *)symbol->il_operand_list)->remove_element(0);
 	if (((list_c *)symbol->il_operand_list)->n == 0) {
@@ -838,7 +838,7 @@ void *print_datatypes_error_c::visit(il_function_call_c *symbol) {
 // SYM_REF3(il_expression_c, il_expr_operator, il_operand, simple_instr_list);
 void *print_datatypes_error_c::visit(il_expression_c *symbol) {
   /* Stage2 will insert an artificial (and equivalent) LD <il_operand> to the simple_instr_list if necessary. We can therefore ignore the 'il_operand' entry! */
-  
+
   /* first give the parenthesised IL list a chance to print errors */
   il_instruction_c *save_fake_prev_il_instruction = fake_prev_il_instruction;
   symbol->simple_instr_list->accept(*this);
@@ -872,7 +872,7 @@ void *print_datatypes_error_c::visit(il_fb_call_c *symbol) {
 		/* fcall_param.called_function_declaration = */ symbol->called_fb_declaration,
 		/* fcall_param.extensible_param_count      = */ extensible_param_count           /* will not be used, but must provide a reference to be able to compile */
 	};
-  
+
 	handle_function_invocation(symbol, fcall_param);
 	/* check the semantics of the CALC, CALCN operators! */
 	symbol->il_call_operator->accept(*this);
@@ -892,7 +892,7 @@ void *print_datatypes_error_c::visit(il_formal_funct_call_c *symbol) {
 		/* fcall_param.called_function_declaration = */ symbol->called_function_declaration,
 		/* fcall_param.extensible_param_count      = */ symbol->extensible_param_count
 	};
-  
+
 	handle_function_invocation(symbol, fcall_param);
 	return NULL;
 }
@@ -904,22 +904,22 @@ void *print_datatypes_error_c::visit(il_formal_funct_call_c *symbol) {
 // SYM_REF1(il_simple_instruction_c, il_simple_instruction, symbol_c *prev_il_instruction;)
 void *print_datatypes_error_c::visit(il_simple_instruction_c *symbol)	{
   if (matiec::analysis_flow_predecessors(symbol).size() > 1) ERROR; /* There should be no labeled insructions inside an IL expression! */
-    
+
   il_instruction_c tmp_prev_il_instruction(NULL, NULL);
 #if 0
-  /* the print error algorithm will need access to the intersected candidate_datatype lists of all prev_il_instructions, as well as the 
+  /* the print error algorithm will need access to the intersected candidate_datatype lists of all prev_il_instructions, as well as the
    * list of the prev_il_instructions.
    * Instead of creating two 'global' (within the class) variables, we create a single il_instruction_c variable (fake_prev_il_instruction),
    * and shove that data into this single variable.
    */
   if (matiec::analysis_flow_predecessors(symbol).size() > 0)
-    tmp_prev_il_instruction.candidate_datatypes =
+    tmp_prev_il_instruction.candidate_datatypes() =
         matiec::analysis_datatype_candidates(
             matiec::analysis_flow_predecessors(symbol)[0]);
   tmp_prev_il_instruction.prev_il_instruction = matiec::analysis_flow_predecessors(symbol);
 #endif
-  
-  /* the print error algorithm will need access to the intersected candidate_datatype lists of all prev_il_instructions, as well as the 
+
+  /* the print error algorithm will need access to the intersected candidate_datatype lists of all prev_il_instructions, as well as the
    * list of the prev_il_instructions.
    * Instead of creating two 'global' (within the class) variables, we create a single il_instruction_c variable (fake_prev_il_instruction),
    * and shove that data into this single variable.
@@ -928,16 +928,16 @@ void *print_datatypes_error_c::visit(il_simple_instruction_c *symbol)	{
   intersect_prev_candidate_datatype_lists(&tmp_prev_il_instruction);
   if (are_all_datatypes_equal(matiec::analysis_flow_predecessors(symbol)))
     if (matiec::analysis_flow_predecessors(symbol).size() > 0)
-      tmp_prev_il_instruction.datatype = (matiec::analysis_flow_predecessors(symbol)[0])->datatype;
-  
-  
+      tmp_prev_il_instruction.datatype() = (matiec::analysis_flow_predecessors(symbol)[0])->datatype();
+
+
    /* copy the candidate_datatypes list */
   fake_prev_il_instruction = &tmp_prev_il_instruction;
   symbol->il_simple_instruction->accept(*this);
   fake_prev_il_instruction = NULL;
   return NULL;
-  
-  
+
+
 //   if (matiec::analysis_flow_predecessors(symbol).size() == 0)  prev_il_instruction = NULL;
 //   else                                          prev_il_instruction = matiec::analysis_flow_predecessors(symbol)[0];
 
@@ -959,7 +959,7 @@ void *print_datatypes_error_c::print_binary_operator_errors(const char *il_opera
 		STAGE3_ERROR(0, symbol, symbol, "Missing operand for %s operator.", il_operator);		// message (a)
 	} else if ((matiec::analysis_datatype_candidates(symbol).size() == 0) && (matiec::analysis_datatype_candidates(il_operand).size() > 0)) {
 		STAGE3_ERROR(0, symbol, symbol, "Data type mismatch for '%s' operator.", il_operator);		// message (b)
-	} else if (NULL == symbol->datatype) {  // do NOT use !get_datatype_info_c::is_type_valid() here!
+	} else if (NULL == symbol->datatype()) {  // do NOT use !get_datatype_info_c::is_type_valid() here!
 		STAGE3_WARNING(symbol, symbol, "Result of '%s' operation is never used.", il_operator);		// message (c)
 	} else if (deprecated_operation)
 		STAGE3_WARNING(symbol, symbol, "Deprecated operation for '%s' operator.", il_operator);		// message (d)
@@ -1023,11 +1023,11 @@ void *print_datatypes_error_c::visit(  LT_operator_c *symbol) {return print_bina
 void *print_datatypes_error_c::visit(  LE_operator_c *symbol) {return print_binary_operator_errors( "LE" , symbol);}
 void *print_datatypes_error_c::visit(  NE_operator_c *symbol) {return print_binary_operator_errors( "NE" , symbol);}
 
-  
+
 
 
 void *print_datatypes_error_c::handle_conditional_flow_control_IL_instruction(symbol_c *symbol, const char *oper) {
-	if (!get_datatype_info_c::is_type_valid(symbol->datatype))
+	if (!get_datatype_info_c::is_type_valid(symbol->datatype()))
 		STAGE3_ERROR(0, symbol, symbol, "%s operator must be preceded by an IL instruction producing a BOOL value.", oper);
 	return NULL;
 }
@@ -1081,7 +1081,7 @@ void *print_datatypes_error_c::visit(  ref_expression_c  *symbol) {
 		STAGE3_ERROR(0, symbol, symbol, "REF operator must be used with a variable.");
 	return NULL;
 }
-    
+
 
 void *print_datatypes_error_c::print_binary_expression_errors(const char *operation, symbol_c *symbol, symbol_c *l_expr, symbol_c *r_expr, bool deprecated_operation) {
 	l_expr->accept(*this);
@@ -1167,8 +1167,8 @@ void *print_datatypes_error_c::visit(object_method_invocation_c *symbol) {
 void *print_datatypes_error_c::visit(assignment_statement_c *symbol) {
 	symbol->l_exp->accept(*this);
 	symbol->r_exp->accept(*this);
-	if ((!get_datatype_info_c::is_type_valid(symbol->l_exp->datatype)) &&
-	    (!get_datatype_info_c::is_type_valid(symbol->r_exp->datatype)) &&
+	if ((!get_datatype_info_c::is_type_valid(symbol->l_exp->datatype())) &&
+	    (!get_datatype_info_c::is_type_valid(symbol->r_exp->datatype())) &&
 	    (matiec::analysis_datatype_candidates(symbol->l_exp).size() > 0)	&&
 	    (matiec::analysis_datatype_candidates(symbol->r_exp).size() > 0))
 		STAGE3_ERROR(0, symbol, symbol, "Incompatible data types for ':=' operation.");
@@ -1196,7 +1196,7 @@ void *print_datatypes_error_c::visit(fb_invocation_c *symbol) {
 		/* fcall_param.called_function_declaration = */ symbol->called_fb_declaration,
 		/* fcall_param.extensible_param_count      = */ extensible_param_count           /* will not be used, but must provide a reference to be able to compile */
 	};
-	
+
 	handle_function_invocation(symbol, fcall_param);
 	return NULL;
 }
@@ -1208,7 +1208,7 @@ void *print_datatypes_error_c::visit(fb_invocation_c *symbol) {
 
 void *print_datatypes_error_c::visit(if_statement_c *symbol) {
 	symbol->expression->accept(*this);
-	if ((!get_datatype_info_c::is_type_valid(symbol->expression->datatype)) &&
+	if ((!get_datatype_info_c::is_type_valid(symbol->expression->datatype())) &&
 	    (matiec::analysis_datatype_candidates(symbol->expression).size() > 0)) {
 		STAGE3_ERROR(0, symbol->expression, symbol->expression, "Invalid data type for 'IF' condition (should be BOOL).");
 	}
@@ -1223,7 +1223,7 @@ void *print_datatypes_error_c::visit(if_statement_c *symbol) {
 
 void *print_datatypes_error_c::visit(elseif_statement_c *symbol) {
 	symbol->expression->accept(*this);
-	if ((!get_datatype_info_c::is_type_valid(symbol->expression->datatype)) &&
+	if ((!get_datatype_info_c::is_type_valid(symbol->expression->datatype())) &&
 	    (matiec::analysis_datatype_candidates(symbol->expression).size() > 0)) {
 		STAGE3_ERROR(0, symbol->expression, symbol->expression, "Invalid data type for 'ELSIF' condition (should be BOOL).");
 	}
@@ -1235,7 +1235,7 @@ void *print_datatypes_error_c::visit(elseif_statement_c *symbol) {
 
 void *print_datatypes_error_c::visit(case_statement_c *symbol) {
 	symbol->expression->accept(*this);
-	if ((!get_datatype_info_c::is_type_valid(symbol->expression->datatype)) &&
+	if ((!get_datatype_info_c::is_type_valid(symbol->expression->datatype())) &&
 	    (matiec::analysis_datatype_candidates(symbol->expression).size() > 0)) {
 		STAGE3_ERROR(0, symbol->expression, symbol->expression, "'CASE' quantity not an integer or enumerated.");
 	}
@@ -1254,23 +1254,23 @@ void *print_datatypes_error_c::visit(for_statement_c *symbol) {
 	symbol->beg_expression->accept(*this);
 	symbol->end_expression->accept(*this);
 	/* Control variable */
-	if ((!get_datatype_info_c::is_type_valid(symbol->control_variable->datatype)) &&
+	if ((!get_datatype_info_c::is_type_valid(symbol->control_variable->datatype())) &&
 	    (matiec::analysis_datatype_candidates(symbol->control_variable).size() > 0)) {
 		STAGE3_ERROR(0, symbol->control_variable, symbol->control_variable, "Invalid data type for 'FOR' control variable.");
 	}
 	/* BEG expression */
-	if ((!get_datatype_info_c::is_type_valid(symbol->beg_expression->datatype)) &&
+	if ((!get_datatype_info_c::is_type_valid(symbol->beg_expression->datatype())) &&
 	    (matiec::analysis_datatype_candidates(symbol->beg_expression).size() > 0)) {
 		STAGE3_ERROR(0, symbol->beg_expression, symbol->beg_expression, "Invalid data type for 'FOR' begin expression.");
 	}
 	/* END expression */
-	if ((!get_datatype_info_c::is_type_valid(symbol->end_expression->datatype)) &&
+	if ((!get_datatype_info_c::is_type_valid(symbol->end_expression->datatype())) &&
 	    (matiec::analysis_datatype_candidates(symbol->end_expression).size() > 0)) {
 		STAGE3_ERROR(0, symbol->end_expression, symbol->end_expression, "Invalid data type for 'FOR' end expression.");
 	}
 	/* BY expression */
 	if ((NULL != symbol->by_expression) &&
-	    (!get_datatype_info_c::is_type_valid(symbol->by_expression->datatype)) &&
+	    (!get_datatype_info_c::is_type_valid(symbol->by_expression->datatype())) &&
 	    (matiec::analysis_datatype_candidates(symbol->end_expression).size() > 0)) {
 		STAGE3_ERROR(0, symbol->by_expression, symbol->by_expression, "Invalid data type for 'FOR' by expression.");
 	}
@@ -1283,7 +1283,7 @@ void *print_datatypes_error_c::visit(for_statement_c *symbol) {
 
 void *print_datatypes_error_c::visit(while_statement_c *symbol) {
 	symbol->expression->accept(*this);
-	if (!get_datatype_info_c::is_type_valid(symbol->expression->datatype)) {
+	if (!get_datatype_info_c::is_type_valid(symbol->expression->datatype())) {
 		STAGE3_ERROR(0, symbol->expression, symbol->expression, "Invalid data type for 'WHILE' condition.");
 		return NULL;
 	}
@@ -1293,7 +1293,7 @@ void *print_datatypes_error_c::visit(while_statement_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(repeat_statement_c *symbol) {
-	if (!get_datatype_info_c::is_type_valid(symbol->expression->datatype)) {
+	if (!get_datatype_info_c::is_type_valid(symbol->expression->datatype())) {
 		STAGE3_ERROR(0, symbol->expression, symbol->expression, "Invalid data type for 'REPEAT' condition.");
 		return NULL;
 	}

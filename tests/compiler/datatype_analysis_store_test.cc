@@ -1,16 +1,15 @@
 #include "compiler/compilation_context.hh"
-#include "stage3/datatype_analysis_store.hh"
 
 #include <cassert>
 
 int main() {
   matiec::CompilationContext context;
   matiec::ActiveAstArenaScope arena_scope(context.ast_arena());
+  matiec::ActiveAnalysisStoreScope analysis_scope(context.analysis());
   integer_c *literal = context.ast_arena().make<integer_c>("42");
   int_type_name_c *candidate = context.ast_arena().make<int_type_name_c>();
-  literal->candidate_datatypes.push_back(candidate);
+  literal->candidate_datatypes().push_back(candidate);
 
-  assert(publish_datatype_candidates(literal, context.analysis()));
   assert(context.analysis().datatype_size() == 1);
   const matiec::AnalysisEntry<matiec::DatatypeAnalysisRecord> *entry =
       context.analysis().datatype(literal);
@@ -19,12 +18,8 @@ int main() {
   assert(entry->value.candidates.size() == 1);
   assert(entry->value.candidates[0] == candidate);
 
-  literal->candidate_datatypes.clear();
-  {
-    matiec::ActiveAnalysisStoreScope analysis_scope(context.analysis());
-    assert(matiec::analysis_datatype_candidates(literal).size() == 1);
-    assert(matiec::analysis_datatype_candidates(literal)[0] == candidate);
-  }
+  assert(matiec::analysis_datatype_candidates(literal).size() == 1);
+  assert(matiec::analysis_datatype_candidates(literal)[0] == candidate);
 
   int_type_name_c shared_candidate;
   matiec::DatatypeAnalysisRecord shared;
@@ -41,32 +36,26 @@ int main() {
   assert(!context.analysis().set_datatype(literal, invalid));
   assert(context.analysis().datatype_size() == 1);
 
-  literal->candidate_datatypes.clear();
-  literal->datatype = &shared_candidate;
-  literal->scope = literal;
-  assert(publish_selected_datatypes(literal, context.analysis()));
+  literal->candidate_datatypes().clear();
+  literal->datatype() = &shared_candidate;
+  literal->scope() = literal;
   entry = context.analysis().datatype(literal);
-  assert(entry->value.candidates.size() == 1);
+  assert(entry->value.candidates.empty());
   assert(entry->value.selected == &shared_candidate);
   assert(entry->value.scope == literal);
 
-  literal->datatype = nullptr;
-  literal->scope = nullptr;
-  {
-    matiec::ActiveAnalysisStoreScope analysis_scope(context.analysis());
-    assert(matiec::analysis_selected_datatype(literal) == &shared_candidate);
-    assert(matiec::analysis_scope(literal) == literal);
+  assert(matiec::analysis_selected_datatype(literal) == &shared_candidate);
+  assert(matiec::analysis_scope(literal) == literal);
 
-    integer_c transient("7");
-    transient.candidate_datatypes.push_back(&shared_candidate);
-    transient.datatype = &shared_candidate;
-    transient.scope = literal;
-    assert(matiec::analysis_datatype_candidates(&transient).size() == 1);
-    assert(matiec::analysis_selected_datatype(&transient) == &shared_candidate);
-    assert(matiec::analysis_scope(&transient) == literal);
-  }
-  assert(literal->datatype == nullptr);
-  assert(literal->scope == nullptr);
+  integer_c transient("7");
+  transient.candidate_datatypes().push_back(&shared_candidate);
+  transient.datatype() = &shared_candidate;
+  transient.scope() = literal;
+  assert(context.analysis().datatype(&transient) == nullptr);
+  assert(matiec::analysis_datatype_candidates(&transient).size() == 1);
+  assert(matiec::analysis_selected_datatype(&transient) == &shared_candidate);
+  assert(matiec::analysis_scope(&transient) == literal);
+  assert(context.analysis().validate_datatypes());
 
   invalid = entry->value;
   invalid.scope = foreign;
@@ -75,5 +64,8 @@ int main() {
 
   context.analysis().clear();
   assert(context.analysis().datatype_size() == 0);
+  assert(matiec::analysis_datatype_candidates(&transient).empty());
+  assert(matiec::analysis_selected_datatype(&transient) == nullptr);
+  assert(matiec::analysis_scope(&transient) == nullptr);
   return 0;
 }

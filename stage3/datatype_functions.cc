@@ -80,7 +80,7 @@
  *       valid, but deprecated, suposedly meaning that they will be removed in the following version of the standard.
  *       However, the current draft version of IEC 61131-3 v3 still allows this use, and no longer declares these
  *       implicit operations as deprecated.
- *       Because of this, and although we are implementing v2 of the standard, we will no longer mark these 
+ *       Because of this, and although we are implementing v2 of the standard, we will no longer mark these
  *       operations as deprecated.
  */
   #define ANYTIME_OPER_DEPRECATION_STATUS widen_entry::ok
@@ -100,16 +100,16 @@ const struct widen_entry widen_ADD_table[] = {
     /*******************************************/
     /*** Operations with TIME, DT and TOD... ***/
     /*******************************************/
-    /*******************************************/ 
+    /*******************************************/
     { &get_datatype_info_c::time_type_name,          &get_datatype_info_c::time_type_name,            &get_datatype_info_c::time_type_name,         widen_entry::ok                 },
     { &get_datatype_info_c::tod_type_name,           &get_datatype_info_c::time_type_name,            &get_datatype_info_c::tod_type_name,          ANYTIME_OPER_DEPRECATION_STATUS },
     /* NOTE: the standard des not explicitly support the following semantics. However, since 'addition' is supposed to be commutative, we add it anyway... */
     /* not currently supported by stage4, so it is best no tto add it for now... */
 //  { &get_datatype_info_c::time_type_name,          &get_datatype_info_c::tod_type_name,             &get_datatype_info_c::tod_type_name,          ANYTIME_OPER_DEPRECATION_STATUS },
-    { &get_datatype_info_c::dt_type_name,            &get_datatype_info_c::time_type_name,            &get_datatype_info_c::dt_type_name,           ANYTIME_OPER_DEPRECATION_STATUS },         
+    { &get_datatype_info_c::dt_type_name,            &get_datatype_info_c::time_type_name,            &get_datatype_info_c::dt_type_name,           ANYTIME_OPER_DEPRECATION_STATUS },
     /* NOTE: the standard des not explicitly support the following semantics. However, since 'addition' is supposed to be commutative, we add it anyway... */
     /* not currently supported by stage4, so it is best no tto add it for now... */
-//  { &get_datatype_info_c::time_type_name,          &get_datatype_info_c::dt_type_name,              &get_datatype_info_c::dt_type_name,           ANYTIME_OPER_DEPRECATION_STATUS },         
+//  { &get_datatype_info_c::time_type_name,          &get_datatype_info_c::dt_type_name,              &get_datatype_info_c::dt_type_name,           ANYTIME_OPER_DEPRECATION_STATUS },
 
     /*******************************/
     /* SAFE version on the left... */
@@ -119,10 +119,10 @@ const struct widen_entry widen_ADD_table[] = {
     /* NOTE: the standard des not explicitly support the following semantics. However, since 'addition' is supposed to be commutative, we add it anyway... */
     /* not currently supported by stage4, so it is best no tto add it for now... */
 //  { &get_datatype_info_c::safetime_type_name,      &get_datatype_info_c::tod_type_name,             &get_datatype_info_c::tod_type_name,          ANYTIME_OPER_DEPRECATION_STATUS },
-    { &get_datatype_info_c::safedt_type_name,        &get_datatype_info_c::time_type_name,            &get_datatype_info_c::dt_type_name,           ANYTIME_OPER_DEPRECATION_STATUS },         
+    { &get_datatype_info_c::safedt_type_name,        &get_datatype_info_c::time_type_name,            &get_datatype_info_c::dt_type_name,           ANYTIME_OPER_DEPRECATION_STATUS },
     /* NOTE: the standard des not explicitly support the following semantics. However, since 'addition' is supposed to be commutative, we add it anyway... */
     /* not currently supported by stage4, so it is best no tto add it for now... */
-//  { &get_datatype_info_c::safetime_type_name,      &get_datatype_info_c::dt_type_name,              &get_datatype_info_c::dt_type_name,           ANYTIME_OPER_DEPRECATION_STATUS },         
+//  { &get_datatype_info_c::safetime_type_name,      &get_datatype_info_c::dt_type_name,              &get_datatype_info_c::dt_type_name,           ANYTIME_OPER_DEPRECATION_STATUS },
 
     /********************************/
     /* SAFE version on the right... */
@@ -132,10 +132,10 @@ const struct widen_entry widen_ADD_table[] = {
     /* NOTE: the standard des not explicitly support the following semantics. However, since 'addition' is supposed to be commutative, we add it anyway... */
     /* not currently supported by stage4, so it is best no tto add it for now... */
 //  { &get_datatype_info_c::time_type_name,          &get_datatype_info_c::safetod_type_name,         &get_datatype_info_c::tod_type_name,          ANYTIME_OPER_DEPRECATION_STATUS },
-    { &get_datatype_info_c::dt_type_name,            &get_datatype_info_c::safetime_type_name,        &get_datatype_info_c::dt_type_name,           ANYTIME_OPER_DEPRECATION_STATUS },         
+    { &get_datatype_info_c::dt_type_name,            &get_datatype_info_c::safetime_type_name,        &get_datatype_info_c::dt_type_name,           ANYTIME_OPER_DEPRECATION_STATUS },
     /* NOTE: the standard des not explicitly support the following semantics. However, since 'addition' is supposed to be commutative, we add it anyway... */
     /* not currently supported by stage4, so it is best no tto add it for now... */
-//  { &get_datatype_info_c::time_type_name,          &get_datatype_info_c::safedt_type_name,          &get_datatype_info_c::dt_type_name,           ANYTIME_OPER_DEPRECATION_STATUS },         
+//  { &get_datatype_info_c::time_type_name,          &get_datatype_info_c::safedt_type_name,          &get_datatype_info_c::dt_type_name,           ANYTIME_OPER_DEPRECATION_STATUS },
 
     /*************************************/
     /* SAFE version on left and right... */
@@ -145,11 +145,11 @@ const struct widen_entry widen_ADD_table[] = {
     /* NOTE: the standard des not explicitly support the following semantics. However, since 'addition' is supposed to be commutative, we add it anyway... */
     /* not currently supported by stage4, so it is best no tto add it for now... */
 //  { &get_datatype_info_c::safetime_type_name,      &get_datatype_info_c::safetod_type_name,         &get_datatype_info_c::safetod_type_name,      ANYTIME_OPER_DEPRECATION_STATUS },
-    { &get_datatype_info_c::safedt_type_name,        &get_datatype_info_c::safetime_type_name,        &get_datatype_info_c::safedt_type_name,       ANYTIME_OPER_DEPRECATION_STATUS },         
+    { &get_datatype_info_c::safedt_type_name,        &get_datatype_info_c::safetime_type_name,        &get_datatype_info_c::safedt_type_name,       ANYTIME_OPER_DEPRECATION_STATUS },
     /* NOTE: the standard des not explicitly support the following semantics. However, since 'addition' is supposed to be commutative, we add it anyway... */
     /* not currently supported by stage4, so it is best no tto add it for now... */
 //  { &get_datatype_info_c::safetime_type_name,      &get_datatype_info_c::safedt_type_name,          &get_datatype_info_c::safedt_type_name,       ANYTIME_OPER_DEPRECATION_STATUS },
-   
+
     { NULL, NULL, NULL, widen_entry::ok },
 };
 
@@ -172,13 +172,13 @@ const struct widen_entry widen_SUB_table[] = {
     /*******************************************/
     /*** Operations with TIME, DT and TOD... ***/
     /*******************************************/
-    /*******************************************/ 
+    /*******************************************/
     { &get_datatype_info_c::time_type_name,          &get_datatype_info_c::time_type_name,            &get_datatype_info_c::time_type_name,         widen_entry::ok                 },
     { &get_datatype_info_c::date_type_name,          &get_datatype_info_c::date_type_name,            &get_datatype_info_c::time_type_name,         ANYTIME_OPER_DEPRECATION_STATUS },
     { &get_datatype_info_c::tod_type_name,           &get_datatype_info_c::time_type_name,            &get_datatype_info_c::tod_type_name,          ANYTIME_OPER_DEPRECATION_STATUS },
     { &get_datatype_info_c::tod_type_name,           &get_datatype_info_c::tod_type_name,             &get_datatype_info_c::time_type_name,         ANYTIME_OPER_DEPRECATION_STATUS },
     { &get_datatype_info_c::dt_type_name,            &get_datatype_info_c::time_type_name,            &get_datatype_info_c::dt_type_name,           ANYTIME_OPER_DEPRECATION_STATUS },
-    { &get_datatype_info_c::dt_type_name,            &get_datatype_info_c::dt_type_name,              &get_datatype_info_c::time_type_name,         ANYTIME_OPER_DEPRECATION_STATUS },        
+    { &get_datatype_info_c::dt_type_name,            &get_datatype_info_c::dt_type_name,              &get_datatype_info_c::time_type_name,         ANYTIME_OPER_DEPRECATION_STATUS },
 
     /*******************************/
     /* SAFE version on the left... */
@@ -188,7 +188,7 @@ const struct widen_entry widen_SUB_table[] = {
     { &get_datatype_info_c::safetod_type_name,       &get_datatype_info_c::time_type_name,            &get_datatype_info_c::tod_type_name,          ANYTIME_OPER_DEPRECATION_STATUS },
     { &get_datatype_info_c::safetod_type_name,       &get_datatype_info_c::tod_type_name,             &get_datatype_info_c::time_type_name,         ANYTIME_OPER_DEPRECATION_STATUS },
     { &get_datatype_info_c::safedt_type_name,        &get_datatype_info_c::time_type_name,            &get_datatype_info_c::dt_type_name,           ANYTIME_OPER_DEPRECATION_STATUS },
-    { &get_datatype_info_c::safedt_type_name,        &get_datatype_info_c::dt_type_name,              &get_datatype_info_c::time_type_name,         ANYTIME_OPER_DEPRECATION_STATUS },        
+    { &get_datatype_info_c::safedt_type_name,        &get_datatype_info_c::dt_type_name,              &get_datatype_info_c::time_type_name,         ANYTIME_OPER_DEPRECATION_STATUS },
 
     /********************************/
     /* SAFE version on the right... */
@@ -198,7 +198,7 @@ const struct widen_entry widen_SUB_table[] = {
     { &get_datatype_info_c::tod_type_name,           &get_datatype_info_c::safetime_type_name,        &get_datatype_info_c::tod_type_name,          ANYTIME_OPER_DEPRECATION_STATUS },
     { &get_datatype_info_c::tod_type_name,           &get_datatype_info_c::safetod_type_name,         &get_datatype_info_c::time_type_name,         ANYTIME_OPER_DEPRECATION_STATUS },
     { &get_datatype_info_c::dt_type_name,            &get_datatype_info_c::safetime_type_name,        &get_datatype_info_c::dt_type_name,           ANYTIME_OPER_DEPRECATION_STATUS },
-    { &get_datatype_info_c::dt_type_name,            &get_datatype_info_c::safedt_type_name,          &get_datatype_info_c::time_type_name,         ANYTIME_OPER_DEPRECATION_STATUS },        
+    { &get_datatype_info_c::dt_type_name,            &get_datatype_info_c::safedt_type_name,          &get_datatype_info_c::time_type_name,         ANYTIME_OPER_DEPRECATION_STATUS },
 
     /*************************************/
     /* SAFE version on left and right... */
@@ -208,7 +208,7 @@ const struct widen_entry widen_SUB_table[] = {
     { &get_datatype_info_c::safetod_type_name,       &get_datatype_info_c::safetime_type_name,        &get_datatype_info_c::safetod_type_name,      ANYTIME_OPER_DEPRECATION_STATUS },
     { &get_datatype_info_c::safetod_type_name,       &get_datatype_info_c::safetod_type_name,         &get_datatype_info_c::safetime_type_name,     ANYTIME_OPER_DEPRECATION_STATUS },
     { &get_datatype_info_c::safedt_type_name,        &get_datatype_info_c::safetime_type_name,        &get_datatype_info_c::safedt_type_name,       ANYTIME_OPER_DEPRECATION_STATUS },
-    { &get_datatype_info_c::safedt_type_name,        &get_datatype_info_c::safedt_type_name,          &get_datatype_info_c::safetime_type_name,     ANYTIME_OPER_DEPRECATION_STATUS },        
+    { &get_datatype_info_c::safedt_type_name,        &get_datatype_info_c::safedt_type_name,          &get_datatype_info_c::safetime_type_name,     ANYTIME_OPER_DEPRECATION_STATUS },
 
     { NULL, NULL, NULL, widen_entry::ok },
 };
@@ -232,7 +232,7 @@ const struct widen_entry widen_MUL_table[] = {
     /*******************************************/
     /*** Operations with TIME, DT and TOD... ***/
     /*******************************************/
-    /*******************************************/ 
+    /*******************************************/
 #define __multime(TYPE)       \
     { &get_datatype_info_c::time_type_name,          &get_datatype_info_c::TYPE##_type_name,          &get_datatype_info_c::time_type_name,         ANYTIME_OPER_DEPRECATION_STATUS }, \
     { &get_datatype_info_c::safetime_type_name,      &get_datatype_info_c::TYPE##_type_name,          &get_datatype_info_c::time_type_name,         ANYTIME_OPER_DEPRECATION_STATUS }, \
@@ -266,7 +266,7 @@ const struct widen_entry widen_DIV_table[] = {
     /*******************************************/
     /*** Operations with TIME, DT and TOD... ***/
     /*******************************************/
-    /*******************************************/ 
+    /*******************************************/
 #define __divtime(TYPE)       \
     { &get_datatype_info_c::time_type_name,          &get_datatype_info_c::TYPE##_type_name,          &get_datatype_info_c::time_type_name,         ANYTIME_OPER_DEPRECATION_STATUS }, \
     { &get_datatype_info_c::safetime_type_name,      &get_datatype_info_c::TYPE##_type_name,          &get_datatype_info_c::time_type_name,         ANYTIME_OPER_DEPRECATION_STATUS }, \
@@ -278,7 +278,7 @@ const struct widen_entry widen_DIV_table[] = {
     { NULL, NULL, NULL, widen_entry::ok },
  };
 
- 
+
 
 
 const struct widen_entry widen_MOD_table[] = {
@@ -292,8 +292,8 @@ const struct widen_entry widen_MOD_table[] = {
 
     { NULL, NULL, NULL, widen_entry::ok },
 };
- 
- 
+
+
 
 
 const struct widen_entry widen_EXPT_table[] = {
@@ -387,7 +387,7 @@ const struct widen_entry widen_CMP_table[] = {
  * Returns: position of datatype in the list, or -1 if not found.
  */
 int search_in_candidate_datatype_list(symbol_c *datatype, const std::vector <symbol_c *> &candidate_datatypes) {
-	if (NULL == datatype) 
+	if (NULL == datatype)
 		return -1;
 
 	for(unsigned int i = 0; i < candidate_datatypes.size(); i++)
@@ -404,7 +404,7 @@ bool remove_from_candidate_datatype_list(symbol_c *datatype, std::vector <symbol
 	int pos = search_in_candidate_datatype_list(datatype, candidate_datatypes);
 	if (pos < 0)
 		return false;
-	
+
 	candidate_datatypes.erase(candidate_datatypes.begin() + pos);
 	return true;
 }
@@ -421,13 +421,13 @@ void intersect_candidate_datatype_list(symbol_c *list1 /*origin, dest.*/, symbol
 		/* In principle, we should never call it with NULL values. Best to abort the compiler just in case! */
 		return;
 
-	for(std::vector<symbol_c *>::iterator i = list1->candidate_datatypes.begin(); i < list1->candidate_datatypes.end(); ) {
+	for(std::vector<symbol_c *>::iterator i = list1->candidate_datatypes().begin(); i < list1->candidate_datatypes().end(); ) {
 		/* Note that we do _not_ increment i in the for() loop!
-		 * When we erase an element from position i, a new element will take it's place, that must also be tested! 
+		 * When we erase an element from position i, a new element will take it's place, that must also be tested!
 		 */
-		if (search_in_candidate_datatype_list(*i, list2->candidate_datatypes) < 0)
+		if (search_in_candidate_datatype_list(*i, list2->candidate_datatypes()) < 0)
 			/* remove this element! This will change the value of candidate_datatypes.size() */
-			list1->candidate_datatypes.erase(i);
+			list1->candidate_datatypes().erase(i);
 		else i++;
 	}
 }
@@ -440,7 +440,7 @@ void intersect_prev_candidate_datatype_lists(il_instruction_c *symbol) {
 	if (matiec::analysis_flow_predecessors(symbol).empty())
 		return;
 
-	symbol->candidate_datatypes = matiec::analysis_datatype_candidates(
+	symbol->candidate_datatypes() = matiec::analysis_datatype_candidates(
 		matiec::analysis_flow_predecessors(symbol)[0]);
 	for (unsigned int i = 1; i < matiec::analysis_flow_predecessors(symbol).size(); i++) {
 		intersect_candidate_datatype_list(symbol /*origin, dest.*/, matiec::analysis_flow_predecessors(symbol)[i] /*with*/);

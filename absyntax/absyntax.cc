@@ -71,8 +71,6 @@ symbol_c::symbol_c(
   this->last_order   = last_order;
   this->parent       = NULL;
   this->token        = NULL;
-  this->datatype     = NULL;
-  this->scope        = NULL;
 }
 
 symbol_c::~symbol_c(void) {
@@ -415,5 +413,4 @@ void *class_name_c::accept(visitor_c &visitor) {return visitor.visit(this);}
 #undef SYM_REF4
 #undef SYM_REF5
 #undef SYM_REF6
-
 

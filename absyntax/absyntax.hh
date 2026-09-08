@@ -72,6 +72,16 @@ class visitor_c; // forward declaration
 
 class symbol_c; // forward declaration
 
+namespace matiec {
+std::vector<symbol_c *> &analysis_datatype_candidates_mut(symbol_c *symbol);
+const std::vector<symbol_c *> &analysis_datatype_candidates(
+    const symbol_c *symbol);
+symbol_c *&analysis_selected_datatype_ref(symbol_c *symbol);
+symbol_c *analysis_selected_datatype(const symbol_c *symbol);
+symbol_c *&analysis_scope_ref(symbol_c *symbol);
+symbol_c *analysis_scope(const symbol_c *symbol);
+}
+
 
 
 
@@ -197,23 +207,22 @@ class symbol_c {
     long int last_order;    /* relative order in which it is read by lexcial analyser */
 
 
-    /*
-     * Annotations produced during stage 3
-     */    
-    /*** Data type analysis ***/
-    std::vector <symbol_c *> candidate_datatypes; /* All possible data types the expression/literal/etc. may take. Filled in stage3 by fill_candidate_datatypes_c class */
-    /* Data type of the expression/literal/etc. Filled in stage3 by narrow_candidate_datatypes_c 
-     * If set to NULL, it means it has not yet been evaluated.
-     * If it points to an object of type invalid_type_name_c, it means it is invalid.
-     * Otherwise, it points to an object of the apropriate data type (e.g. int_type_name_c, bool_type_name_c, ...)
-     */
-    symbol_c *datatype;
-    /* The POU in which the symbolic variable (or structured variable, or array variable, or located variable, - any more?)
-     * was declared. This will point to a Configuration, Resource, Program, FB, or Function.
-     * This is set in stage 3 by the datatype analyser algorithm (fill/narrow) for the symbols:
-     *  symbolic_variable_c, array_variable_c, structured_variable_c
-     */
-    symbol_c *scope;    
+    /* Transitional producer accessors. Datatype analysis storage belongs to the
+     * active compilation's AnalysisStore, not to the AST node. */
+    std::vector<symbol_c *> &candidate_datatypes() {
+      return matiec::analysis_datatype_candidates_mut(this);
+    }
+    const std::vector<symbol_c *> &candidate_datatypes() const {
+      return matiec::analysis_datatype_candidates(this);
+    }
+    symbol_c *&datatype() {
+      return matiec::analysis_selected_datatype_ref(this);
+    }
+    symbol_c *datatype() const {
+      return matiec::analysis_selected_datatype(this);
+    }
+    symbol_c *&scope() { return matiec::analysis_scope_ref(this); }
+    symbol_c *scope() const { return matiec::analysis_scope(this); }
 
     /*** constant folding ***/
     /* If the symbol has a constant numerical value, this will be set to that value by constant_folding_c */

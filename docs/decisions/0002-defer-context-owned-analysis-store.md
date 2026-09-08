@@ -86,5 +86,7 @@ thread-local active-store guard that is installed and restored by the compiler;
 this supersedes the original prohibition above while preserving nested context
 isolation. This document remains the historical rationale for the staged
 approach. Test-only materializers have also been removed. The remaining
-follow-up removes producer-local compatibility fields and finally the scoped active-store bridge;
-it does not reopen the completed result-store design.
+follow-up removes the non-datatype producer-local compatibility fields and
+finally the scoped active-store bridge; datatype candidates, selections, and
+scopes no longer occupy AST fields. This does not reopen the completed
+result-store design.

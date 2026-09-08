@@ -70,6 +70,10 @@ class AnalysisStore {
                      AnalysisStatus status = AnalysisStatus::valid);
   bool set_generator_symbol(const symbol_c *key, const std::string &name,
                             symbol_c *value);
+  DatatypeAnalysisRecord &datatype_working(symbol_c *key);
+  const DatatypeAnalysisRecord *datatype_working(
+      const symbol_c *key) const;
+  bool validate_datatypes() const;
 
   const AnalysisEntry<FlowAnalysisRecord> *flow(const symbol_c *key) const;
   const AnalysisEntry<ConstantAnalysisRecord> *constant(const symbol_c *key) const;
@@ -123,6 +127,8 @@ class AnalysisStore {
   Table<FlowAnalysisRecord> flow_;
   Table<ConstantAnalysisRecord> constants_;
   Table<DatatypeAnalysisRecord> datatypes_;
+  std::unordered_map<const symbol_c *, DatatypeAnalysisRecord>
+      transient_datatypes_;
   Table<ResolutionAnalysisRecord> resolutions_;
   Table<EnumerationAnalysisRecord> enumerations_;
   Table<GeneratorAnalysisRecord> generators_;
@@ -158,9 +164,11 @@ const const_value_c &analysis_constant_value(const symbol_c *symbol);
 const DatatypeAnalysisRecord *analysis_datatype(const symbol_c *symbol);
 const std::vector<symbol_c *> &analysis_datatype_candidates(
     const symbol_c *symbol);
+std::vector<symbol_c *> &analysis_datatype_candidates_mut(symbol_c *symbol);
 symbol_c *analysis_selected_datatype(const symbol_c *symbol);
+symbol_c *&analysis_selected_datatype_ref(symbol_c *symbol);
 symbol_c *analysis_scope(const symbol_c *symbol);
-bool refresh_analysis_datatype_candidates(symbol_c *symbol);
+symbol_c *&analysis_scope_ref(symbol_c *symbol);
 
 }  // namespace matiec
 

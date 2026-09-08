@@ -82,11 +82,11 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
      * scope ...
      */
     #define IL_DEFVAR_BACK   VAR_LEADER "IL_DEFVAR_BACK"
-    
+
     il_default_variable_c implicit_variable_current;      /* the current   implicit variable, with the datatype resulting from the previous IL operation */
     il_default_variable_c implicit_variable_result;       /* the resulting implicit variable, with the datatype resulting from the current  IL operation */
     il_default_variable_c implicit_variable_result_back;
-    
+
     /* Operand to the IL operation currently being processed... */
     /* These variables are used to pass data from the
      * il_simple_operation_c and il_expression_c visitors
@@ -131,7 +131,7 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
       search_fb_instance_decl    = new search_fb_instance_decl_c   (scope);
       search_varfb_instance_type = new search_varfb_instance_type_c(scope);
       search_var_instance_decl   = new search_var_instance_decl_c  (scope);
-      
+
       current_operand = NULL;
       current_array_type = NULL;
       current_param_type = NULL;
@@ -155,7 +155,7 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
     /* Declare an implicit IL variable... */
     void declare_implicit_variable(il_default_variable_c *implicit_var) {
       s4o.print(s4o.indent_spaces);
-      implicit_var->datatype = NULL;
+      implicit_var->datatype() = NULL;
 
       s4o.print(IL_DEFVAR_T);
       s4o.print(" ");
@@ -168,21 +168,21 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
       s4o.print(";\n");
 
     }
-    
-  public:  
+
+  public:
     /* Declare the default variable, that will store the result of the IL operations */
     void declare_implicit_variable(void) {
       declare_implicit_variable(&this->implicit_variable_result);
     }
-    
+
     /* Declare the backup to the default variable, that will store the result of the IL operations executed inside a parenthesis... */
     void declare_implicit_variable_back(void) {
       declare_implicit_variable(&this->implicit_variable_result_back);
     }
-    
+
     void print_implicit_variable_back(void) {
       this->implicit_variable_result_back.accept(*this);
-    }    
+    }
 
 
   private:
@@ -235,14 +235,14 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
       if (NULL == sv) ERROR;
       identifier_c *id = dynamic_cast<identifier_c *>(sv->var_name);
       if (NULL == id) ERROR;
-      
+
       identifier_c param(param_name);
 
       //SYM_REF3(il_param_assignment_c, il_assign_operator, il_operand, simple_instr_list)
       il_assign_operator_c il_assign_operator(&param);
       il_param_assignment_c il_param_assignment(&il_assign_operator, &this->implicit_variable_current, NULL);
       // SYM_LIST(il_param_list_c)
-      il_param_list_c il_param_list;   
+      il_param_list_c il_param_list;
       il_param_list.add_element(&il_param_assignment);
       CAL_operator_c CAL_operator;
       // SYM_REF4(il_fb_call_c, il_call_operator, fb_name, il_operand_list, il_param_list)
@@ -256,7 +256,7 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
     void *CMP_operator(symbol_c *operand, const char *operation) {
       if (NULL == operand) ERROR;
       if (NULL == matiec::analysis_selected_datatype(operand)) ERROR;
-      if (NULL == this->implicit_variable_current.datatype) ERROR;
+      if (NULL == this->implicit_variable_current.datatype()) ERROR;
 
       this->implicit_variable_result.accept(*this);
       s4o.print(" = ");
@@ -268,7 +268,7 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
 
     /* A helper function... */
     void C_modifier(void) {
-      if (!get_datatype_info_c::is_BOOL_compatible(implicit_variable_current.datatype)) ERROR;
+      if (!get_datatype_info_c::is_BOOL_compatible(implicit_variable_current.datatype())) ERROR;
       s4o.print("if (");
       this->implicit_variable_current.accept(*this);
       s4o.print(") ");
@@ -276,7 +276,7 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
 
     /* A helper function... */
     void CN_modifier(void) {
-      if (!get_datatype_info_c::is_BOOL_compatible(implicit_variable_current.datatype)) ERROR;
+      if (!get_datatype_info_c::is_BOOL_compatible(implicit_variable_current.datatype())) ERROR;
       s4o.print("if (!");
       this->implicit_variable_current.accept(*this);
       s4o.print(") ");
@@ -630,13 +630,13 @@ void *visit(array_initial_elements_list_c *symbol) {
 
 /*| instruction_list il_instruction */
 void *visit(instruction_list_c *symbol) {
-  
+
   /* Declare the IL implicit variable, that will store the result of the IL operations... */
   declare_implicit_variable();
 
   /* Declare the backup to the IL implicit variable, that will store the result of the IL operations executed inside a parenthesis... */
   declare_implicit_variable_back();
-  
+
   for(int i = 0; i < symbol->n; i++) {
     print_line_directive(symbol->get_element(i));
     s4o.print(s4o.indent_spaces);
@@ -651,9 +651,9 @@ void *visit(instruction_list_c *symbol) {
 // SYM_REF2(il_instruction_c, label, il_instruction)
 void *visit(il_instruction_c *symbol) {
   /* all previous IL instructions should have the same datatype (checked in stage3), so we get the datatype from the first previous IL instruction we find */
-  implicit_variable_current.datatype = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_selected_datatype(matiec::analysis_flow_predecessors(symbol)[0]);
-  implicit_variable_result .datatype = matiec::analysis_selected_datatype(symbol);
-  
+  implicit_variable_current.datatype() = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_selected_datatype(matiec::analysis_flow_predecessors(symbol)[0]);
+  implicit_variable_result .datatype() = matiec::analysis_selected_datatype(symbol);
+
   if (NULL != symbol->label) {
     symbol->label->accept(*this);
     s4o.print(":\n");
@@ -662,10 +662,10 @@ void *visit(il_instruction_c *symbol) {
 
   if (NULL != symbol->il_instruction) {
     symbol->il_instruction->accept(*this);
-  }  
-  
-  implicit_variable_result .datatype = NULL;
-  implicit_variable_current.datatype = NULL;
+  }
+
+  implicit_variable_result .datatype() = NULL;
+  implicit_variable_current.datatype() = NULL;
   return NULL;
 }
 
@@ -687,7 +687,7 @@ void *visit(il_function_call_c *symbol) {
   symbol_c* function_name = NULL;
   symbol_c* function_type_suffix = NULL;
   DECLARE_PARAM_LIST()
-  
+
   function_call_param_iterator_c function_call_param_iterator(symbol);
 
   const matiec::ResolutionAnalysisRecord *resolution =
@@ -697,16 +697,16 @@ void *visit(il_function_call_c *symbol) {
   if (f_decl == NULL) ERROR;
 
   function_name = symbol->function_name;
-  
+
   /* loop through each function parameter, find the value we should pass
    * to it, and then output the c equivalent...
    */
   function_param_iterator_c fp_iterator(f_decl);
   identifier_c *param_name;
     /* flag to remember whether we have already used the value stored in the implicit variable to pass to the first parameter */
-  bool used_defvar = false; 
+  bool used_defvar = false;
     /* flag to cirreclty handle calls to extensible standard functions (i.e. functions with variable number of input parameters) */
-  bool found_first_extensible_parameter = false;  
+  bool found_first_extensible_parameter = false;
   for(int i = 1; (param_name = fp_iterator.next()) != NULL; i++) {
     if (fp_iterator.is_extensible_param() && (!found_first_extensible_parameter)) {
       /* We are calling an extensible function. Before passing the extensible
@@ -732,12 +732,12 @@ void *visit(il_function_call_c *symbol) {
       ADD_PARAM_LIST(param_name, param_value, param_type, function_param_iterator_c::direction_in)
       found_first_extensible_parameter = true;
     }
-    
+
     symbol_c *param_type = fp_iterator.param_type();
     if (param_type == NULL) ERROR;
-    
+
     function_param_iterator_c::param_direction_t param_direction = fp_iterator.param_direction();
-    
+
     symbol_c *param_value = NULL;
 
     /* Get the value from a foo(<param_name> = <param_value>) style call */
@@ -760,7 +760,7 @@ void *visit(il_function_call_c *symbol) {
      * use the IL implicit variable as a source of data to pass to those parameters!
      */
     if ((param_value == NULL) &&  (!used_defvar) && !fp_iterator.is_en_eno_param_implicit()) {
-      if (NULL == implicit_variable_current.datatype) ERROR;
+      if (NULL == implicit_variable_current.datatype()) ERROR;
       param_value = &this->implicit_variable_current;
       used_defvar = true;
     }
@@ -769,7 +769,7 @@ void *visit(il_function_call_c *symbol) {
     if ((param_value == NULL) && !fp_iterator.is_en_eno_param_implicit()) {
       param_value = function_call_param_iterator.next_nf();
     }
-    
+
     /* if no more parameter values in function call, and the current parameter
      * of the function declaration is an extensible parameter, we
      * have reached the end, and should simply jump out of the for loop.
@@ -777,7 +777,7 @@ void *visit(il_function_call_c *symbol) {
     if ((param_value == NULL) && (fp_iterator.is_extensible_param())) {
       break;
     }
-    
+
     /* We do not yet support embedded IL lists, so we abort the compiler if we find one */
     /* Note that in IL function calls the syntax does not allow embeded IL lists, so this check is not necessary here! */
     /*
@@ -785,13 +785,13 @@ void *visit(il_function_call_c *symbol) {
      if (NULL != instruction_list) STAGE4_ERROR(param_value, param_value, "The compiler does not yet support formal invocations in IL that contain embedded IL lists. Aborting!");
     }
     */
-    
+
     if ((param_value == NULL) && (param_direction == function_param_iterator_c::direction_in)) {
       /* No value given for parameter, so we must use the default... */
       /* First check whether default value specified in function declaration...*/
       param_value = fp_iterator.default_value();
     }
-    
+
     ADD_PARAM_LIST(param_name, param_value, param_type, fp_iterator.param_direction())
   } /* for(...) */
 
@@ -819,7 +819,7 @@ void *visit(il_function_call_c *symbol) {
     this->implicit_variable_result.accept(*this);
     s4o.print(" = ");
   }
-    
+
   if (function_type_prefix != NULL) {
     s4o.print("(");
     default_literal_type(function_type_prefix)->accept(*this);
@@ -849,16 +849,16 @@ void *visit(il_function_call_c *symbol) {
     if (function_type_suffix != NULL)
       function_type_suffix->accept(*this);
   }
-  
+
   s4o.print("(");
   s4o.indent_right();
   s4o.print("\n"+s4o.indent_spaces);
-  
+
   int nb_param = 0;
   PARAM_LIST_ITERATOR() {
     symbol_c *param_value = PARAM_VALUE;
     current_param_type = PARAM_TYPE;
-    
+
     switch (PARAM_DIRECTION) {
       case function_param_iterator_c::direction_in:
         if (nb_param > 0)
@@ -905,9 +905,9 @@ void *visit(il_function_call_c *symbol) {
       s4o.print(",\n"+s4o.indent_spaces);
     s4o.print(FB_FUNCTION_PARAM);
   }
-  
+
   s4o.print(")");
-  s4o.indent_left();  
+  s4o.indent_left();
 
   CLEAR_PARAM_LIST()
 
@@ -921,7 +921,7 @@ void *visit(il_expression_c *symbol) {
   LD_operator_c           *tmp_LD_operator           = NULL;
   il_simple_operation_c   *tmp_il_simple_operation   = NULL;
   il_simple_instruction_c *tmp_il_simple_instruction = NULL;
-  
+
   /* We will be recursevely interpreting an instruction list, so we store a backup of the implicit_variable_result/current.
    * Notice that they will be overwriten while processing the parenthsized instruction list.
    */
@@ -934,13 +934,13 @@ void *visit(il_expression_c *symbol) {
   /* Now do the parenthesised instructions... */
   /* NOTE: the following code line will overwrite the variables implicit_variable_current and implicit_variable_result */
   symbol->simple_instr_list->accept(*this);
-  
+
   /* Now do the operation, using the previous result! */
   /* NOTE: The result of the previous instruction list in the parenthesis will be stored
    * in a variable named IL_DEFVAR_BACK. This is done in the visitor
    * to instruction_list_c objects...
    */
-  this->implicit_variable_result_back.datatype = matiec::analysis_selected_datatype(symbol->simple_instr_list);
+  this->implicit_variable_result_back.datatype() = matiec::analysis_selected_datatype(symbol->simple_instr_list);
   this->current_operand = &(this->implicit_variable_result_back);
 
   this->implicit_variable_current = old_implicit_variable_current;
@@ -949,7 +949,7 @@ void *visit(il_expression_c *symbol) {
   symbol->il_expr_operator->accept(*this);
 
   this->current_operand = NULL;
-  this->implicit_variable_result_back.datatype = NULL;
+  this->implicit_variable_result_back.datatype() = NULL;
   return NULL;
 }
 
@@ -1011,10 +1011,10 @@ void *visit(il_fb_call_c *symbol) {
     {simple_instr_list_c *instruction_list = dynamic_cast<simple_instr_list_c *>(param_value);
      if (NULL != instruction_list) STAGE4_ERROR(param_value, param_value, "The compiler does not yet support formal invocations in IL that contain embedded IL lists. Aborting!");
     }
-    
+
     symbol_c *param_type = fp_iterator.param_type();
     if (param_type == NULL) ERROR;
-    
+
         /* now output the value assignment */
     if (param_value != NULL)
       if ((param_direction == function_param_iterator_c::direction_in) ||
@@ -1103,7 +1103,7 @@ void *visit(il_formal_funct_call_c *symbol) {
   function_declaration_c *f_decl = resolution == NULL ? NULL :
       (function_declaration_c *)resolution->declaration;
   if (f_decl == NULL) ERROR;
-        
+
   function_name = symbol->function_name;
 
   /* loop through each function parameter, find the value we should pass
@@ -1139,8 +1139,8 @@ void *visit(il_formal_funct_call_c *symbol) {
       ADD_PARAM_LIST(param_name, param_value, param_type, function_param_iterator_c::direction_in)
       found_first_extensible_parameter = true;
     }
-    
-    if (fp_iterator.is_extensible_param()) {      
+
+    if (fp_iterator.is_extensible_param()) {
       /* since we are handling an extensible parameter, we must add the index to the
        * parameter name so we can go looking for the value passed to the correct
        * extended parameter (e.g. IN1, IN2, IN3, IN4, ...)
@@ -1174,7 +1174,7 @@ void *visit(il_formal_funct_call_c *symbol) {
     if ((param_value == NULL) && !fp_iterator.is_en_eno_param_implicit()) {
       param_value = function_call_param_iterator.next_nf();
     }
-    
+
     /* if no more parameter values in function call, and the current parameter
      * of the function declaration is an extensible parameter, we
      * have reached the end, and should simply jump out of the for loop.
@@ -1182,21 +1182,21 @@ void *visit(il_formal_funct_call_c *symbol) {
     if ((param_value == NULL) && (fp_iterator.is_extensible_param())) {
       break;
     }
-    
+
     /* We do not yet support embedded IL lists, so we abort the compiler if we find one */
     {simple_instr_list_c *instruction_list = dynamic_cast<simple_instr_list_c *>(param_value);
      if (NULL != instruction_list) STAGE4_ERROR(param_value, param_value, "The compiler does not yet support formal invocations in IL that contain embedded IL lists. Aborting!");
     }
-    
+
     if ((param_value == NULL) && (param_direction == function_param_iterator_c::direction_in)) {
       /* No value given for parameter, so we must use the default... */
       /* First check whether default value specified in function declaration...*/
       param_value = fp_iterator.default_value();
     }
-    
+
     ADD_PARAM_LIST(param_name, param_value, param_type, fp_iterator.param_direction())
   }
-  
+
   if (function_call_param_iterator.next_nf() != NULL) ERROR;
 
   bool has_output_params = false;
@@ -1215,16 +1215,16 @@ void *visit(il_formal_funct_call_c *symbol) {
   /* (fdecl_mutiplicity > 1)  => calling overloaded function */
   int fdecl_mutiplicity =  function_symtable.count(symbol->function_name);
   if (fdecl_mutiplicity == 0) ERROR;
-  if (fdecl_mutiplicity == 1) 
+  if (fdecl_mutiplicity == 1)
     /* function being called is NOT overloaded! */
-    f_decl = NULL; 
+    f_decl = NULL;
 
   /* when function returns a void, we do not store the value in the default variable! */
   if (!get_datatype_info_c::is_VOID(matiec::analysis_selected_datatype(symbol))) {
     this->implicit_variable_result.accept(*this);
     s4o.print(" = ");
   }
-  
+
   if (function_type_prefix != NULL) {
     s4o.print("(");
     default_literal_type(function_type_prefix)->accept(*this);
@@ -1254,13 +1254,13 @@ void *visit(il_formal_funct_call_c *symbol) {
         s4o.print("__");
         print_function_parameter_data_types(&s4o, f_decl);
       }
-    }  
+    }
     if (function_type_suffix != NULL)
       function_type_suffix->accept(*this);
   }
   s4o.print("(");
   s4o.indent_right();
-  
+
   int nb_param = 0;
   PARAM_LIST_ITERATOR() {
     symbol_c *param_value = PARAM_VALUE;
@@ -1374,14 +1374,14 @@ void *visit(simple_instr_list_c *symbol) {
   s4o.print("{\n");
   s4o.indent_right();
   declare_implicit_variable();
-    
+
   print_list(symbol, s4o.indent_spaces, ";\n" + s4o.indent_spaces, ";\n");
 
   /* copy the result in the IL implicit variable to the variable
    * used to pass the data out to the scope enclosing the current scope!
    */
-  this->implicit_variable_result_back.datatype = matiec::analysis_selected_datatype(symbol);
-  this->implicit_variable_result     .datatype = matiec::analysis_selected_datatype(symbol);
+  this->implicit_variable_result_back.datatype() = matiec::analysis_selected_datatype(symbol);
+  this->implicit_variable_result     .datatype() = matiec::analysis_selected_datatype(symbol);
 
   s4o.print("\n");
   s4o.print(s4o.indent_spaces);
@@ -1401,13 +1401,13 @@ void *visit(simple_instr_list_c *symbol) {
 // SYM_REF1(il_simple_instruction_c, il_simple_instruction, symbol_c *prev_il_instruction;)
 void *visit(il_simple_instruction_c *symbol) {
   /* all previous IL instructions should have the same datatype (checked in stage3), so we get the datatype from the first previous IL instruction we find */
-  implicit_variable_current.datatype = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_selected_datatype(matiec::analysis_flow_predecessors(symbol)[0]);
-  implicit_variable_result .datatype = matiec::analysis_selected_datatype(symbol);
-  
+  implicit_variable_current.datatype() = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_selected_datatype(matiec::analysis_flow_predecessors(symbol)[0]);
+  implicit_variable_result .datatype() = matiec::analysis_selected_datatype(symbol);
+
   symbol->il_simple_instruction->accept(*this);
-  
-  implicit_variable_result .datatype = NULL;
-  implicit_variable_current.datatype = NULL;
+
+  implicit_variable_result .datatype() = NULL;
+  implicit_variable_current.datatype() = NULL;
   return NULL;
 }
 
@@ -1483,7 +1483,7 @@ void *visit(NOT_operator_c *symbol) {
    *       However, it does not define the semantic of the NOT operation when the <il_operand> is specified.
    *       We therefore consider it an error if an il_operand is specified!
    *       The error is caught in stage 3!
-   */  
+   */
   if (NULL != this->current_operand) ERROR;
   XXX_operator(&(this->implicit_variable_result), get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(symbol))?" = !":" = ~", &(this->implicit_variable_current));
   return NULL;
@@ -1491,17 +1491,17 @@ void *visit(NOT_operator_c *symbol) {
 
 
 void *visit(S_operator_c *symbol) {
-  /* This operator must implement one of two possible semantics: 
+  /* This operator must implement one of two possible semantics:
    *     - FB call
    *     - Set all the bits of an ANY_BIT type variable to 1
    */
-  
+
   /* Check whether we must implement the FB call semantics... */
   const matiec::ResolutionAnalysisRecord *resolution =
       stage4_resolution_record(s4o, symbol);
   if ((resolution != NULL) && (resolution->declaration != NULL))
     return XXX_CAL_operator( "S", this->current_operand);
-  
+
   /* Implement the bit setting semantics... */
   if (wanted_variablegeneration != expression_vg) {
     s4o.print("LD");
@@ -1525,17 +1525,17 @@ void *visit(S_operator_c *symbol) {
 
 
 void *visit(R_operator_c *symbol) {
-  /* This operator must implement one of two possible semantics: 
+  /* This operator must implement one of two possible semantics:
    *     - FB call
    *     - Set all the bits of an ANY_BIT type variable to 0
    */
-  
+
   /* Check whether we must implement the FB call semantics... */
   const matiec::ResolutionAnalysisRecord *resolution =
       stage4_resolution_record(s4o, symbol);
   if ((resolution != NULL) && (resolution->declaration != NULL))
     return XXX_CAL_operator( "R", this->current_operand);
-  
+
   /* Implement the bit setting semantics... */
   if (wanted_variablegeneration != expression_vg) {
     s4o.print("LD");
@@ -1775,7 +1775,7 @@ il_default_variable_c::il_default_variable_c(const char *var_name_str, symbol_c 
   this->var_name = new identifier_c(var_name_str);
   if (NULL == this->var_name) ERROR;
 
-  this->datatype = current_type;
+  this->datatype() = current_type;
 }
 
 generate_c_il_adapter_c::generate_c_il_adapter_c(stage4out_c *s4o_ptr, symbol_c *name,

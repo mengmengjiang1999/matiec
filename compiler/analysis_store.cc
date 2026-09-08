@@ -1,5 +1,6 @@
 #include "compiler/analysis_store.hh"
 
+#include <cassert>
 #include <utility>
 
 namespace matiec {
@@ -121,6 +122,26 @@ bool AnalysisStore::set_generator_symbol(const symbol_c *key,
   return true;
 }
 
+DatatypeAnalysisRecord &AnalysisStore::datatype_working(symbol_c *key) {
+  if (key != nullptr && arena_.owns(key)) return datatypes_[key].value;
+  return transient_datatypes_[key];
+}
+
+const DatatypeAnalysisRecord *AnalysisStore::datatype_working(
+    const symbol_c *key) const {
+  const AnalysisEntry<DatatypeAnalysisRecord> *persistent = datatype(key);
+  if (persistent != nullptr) return &persistent->value;
+  std::unordered_map<const symbol_c *, DatatypeAnalysisRecord>::const_iterator
+      transient = transient_datatypes_.find(key);
+  return transient == transient_datatypes_.end() ? nullptr : &transient->second;
+}
+
+bool AnalysisStore::validate_datatypes() const {
+  for (const auto &entry : datatypes_)
+    if (!valid(entry.second.value)) return false;
+  return true;
+}
+
 const AnalysisEntry<FlowAnalysisRecord> *AnalysisStore::flow(
     const symbol_c *key) const { return find(flow_, key); }
 const AnalysisEntry<ConstantAnalysisRecord> *AnalysisStore::constant(
@@ -166,6 +187,7 @@ void AnalysisStore::clear() {
   flow_.clear();
   constants_.clear();
   datatypes_.clear();
+  transient_datatypes_.clear();
   resolutions_.clear();
   enumerations_.clear();
   generators_.clear();
@@ -251,30 +273,41 @@ const std::vector<symbol_c *> &analysis_datatype_candidates(
     const symbol_c *symbol) {
   static const std::vector<symbol_c *> empty;
   if (symbol == nullptr) return empty;
-  const DatatypeAnalysisRecord *record = analysis_datatype(symbol);
-  return record == nullptr ? symbol->candidate_datatypes : record->candidates;
+  if (current_analysis_store == nullptr) return empty;
+  const DatatypeAnalysisRecord *record =
+      current_analysis_store->datatype_working(symbol);
+  return record == nullptr ? empty : record->candidates;
+}
+
+std::vector<symbol_c *> &analysis_datatype_candidates_mut(symbol_c *symbol) {
+  assert(current_analysis_store != nullptr && symbol != nullptr);
+  return current_analysis_store->datatype_working(symbol).candidates;
 }
 
 symbol_c *analysis_selected_datatype(const symbol_c *symbol) {
   if (symbol == nullptr) return nullptr;
-  const DatatypeAnalysisRecord *record = analysis_datatype(symbol);
-  return record == nullptr ? symbol->datatype : record->selected;
+  if (current_analysis_store == nullptr) return nullptr;
+  const DatatypeAnalysisRecord *record =
+      current_analysis_store->datatype_working(symbol);
+  return record == nullptr ? nullptr : record->selected;
+}
+
+symbol_c *&analysis_selected_datatype_ref(symbol_c *symbol) {
+  assert(current_analysis_store != nullptr && symbol != nullptr);
+  return current_analysis_store->datatype_working(symbol).selected;
 }
 
 symbol_c *analysis_scope(const symbol_c *symbol) {
   if (symbol == nullptr) return nullptr;
-  const DatatypeAnalysisRecord *record = analysis_datatype(symbol);
-  return record == nullptr ? symbol->scope : record->scope;
+  if (current_analysis_store == nullptr) return nullptr;
+  const DatatypeAnalysisRecord *record =
+      current_analysis_store->datatype_working(symbol);
+  return record == nullptr ? nullptr : record->scope;
 }
 
-bool refresh_analysis_datatype_candidates(symbol_c *symbol) {
-  if (current_analysis_store == nullptr || symbol == nullptr) return false;
-  DatatypeAnalysisRecord record;
-  const AnalysisEntry<DatatypeAnalysisRecord> *entry =
-      current_analysis_store->datatype(symbol);
-  if (entry != nullptr) record = entry->value;
-  record.candidates = symbol->candidate_datatypes;
-  return current_analysis_store->set_datatype(symbol, std::move(record));
+symbol_c *&analysis_scope_ref(symbol_c *symbol) {
+  assert(current_analysis_store != nullptr && symbol != nullptr);
+  return current_analysis_store->datatype_working(symbol).scope;
 }
 
 }  // namespace matiec

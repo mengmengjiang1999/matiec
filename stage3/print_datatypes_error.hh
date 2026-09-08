@@ -32,7 +32,7 @@
  *
  */
 
-/* NOTE: The algorithm implemented here assumes that the symbol_c.candidate_datatype, and the symbol_c.datatype 
+/* NOTE: The algorithm implemented here assumes that the symbol_c.candidate_datatype, and the symbol_c.datatype()
  *       annotations have already been apropriately filled in!
  *       BEFORE running this visitor, be sure to CALL the fill_candidate_datatypes_c, and the narrow_candidate_datatypes_c visitors!
  */
@@ -57,7 +57,7 @@ class print_datatypes_error_c: public iterator_visitor_c {
     #define error_level_default (1)
     #define error_level_nagging (4)
     int current_display_error_level;
-    
+
     search_varfb_instance_type_c *search_varfb_instance_type;
     /* When calling a function block, we must first find it's type,
      * by searching through the declarations of the variables currently
@@ -90,7 +90,7 @@ class print_datatypes_error_c: public iterator_visitor_c {
 
     /* the current data type of the data stored in the IL stack, i.e. the default variable */
     il_instruction_c *fake_prev_il_instruction;
-    /* the narrow algorithm will need access to the intersected candidate_datatype lists of all prev_il_instructions, as well as the 
+    /* the narrow algorithm will need access to the intersected candidate_datatype lists of all prev_il_instructions, as well as the
      * list of the prev_il_instructions.
      * Instead of creating two 'global' (within the class) variables, we create a single il_instruction_c variable (fake_prev_il_instruction),
      * and shove that data into this single variable.
@@ -100,13 +100,13 @@ class print_datatypes_error_c: public iterator_visitor_c {
 
     /* some helper functions... */
     void handle_function_invocation(symbol_c *fcall, generic_function_call_t fcall_data);
-    void *handle_implicit_il_fb_invocation(const char *param_name, symbol_c *il_operator, symbol_c *called_fb_declaration);  
+    void *handle_implicit_il_fb_invocation(const char *param_name, symbol_c *il_operator, symbol_c *called_fb_declaration);
     void *handle_conditional_flow_control_IL_instruction(symbol_c *symbol, const char *oper);
 
     void *print_binary_operator_errors  (const char *il_operator, symbol_c *symbol,                                     bool deprecated_operation = false);
     void *print_binary_expression_errors(const char *operation  , symbol_c *symbol, symbol_c *l_expr, symbol_c *r_expr, bool deprecated_operation = false);
 
-    
+
   public:
     print_datatypes_error_c(symbol_c *ignore,
                             matiec::DiagnosticEngine &diagnostics);

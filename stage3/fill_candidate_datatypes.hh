@@ -39,13 +39,13 @@
 
 /*
  *  Fill the candidate datatype list for all symbols that may legally 'have' a data type (e.g. variables, literals, function calls, expressions, etc.)
- * 
+ *
  *  The candidate datatype list will be filled with a list of all the data types that expression may legally take.
  *  For example, the very simple literal '0' (as in foo := 0), may represent a:
  *    BOOL, BYTE, WORD, DWORD, LWORD, USINT, SINT, UINT, INT, UDINT, DINT, ULINT, LINT (as well as the SAFE versions of these data tyes too!)
  *
  * WARNING: This visitor class starts off by building a map of all enumeration constants that are defined in the source code (i.e. a library_c symbol),
- *          and this map is later used to determine the datatpe of each use of an enumeration constant. By implication, the fill_candidate_datatypes_c 
+ *          and this map is later used to determine the datatpe of each use of an enumeration constant. By implication, the fill_candidate_datatypes_c
  *          visitor class will only work corretly if it is asked to visit a symbol of class library_c!!
  */
 
@@ -77,7 +77,7 @@ class fill_candidate_datatypes_c: public iterator_visitor_c {
      * fill_candidate_datatypes_c::visit(enumerated_value_list_c *symbol) function.
      */
     symbol_c *current_enumerated_spec_type;
-    
+
     /* pointer to the Function, FB, or Program currently being analysed */
     symbol_c *current_scope;
     /* Pointer to the previous IL instruction, which contains the current data type (actually, the list of candidate data types) of the data stored in the IL stack, i.e. the default variable, a.k.a. accumulator */
@@ -102,20 +102,20 @@ class fill_candidate_datatypes_c: public iterator_visitor_c {
     void *fill_var_declaration      (symbol_c *var_list, symbol_c *type);
 
     /* a helper function... */
-    symbol_c *base_type(symbol_c *symbol);    
-    
+    symbol_c *base_type(symbol_c *symbol);
+
     /* add a data type to a candidate data type list, while guaranteeing no duplicate entries! */
     /* Returns true if it really did add the datatype to the list, or false if it was already present in the list! */
     bool add_datatype_to_candidate_list  (symbol_c *symbol, symbol_c *datatype);
     bool add_2datatypes_to_candidate_list(symbol_c *symbol, symbol_c *datatype1, symbol_c *datatype2);
     void remove_incompatible_datatypes(symbol_c *symbol);
-    
-    
+
+
   public:
     fill_candidate_datatypes_c(symbol_c *ignore);
     virtual ~fill_candidate_datatypes_c(void);
 
-    
+
     /***************************/
     /* B 0 - Programming Model */
     /***************************/
@@ -139,14 +139,14 @@ class fill_candidate_datatypes_c: public iterator_visitor_c {
     /*********************************/
     /* defined in IEC 61131-3 v3 - Basically the 'NULL' keyword! */
     void *visit(ref_value_null_literal_c *symbol);
-      
+
     /******************************/
     /* B 1.2.1 - Numeric Literals */
     /******************************/
     void *handle_any_integer(symbol_c *symbol);
     void *handle_any_real   (symbol_c *symbol);
     void *handle_any_literal(symbol_c *symbol, symbol_c *symbol_value, symbol_c *symbol_type);
-    
+
     void *visit(real_c *symbol);
     void *visit(integer_c *symbol);
     void *visit(neg_real_c *symbol);
@@ -215,13 +215,13 @@ class fill_candidate_datatypes_c: public iterator_visitor_c {
     void *visit(structure_element_initialization_c *symbol);
 //  void *visit(string_type_declaration_c *symbol);
     void *visit(fb_spec_init_c *symbol);
-      
+
     void *visit(ref_spec_c *symbol);      // Defined in IEC 61131-3 v3
     void *visit(ref_spec_init_c *symbol); // Defined in IEC 61131-3 v3
     void *visit(ref_type_decl_c *symbol); // Defined in IEC 61131-3 v3
 
 
-    
+
     /*********************/
     /* B 1.4 - Variables */
     /*********************/

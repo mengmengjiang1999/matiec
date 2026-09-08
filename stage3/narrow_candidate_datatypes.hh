@@ -40,16 +40,16 @@
 
 /*
  *  Choose, from the list of all the possible datatypes each expression may take, the single datatype that it will in fact take.
- *  The resulting (chosen) datatype, will be stored in the symbol_c.datatype variable, leaving the candidate datatype list untouched!
- * 
+ *  The resulting (chosen) datatype, will be stored in the symbol_c.datatype() variable, leaving the candidate datatype list untouched!
+ *
  *  For rvalue expressions, this decision will be based on the datatype of the lvalue expression.
  *  For lvalue expressions, the candidate datatype list should have a single entry.
- * 
+ *
  *  For example, the very simple literal '0' in 'foo := 0', may represent a:
  *    BOOL, BYTE, WORD, DWORD, LWORD, USINT, SINT, UINT, INT, UDINT, DINT, ULINT, LINT (as well as the SAFE versions of these data tyes too!)
- * 
+ *
  *  In this class, the datatype of '0' will be set to the same datatype as the 'foo' variable.
- *  If the intersection of the candidate datatype lists of the left and right side expressions is empty, 
+ *  If the intersection of the candidate datatype lists of the left and right side expressions is empty,
  *  then a datatype error has been found, and the datatype is either left at NULL, or set to a pointer of an invalid_type_name_c object!
  */
 
@@ -69,7 +69,7 @@ class narrow_candidate_datatypes_c: public iterator_visitor_c {
     il_instruction_c *fake_prev_il_instruction;
     il_instruction_c   *current_il_instruction;
 
-  protected:  
+  protected:
     virtual void set_datatype_in_prev_il_instructions(symbol_c *datatype, il_instruction_c *symbol);
 
   private:
@@ -115,49 +115,49 @@ class narrow_candidate_datatypes_c: public iterator_visitor_c {
     /***********************************/
     /* B 1.3.1 - Elementary Data Types */
     /***********************************/
-    void *visit(    time_type_name_c    *symbol); 
-    void *visit(    bool_type_name_c    *symbol); 
-    void *visit(    sint_type_name_c    *symbol); 
-    void *visit(    int_type_name_c     *symbol); 
-    void *visit(    dint_type_name_c    *symbol); 
-    void *visit(    lint_type_name_c    *symbol); 
-    void *visit(    usint_type_name_c   *symbol); 
-    void *visit(    uint_type_name_c    *symbol); 
-    void *visit(    udint_type_name_c   *symbol); 
-    void *visit(    ulint_type_name_c   *symbol); 
-    void *visit(    real_type_name_c    *symbol); 
-    void *visit(    lreal_type_name_c   *symbol); 
-    void *visit(    date_type_name_c    *symbol); 
-    void *visit(    tod_type_name_c     *symbol); 
-    void *visit(    dt_type_name_c      *symbol); 
-    void *visit(    byte_type_name_c    *symbol); 
-    void *visit(    word_type_name_c    *symbol); 
-    void *visit(    dword_type_name_c   *symbol); 
-    void *visit(    lword_type_name_c   *symbol); 
-    void *visit(    string_type_name_c  *symbol); 
-    void *visit(    wstring_type_name_c *symbol); 
+    void *visit(    time_type_name_c    *symbol);
+    void *visit(    bool_type_name_c    *symbol);
+    void *visit(    sint_type_name_c    *symbol);
+    void *visit(    int_type_name_c     *symbol);
+    void *visit(    dint_type_name_c    *symbol);
+    void *visit(    lint_type_name_c    *symbol);
+    void *visit(    usint_type_name_c   *symbol);
+    void *visit(    uint_type_name_c    *symbol);
+    void *visit(    udint_type_name_c   *symbol);
+    void *visit(    ulint_type_name_c   *symbol);
+    void *visit(    real_type_name_c    *symbol);
+    void *visit(    lreal_type_name_c   *symbol);
+    void *visit(    date_type_name_c    *symbol);
+    void *visit(    tod_type_name_c     *symbol);
+    void *visit(    dt_type_name_c      *symbol);
+    void *visit(    byte_type_name_c    *symbol);
+    void *visit(    word_type_name_c    *symbol);
+    void *visit(    dword_type_name_c   *symbol);
+    void *visit(    lword_type_name_c   *symbol);
+    void *visit(    string_type_name_c  *symbol);
+    void *visit(    wstring_type_name_c *symbol);
 
-    void *visit(safetime_type_name_c    *symbol); 
-    void *visit(safebool_type_name_c    *symbol); 
-    void *visit(safesint_type_name_c    *symbol); 
-    void *visit(safeint_type_name_c     *symbol); 
-    void *visit(safedint_type_name_c    *symbol); 
-    void *visit(safelint_type_name_c    *symbol); 
-    void *visit(safeusint_type_name_c   *symbol); 
-    void *visit(safeuint_type_name_c    *symbol); 
-    void *visit(safeudint_type_name_c   *symbol); 
-    void *visit(safeulint_type_name_c   *symbol); 
-    void *visit(safereal_type_name_c    *symbol); 
-    void *visit(safelreal_type_name_c   *symbol); 
-    void *visit(safedate_type_name_c    *symbol); 
-    void *visit(safetod_type_name_c     *symbol); 
-    void *visit(safedt_type_name_c      *symbol); 
-    void *visit(safebyte_type_name_c    *symbol); 
-    void *visit(safeword_type_name_c    *symbol); 
-    void *visit(safedword_type_name_c   *symbol); 
-    void *visit(safelword_type_name_c   *symbol); 
-    void *visit(safestring_type_name_c  *symbol); 
-    void *visit(safewstring_type_name_c *symbol); 
+    void *visit(safetime_type_name_c    *symbol);
+    void *visit(safebool_type_name_c    *symbol);
+    void *visit(safesint_type_name_c    *symbol);
+    void *visit(safeint_type_name_c     *symbol);
+    void *visit(safedint_type_name_c    *symbol);
+    void *visit(safelint_type_name_c    *symbol);
+    void *visit(safeusint_type_name_c   *symbol);
+    void *visit(safeuint_type_name_c    *symbol);
+    void *visit(safeudint_type_name_c   *symbol);
+    void *visit(safeulint_type_name_c   *symbol);
+    void *visit(safereal_type_name_c    *symbol);
+    void *visit(safelreal_type_name_c   *symbol);
+    void *visit(safedate_type_name_c    *symbol);
+    void *visit(safetod_type_name_c     *symbol);
+    void *visit(safedt_type_name_c      *symbol);
+    void *visit(safebyte_type_name_c    *symbol);
+    void *visit(safeword_type_name_c    *symbol);
+    void *visit(safedword_type_name_c   *symbol);
+    void *visit(safelword_type_name_c   *symbol);
+    void *visit(safestring_type_name_c  *symbol);
+    void *visit(safewstring_type_name_c *symbol);
 
 
     /********************************/
@@ -193,7 +193,7 @@ class narrow_candidate_datatypes_c: public iterator_visitor_c {
     void *visit(structure_element_initialization_c *symbol);
 //  void *visit(string_type_declaration_c *symbol);
     void *visit(fb_spec_init_c *symbol);
-      
+
     void *visit(ref_spec_c *symbol);      // Defined in IEC 61131-3 v3
     void *visit(ref_spec_init_c *symbol); // Defined in IEC 61131-3 v3
     void *visit(ref_type_decl_c *symbol); // Defined in IEC 61131-3 v3
@@ -369,7 +369,7 @@ class narrow_candidate_datatypes_c: public iterator_visitor_c {
     /* B 3.2.2 Subprogram Control Statements */
     /*****************************************/
     void *visit(fb_invocation_c *symbol);
-    
+
     /********************************/
     /* B 3.2.3 Selection Statements */
     /********************************/

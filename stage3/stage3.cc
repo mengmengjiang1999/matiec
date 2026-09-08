@@ -47,7 +47,6 @@
 #include "case_elements_check.hh"
 #include "constant_folding.hh"
 #include "constant_analysis_store.hh"
-#include "datatype_analysis_store.hh"
 #include "resolution_analysis_store.hh"
 #include "enumeration_analysis_store.hh"
 #include "declaration_check.hh"
@@ -116,14 +115,13 @@ static int type_safety(symbol_c *tree_root,
                        matiec::AnalysisStore &analysis){
 	fill_candidate_datatypes_c fill_candidate_datatypes(tree_root);
 	tree_root->accept(fill_candidate_datatypes);
-	if (!publish_datatype_candidates(tree_root, analysis)) return 1;
 	narrow_candidate_datatypes_c narrow_candidate_datatypes(tree_root);
 	tree_root->accept(narrow_candidate_datatypes);
 	print_datatypes_error_c print_datatypes_error(tree_root, diagnostics);
 	tree_root->accept(print_datatypes_error);
 	forced_narrow_candidate_datatypes_c forced_narrow_candidate_datatypes(tree_root);
 	tree_root->accept(forced_narrow_candidate_datatypes);
-	if (!publish_selected_datatypes(tree_root, analysis)) return 1;
+	if (!analysis.validate_datatypes()) return 1;
 	if (!publish_declaration_resolution(tree_root, analysis)) return 1;
 	return print_datatypes_error.get_error_count();
 }

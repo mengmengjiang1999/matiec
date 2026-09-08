@@ -32,14 +32,14 @@
 
 /*
  *  Data type analysis of IL code may leave some IL instructions with an undefined datatype.
- *  This visitor will set the datatype for all these symbols, so that all symbols have a well 
+ *  This visitor will set the datatype for all these symbols, so that all symbols have a well
  *  defined datatype when we reach stage4.
  *
  *  Example:
  * =========
  *
- *  VAR 
- *     N   : INT := 99 ;    
+ *  VAR
+ *     N   : INT := 99 ;
  *     tonv: TON;
  *     byte_var: BYTE;
  *     tonv : TON;
@@ -47,59 +47,59 @@
  *     t : time;
  *     tod1: tod;
  *  END_VAR
- *  
+ *
  * (0) --> Data type before executing forced_narrow_candidate_datatypes_c
  * (1) --> Data type after executing 1st pass of forced_narrow_candidate_datatypes_c
  * (2) --> Data type after executing 2nd pass of forced_narrow_candidate_datatypes_c
- * 
+ *
  * --- --> NULL (undefined datatype)
  * *** --> invalid_type_name_c (invalid datatype)
  *
  * (0)   PASS1   (1)    PASS2   (2)
- *      
- * ---     (e)   ***            ***       CAL tonv (                          
- *                                               PT := T#1s                   
- *                                            )                               
- * ---     (e)   ***            ***       JMP l4                              
  *
- * ---     (e)   sint           sint  l0: LD  1                               
- * ---     (e)   sint           sint      ADD 2                               
- * ---  (c)      sint           sint      CAL tonv (                          
- *                                            PT := T#1s                      
- *                                            )                               
- *                                                                            
- * ---     (e)   sint           sint      LD  45                              
- * ---  (c)      sint           sint      ADD 45                              
+ * ---     (e)   ***            ***       CAL tonv (
+ *                                               PT := T#1s
+ *                                            )
+ * ---     (e)   ***            ***       JMP l4
  *
+ * ---     (e)   sint           sint  l0: LD  1
+ * ---     (e)   sint           sint      ADD 2
+ * ---  (c)      sint           sint      CAL tonv (
+ *                                            PT := T#1s
+ *                                            )
  *
- * ---     (e)   sint           sint      LD  3                               
- * ---     (e)   sint           sint  l1:                                     
- * ---  (c)      sint           sint  l2: ADD 4                               
- * int           int            int       LD  5                               
- * int           int            int       ST  n                               
- * int           int            int       JMP l3                              
- *                                                                            
- * ---  (d)      ---      (e)   sint      LD  5                               
- * ---  (d)      ---      (e)   sint      SUB 6                               
- * ---  (d)(e)   sint           sint      JMP l1                              
- *
- * ---     (e)   bool           bool      LD  FALSE                           
- * ---     (e)   bool           bool      NOT                                 
- * ---  (b)      bool           bool      RET                                 
- *
- * int           int            int   l3:                                     
- * int           int            int       ST  n                               
- * ---  (b)      int            int       RET                                 
- *
- * ---     (e)   ***            ***   l4:                                     
- * ---     (e)   ***            ***       CAL tonv (                          
- *                                               PT := T#1s                   
- *                                            )                               
- * ---  (a)      ***            ***       JMP l0                              
- * ---  (b)      byte           byte      LD  88                              
+ * ---     (e)   sint           sint      LD  45
+ * ---  (c)      sint           sint      ADD 45
  *
  *
- *   
+ * ---     (e)   sint           sint      LD  3
+ * ---     (e)   sint           sint  l1:
+ * ---  (c)      sint           sint  l2: ADD 4
+ * int           int            int       LD  5
+ * int           int            int       ST  n
+ * int           int            int       JMP l3
+ *
+ * ---  (d)      ---      (e)   sint      LD  5
+ * ---  (d)      ---      (e)   sint      SUB 6
+ * ---  (d)(e)   sint           sint      JMP l1
+ *
+ * ---     (e)   bool           bool      LD  FALSE
+ * ---     (e)   bool           bool      NOT
+ * ---  (b)      bool           bool      RET
+ *
+ * int           int            int   l3:
+ * int           int            int       ST  n
+ * ---  (b)      int            int       RET
+ *
+ * ---     (e)   ***            ***   l4:
+ * ---     (e)   ***            ***       CAL tonv (
+ *                                               PT := T#1s
+ *                                            )
+ * ---  (a)      ***            ***       JMP l0
+ * ---  (b)      byte           byte      LD  88
+ *
+ *
+ *
  */
 
 
@@ -112,7 +112,7 @@
 /* set to 1 to see debug info during execution */
 static int debug = 0;
 
-forced_narrow_candidate_datatypes_c::forced_narrow_candidate_datatypes_c(symbol_c *ignore) 
+forced_narrow_candidate_datatypes_c::forced_narrow_candidate_datatypes_c(symbol_c *ignore)
  :narrow_candidate_datatypes_c(ignore) {
 }
 
@@ -126,7 +126,7 @@ void forced_narrow_candidate_datatypes_c::set_datatype_in_prev_il_instructions(s
 	/* In the forced_narrow_candidate_datatypes algorithm, we do NOT set any datatypes to invalid_type_name_c
 	 * Any IL instructions that really are of an invalid_type_name_c (because the IL code is buggy?) have already
 	 * been set by the standard narrow_candidate_datatypes algorithm.
-	 * 
+	 *
 	 * Remember too that valid IL code may also have some IL instructions correctly set to invalid_type_name_c, especially
 	 * in cases where the data in the accumulator will not be used in the current IL instruction
 	 * For example:
@@ -137,7 +137,7 @@ void forced_narrow_candidate_datatypes_c::set_datatype_in_prev_il_instructions(s
 	 * lable1:            <----  This IL instruction_c (with NULL symbol->il_instruction) has invalid_type_name_c datatype!!
 	 *        LD T#3s              And yet, the code is legal!!!
 	 *        ST time_var
-	 */ 
+	 */
 	if (!get_datatype_info_c::is_type_valid(datatype)) return;
 	// Call the 'original' version of the set_datatype_in_prev_il_instructions() function, from narrow_candidate_datatypes_c
 	return narrow_candidate_datatypes_c::set_datatype_in_prev_il_instructions(datatype, symbol);
@@ -147,23 +147,23 @@ void forced_narrow_candidate_datatypes_c::set_datatype_in_prev_il_instructions(s
 
 void forced_narrow_candidate_datatypes_c::forced_narrow_il_instruction(
     symbol_c *symbol, const std::vector<symbol_c *> &next_il_instruction) {
-  if (NULL == symbol->datatype) {
+  if (NULL == symbol->datatype()) {
     if (matiec::analysis_datatype_candidates(symbol).empty()) {
-      symbol->datatype = &(get_datatype_info_c::invalid_type_name); // This will occur in the situations (a) in the above example
+      symbol->datatype() = &(get_datatype_info_c::invalid_type_name); // This will occur in the situations (a) in the above example
       // return NULL; // No need to return control to the visit() method of the base class... But we do so, just to be safe (called at the end of this function)!
     } else {
       if (next_il_instruction.empty()) {
-        symbol->datatype = matiec::analysis_datatype_candidates(symbol)[0]; // This will occur in the situations (b) in the above example
+        symbol->datatype() = matiec::analysis_datatype_candidates(symbol)[0]; // This will occur in the situations (b) in the above example
       } else {
         symbol_c *next_datatype = NULL;
 
         /* find the datatype of the following IL instructions (they should all be identical by now, but we don't have an assertion checking for this. */
         for (unsigned int i=0; i < next_il_instruction.size(); i++)
-          if (NULL != next_il_instruction[i]->datatype)
-            next_datatype = next_il_instruction[i]->datatype;
+          if (NULL != next_il_instruction[i]->datatype())
+            next_datatype = next_il_instruction[i]->datatype();
         if (get_datatype_info_c::is_type_valid(next_datatype)) {
           //  This will occur in the situations (c) in the above example
-          symbol->datatype = matiec::analysis_datatype_candidates(symbol)[0];
+          symbol->datatype() = matiec::analysis_datatype_candidates(symbol)[0];
         } else {
           //  This will occur in the situations (d) in the above example
           // it is not possible to determine the exact situation in the current pass, so we can't do anything just yet. Leave it for the next time around!
@@ -197,22 +197,22 @@ void *forced_narrow_candidate_datatypes_c::visit(instruction_list_c *symbol) {
    */
   /*
   for(int i = symbol->n-1; i >= 0; i--) {
-    if (NULL == symbol->get_element(i)->datatype)
+    if (NULL == symbol->get_element(i)->datatype())
       ERROR;
   }
   */
-  
+
   return NULL;
 }
 
 
-  
+
 /* | label ':' [il_incomplete_instruction] eol_list */
 // SYM_REF2(il_instruction_c, label, il_instruction)
 // void *visit(instruction_list_c *symbol);
 void *forced_narrow_candidate_datatypes_c::visit(il_instruction_c *symbol) {
   forced_narrow_il_instruction(symbol, matiec::analysis_flow_successors(symbol));
-  
+
   /* return control to the visit() method of the base class! */
   return narrow_candidate_datatypes_c::visit(symbol);  //  This handles the situations (e) in the above example
 }
@@ -228,7 +228,7 @@ void *forced_narrow_candidate_datatypes_c::visit(il_instruction_c *symbol) {
 /* | function_name [il_operand_list] */
 /* NOTE: The parameters 'called_function_declaration' and 'extensible_param_count' are used to pass data between the stage 3 and stage 4. */
 // SYM_REF2(il_function_call_c, function_name, il_operand_list, symbol_c *called_function_declaration; int extensible_param_count;)
-// void *forced_narrow_candidate_datatypes_c::visit(il_function_call_c *symbol) 
+// void *forced_narrow_candidate_datatypes_c::visit(il_function_call_c *symbol)
 
 /* | il_expr_operator '(' [il_operand] eol_list [simple_instr_list] ')' */
 // SYM_REF3(il_expression_c, il_expr_operator, il_operand, simple_instr_list);
@@ -259,7 +259,7 @@ void *forced_narrow_candidate_datatypes_c::visit(il_instruction_c *symbol) {
 // SYM_REF1(il_simple_instruction_c, il_simple_instruction, symbol_c *prev_il_instruction;)
 void *forced_narrow_candidate_datatypes_c::visit(il_simple_instruction_c*symbol) {
   forced_narrow_il_instruction(symbol, matiec::analysis_flow_successors(symbol));
-  
+
   /* return control to the visit() method of the base class! */
   return narrow_candidate_datatypes_c::visit(symbol);  //  This handle the situations (e) in the above example
 }

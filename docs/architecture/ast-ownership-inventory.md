@@ -9,7 +9,7 @@ memory; the target is one lifetime boundary per `CompilationContext`.
 
 | Allocation | Current producer | Current references | Current release | Migration rule |
 | --- | --- | --- | --- | --- |
-| AST nodes (`symbol_c` subclasses) | Bison actions in `stage1_2/iec_bison.yy`, Stage 3 producer-local scratch, and a few generator helpers | Parent/child fields are non-owning raw pointers; `parent` and `token` borrow nodes. Legacy datatype/scope/candidate fields remain producer-local compatibility storage, while completed results live in `AnalysisStore` | Usually none; `symbol_c` has a virtual but empty destructor | Allocate all per-compilation nodes in `AstArena`; node links remain non-owning |
+| AST nodes (`symbol_c` subclasses) | Bison actions in `stage1_2/iec_bison.yy`, Stage 3 producer-local scratch, and a few generator helpers | Parent/child fields are non-owning raw pointers; `parent` and `token` borrow nodes. Datatype candidates, selections, and scopes live only in persistent or transient `AnalysisStore` records | Usually none; `symbol_c` has a virtual but empty destructor | Allocate all per-compilation nodes in `AstArena`; node links remain non-owning |
 | AST list storage (`list_c::elements`) | `list_c` constructors and `realloc` in `absyntax/absyntax.cc` | Owned only by the containing list node; entries borrow child nodes and token text | None because `list_c` has no destructor | Release the backing buffer when the arena destroys the list; do not recursively delete entries |
 | Lexer token text | `strdup()` in `stage1_2/iec_flex.ll` | Passed into `token_c::value` and sometimes retained as source filenames or lookup keys | Only short-lived scratch copies are freed; text retained by tokens is not | Copy token text into arena-owned storage and preserve stable `const char *` addresses |
 | Source/include filenames | `strdup()` in lexer include handling | Borrowed by source-location fields on every node created while the file is active | Include-stack bookkeeping is partially freed; filenames intentionally survive | Intern/copy filenames into arena-owned storage before assigning node locations |
@@ -31,9 +31,10 @@ memory; the target is one lifetime boundary per `CompilationContext`.
 - Static elementary datatype objects in `get_datatype_info_c` are immutable
   canonical sentinels. They are process-lifetime data, not compilation-owned AST,
   and must never be registered with an arena.
-- Semantic fields on `symbol_c` currently mix borrowed canonical types with
+- Typed analysis records may mix borrowed canonical types with
   compilation-created nodes. Arena teardown may destroy only allocations that it
-  created, without following these pointers.
+  created, without following these pointers; transient records are cleared by
+  their compilation context.
 
 ## Stateful process-lifetime objects
 

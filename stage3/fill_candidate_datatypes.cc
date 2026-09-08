@@ -38,7 +38,7 @@
  * - check data type declarations
  * - check inside configurations (variable declarations)
  * - check SFC code
- * - must fix S and R IL functions (includes potientialy fixing stage4 code!) 
+ * - must fix S and R IL functions (includes potientialy fixing stage4 code!)
  */
 
 
@@ -49,13 +49,13 @@
 
 /*
  *  Fill the candidate datatype list for all symbols that may legally 'have' a data type (e.g. variables, literals, function calls, expressions, etc.)
- * 
+ *
  *  The candidate datatype list will be filled with a list of all the data types that expression may legally take.
  *  For example, the very simple literal '0' (as in foo := 0), may represent a:
  *    BOOL, BYTE, WORD, DWORD, LWORD, USINT, SINT, UINT, INT, UDINT, DINT, ULINT, LINT (as well as the SAFE versions of these data tyes too!)
  *
  * WARNING: This visitor class starts off by building a map of all enumeration constants that are defined in the source code (i.e. a library_c symbol),
- *          and this map is later used to determine the datatpe of each use of an enumeration constant. By implication, the fill_candidate_datatypes_c 
+ *          and this map is later used to determine the datatpe of each use of an enumeration constant. By implication, the fill_candidate_datatypes_c
  *          visitor class will only work corretly if it is asked to visit a symbol of class library_c!!
  */
 
@@ -93,8 +93,8 @@ static int debug = 0;
 
 typedef dsymtable_c<symbol_c *> enumerated_value_symtable_t;
 static enumerated_value_symtable_t global_enumerated_value_symtable;
- 
- 
+
+
 class populate_globalenumvalue_symtable_c: public iterator_visitor_c {
   private:
     symbol_c *current_enumerated_type;
@@ -181,7 +181,7 @@ class populate_globalenumvalue_symtable_c: public iterator_visitor_c {
   void *visit(function_block_declaration_c *symbol) {return NULL;}
   /* B 1.5.3 - Programs */
   void *visit(program_declaration_c *symbol) {return NULL;}
-  
+
 }; /* populate_globalenumvalue_symtable_c */
 
 static populate_globalenumvalue_symtable_c populate_globalenumvalue_symtable;
@@ -195,10 +195,10 @@ static populate_globalenumvalue_symtable_c populate_globalenumvalue_symtable;
 
 /* Add to the local_enumerated_value_symtable the local enum value constants */
 /* Notes:
- * Some enumerations are 
+ * Some enumerations are
  *   (A) declared anonymously inside a VAR ... END_VAR declaration
  *       (e.g. VAR enum_var : (enumvalue1, enumvalue2); END_VAR)
- *  while others are 
+ *  while others are
  *   (B) declared (with a name) inside a TYPE .. END_TYPE declaration.
  *
  *  Values in (A) are added to the enumerated_value_symtable in absyntaxt_utils.cc.
@@ -206,7 +206,7 @@ static populate_globalenumvalue_symtable_c populate_globalenumvalue_symtable;
  *
  * This class will add the enum values in (B) to the local_enumerated_value_symtable.
  *
- * If a locally defined enum value is identical to another locally defined enum_value, a 
+ * If a locally defined enum value is identical to another locally defined enum_value, a
  *  duplicate entry is created.
  *  However, if a locally defined enum value is identical to another globally defined enum_value, the
  *  corresponding entry in local_enumerated_value_symtable is also set to the local datatype.
@@ -217,7 +217,7 @@ static populate_globalenumvalue_symtable_c populate_globalenumvalue_symtable;
  *  For example:
  *
  *  TYPE  GlobalEnumT: (xxx1, xxx2, xxx3) END_TYPE
- * 
+ *
  *   FUNCTION_BLOCK FOO
  *    VAR_INPUT
  *       GlobalEnumVar: GlobalEnumT;
@@ -228,7 +228,7 @@ static populate_globalenumvalue_symtable_c populate_globalenumvalue_symtable;
  *     GlobalEnumVar := GlobalEnumT#xxx1;
  *     END_FUNCTION_BLOCK
  */
- 
+
 static enumerated_value_symtable_t local_enumerated_value_symtable;
 
 
@@ -252,7 +252,7 @@ class populate_localenumvalue_symtable_c: public iterator_visitor_c {
   /********************************/
   /*  TYPE type_declaration_list END_TYPE */
   void *visit(data_type_declaration_c *symbol) {return NULL;} // do not visit the type declarations!!
-  
+
   /* enumerated_specification ASSIGN enumerated_value */
   void *visit(enumerated_spec_init_c *symbol) {
     current_enumerated_type = symbol;
@@ -265,9 +265,9 @@ class populate_localenumvalue_symtable_c: public iterator_visitor_c {
   /* [enumerated_type_name '#'] identifier */
   void *visit(enumerated_value_c *symbol) {
     /* if the enumerated_value_c is not inside a enumerated_spec_init_c (e.g. used as the inital value of a variable), we simply return */
-    if (current_enumerated_type == NULL) return NULL;  
+    if (current_enumerated_type == NULL) return NULL;
     /* this is really an ERROR! The initial value may use the syntax NUM_TYPE#enum_value, but in that case we should have return'd in the above statement !! */
-    if (symbol->type != NULL) ERROR;  
+    if (symbol->type != NULL) ERROR;
 
     enumerated_value_symtable_t::iterator lower = local_enumerated_value_symtable.lower_bound(symbol->value);
     enumerated_value_symtable_t::iterator upper = local_enumerated_value_symtable.upper_bound(symbol->value);
@@ -276,7 +276,7 @@ class populate_localenumvalue_symtable_c: public iterator_visitor_c {
         /*  The same identifier is used more than once as an enumerated value/constant inside the same enumerated datat type! */
         return NULL; /* No need to insert it! It is already in the table! */
       }
-    
+
     /* add it to the local symbol table. */
     local_enumerated_value_symtable.insert(symbol->value, current_enumerated_type);
     return NULL;
@@ -326,21 +326,21 @@ symbol_c *fill_candidate_datatypes_c::widening_conversion(symbol_c *left_type, s
 /* Returns true if it really did add the datatype to the list, or false if it was already present in the list! */
 bool fill_candidate_datatypes_c::add_datatype_to_candidate_list(symbol_c *symbol, symbol_c *datatype) {
   /* If it is an invalid data type, do not insert!
-   * NOTE: it reduces overall code size to do this test here, instead of doing every time before calling the add_datatype_to_candidate_list() function. 
+   * NOTE: it reduces overall code size to do this test here, instead of doing every time before calling the add_datatype_to_candidate_list() function.
    */
   if (!get_datatype_info_c::is_type_valid(datatype)) /* checks for NULL and invalid_type_name_c */
     return false;
 
-  if (search_in_candidate_datatype_list(datatype, symbol->candidate_datatypes) >= 0) 
+  if (search_in_candidate_datatype_list(datatype, symbol->candidate_datatypes()) >= 0)
     /* already in the list, Just return! */
     return false;
-  
+
   /* not yet in the candidate data type list, so we insert it now! */
-  symbol->candidate_datatypes.push_back(datatype);
+  symbol->candidate_datatypes().push_back(datatype);
   return true;
 }
-    
-    
+
+
 bool fill_candidate_datatypes_c::add_2datatypes_to_candidate_list(symbol_c *symbol, symbol_c *datatype1, symbol_c *datatype2) {
   add_datatype_to_candidate_list(symbol, datatype1);
   add_datatype_to_candidate_list(symbol, datatype2);
@@ -354,14 +354,14 @@ void fill_candidate_datatypes_c::remove_incompatible_datatypes(symbol_c *symbol)
     #error __REMOVE__ macro already exists. Choose another name!
   #endif
   #define __REMOVE__(datatype)\
-      remove_from_candidate_datatype_list(&get_datatype_info_c::datatype,       symbol->candidate_datatypes);\
-      remove_from_candidate_datatype_list(&get_datatype_info_c::safe##datatype, symbol->candidate_datatypes);
-  
+      remove_from_candidate_datatype_list(&get_datatype_info_c::datatype,       symbol->candidate_datatypes());\
+      remove_from_candidate_datatype_list(&get_datatype_info_c::safe##datatype, symbol->candidate_datatypes());
+
   {/* Remove unsigned data types */
     uint64_t value = 0;
     if (VALID_CVALUE( uint64, symbol)) value = GET_CVALUE(uint64, symbol);
     if (IS_OVERFLOW ( uint64, symbol)) value = (uint64_t)UINT32_MAX + (uint64_t)1;
-    
+
     if (value > 1          )          {__REMOVE__(bool_type_name);}
     if (value > UINT8_MAX  )          {__REMOVE__(usint_type_name);  __REMOVE__( byte_type_name);}
     if (value > UINT16_MAX )          {__REMOVE__( uint_type_name);  __REMOVE__( word_type_name);}
@@ -373,13 +373,13 @@ void fill_candidate_datatypes_c::remove_incompatible_datatypes(symbol_c *symbol)
     int64_t value = 0;
     if (VALID_CVALUE(  int64, symbol)) value = GET_CVALUE(int64, symbol);
     if (IS_OVERFLOW (  int64, symbol)) value = (int64_t)INT32_MAX + (int64_t)1;
-    
+
     if ((value <  INT8_MIN) || (value >  INT8_MAX)) {__REMOVE__(sint_type_name);}
     if ((value < INT16_MIN) || (value > INT16_MAX)) {__REMOVE__( int_type_name);}
     if ((value < INT32_MIN) || (value > INT32_MAX)) {__REMOVE__(dint_type_name);}
     if (IS_OVERFLOW( int64, symbol))                {__REMOVE__(lint_type_name);}
   }
-    
+
   {/* Remove floating point data types */
     real64_t value = 0;
     if (VALID_CVALUE( real64, symbol)) value = GET_CVALUE(real64, symbol);
@@ -390,7 +390,7 @@ void fill_candidate_datatypes_c::remove_incompatible_datatypes(symbol_c *symbol)
   }
   #undef __REMOVE__
 }
-    
+
 
 /* returns true if compatible function/FB invocation, otherwise returns false */
 /* Assumes that the candidate_datatype lists of all the parameters being passed haved already been filled in */
@@ -420,9 +420,9 @@ bool fill_candidate_datatypes_c::match_nonformal_call(symbol_c *f_call, symbol_c
 
 		/* Get the parameter type */
 		param_datatype = base_type(fp_iterator.param_type());
-		
+
 		/* check whether one of the candidate_data_types of the value being passed is the same as the param_type */
-		if (search_in_candidate_datatype_list(param_datatype, call_param_value->candidate_datatypes) < 0)
+		if (search_in_candidate_datatype_list(param_datatype, call_param_value->candidate_datatypes()) < 0)
 			return false; /* return false if param_type not in the list! */
 	}
 	/* call is compatible! */
@@ -460,7 +460,7 @@ bool fill_candidate_datatypes_c::match_formal_call(symbol_c *f_call, symbol_c *f
 			return false;
 
 		/* Obtaining the type of the value being passed in the function call */
-		std::vector <symbol_c *>&call_param_types = call_param_value->candidate_datatypes;
+		std::vector <symbol_c *>&call_param_types = call_param_value->candidate_datatypes();
 
 		/* Find the corresponding parameter in function declaration */
 		param_name = fp_iterator.search(call_param_name);
@@ -479,11 +479,11 @@ bool fill_candidate_datatypes_c::match_formal_call(symbol_c *f_call, symbol_c *f
 			if ((function_param_iterator_c::direction_out   != param_dir))
 				return false;
 		} else ERROR;
-		
+
 		/* check whether one of the candidate_data_types of the value being passed is the same as the param_type */
 		if (search_in_candidate_datatype_list(param_datatype, call_param_types) < 0)
 			return false; /* return false if param_type not in the list! */
-		
+
 		/* If this is the first parameter, then copy the datatype to *first_param_datatype */
 		if (is_first_param)
 			if (NULL != first_param_datatype)
@@ -511,7 +511,7 @@ typedef struct {
   symbol_c *nonformal_operand_list,
   symbol_c *   formal_operand_list,
 
-  std::vector <symbol_c *> &candidate_functions,  
+  std::vector <symbol_c *> &candidate_functions,
   symbol_c &*called_function_declaration,
   int      &extensible_param_count
 } generic_function_call_t;
@@ -535,17 +535,17 @@ void fill_candidate_datatypes_c::handle_function_call(symbol_c *fcall, generic_f
 	/* If the name of the function being called is not found in the function symbol table, then this is an invalid call */
 	/* Since the lexical parser already checks for this, then if this occurs then we have an internal compiler error. */
 	if (lower == function_symtable.end()) ERROR;
-	
-	/* Look for all compatible function declarations, and add their return datatypes 
-	 * to the candidate_datatype list of this function invocation. 
+
+	/* Look for all compatible function declarations, and add their return datatypes
+	 * to the candidate_datatype list of this function invocation.
 	 *
 	 * If only one function exists, we add its return datatype to the candidate_datatype list,
 	 * even if the parameters passed to it are invalid.
 	 * This guarantees that the remainder of the expression in which the function call is inserted
 	 * is treated as if the function call returns correctly, and therefore does not generate
 	 * spurious error messages.
-	 * Even if the parameters to the function call are invalid, doing this is still safe, as the 
-	 * expressions inside the function call will themselves have erros and will  guarantee that 
+	 * Even if the parameters to the function call are invalid, doing this is still safe, as the
+	 * expressions inside the function call will themselves have erros and will  guarantee that
 	 * compilation is aborted in stage3 (in print_datatypes_error_c).
 	 */
 	if (function_symtable.count(fcall_data.function_name) == 1) {
@@ -554,26 +554,26 @@ void fill_candidate_datatypes_c::handle_function_call(symbol_c *fcall, generic_f
 		if (add_datatype_to_candidate_list(fcall, returned_parameter_type))
 			/* we only add it to the function declaration list if this entry was not already present in the candidate datatype list! */
 			fcall_data.candidate_functions.push_back(f_decl);
-		
+
 	}
 	for(; lower != upper; lower++) {
 		bool compatible = false;
-		
+
 		f_decl = function_symtable.get_value(lower);
 		/* Check if function declaration in symbol_table is compatible with parameters */
 		if (NULL != fcall_data.nonformal_operand_list) compatible=match_nonformal_call(fcall, f_decl);
 		if (NULL != fcall_data.   formal_operand_list) compatible=   match_formal_call(fcall, f_decl);
 		if (compatible) {
-			/* Add the data type returned by the called functions. 
+			/* Add the data type returned by the called functions.
 			 * However, only do this if this data type is not already present in the candidate_datatypes list_c
 			 */
-			returned_parameter_type = base_type(f_decl->type_name);		
+			returned_parameter_type = base_type(f_decl->type_name);
 			if (add_datatype_to_candidate_list(fcall, returned_parameter_type))
 				/* we only add it to the function declaration list if this entry was not already present in the candidate datatype list! */
 				fcall_data.candidate_functions.push_back(f_decl);
 		}
 	}
-	if (debug) std::cout << "end_function() [" << fcall->candidate_datatypes.size() << "] result.\n";
+	if (debug) std::cout << "end_function() [" << fcall->candidate_datatypes().size() << "] result.\n";
 	return;
 }
 
@@ -597,10 +597,10 @@ void *fill_candidate_datatypes_c::handle_implicit_il_fb_call(symbol_c *il_instru
 	called_fb_declaration = fb_decl;
 
 	/* This implicit FB call does not change the value stored in the current/default IL variable */
-	/* It does, however, require that the datatype be compatible with the input parameter of the FB being called. 
+	/* It does, however, require that the datatype be compatible with the input parameter of the FB being called.
 	 * If we were to follow the filling & narrowing algorithm correctly (implemented in fill_candidate_datatypes_c
 	 * & narrow_candidate_datatypes_c respectively), we should be restricting the candidate_datatpes to the datatypes
-	 * that are compatible to the FB call. 
+	 * that are compatible to the FB call.
 	 * However, doing the above will often result in some very confusing error messages for the user, especially in the case
 	 * in which the FB call is wrong, so the resulting cadidate datatypes is an empty list. In this case, the user would see
 	 * many error messages related to the IL instructions that follow the FB call, even though those IL instructions may be perfectly
@@ -609,9 +609,9 @@ void *fill_candidate_datatypes_c::handle_implicit_il_fb_call(symbol_c *il_instru
 	 * here).
 	 */
 	if (NULL != prev_il_instruction)
-		il_instruction->candidate_datatypes = prev_il_instruction->candidate_datatypes; 
+		il_instruction->candidate_datatypes() = prev_il_instruction->candidate_datatypes();
 
-	if (debug) std::cout << "handle_implicit_il_fb_call() [" << prev_il_instruction->candidate_datatypes.size() << "] ==> " << il_instruction->candidate_datatypes.size() << " result.\n";
+	if (debug) std::cout << "handle_implicit_il_fb_call() [" << prev_il_instruction->candidate_datatypes().size() << "] ==> " << il_instruction->candidate_datatypes().size() << " result.\n";
 	return NULL;
 }
 
@@ -633,10 +633,10 @@ void *fill_candidate_datatypes_c::handle_S_and_R_operator(symbol_c *symbol, cons
 	if (NULL == il_operand)          return NULL;
 
 	/* Try the Set/Reset semantics */
-	for (unsigned int i = 0; i < prev_il_instruction->candidate_datatypes.size(); i++) {
-		for(unsigned int j = 0; j < il_operand->candidate_datatypes.size(); j++) {
-			prev_instruction_type = prev_il_instruction->candidate_datatypes[i];
-			operand_type = il_operand->candidate_datatypes[j];
+	for (unsigned int i = 0; i < prev_il_instruction->candidate_datatypes().size(); i++) {
+		for(unsigned int j = 0; j < il_operand->candidate_datatypes().size(); j++) {
+			prev_instruction_type = prev_il_instruction->candidate_datatypes()[i];
+			operand_type = il_operand->candidate_datatypes()[j];
 			/* IEC61131-3, Table 52, Note (e) states that the datatype of the operand must be BOOL!
 			 * IEC61131-3, Table 52, line 3 states that this operator should "Set operand to 1 if current result is Boolean 1"
 			 *     which implies that the prev_instruction_type MUST also be BOOL compatible.
@@ -647,17 +647,17 @@ void *fill_candidate_datatypes_c::handle_S_and_R_operator(symbol_c *symbol, cons
 	}
 
 	/* if the appropriate semantics is not a Set/Reset of a boolean variable, the we try for the FB invocation! */
-	if (symbol->candidate_datatypes.size() == 0) {
+	if (symbol->candidate_datatypes().size() == 0) {
 		handle_implicit_il_fb_call(symbol,  operator_str, called_fb_declaration);
 		/* If it is also not a valid FB call, make sure the candidate_datatypes is empty (handle_implicit_il_fb_call may leave it non-empty!!) */
 		/* From here on out, all later code will consider the symbol->called_fb_declaration being NULL as an indication that this operator must use the
 		 * Set/Reset semantics, so we must also guarantee that the remainder of the state of this symbol is compatible with that assumption!
 		 */
 		if (NULL == called_fb_declaration)
-			symbol->candidate_datatypes.clear();
+			symbol->candidate_datatypes().clear();
 	}
 
-	if (debug) std::cout << operator_str << " [" << prev_il_instruction->candidate_datatypes.size() << "," << il_operand->candidate_datatypes.size() << "] ==> "  << symbol->candidate_datatypes.size() << " result.\n";
+	if (debug) std::cout << operator_str << " [" << prev_il_instruction->candidate_datatypes().size() << "," << il_operand->candidate_datatypes().size() << "] ==> "  << symbol->candidate_datatypes().size() << " result.\n";
 	return NULL;
 }
 
@@ -668,12 +668,12 @@ void *fill_candidate_datatypes_c::handle_binary_operator(const struct widen_entr
 	if (NULL == l_expr) return NULL; /* if no prev_il_instruction */
 	if (NULL == r_expr) return NULL; /* if no IL operand!! */
 
-	for(unsigned int i = 0; i < l_expr->candidate_datatypes.size(); i++)
-		for(unsigned int j = 0; j < r_expr->candidate_datatypes.size(); j++)
+	for(unsigned int i = 0; i < l_expr->candidate_datatypes().size(); i++)
+		for(unsigned int j = 0; j < r_expr->candidate_datatypes().size(); j++)
 			/* NOTE: add_datatype_to_candidate_list() will only really add the datatype if it is != NULL !!! */
-			add_datatype_to_candidate_list(symbol, widening_conversion(l_expr->candidate_datatypes[i], r_expr->candidate_datatypes[j], widen_table));
+			add_datatype_to_candidate_list(symbol, widening_conversion(l_expr->candidate_datatypes()[i], r_expr->candidate_datatypes()[j], widen_table));
 	remove_incompatible_datatypes(symbol);
-	if (debug) std::cout <<  "[" << l_expr->candidate_datatypes.size() << "," << r_expr->candidate_datatypes.size() << "] ==> "  << symbol->candidate_datatypes.size() << " result.\n";
+	if (debug) std::cout <<  "[" << l_expr->candidate_datatypes().size() << "," << r_expr->candidate_datatypes().size() << "] ==> "  << symbol->candidate_datatypes().size() << " result.\n";
 	return NULL;
 }
 
@@ -695,10 +695,10 @@ void *fill_candidate_datatypes_c::handle_binary_expression(const struct widen_en
  */
 void *fill_candidate_datatypes_c::handle_equality_comparison(const struct widen_entry widen_table[], symbol_c *symbol, symbol_c *l_expr, symbol_c *r_expr) {
 	handle_binary_expression(widen_table, symbol, l_expr, r_expr);
-	for(unsigned int i = 0; i < l_expr->candidate_datatypes.size(); i++)
-		for(unsigned int j = 0; j < r_expr->candidate_datatypes.size(); j++) {
-			if (   (get_datatype_info_c::is_enumerated(l_expr->candidate_datatypes[i]) && (l_expr->candidate_datatypes[i] == r_expr->candidate_datatypes[j]))
-			    || (get_datatype_info_c::is_ref_to    (l_expr->candidate_datatypes[i]) && get_datatype_info_c::is_type_equal(l_expr->candidate_datatypes[i], r_expr->candidate_datatypes[j])))   
+	for(unsigned int i = 0; i < l_expr->candidate_datatypes().size(); i++)
+		for(unsigned int j = 0; j < r_expr->candidate_datatypes().size(); j++) {
+			if (   (get_datatype_info_c::is_enumerated(l_expr->candidate_datatypes()[i]) && (l_expr->candidate_datatypes()[i] == r_expr->candidate_datatypes()[j]))
+			    || (get_datatype_info_c::is_ref_to    (l_expr->candidate_datatypes()[i]) && get_datatype_info_c::is_type_equal(l_expr->candidate_datatypes()[i], r_expr->candidate_datatypes()[j])))
 				add_datatype_to_candidate_list(symbol, &get_datatype_info_c::bool_type_name);
 		}
 	return NULL;
@@ -721,7 +721,7 @@ symbol_c *fill_candidate_datatypes_c::base_type(symbol_c *symbol) {
 void *fill_candidate_datatypes_c::visit(library_c *symbol) {
 	symbol->accept(populate_globalenumvalue_symtable);
 	/* Now let the base class iterator_visitor_c iterate through all the library elements */
-	return iterator_visitor_c::visit(symbol);  
+	return iterator_visitor_c::visit(symbol);
 }
 
 
@@ -751,18 +751,18 @@ void *fill_candidate_datatypes_c::visit(derived_datatype_identifier_c *symbol) {
 }
 
 /* The datatype of a poutype_identifier_c is currently always being set by the parent object, so we leave this code commented out for now. */
-/* 
+/*
 void *fill_candidate_datatypes_c::visit(         poutype_identifier_c *symbol) {
   add_datatype_to_candidate_list(symbol, base_type( function_block_type_symtable[symbol->value])); // will only add if datatype is not NULL!
   add_datatype_to_candidate_list(symbol, base_type(        program_type_symtable[symbol->value])); // will only add if datatype is not NULL!
 //add_datatype_to_candidate_list(symbol, base_type(            function_symtable[symbol->value])); // will only add if datatype is not NULL!
-  // NOTE: Although poutype_identifier_c is also used to identify functions, these symbols are not used as a datatype, 
+  // NOTE: Although poutype_identifier_c is also used to identify functions, these symbols are not used as a datatype,
   //       so we do NOT add it as a candidate datatype!
   return NULL;
 }
 */
-    
-    
+
+
 /*********************/
 /* B 1.2 - Constants */
 /*********************/
@@ -773,17 +773,17 @@ void *fill_candidate_datatypes_c::visit(         poutype_identifier_c *symbol) {
 void *fill_candidate_datatypes_c::visit(ref_value_null_literal_c *symbol) {
 	/* 'NULL' does not have any specific datatype. It is compatible with any reference, i.e. REF_TO <anything>
 	 * The fill_candidate_datatypes / narrow_candidate_datatypes algorithm would require us to add
-	 * as possible datatypes all the REF_TO <datatype>. To do this we would need to go through the list of all 
+	 * as possible datatypes all the REF_TO <datatype>. To do this we would need to go through the list of all
 	 * user declared datatypes, as well as all the elementary datatypes. This is easily done by using the
 	 * type_symtable symbol table declared in absyntax_utils.hh.
-	 * 
+	 *
 	 *  for(int i=0; i<type_symtable.n; i++)  add_datatype_to_candidate_list(symbol, new ref_spec_c(type_symtable[i]));
 	 *  add_datatype_to_candidate_list(symbol, new ref_spec_c( ... SINT ...));
 	 *  add_datatype_to_candidate_list(symbol, new ref_spec_c( ...  INT ...));
 	 *  add_datatype_to_candidate_list(symbol, new ref_spec_c( ... LINT ...));
 	 *     ...
-	 * 
-	 * However, doing this for all NULL constants that may show up is probably a little too crazy, just for 
+	 *
+	 * However, doing this for all NULL constants that may show up is probably a little too crazy, just for
 	 * the 'pleasure' of following the standard fill/narrow algorithm.
 	 *
 	 * I have therefore opted to handle this as a special case:
@@ -814,7 +814,7 @@ void *fill_candidate_datatypes_c::handle_any_integer(symbol_c *symbol) {
 	add_2datatypes_to_candidate_list(symbol, &get_datatype_info_c::udint_type_name, &get_datatype_info_c::safeudint_type_name);
 	add_2datatypes_to_candidate_list(symbol, &get_datatype_info_c::ulint_type_name, &get_datatype_info_c::safeulint_type_name);
 	remove_incompatible_datatypes(symbol);
-	if (debug) std::cout << "ANY_INT [" << symbol->candidate_datatypes.size()<< "]" << std::endl;
+	if (debug) std::cout << "ANY_INT [" << symbol->candidate_datatypes().size()<< "]" << std::endl;
 	return NULL;
 }
 
@@ -824,7 +824,7 @@ void *fill_candidate_datatypes_c::handle_any_real(symbol_c *symbol) {
 	add_2datatypes_to_candidate_list(symbol, &get_datatype_info_c::real_type_name,  &get_datatype_info_c::safereal_type_name);
 	add_2datatypes_to_candidate_list(symbol, &get_datatype_info_c::lreal_type_name, &get_datatype_info_c::safelreal_type_name);
 	remove_incompatible_datatypes(symbol);
-	if (debug) std::cout << "ANY_REAL [" << symbol->candidate_datatypes.size() << "]" << std::endl;
+	if (debug) std::cout << "ANY_REAL [" << symbol->candidate_datatypes().size() << "]" << std::endl;
 	return NULL;
 }
 
@@ -832,10 +832,10 @@ void *fill_candidate_datatypes_c::handle_any_real(symbol_c *symbol) {
 
 void *fill_candidate_datatypes_c::handle_any_literal(symbol_c *symbol, symbol_c *symbol_value, symbol_c *symbol_type) {
 	symbol_value->accept(*this);
-	if (search_in_candidate_datatype_list(symbol_type, symbol_value->candidate_datatypes) >= 0)
+	if (search_in_candidate_datatype_list(symbol_type, symbol_value->candidate_datatypes()) >= 0)
 		add_datatype_to_candidate_list(symbol, symbol_type);
 	remove_incompatible_datatypes(symbol);
-	if (debug) std::cout << "ANY_LITERAL [" << symbol->candidate_datatypes.size() << "]\n";
+	if (debug) std::cout << "ANY_LITERAL [" << symbol->candidate_datatypes().size() << "]\n";
 	return NULL;
 }
 
@@ -853,7 +853,7 @@ void *fill_candidate_datatypes_c::visit(neg_integer_c *symbol) {
 	add_2datatypes_to_candidate_list(symbol, &get_datatype_info_c::dint_type_name, &get_datatype_info_c::safedint_type_name);
 	add_2datatypes_to_candidate_list(symbol, &get_datatype_info_c::lint_type_name, &get_datatype_info_c::safelint_type_name);
 	remove_incompatible_datatypes(symbol);
-	if (debug) std::cout << "neg ANY_INT [" << symbol->candidate_datatypes.size() << "]" << std::endl;
+	if (debug) std::cout << "neg ANY_INT [" << symbol->candidate_datatypes().size() << "]" << std::endl;
 	return NULL;
 }
 
@@ -882,7 +882,7 @@ void *fill_candidate_datatypes_c::visit(   boolean_literal_c *symbol) {
 	if (NULL != symbol->type) return handle_any_literal(symbol, symbol->value, symbol->type);
 
 	symbol->value->accept(*this);
-	symbol->candidate_datatypes = symbol->value->candidate_datatypes;
+	symbol->candidate_datatypes() = symbol->value->candidate_datatypes();
 	return NULL;
 }
 
@@ -918,7 +918,7 @@ void *fill_candidate_datatypes_c::visit(single_byte_character_string_c *symbol) 
 /************************/
 void *fill_candidate_datatypes_c::visit(duration_c *symbol) {
 	add_datatype_to_candidate_list(symbol, symbol->type_name);
-	if (debug) std::cout << "TIME_LITERAL [" << symbol->candidate_datatypes.size() << "]\n";
+	if (debug) std::cout << "TIME_LITERAL [" << symbol->candidate_datatypes().size() << "]\n";
 	return NULL;
 }
 
@@ -937,8 +937,8 @@ void *fill_candidate_datatypes_c::visit(date_and_time_c *symbol) {add_datatype_t
 /********************************/
 
 void *fill_candidate_datatypes_c::fill_type_decl(symbol_c *symbol, symbol_c *type_name, symbol_c *spec_init) {
-  /* NOTE: Unlike the rest of the 'fill' algorithm that works using a bottom->up approach, when handling 
-   *       data type declarations (section B.1.3.3 - Derived data types) we use a top->bottom approach. 
+  /* NOTE: Unlike the rest of the 'fill' algorithm that works using a bottom->up approach, when handling
+   *       data type declarations (section B.1.3.3 - Derived data types) we use a top->bottom approach.
    *       This is intentional, and not a bug! Explanation follows...
    *       Here we are essentially determining the base type of each defined data type. In many cases (especially structs,
    *       enumerations, arrays, etc...), the datatype is its own base type. However, the derived datatype is stored in
@@ -948,21 +948,21 @@ void *fill_candidate_datatypes_c::fill_type_decl(symbol_c *symbol, symbol_c *typ
    *       Here we must right the code to handle whatever the search_base_type_c chooses to use as the canonical symbol to represent
    *       the base datatype.
    *       Since the base datatype may be (and sometimes/often/always(?) actually is) the top level symbol_c (an enumerated_type_declaration_c
-   *       in the case of the enumerations), it only makes sense to ask search_base_type_c for a basetype when we pass it the 
+   *       in the case of the enumerations), it only makes sense to ask search_base_type_c for a basetype when we pass it the
    *       symbol in the highest level of the type declaration (the enumerated_type_declaration_c in the case of the enumerations).
-   *       For this reason, we determine the basetype at the top level, and send that info down to the bottom level of the data type 
+   *       For this reason, we determine the basetype at the top level, and send that info down to the bottom level of the data type
    *       declaration. In summary, a top->down algorithm!
-   */ 
+   */
   add_datatype_to_candidate_list(symbol, base_type(symbol));
-  type_name->candidate_datatypes = symbol->candidate_datatypes;  // use top->down algorithm!!
-  spec_init->candidate_datatypes = symbol->candidate_datatypes;  // use top->down algorithm!!
+  type_name->candidate_datatypes() = symbol->candidate_datatypes();  // use top->down algorithm!!
+  spec_init->candidate_datatypes() = symbol->candidate_datatypes();  // use top->down algorithm!!
   spec_init->accept(*this);
   return NULL;
 }
 
 
 void *fill_candidate_datatypes_c::fill_spec_init(symbol_c *symbol, symbol_c *type_spec, symbol_c *init_value) {
-	/* NOTE: The note in the fill_type_decl() function is also partially valid here, 
+	/* NOTE: The note in the fill_type_decl() function is also partially valid here,
 	 *       i.e. here too we work using a top->down algorithm for the type_spec part, but a bottom->up algorithm
 	 *       for the init_value part!!
 	 */
@@ -975,20 +975,20 @@ void *fill_candidate_datatypes_c::fill_spec_init(symbol_c *symbol, symbol_c *typ
 	 *      the anonymous datatype will be defined directly by the ***_spec_init_c, and will not have an
 	 *      ****_type_declaration_c. In these cases, the anonymous data type is its own basetype, and the
 	 *      ***_spec_init_c class will act as the canonical symbol that represents the (anonymous) basetype.
-	 *      
+	 *
 	 *      This method must handle the above case, as well as the case in which the ***_spec_init_c is called
 	 *      from an ****_type_declaration_c.
 	 */
-	if (symbol->candidate_datatypes.size() == 0) // i.e., if this is an anonymous datatype!
-		add_datatype_to_candidate_list(symbol, base_type(symbol)); 
-	
+	if (symbol->candidate_datatypes().size() == 0) // i.e., if this is an anonymous datatype!
+		add_datatype_to_candidate_list(symbol, base_type(symbol));
+
 	// use top->down algorithm!!
-	type_spec->candidate_datatypes = symbol->candidate_datatypes;   
+	type_spec->candidate_datatypes() = symbol->candidate_datatypes();
 	type_spec->accept(*this);
-	
+
 	// use bottom->up algorithm!!
-	/* NOTE: In special cases we will run a modified bottom->up algorithm, i.e. with a top->down indication of 
-	 *       tentative candidate_datatypes... 
+	/* NOTE: In special cases we will run a modified bottom->up algorithm, i.e. with a top->down indication of
+	 *       tentative candidate_datatypes...
 	 *       (e.g. structure_element_initialization_list_c). The tentative candidate_datatypes (a list of
 	 *       candidate_datatypes to consider while running the bottom->up algorithm) will actually be the
 	 *       datatypes in symbol->parent->candidate_datatpes
@@ -1017,7 +1017,7 @@ void *fill_candidate_datatypes_c::fill_spec_init(symbol_c *symbol, symbol_c *typ
 /*  simple_type_name ':' simple_spec_init */
 // SYM_REF2(simple_type_declaration_c, simple_type_name, simple_spec_init)
 void *fill_candidate_datatypes_c::visit(simple_type_declaration_c *symbol) {return fill_type_decl(symbol, symbol->simple_type_name, symbol->simple_spec_init);}
-  
+
 
 /* simple_specification ASSIGN constant */
 // SYM_REF2(simple_spec_init_c, simple_specification, constant)
@@ -1042,11 +1042,11 @@ void *fill_candidate_datatypes_c::visit(subrange_spec_init_c *symbol) {return fi
 void *fill_candidate_datatypes_c::visit(subrange_c *symbol) {
 	symbol->lower_limit->accept(*this);
 	symbol->upper_limit->accept(*this);
-	
-	for (unsigned int u = 0; u < symbol->upper_limit->candidate_datatypes.size(); u++) {
-		for(unsigned int l = 0; l < symbol->lower_limit->candidate_datatypes.size(); l++) {
-			if (get_datatype_info_c::is_type_equal(symbol->upper_limit->candidate_datatypes[u], symbol->lower_limit->candidate_datatypes[l]))
-				add_datatype_to_candidate_list(symbol, symbol->lower_limit->candidate_datatypes[l]);
+
+	for (unsigned int u = 0; u < symbol->upper_limit->candidate_datatypes().size(); u++) {
+		for(unsigned int l = 0; l < symbol->lower_limit->candidate_datatypes().size(); l++) {
+			if (get_datatype_info_c::is_type_equal(symbol->upper_limit->candidate_datatypes()[u], symbol->lower_limit->candidate_datatypes()[l]))
+				add_datatype_to_candidate_list(symbol, symbol->lower_limit->candidate_datatypes()[l]);
 		}
 	}
 	return NULL;
@@ -1068,14 +1068,14 @@ void *fill_candidate_datatypes_c::visit(enumerated_spec_init_c *symbol) {return 
 /* enumerated_value_list ',' enumerated_value */
 // SYM_LIST(enumerated_value_list_c)
 void *fill_candidate_datatypes_c::visit(enumerated_value_list_c *symbol) {
-  if (symbol->candidate_datatypes.size() != 1) ERROR;
-  symbol_c *current_enumerated_spec_type = symbol->candidate_datatypes[0];
-  
+  if (symbol->candidate_datatypes().size() != 1) ERROR;
+  symbol_c *current_enumerated_spec_type = symbol->candidate_datatypes()[0];
+
   /* We already know the datatype of the enumerated_value(s) in the list, so we set them directly instead of recursively calling the enumerated_value_c visit method! */
   for(int i = 0; i < symbol->n; i++)
     add_datatype_to_candidate_list(symbol->get_element(i), current_enumerated_spec_type); // top->down algorithm!!
 
-  return NULL;  
+  return NULL;
 }
 
 
@@ -1086,8 +1086,8 @@ void *fill_candidate_datatypes_c::visit(enumerated_value_list_c *symbol) {
  *          as well as in the source code of POU bodies
  *          (e.g.    enumVar := xxx1    ---> xxx1 will be enumerated_value_c)
  *
- *          The following method will only be used to visit enumerated_value_c that show up inside the 
- *          source code of POU bodies (or the initial values of an enumerated type). When used inside an 
+ *          The following method will only be used to visit enumerated_value_c that show up inside the
+ *          source code of POU bodies (or the initial values of an enumerated type). When used inside an
  *          enumerated type declaration to list the possible enum values (whether inside
  *          a TYPE ... END_TYPE, or inside a VAR .. END_VAR), the visitor method for enumerated_value_list_c
  *          will NOT recursively call the following enumerated_value_c visitor method!
@@ -1100,7 +1100,7 @@ void *fill_candidate_datatypes_c::visit(enumerated_value_c *symbol) {
 	if (NULL != symbol->type) {
 		/* NOTE: This code must take into account the following situation:
 		 *
-		 *        TYPE  
+		 *        TYPE
 		 *           base_enum_t: (x1, x2, x3);
 		 *           enum_t1 : base_enum_t := x1;
 		 *           enum_t2 : base_enum_t := x2;
@@ -1123,7 +1123,7 @@ void *fill_candidate_datatypes_c::visit(enumerated_value_c *symbol) {
 		enumerated_value_symtable_t::iterator upper = global_enumerated_value_symtable.upper_bound(symbol->value);
 		for (; lower != upper; lower++)
 			if (get_datatype_info_c::is_type_equal(base_type(lower->second), base_type(symbol->type)))
-				enumerated_type = symbol->type; 
+				enumerated_type = symbol->type;
 	}
 	else {
 		int       global_multiplicity    = global_enumerated_value_symtable.count(symbol->value);
@@ -1149,7 +1149,7 @@ void *fill_candidate_datatypes_c::visit(enumerated_value_c *symbol) {
 	if (NULL != enumerated_type)
 		add_datatype_to_candidate_list(symbol, enumerated_type);
 
-	if (debug) std::cout << "ENUMERATE [" << symbol->candidate_datatypes.size() << "]\n";
+	if (debug) std::cout << "ENUMERATE [" << symbol->candidate_datatypes().size() << "]\n";
 	return NULL;
 }
 
@@ -1170,9 +1170,9 @@ static bool is_aggregate_initial_value(symbol_c *symbol) {
  * parent's candidate_datatypes when we are the value of a variable/structure element declaration.
  */
 static std::vector <symbol_c *> get_tentative_datatypes(symbol_c *symbol) {
-	if (!symbol->candidate_datatypes.empty()) return symbol->candidate_datatypes;
+	if (!symbol->candidate_datatypes().empty()) return symbol->candidate_datatypes();
 	if (NULL == symbol->parent)               return std::vector <symbol_c *>();
-	return symbol->parent->candidate_datatypes;
+	return symbol->parent->candidate_datatypes();
 }
 
 
@@ -1203,7 +1203,7 @@ void *fill_candidate_datatypes_c::visit(array_initial_elements_list_c *symbol) {
 	iterator_visitor_c::visit(symbol);
 
 	std::vector <symbol_c *> tentative_datatypes = get_tentative_datatypes(symbol);
-	symbol->candidate_datatypes.clear();
+	symbol->candidate_datatypes().clear();
 
 	for (unsigned int i = 0; i < tentative_datatypes.size(); i++) { // size() should always be 1 here -> a single array type!
 		symbol_c *element_type = search_base_type_c::get_basetype_decl(get_datatype_info_c::get_array_storedtype_id(tentative_datatypes[i]));
@@ -1224,7 +1224,7 @@ void *fill_candidate_datatypes_c::visit(array_initial_elements_list_c *symbol) {
 				add_datatype_to_candidate_list(array_elem, element_type);
 				array_elem->accept(*this);
 			}
-			if (search_in_candidate_datatype_list(element_type, array_elem->candidate_datatypes) < 0) {
+			if (search_in_candidate_datatype_list(element_type, array_elem->candidate_datatypes()) < 0) {
 				flag_all_elem_ok = 0; // the datatype stored in the array is not a candidate_datatype of this element
 			}
 		}
@@ -1265,7 +1265,7 @@ void *fill_candidate_datatypes_c::visit(structure_element_initialization_list_c 
 	iterator_visitor_c::visit(symbol); // call visit(structure_element_initialization_c *) on all elements
 
 	std::vector <symbol_c *> tentative_datatypes = get_tentative_datatypes(symbol);
-	symbol->candidate_datatypes.clear();
+	symbol->candidate_datatypes().clear();
 
 	for (unsigned int i = 0; i < tentative_datatypes.size(); i++) { // size() should always be 1 here -> a single structure or FB type!
 		// assume tentative_datatypes[i] is a FB type
@@ -1277,7 +1277,7 @@ void *fill_candidate_datatypes_c::visit(structure_element_initialization_list_c 
 		for (int k = 0; k < symbol->n; k++) {
 			structure_element_initialization_c *struct_elem = dynamic_cast<structure_element_initialization_c *>(symbol->get_element(k));
 			if (struct_elem == NULL) ERROR;
-			
+
 			// assume symbol->parent is a FB type...
 			symbol_c *type = NULL;
 			if (struct_decl != NULL) {
@@ -1292,7 +1292,7 @@ void *fill_candidate_datatypes_c::visit(structure_element_initialization_list_c 
 				add_datatype_to_candidate_list(struct_elem, type);
 				struct_elem->accept(*this);
 			}
-			if (search_in_candidate_datatype_list(type, struct_elem->candidate_datatypes) < 0) {
+			if (search_in_candidate_datatype_list(type, struct_elem->candidate_datatypes()) < 0) {
 				flag_all_elem_ok = 0; // the necessary datatype for structure init element is not a candidate_datatype of that element
 			}
 		}
@@ -1308,14 +1308,14 @@ void *fill_candidate_datatypes_c::visit(structure_element_initialization_list_c 
 // SYM_REF2(structure_element_initialization_c, structure_element_name, value)
 void *fill_candidate_datatypes_c::visit(structure_element_initialization_c *symbol) {
 	symbol->value->accept(*this);
-	symbol->candidate_datatypes = symbol->value->candidate_datatypes;
+	symbol->candidate_datatypes() = symbol->value->candidate_datatypes();
 	// Note that candidate_datatypes of symbol->structure_element_name are left empty!
 	return NULL;
 }
 
 
 /*  string_type_name ':' elementary_string_type_name string_type_declaration_size string_type_declaration_init */
-// SYM_REF4(string_type_declaration_c, string_type_name, elementary_string_type_name, string_type_declaration_size, string_type_declaration_init/* may be == NULL! */) 
+// SYM_REF4(string_type_declaration_c, string_type_name, elementary_string_type_name, string_type_declaration_size, string_type_declaration_init/* may be == NULL! */)
 
 
 /*  function_block_type_name ASSIGN structure_initialization */
@@ -1327,19 +1327,19 @@ void *fill_candidate_datatypes_c::visit(fb_spec_init_c *symbol) {return fill_spe
 /* REF_TO (non_generic_type_name | function_block_type_name) */
 // SYM_REF1(ref_spec_c, type_name)
 void *fill_candidate_datatypes_c::visit(ref_spec_c *symbol) {
-  
+
 	// when parsing datatype declarations, fill_candidate_datatypes_c follows a top->down algorithm (see the comment in fill_type_decl() for an explanation)
-	add_datatype_to_candidate_list(symbol->type_name, base_type(symbol->type_name)); 
+	add_datatype_to_candidate_list(symbol->type_name, base_type(symbol->type_name));
 	symbol->type_name->accept(*this);  /* The referenced/pointed to datatype! */
 
-	if (symbol->candidate_datatypes.size() == 0) // i.e., if this is an anonymous datatype!
-		add_datatype_to_candidate_list(symbol, base_type(symbol)); 
+	if (symbol->candidate_datatypes().size() == 0) // i.e., if this is an anonymous datatype!
+		add_datatype_to_candidate_list(symbol, base_type(symbol));
 
 	return NULL;
 }
 
 /* For the moment, we do not support initialising reference data types */
-/* ref_spec [ ASSIGN ref_initialization ] */ 
+/* ref_spec [ ASSIGN ref_initialization ] */
 /* NOTE: ref_initialization may be NULL!! */
 // SYM_REF2(ref_spec_init_c, ref_spec, ref_initialization)
 void *fill_candidate_datatypes_c::visit(ref_spec_init_c *symbol) {return fill_spec_init(symbol, symbol->ref_spec, symbol->ref_initialization);}
@@ -1356,9 +1356,9 @@ void *fill_candidate_datatypes_c::visit(ref_type_decl_c *symbol) {return fill_ty
 /* B 1.4 - Variables */
 /*********************/
 void *fill_candidate_datatypes_c::visit(symbolic_variable_c *symbol) {
-	symbol->scope = current_scope;  // the scope in which this variable was declared!
+	symbol->scope() = current_scope;  // the scope in which this variable was declared!
 	add_datatype_to_candidate_list(symbol, search_var_instance_decl->get_basetype_decl(symbol)); /* will only add if non NULL */
-	if (debug) std::cout << "VAR [" << symbol->candidate_datatypes.size() << "]\n";
+	if (debug) std::cout << "VAR [" << symbol->candidate_datatypes().size() << "]\n";
 	return NULL;
 }
 
@@ -1399,31 +1399,31 @@ void *fill_candidate_datatypes_c::visit(array_variable_c *symbol) {
 	 * e.g.   structvar.a1[v1+2].b1.c1[v2+3].d1
 	 *        TYPE
 	 *           d_s: STRUCT d1: int; d2: int;
-	 *           d_a: ARRAY [1..3] OF d_s;  
+	 *           d_a: ARRAY [1..3] OF d_s;
 	 *           c_s: STRUCT c1: d_a; c2: d_a;
 	 *           b_s: STRUCT b1: c_s; b2: c_s;
-	 *           b_a: ARRAY [1..3] OF b_s;  
+	 *           b_a: ARRAY [1..3] OF b_s;
 	 *           a_s: STRUCT a1: b_a; a2: b_a;
-	 *        END_TYPE 
+	 *        END_TYPE
 	 *        VAR
 	 *          structvar: a_s;
 	 *        END_VAR
 	 */
 	symbol->subscripted_variable->accept(*this);
 	// the scope in which this variable was declared! It will be the same as the subscripted variable (a symbolic_variable_ !)
-	symbol->scope = symbol->subscripted_variable->scope;
-	if (NULL == symbol->scope) ERROR;
+	symbol->scope() = symbol->subscripted_variable->scope();
+	if (NULL == symbol->scope()) ERROR;
 
-	
-	for (unsigned int i = 0; i < symbol->subscripted_variable->candidate_datatypes.size(); i++) {
+
+	for (unsigned int i = 0; i < symbol->subscripted_variable->candidate_datatypes().size(); i++) {
 	  /* get the declaration of the data type __stored__ in the array... */
-	  add_datatype_to_candidate_list(symbol, search_base_type_c::get_basetype_decl(get_datatype_info_c::get_array_storedtype_id(symbol->subscripted_variable->candidate_datatypes[i])));   /* will only add if non NULL */
+	  add_datatype_to_candidate_list(symbol, search_base_type_c::get_basetype_decl(get_datatype_info_c::get_array_storedtype_id(symbol->subscripted_variable->candidate_datatypes()[i])));   /* will only add if non NULL */
 	}
 
 	/* recursively call the subscript list, so we can check the data types of the expressions used for the subscripts */
 	symbol->subscript_list->accept(*this);
 
-	if (debug) std::cout << "ARRAY_VAR [" << symbol->candidate_datatypes.size() << "]\n";	
+	if (debug) std::cout << "ARRAY_VAR [" << symbol->candidate_datatypes().size() << "]\n";
 	return NULL;
 }
 
@@ -1449,12 +1449,12 @@ void *fill_candidate_datatypes_c::visit(structured_variable_c *symbol) {
 	 */
 	symbol->record_variable->accept(*this);
 
-	if (symbol->record_variable->candidate_datatypes.size() == 1) {
+	if (symbol->record_variable->candidate_datatypes().size() == 1) {
 	  // set the scope in which this variable is declared (will be a struct datatype declaration!)
 	  // We rely on the fact that if only one candidate datatype exists, then it will be the scope in which the field_variable is declared!
-	  symbol->scope = symbol->record_variable->candidate_datatypes[0];  // the scope in which this variable was declared! Will be used in stage4
+	  symbol->scope() = symbol->record_variable->candidate_datatypes()[0];  // the scope in which this variable was declared! Will be used in stage4
 	  // Determine candidate datatypes...
-	  add_datatype_to_candidate_list(symbol, search_base_type_c::get_basetype_decl(get_datatype_info_c::get_struct_field_type_id(symbol->scope, symbol->field_selector)));  /* will only add if non NULL */
+	  add_datatype_to_candidate_list(symbol, search_base_type_c::get_basetype_decl(get_datatype_info_c::get_struct_field_type_id(symbol->scope(), symbol->field_selector)));  /* will only add if non NULL */
 	}
 
 	  return NULL;
@@ -1467,26 +1467,26 @@ void *fill_candidate_datatypes_c::visit(structured_variable_c *symbol) {
 /******************************************/
 
 /* When handling the declaration of variables the fill/narrow algorithm will simply visit the objects
- * in the abstract syntax tree defining the desired datatype for the variables. Tis is to set the 
- * symbol->datatype to the basetype of that datatype.
+ * in the abstract syntax tree defining the desired datatype for the variables. Tis is to set the
+ * symbol->datatype() to the basetype of that datatype.
  *
- * Note that we do not currently set the symbol->datatype annotation for the identifier_c objects naming the 
+ * Note that we do not currently set the symbol->datatype() annotation for the identifier_c objects naming the
  * variables inside the variable declaration. However, this is liable to change in the future, so do not write
  * any code that depends on this!
- * 
+ *
  * example:
  *    VAR  var1, var2, var3  :  my_type;  END_VAR
- *   (*    ^^^^  ^^^^  ^^^^                -> will NOT have the symbol->datatype set (for now, may change in the future!) *)
- *   (*                         ^^^^^^^    -> WILL     have the symbol->datatype set *)
- * 
- * (remeber too that the identifier_c objects identifying variables inside ST/IL/SFC code *will* have their 
- *  symbol->datatype annotation filled by the fill/narrow algorithm)
+ *   (*    ^^^^  ^^^^  ^^^^                -> will NOT have the symbol->datatype() set (for now, may change in the future!) *)
+ *   (*                         ^^^^^^^    -> WILL     have the symbol->datatype() set *)
+ *
+ * (remeber too that the identifier_c objects identifying variables inside ST/IL/SFC code *will* have their
+ *  symbol->datatype() annotation filled by the fill/narrow algorithm)
  */
 void *fill_candidate_datatypes_c::fill_var_declaration(symbol_c *var_list, symbol_c *type) {
   /* The type may be either a datatype object (e.g. array_spec_init_c, ...), or a derived_datatype_identifier_c
    * naming a previously declared datatype.
-   * If it is a derived_datatype_identifier_c, we will search the list of all declared datatypes to determine 
-   * the requested datatype. This is done automatically by the search_base_type_c::get_basetype_decl() method, 
+   * If it is a derived_datatype_identifier_c, we will search the list of all declared datatypes to determine
+   * the requested datatype. This is done automatically by the search_base_type_c::get_basetype_decl() method,
    * so we do not need to do anything special here!
    */
   add_datatype_to_candidate_list(type, search_base_type_c::get_basetype_decl(type));  /* will only add if non NULL */
@@ -1518,13 +1518,13 @@ void *fill_candidate_datatypes_c::visit(incompl_located_var_decl_c   *symbol) {r
 void *fill_candidate_datatypes_c::visit(var1_list_c *symbol) {
   for(int i = 0; i < symbol->n; i++) {symbol->get_element(i)->accept(*this);}
   return NULL;
-}  
+}
 
 
 /*  AT direct_variable */
 // SYM_REF1(location_c, direct_variable)
 void *fill_candidate_datatypes_c::visit(location_c *symbol) {
- /* This is a special situation. 
+ /* This is a special situation.
   *
   * The reason is that a located variable may be declared to be of any data type, as long as the size
   * matches the location (lines 1 3 and 4 of table 17). For example:
@@ -1554,8 +1554,8 @@ void *fill_candidate_datatypes_c::visit(location_c *symbol) {
   */
 
 	symbol->direct_variable->accept(*this);
-	for (unsigned int i = 0; i < symbol->direct_variable->candidate_datatypes.size(); i++) {
-        symbol_c *candidate_datatype = symbol->direct_variable->candidate_datatypes[i];
+	for (unsigned int i = 0; i < symbol->direct_variable->candidate_datatypes().size(); i++) {
+        symbol_c *candidate_datatype = symbol->direct_variable->candidate_datatypes()[i];
         if(get_datatype_info_c::is_ANY_generic_type(candidate_datatype)){
             add_datatype_to_candidate_list(symbol, &get_datatype_info_c::any_type_name);
         } else {
@@ -1617,11 +1617,11 @@ void *fill_candidate_datatypes_c::visit(located_var_decl_c *symbol) {
   symbol->located_var_spec_init->accept(*this);
   symbol->location->accept(*this);
   if (NULL != symbol->variable_name) {
-    symbol->variable_name->candidate_datatypes = symbol->location->candidate_datatypes;
+    symbol->variable_name->candidate_datatypes() = symbol->location->candidate_datatypes();
     intersect_candidate_datatype_list(symbol->variable_name /*origin, dest.*/, symbol->located_var_spec_init /*with*/);
   }
   return NULL;
-}  
+}
 
 
 
@@ -1634,7 +1634,7 @@ void *fill_candidate_datatypes_c::visit(located_var_decl_c *symbol) {
 void *fill_candidate_datatypes_c::visit(function_declaration_c *symbol) {
 	if (debug) printf("Filling candidate data types list of function %s\n", ((token_c *)(symbol->derived_function_name))->value);
 	local_enumerated_value_symtable.reset();
-	current_scope = symbol;	
+	current_scope = symbol;
 	symbol->var_declarations_list->accept(populate_enumvalue_symtable);
 
 	search_var_instance_decl = new search_var_instance_decl_c(symbol);
@@ -1643,7 +1643,7 @@ void *fill_candidate_datatypes_c::visit(function_declaration_c *symbol) {
 	delete search_var_instance_decl;
 	search_var_instance_decl = NULL;
 
-	current_scope = NULL;	
+	current_scope = NULL;
 	local_enumerated_value_symtable.reset();
 	return NULL;
 }
@@ -1654,7 +1654,7 @@ void *fill_candidate_datatypes_c::visit(function_declaration_c *symbol) {
 void *fill_candidate_datatypes_c::visit(function_block_declaration_c *symbol) {
 	if (debug) printf("Filling candidate data types list of FB %s\n", ((token_c *)(symbol->fblock_name))->value);
 	local_enumerated_value_symtable.reset();
-	current_scope = symbol;	
+	current_scope = symbol;
 	symbol->var_declarations->accept(populate_enumvalue_symtable);
 
 	search_var_instance_decl = new search_var_instance_decl_c(symbol);
@@ -1663,13 +1663,13 @@ void *fill_candidate_datatypes_c::visit(function_block_declaration_c *symbol) {
 	delete search_var_instance_decl;
 	search_var_instance_decl = NULL;
 
-	current_scope = NULL;	
+	current_scope = NULL;
 	local_enumerated_value_symtable.reset();
-	
-	/* The FB declaration itself may be used as a dataype! We now do the fill algorithm considering 
+
+	/* The FB declaration itself may be used as a dataype! We now do the fill algorithm considering
 	 * function_block_declaration_c a data type declaration...
 	 */
-	// The next line is essentially equivalent to doing-->  symbol->candidate_datatypes.push_back(symbol);
+	// The next line is essentially equivalent to doing-->  symbol->candidate_datatypes().push_back(symbol);
 	add_datatype_to_candidate_list(symbol, base_type(symbol));
 	return NULL;
 }
@@ -1680,16 +1680,16 @@ void *fill_candidate_datatypes_c::visit(function_block_declaration_c *symbol) {
 void *fill_candidate_datatypes_c::visit(program_declaration_c *symbol) {
 	if (debug) printf("Filling candidate data types list in program %s\n", ((token_c *)(symbol->program_type_name))->value);
 	local_enumerated_value_symtable.reset();
-	current_scope = symbol;	
+	current_scope = symbol;
 	symbol->var_declarations->accept(populate_enumvalue_symtable);
-	
+
 	search_var_instance_decl = new search_var_instance_decl_c(symbol);
 	symbol->var_declarations->accept(*this);
 	symbol->function_block_body->accept(*this);
 	delete search_var_instance_decl;
 	search_var_instance_decl = NULL;
 
-	current_scope = NULL;	
+	current_scope = NULL;
 	local_enumerated_value_symtable.reset();
 	return NULL;
 }
@@ -1703,16 +1703,16 @@ void *fill_candidate_datatypes_c::visit(transition_condition_c *symbol) {
 
 	if (symbol->transition_condition_il != NULL) {
 		symbol->transition_condition_il->accept(*this);
-		for (unsigned int i = 0; i < symbol->transition_condition_il->candidate_datatypes.size(); i++) {
-			condition_type = symbol->transition_condition_il->candidate_datatypes[i];
+		for (unsigned int i = 0; i < symbol->transition_condition_il->candidate_datatypes().size(); i++) {
+			condition_type = symbol->transition_condition_il->candidate_datatypes()[i];
 			if (get_datatype_info_c::is_BOOL_compatible(condition_type))
 				add_datatype_to_candidate_list(symbol, condition_type);
 		}
 	}
 	if (symbol->transition_condition_st != NULL) {
 		symbol->transition_condition_st->accept(*this);
-		for (unsigned int i = 0; i < symbol->transition_condition_st->candidate_datatypes.size(); i++) {
-			condition_type = symbol->transition_condition_st->candidate_datatypes[i];
+		for (unsigned int i = 0; i < symbol->transition_condition_st->candidate_datatypes().size(); i++) {
+			condition_type = symbol->transition_condition_st->candidate_datatypes()[i];
 			if (get_datatype_info_c::is_BOOL_compatible(condition_type))
 				add_datatype_to_candidate_list(symbol, condition_type);
 		}
@@ -1728,7 +1728,7 @@ void *fill_candidate_datatypes_c::visit(configuration_declaration_c *symbol) {
 	current_scope = symbol;
 //	local_enumerated_value_symtable.reset();  // TODO
 //	symbol->global_var_declarations->accept(populate_enumvalue_symtable);  // TODO
-	
+
 	search_var_instance_decl = new search_var_instance_decl_c(symbol);
 	symbol->global_var_declarations          ->accept(*this);
 	symbol->resource_declarations            ->accept(*this); // points to a single_resource_declaration_c or a resource_declaration_list_c
@@ -1738,7 +1738,7 @@ void *fill_candidate_datatypes_c::visit(configuration_declaration_c *symbol) {
 	delete search_var_instance_decl;
 	search_var_instance_decl = NULL;
 
-	current_scope = NULL;	
+	current_scope = NULL;
 //	local_enumerated_value_symtable.reset();  // TODO
 	return NULL;
 }
@@ -1749,11 +1749,11 @@ void *fill_candidate_datatypes_c::visit(resource_declaration_c *symbol) {
 //	local_enumerated_value_symtable.reset();  // TODO-> this must be replaced with local_enumerated_value_symtable.push(), which is not yet implemented for the dsyntable_c!
 	symbol_c *prev_scope = current_scope;
 	current_scope = symbol;
-	/* TODO Enumeration constants may be defined inside a VAR_GLOBAL .. END_VAR variable declaration list. 
+	/* TODO Enumeration constants may be defined inside a VAR_GLOBAL .. END_VAR variable declaration list.
 	 * We currently do not yet consider enumeration values defined in the var declarations inside a resource!
 	 */
 //	symbol->global_var_declarations->accept(populate_enumvalue_symtable);  // TODO!
-	
+
 	search_var_instance_decl_c *prev_search_var_instance_decl = search_var_instance_decl;
 	search_var_instance_decl  = new  search_var_instance_decl_c(symbol);
 	symbol->global_var_declarations->accept(*this);
@@ -1762,7 +1762,7 @@ void *fill_candidate_datatypes_c::visit(resource_declaration_c *symbol) {
 	delete search_var_instance_decl;
 	search_var_instance_decl = prev_search_var_instance_decl;
 
-	current_scope = prev_scope;	
+	current_scope = prev_scope;
 //	local_enumerated_value_symtable.reset();  // TODO-> this must be replaced with local_enumerated_value_symtable.pop(), which is not yet implemented for the dsyntable_c!
 	return NULL;
 }
@@ -1792,7 +1792,7 @@ void *fill_candidate_datatypes_c::visit(instruction_list_c *symbol) {
 	 *          ld 23
 	 *   label1:st byte_var
 	 *          ld 34
-	 *          JMP label1     
+	 *          JMP label1
 	 *
 	 * Note that the second time we run the algorithm, most of the candidate datatypes are already filled
 	 * in, so it will be able to produce tha correct candidate datatypes for the IL instruction referenced
@@ -1829,7 +1829,7 @@ void *fill_candidate_datatypes_c::visit(il_instruction_c *symbol) {
 		prev_il_instruction = NULL;
 
 		/* This object has (inherits) the same candidate datatypes as the il_instruction */
-		symbol->candidate_datatypes = symbol->il_instruction->candidate_datatypes;
+		symbol->candidate_datatypes() = symbol->il_instruction->candidate_datatypes();
 	}
 
 	return NULL;
@@ -1847,7 +1847,7 @@ void *fill_candidate_datatypes_c::visit(il_simple_operation_c *symbol) {
 	symbol->il_simple_operator->accept(*this);
 	il_operand = NULL;
 	/* This object has (inherits) the same candidate datatypes as the il_simple_operator */
-	symbol->candidate_datatypes = symbol->il_simple_operator->candidate_datatypes;
+	symbol->candidate_datatypes() = symbol->il_simple_operator->candidate_datatypes();
 	return NULL;
 }
 
@@ -1869,7 +1869,7 @@ void *fill_candidate_datatypes_c::visit(il_function_call_c *symbol) {
 	symbol->il_operand_list->accept(*this);
 
 	if (NULL != prev_il_instruction) {
-		((list_c *)symbol->il_operand_list)->insert_element(prev_il_instruction, 0);	
+		((list_c *)symbol->il_operand_list)->insert_element(prev_il_instruction, 0);
 
 		generic_function_call_t fcall_param = {
 			/* fcall_param.function_name               = */ symbol->function_name,
@@ -1892,8 +1892,8 @@ void *fill_candidate_datatypes_c::visit(il_function_call_c *symbol) {
 		delete 	symbol->il_operand_list;
 		symbol->il_operand_list = NULL;
 	}
-	
-	if (debug) std::cout << "il_function_call_c [" << symbol->candidate_datatypes.size() << "] result.\n";
+
+	if (debug) std::cout << "il_function_call_c [" << symbol->candidate_datatypes().size() << "] result.\n";
 	return NULL;
 }
 
@@ -1902,7 +1902,7 @@ void *fill_candidate_datatypes_c::visit(il_function_call_c *symbol) {
 // SYM_REF3(il_expression_c, il_expr_operator, il_operand, simple_instr_list);
 void *fill_candidate_datatypes_c::visit(il_expression_c *symbol) {
   symbol_c *prev_il_instruction_backup = prev_il_instruction;
-  
+
   /* Stage2 will insert an artificial (and equivalent) LD <il_operand> to the simple_instr_list if necessary. We can therefore ignore the 'il_operand' entry! */
   // if (NULL != symbol->il_operand)
   //   symbol->il_operand->accept(*this);
@@ -1917,16 +1917,16 @@ void *fill_candidate_datatypes_c::visit(il_expression_c *symbol) {
    */
   if ((NULL != symbol->il_operand) && ((NULL == symbol->simple_instr_list) || (0 == ((list_c *)symbol->simple_instr_list)->n))) ERROR; // stage2 is not behaving as we expect it to!
   if  (NULL != symbol->il_operand)
-    symbol->il_operand->candidate_datatypes = ((list_c *)symbol->simple_instr_list)->get_element(0)->candidate_datatypes;
-  
+    symbol->il_operand->candidate_datatypes() = ((list_c *)symbol->simple_instr_list)->get_element(0)->candidate_datatypes();
+
   /* Now check the if the data type semantics of operation are correct,  */
   il_operand = symbol->simple_instr_list;
   prev_il_instruction = prev_il_instruction_backup;
   symbol->il_expr_operator->accept(*this);
   il_operand = NULL;
-  
+
   /* This object has the same candidate datatypes as the il_expr_operator. */
-  symbol->candidate_datatypes = symbol->il_expr_operator->candidate_datatypes;
+  symbol->candidate_datatypes() = symbol->il_expr_operator->candidate_datatypes();
   return NULL;
 }
 
@@ -1937,7 +1937,7 @@ void *fill_candidate_datatypes_c::visit(il_jump_operation_c *symbol) {
   symbol->il_jump_operator->accept(*this);
   il_operand = NULL;
   /* This object has the same candidate datatypes as the il_jump_operator. */
-  symbol->candidate_datatypes = symbol->il_jump_operator->candidate_datatypes;
+  symbol->candidate_datatypes() = symbol->il_jump_operator->candidate_datatypes();
   return NULL;
 }
 
@@ -1974,9 +1974,9 @@ void *fill_candidate_datatypes_c::visit(il_fb_call_c *symbol) {
 	 *       print_datatypes_error_c, so the code will never reach stage 4!
 	 */
 	symbol->il_call_operator->accept(*this);
-	symbol->candidate_datatypes = symbol->il_call_operator->candidate_datatypes;
+	symbol->candidate_datatypes() = symbol->il_call_operator->candidate_datatypes();
 
-	if (debug) std::cout << "FB [] ==> "  << symbol->candidate_datatypes.size() << " result.\n";
+	if (debug) std::cout << "FB [] ==> "  << symbol->candidate_datatypes().size() << " result.\n";
 	return NULL;
 }
 
@@ -1986,7 +1986,7 @@ void *fill_candidate_datatypes_c::visit(il_fb_call_c *symbol) {
 // SYM_REF2(il_formal_funct_call_c, function_name, il_param_list, symbol_c *called_function_declaration; int extensible_param_count;)
 void *fill_candidate_datatypes_c::visit(il_formal_funct_call_c *symbol) {
 	/* non-standard extension allowing functions with no input parameters => il_param_list may be NULL !!! */
-	if (NULL != symbol->il_param_list) symbol->il_param_list->accept(*this); 
+	if (NULL != symbol->il_param_list) symbol->il_param_list->accept(*this);
 
 	generic_function_call_t fcall_param = {
 		/* fcall_param.function_name               = */ symbol->function_name,
@@ -1999,7 +1999,7 @@ void *fill_candidate_datatypes_c::visit(il_formal_funct_call_c *symbol) {
 	};
 	handle_function_call(symbol, fcall_param);
 
-	if (debug) std::cout << "il_formal_funct_call_c [" << symbol->candidate_datatypes.size() << "] result.\n";
+	if (debug) std::cout << "il_formal_funct_call_c [" << symbol->candidate_datatypes().size() << "] result.\n";
 	return NULL;
 }
 
@@ -2012,14 +2012,14 @@ void *fill_candidate_datatypes_c::visit(il_formal_funct_call_c *symbol) {
 void *fill_candidate_datatypes_c::visit(simple_instr_list_c *symbol) {
   if (symbol->n <= 0)
     return NULL;  /* List is empty! Nothing to do. */
-    
+
   for(int i = 0; i < symbol->n; i++)
     symbol->get_element(i)->accept(*this);
 
   /* This object has (inherits) the same candidate datatypes as the last il_instruction */
-  symbol->candidate_datatypes = symbol->get_element(symbol->n-1)->candidate_datatypes;
-  
-  if (debug) std::cout << "simple_instr_list_c [" << symbol->candidate_datatypes.size() << "] result.\n";
+  symbol->candidate_datatypes() = symbol->get_element(symbol->n-1)->candidate_datatypes();
+
+  if (debug) std::cout << "simple_instr_list_c [" << symbol->candidate_datatypes().size() << "] result.\n";
   return NULL;
 }
 
@@ -2035,7 +2035,7 @@ void *fill_candidate_datatypes_c::visit(il_simple_instruction_c *symbol) {
   prev_il_instruction = NULL;
 
   /* This object has (inherits) the same candidate datatypes as the il_simple_instruction it points to */
-  symbol->candidate_datatypes = symbol->il_simple_instruction->candidate_datatypes;
+  symbol->candidate_datatypes() = symbol->il_simple_instruction->candidate_datatypes();
   return NULL;
 }
 
@@ -2051,20 +2051,20 @@ void *fill_candidate_datatypes_c::visit(il_simple_instruction_c *symbol) {
 /*******************/
 void *fill_candidate_datatypes_c::visit(LD_operator_c *symbol) {
 	if (NULL == il_operand)          return NULL;
-	for(unsigned int i = 0; i < il_operand->candidate_datatypes.size(); i++) {
-		add_datatype_to_candidate_list(symbol, il_operand->candidate_datatypes[i]);
+	for(unsigned int i = 0; i < il_operand->candidate_datatypes().size(); i++) {
+		add_datatype_to_candidate_list(symbol, il_operand->candidate_datatypes()[i]);
 	}
-	if (debug) std::cout << "LD [" <<  il_operand->candidate_datatypes.size() << "] ==> "  << symbol->candidate_datatypes.size() << " result.\n";
+	if (debug) std::cout << "LD [" <<  il_operand->candidate_datatypes().size() << "] ==> "  << symbol->candidate_datatypes().size() << " result.\n";
 	return NULL;
 }
 
 void *fill_candidate_datatypes_c::visit(LDN_operator_c *symbol) {
 	if (NULL == il_operand)          return NULL;
-	for(unsigned int i = 0; i < il_operand->candidate_datatypes.size(); i++) {
-		if      (get_datatype_info_c::is_ANY_BIT_compatible(il_operand->candidate_datatypes[i]))
-			add_datatype_to_candidate_list(symbol, il_operand->candidate_datatypes[i]);
+	for(unsigned int i = 0; i < il_operand->candidate_datatypes().size(); i++) {
+		if      (get_datatype_info_c::is_ANY_BIT_compatible(il_operand->candidate_datatypes()[i]))
+			add_datatype_to_candidate_list(symbol, il_operand->candidate_datatypes()[i]);
 	}
-	if (debug) std::cout << "LDN [" << il_operand->candidate_datatypes.size() << "] ==> "  << symbol->candidate_datatypes.size() << " result.\n";
+	if (debug) std::cout << "LDN [" << il_operand->candidate_datatypes().size() << "] ==> "  << symbol->candidate_datatypes().size() << " result.\n";
 	return NULL;
 }
 
@@ -2073,15 +2073,15 @@ void *fill_candidate_datatypes_c::visit(ST_operator_c *symbol) {
 
 	if (NULL == prev_il_instruction) return NULL;
 	if (NULL == il_operand)          return NULL;
-	for (unsigned int i = 0; i < prev_il_instruction->candidate_datatypes.size(); i++) {
-		for(unsigned int j = 0; j < il_operand->candidate_datatypes.size(); j++) {
-			prev_instruction_type = prev_il_instruction->candidate_datatypes[i];
-			operand_type = il_operand->candidate_datatypes[j];
+	for (unsigned int i = 0; i < prev_il_instruction->candidate_datatypes().size(); i++) {
+		for(unsigned int j = 0; j < il_operand->candidate_datatypes().size(); j++) {
+			prev_instruction_type = prev_il_instruction->candidate_datatypes()[i];
+			operand_type = il_operand->candidate_datatypes()[j];
 			if (get_datatype_info_c::is_type_equal(prev_instruction_type, operand_type))
 				add_datatype_to_candidate_list(symbol, prev_instruction_type);
 		}
 	}
-	if (debug) std::cout << "ST [" << prev_il_instruction->candidate_datatypes.size() << "," << il_operand->candidate_datatypes.size() << "] ==> "  << symbol->candidate_datatypes.size() << " result.\n";
+	if (debug) std::cout << "ST [" << prev_il_instruction->candidate_datatypes().size() << "," << il_operand->candidate_datatypes().size() << "] ==> "  << symbol->candidate_datatypes().size() << " result.\n";
 	return NULL;
 }
 
@@ -2090,15 +2090,15 @@ void *fill_candidate_datatypes_c::visit(STN_operator_c *symbol) {
 
 	if (NULL == prev_il_instruction) return NULL;
 	if (NULL == il_operand)          return NULL;
-	for (unsigned int i = 0; i < prev_il_instruction->candidate_datatypes.size(); i++) {
-		for(unsigned int j = 0; j < il_operand->candidate_datatypes.size(); j++) {
-			prev_instruction_type = prev_il_instruction->candidate_datatypes[i];
-			operand_type = il_operand->candidate_datatypes[j];
+	for (unsigned int i = 0; i < prev_il_instruction->candidate_datatypes().size(); i++) {
+		for(unsigned int j = 0; j < il_operand->candidate_datatypes().size(); j++) {
+			prev_instruction_type = prev_il_instruction->candidate_datatypes()[i];
+			operand_type = il_operand->candidate_datatypes()[j];
 			if (get_datatype_info_c::is_type_equal(prev_instruction_type,operand_type) && get_datatype_info_c::is_ANY_BIT_compatible(operand_type))
 				add_datatype_to_candidate_list(symbol, prev_instruction_type);
 		}
 	}
-	if (debug) std::cout << "STN [" << prev_il_instruction->candidate_datatypes.size() << "," << il_operand->candidate_datatypes.size() << "] ==> "  << symbol->candidate_datatypes.size() << " result.\n";
+	if (debug) std::cout << "STN [" << prev_il_instruction->candidate_datatypes().size() << "," << il_operand->candidate_datatypes().size() << "] ==> "  << symbol->candidate_datatypes().size() << " result.\n";
 	return NULL;
 }
 
@@ -2111,11 +2111,11 @@ void *fill_candidate_datatypes_c::visit(NOT_operator_c *symbol) {
 	 */
 	if (NULL == prev_il_instruction) return NULL;
 	if (NULL != il_operand)          return NULL;
-	for (unsigned int i = 0; i < prev_il_instruction->candidate_datatypes.size(); i++) {
-		if (get_datatype_info_c::is_ANY_BIT_compatible(prev_il_instruction->candidate_datatypes[i]))
-			add_datatype_to_candidate_list(symbol, prev_il_instruction->candidate_datatypes[i]);
+	for (unsigned int i = 0; i < prev_il_instruction->candidate_datatypes().size(); i++) {
+		if (get_datatype_info_c::is_ANY_BIT_compatible(prev_il_instruction->candidate_datatypes()[i]))
+			add_datatype_to_candidate_list(symbol, prev_il_instruction->candidate_datatypes()[i]);
 	}
-	if (debug) std::cout <<  "NOT_operator [" << prev_il_instruction->candidate_datatypes.size() << "] ==> "  << symbol->candidate_datatypes.size() << " result.\n";
+	if (debug) std::cout <<  "NOT_operator [" << prev_il_instruction->candidate_datatypes().size() << "] ==> "  << symbol->candidate_datatypes().size() << " result.\n";
 	return NULL;
 }
 
@@ -2156,16 +2156,16 @@ void *fill_candidate_datatypes_c::visit(  NE_operator_c *symbol) {return handle_
 
 void *fill_candidate_datatypes_c::handle_conditional_il_flow_control_operator(symbol_c *symbol) {
 	if (NULL == prev_il_instruction) return NULL;
-	for (unsigned int i = 0; i < prev_il_instruction->candidate_datatypes.size(); i++) {
-		if (get_datatype_info_c::is_BOOL_compatible(prev_il_instruction->candidate_datatypes[i]))
-			add_datatype_to_candidate_list(symbol, prev_il_instruction->candidate_datatypes[i]);
+	for (unsigned int i = 0; i < prev_il_instruction->candidate_datatypes().size(); i++) {
+		if (get_datatype_info_c::is_BOOL_compatible(prev_il_instruction->candidate_datatypes()[i]))
+			add_datatype_to_candidate_list(symbol, prev_il_instruction->candidate_datatypes()[i]);
 	}
 	return NULL;
 }
 
-void *fill_candidate_datatypes_c::visit(  CAL_operator_c *symbol) {if (NULL != prev_il_instruction) symbol->candidate_datatypes = prev_il_instruction->candidate_datatypes; return NULL;}
-void *fill_candidate_datatypes_c::visit(  RET_operator_c *symbol) {if (NULL != prev_il_instruction) symbol->candidate_datatypes = prev_il_instruction->candidate_datatypes; return NULL;}
-void *fill_candidate_datatypes_c::visit(  JMP_operator_c *symbol) {if (NULL != prev_il_instruction) symbol->candidate_datatypes = prev_il_instruction->candidate_datatypes; return NULL;}
+void *fill_candidate_datatypes_c::visit(  CAL_operator_c *symbol) {if (NULL != prev_il_instruction) symbol->candidate_datatypes() = prev_il_instruction->candidate_datatypes(); return NULL;}
+void *fill_candidate_datatypes_c::visit(  RET_operator_c *symbol) {if (NULL != prev_il_instruction) symbol->candidate_datatypes() = prev_il_instruction->candidate_datatypes(); return NULL;}
+void *fill_candidate_datatypes_c::visit(  JMP_operator_c *symbol) {if (NULL != prev_il_instruction) symbol->candidate_datatypes() = prev_il_instruction->candidate_datatypes(); return NULL;}
 void *fill_candidate_datatypes_c::visit( CALC_operator_c *symbol) {return handle_conditional_il_flow_control_operator(symbol);}
 void *fill_candidate_datatypes_c::visit(CALCN_operator_c *symbol) {return handle_conditional_il_flow_control_operator(symbol);}
 void *fill_candidate_datatypes_c::visit( RETC_operator_c *symbol) {return handle_conditional_il_flow_control_operator(symbol);}
@@ -2191,15 +2191,15 @@ void *fill_candidate_datatypes_c::visit(JMPCN_operator_c *symbol) {return handle
 void *fill_candidate_datatypes_c::visit(deref_expression_c  *symbol) {
   symbol->exp->accept(*this);
 
-  for (unsigned int i = 0; i < symbol->exp->candidate_datatypes.size(); i++) {
+  for (unsigned int i = 0; i < symbol->exp->candidate_datatypes().size(); i++) {
     /* Determine whether the datatype is a ref_spec_c, as this is the class used as the    */
-    /* canonical/base datatype of REF_TO types (see search_base_type_c ...)                */ 
-    ref_spec_c *ref_spec = dynamic_cast<ref_spec_c *>(symbol->exp->candidate_datatypes[i]);
-    
+    /* canonical/base datatype of REF_TO types (see search_base_type_c ...)                */
+    ref_spec_c *ref_spec = dynamic_cast<ref_spec_c *>(symbol->exp->candidate_datatypes()[i]);
+
     if (NULL != ref_spec)
       add_datatype_to_candidate_list(symbol, search_base_type_c::get_basetype_decl(ref_spec->type_name));
   }
-  
+
   return NULL;
 }
 
@@ -2208,26 +2208,26 @@ void *fill_candidate_datatypes_c::visit(deref_expression_c  *symbol) {
 void *fill_candidate_datatypes_c::visit(deref_operator_c  *symbol) {
   symbol->exp->accept(*this);
 
-  for (unsigned int i = 0; i < symbol->exp->candidate_datatypes.size(); i++) {
+  for (unsigned int i = 0; i < symbol->exp->candidate_datatypes().size(); i++) {
     /* Determine whether the datatype is a ref_spec_c, as this is the class used as the    */
-    /* canonical/base datatype of REF_TO types (see search_base_type_c ...)                */ 
-    ref_spec_c *ref_spec = dynamic_cast<ref_spec_c *>(symbol->exp->candidate_datatypes[i]);
-    
+    /* canonical/base datatype of REF_TO types (see search_base_type_c ...)                */
+    ref_spec_c *ref_spec = dynamic_cast<ref_spec_c *>(symbol->exp->candidate_datatypes()[i]);
+
     if (NULL != ref_spec)
       add_datatype_to_candidate_list(symbol, search_base_type_c::get_basetype_decl(ref_spec->type_name));
-    
+
   }
 
   /* Since the deref_operator_c may be used inside structures, we must handle set the 'scope' annotation here too! */
-  symbol->scope = symbol->exp->scope;
-  
+  symbol->scope() = symbol->exp->scope();
+
   return NULL;
 }
 
 
 /* SYM_REF1(ref_expression_c, exp)  --> an extension to the IEC 61131-3 standard - based on the IEC 61131-3 v3 standard. Returns address of the varible! */
 void *fill_candidate_datatypes_c::visit(  ref_expression_c  *symbol) {
-  /* 
+  /*
    * Note that symbol->exp may be an array variable, and these may containg complex
    * expressions that include function calls in their indexes. These complex expressions must also be
    * analysed using the standard fill/narrow algorithm...
@@ -2236,17 +2236,17 @@ void *fill_candidate_datatypes_c::visit(  ref_expression_c  *symbol) {
 
   /* Currently the IEC 61131-3 symtax requires that the REF() operator have as a parameter a lvalue (a variable), that will have
    * at most one candidate_datatype. This means that we do not really need the for() loop here, but we use it
-   * anyway as it is the correct way of implementing the fill/narrow algorithm! 
+   * anyway as it is the correct way of implementing the fill/narrow algorithm!
    */
-  for (unsigned int i = 0; i < symbol->exp->candidate_datatypes.size(); i++) {
+  for (unsigned int i = 0; i < symbol->exp->candidate_datatypes().size(); i++) {
     /* Create a new object of ref_spec_c, as this is the class used as the  */
-    /* canonical/base datatype of REF_TO types (see search_base_type_c ...) */ 
-    ref_spec_c *ref_spec = new ref_spec_c(symbol->exp->candidate_datatypes[i]);
+    /* canonical/base datatype of REF_TO types (see search_base_type_c ...) */
+    ref_spec_c *ref_spec = new ref_spec_c(symbol->exp->candidate_datatypes()[i]);
     add_datatype_to_candidate_list(symbol, ref_spec);
   }
   return NULL;
 }
-    
+
 void *fill_candidate_datatypes_c::visit(   or_expression_c  *symbol) {return handle_binary_expression  (widen_OR_table,  symbol, symbol->l_exp, symbol->r_exp);}
 void *fill_candidate_datatypes_c::visit(   xor_expression_c *symbol) {return handle_binary_expression  (widen_XOR_table, symbol, symbol->l_exp, symbol->r_exp);}
 void *fill_candidate_datatypes_c::visit(   and_expression_c *symbol) {return handle_binary_expression  (widen_AND_table, symbol, symbol->l_exp, symbol->r_exp);}
@@ -2257,7 +2257,7 @@ void *fill_candidate_datatypes_c::visit(    lt_expression_c *symbol) {return han
 void *fill_candidate_datatypes_c::visit(    gt_expression_c *symbol) {return handle_binary_expression  (widen_CMP_table, symbol, symbol->l_exp, symbol->r_exp);}
 void *fill_candidate_datatypes_c::visit(    le_expression_c *symbol) {return handle_binary_expression  (widen_CMP_table, symbol, symbol->l_exp, symbol->r_exp);}
 void *fill_candidate_datatypes_c::visit(    ge_expression_c *symbol) {return handle_binary_expression  (widen_CMP_table, symbol, symbol->l_exp, symbol->r_exp);}
- 
+
 void *fill_candidate_datatypes_c::visit(   add_expression_c *symbol) {return handle_binary_expression  (widen_ADD_table,  symbol, symbol->l_exp, symbol->r_exp);}
 void *fill_candidate_datatypes_c::visit(   sub_expression_c *symbol) {return handle_binary_expression  (widen_SUB_table,  symbol, symbol->l_exp, symbol->r_exp);}
 void *fill_candidate_datatypes_c::visit(   mul_expression_c *symbol) {return handle_binary_expression  (widen_MUL_table,  symbol, symbol->l_exp, symbol->r_exp);}
@@ -2271,17 +2271,17 @@ void *fill_candidate_datatypes_c::visit(neg_expression_c *symbol) {
    *       does not define the its semantics.
    *
    *       We could be tempted to consider that the semantics of the
-   *       'negation' operation are similar/identical to the semantics of the 
+   *       'negation' operation are similar/identical to the semantics of the
    *       SUB expression/operation. This would include assuming that the
    *       possible datatypes for the 'negation' operation is also
    *       the same as those for the SUB expression/operation, namely ANY_MAGNITUDE.
    *
-   *       However, this would then mean that the following ST code would be 
+   *       However, this would then mean that the following ST code would be
    *       syntactically and semantically correct:
    *       VAR uint_var : UINT END_VAR;
    *       uint_var := - (uint_var);
    *
-   *       Assuming uint_var is not 0, the standard states that the above code should result in a 
+   *       Assuming uint_var is not 0, the standard states that the above code should result in a
    *       runtime error since the operation will result in an overflow. Since the above operation
    *       is only valid when uint_var=0, it would probably make more sense for the programmer to
    *       use if (uint_var=0) ..., so we will simply assume that the above statement simply
@@ -2302,22 +2302,22 @@ void *fill_candidate_datatypes_c::visit(neg_expression_c *symbol) {
    * NOTE: The above argument also applies to the neg_integer_c method!
    */
 	symbol->exp->accept(*this);
-	for (unsigned int i = 0; i < symbol->exp->candidate_datatypes.size(); i++) {
-		if (get_datatype_info_c::is_ANY_signed_MAGNITUDE_compatible(symbol->exp->candidate_datatypes[i]))
-			add_datatype_to_candidate_list(symbol, symbol->exp->candidate_datatypes[i]);
+	for (unsigned int i = 0; i < symbol->exp->candidate_datatypes().size(); i++) {
+		if (get_datatype_info_c::is_ANY_signed_MAGNITUDE_compatible(symbol->exp->candidate_datatypes()[i]))
+			add_datatype_to_candidate_list(symbol, symbol->exp->candidate_datatypes()[i]);
 	}
-	if (debug) std::cout << "neg [" << symbol->exp->candidate_datatypes.size() << "] ==> "  << symbol->candidate_datatypes.size() << " result.\n";
+	if (debug) std::cout << "neg [" << symbol->exp->candidate_datatypes().size() << "] ==> "  << symbol->candidate_datatypes().size() << " result.\n";
 	return NULL;
 }
 
 
 void *fill_candidate_datatypes_c::visit(not_expression_c *symbol) {
 	symbol->exp->accept(*this);
-	for (unsigned int i = 0; i < symbol->exp->candidate_datatypes.size(); i++) {
-		if      (get_datatype_info_c::is_ANY_BIT_compatible(symbol->exp->candidate_datatypes[i]))
-			add_datatype_to_candidate_list(symbol, symbol->exp->candidate_datatypes[i]);
+	for (unsigned int i = 0; i < symbol->exp->candidate_datatypes().size(); i++) {
+		if      (get_datatype_info_c::is_ANY_BIT_compatible(symbol->exp->candidate_datatypes()[i]))
+			add_datatype_to_candidate_list(symbol, symbol->exp->candidate_datatypes()[i]);
 	}
-	if (debug) std::cout << "not [" << symbol->exp->candidate_datatypes.size() << "] ==> "  << symbol->candidate_datatypes.size() << " result.\n";
+	if (debug) std::cout << "not [" << symbol->exp->candidate_datatypes().size() << "] ==> "  << symbol->candidate_datatypes().size() << " result.\n";
 	return NULL;
 }
 
@@ -2339,15 +2339,15 @@ void *fill_candidate_datatypes_c::visit(function_invocation_c *symbol) {
 
 	handle_function_call(symbol, fcall_param);
 
-	if (debug) std::cout << "function_invocation_c [" << symbol->candidate_datatypes.size() << "] result.\n";
+	if (debug) std::cout << "function_invocation_c [" << symbol->candidate_datatypes().size() << "] result.\n";
 	return NULL;
 }
 
 void *fill_candidate_datatypes_c::visit(object_method_invocation_c *symbol) {
 	if (symbol->compatibility_invocation == NULL) ERROR;
 	symbol->compatibility_invocation->accept(*this);
-	symbol->candidate_datatypes =
-		symbol->compatibility_invocation->candidate_datatypes;
+	symbol->candidate_datatypes() =
+		symbol->compatibility_invocation->candidate_datatypes();
 	return NULL;
 }
 
@@ -2370,15 +2370,15 @@ void *fill_candidate_datatypes_c::visit(assignment_statement_c *symbol) {
 	symbol_c *left_type, *right_type;
 	symbol->l_exp->accept(*this);
 	symbol->r_exp->accept(*this);
-	for (unsigned int i = 0; i < symbol->l_exp->candidate_datatypes.size(); i++) {
-		for(unsigned int j = 0; j < symbol->r_exp->candidate_datatypes.size(); j++) {
-			left_type = symbol->l_exp->candidate_datatypes[i];
-			right_type = symbol->r_exp->candidate_datatypes[j];
+	for (unsigned int i = 0; i < symbol->l_exp->candidate_datatypes().size(); i++) {
+		for(unsigned int j = 0; j < symbol->r_exp->candidate_datatypes().size(); j++) {
+			left_type = symbol->l_exp->candidate_datatypes()[i];
+			right_type = symbol->r_exp->candidate_datatypes()[j];
 			if (get_datatype_info_c::is_type_equal(left_type, right_type))
 				add_datatype_to_candidate_list(symbol, left_type);  // NOTE: Must use left_type, as the right_type may be the 'NULL' reference! (see comment in visit(ref_value_null_literal_c)) */
 		}
 	}
-	if (debug) std::cout << ":= [" << symbol->l_exp->candidate_datatypes.size() << "," << symbol->r_exp->candidate_datatypes.size() << "] ==> "  << symbol->candidate_datatypes.size() << " result.\n";
+	if (debug) std::cout << ":= [" << symbol->l_exp->candidate_datatypes().size() << "," << symbol->r_exp->candidate_datatypes().size() << "] ==> "  << symbol->candidate_datatypes().size() << " result.\n";
 	return NULL;
 }
 
@@ -2389,7 +2389,7 @@ void *fill_candidate_datatypes_c::visit(fb_invocation_c *symbol) {
 	symbol_c *fb_decl = search_var_instance_decl->get_basetype_decl(symbol->fb_name);
 	if (! get_datatype_info_c::is_function_block(fb_decl )) fb_decl = NULL;
 	if (NULL == fb_decl) ERROR; /* Although a call to a non-declared FB is a semantic error, this is currently caught by stage 2! */
-	
+
 	if (symbol->   formal_param_list != NULL) symbol->formal_param_list->accept(*this);
 	if (symbol->nonformal_param_list != NULL) symbol->nonformal_param_list->accept(*this);
 
@@ -2399,7 +2399,7 @@ void *fill_candidate_datatypes_c::visit(fb_invocation_c *symbol) {
 	 */
 	symbol->called_fb_declaration = fb_decl;
 
-	if (debug) std::cout << "FB [] ==> "  << symbol->candidate_datatypes.size() << " result.\n";
+	if (debug) std::cout << "FB [] ==> "  << symbol->candidate_datatypes().size() << " result.\n";
 	return NULL;
 }
 

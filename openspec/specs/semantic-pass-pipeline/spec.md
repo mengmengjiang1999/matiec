@@ -70,10 +70,10 @@ analysis store before dependent passes execute.
 
 ### Requirement: Datatype candidates are context-owned
 
-After candidate filling completes, the compiler SHALL publish each arena node's
-ordered candidate datatype vector into the active context's typed analysis store
-before narrowing executes. Narrowing and later consumers SHALL read that completed
-vector from the typed record without production AST materialization.
+Candidate filling SHALL update each arena node's ordered candidate datatype
+vector directly in the active context's typed analysis store before narrowing
+executes. Narrowing and later consumers SHALL read that live completed vector
+without an AST field or publication traversal.
 
 #### Scenario: Candidate types are inferred
 
@@ -89,14 +89,14 @@ vector from the typed record without production AST materialization.
 #### Scenario: Narrowing executes
 
 - **WHEN** narrowing requests a completed candidate vector
-- **THEN** it obtains the vector from the datatype record without requiring an AST copy
+- **THEN** it obtains the vector from the datatype record without requiring an AST field or copy
 
 ### Requirement: Selected datatypes are context-owned
 
-After narrowing and forced narrowing complete, the compiler SHALL publish each
-arena node's selected datatype and scope into the active context's datatype record
-before dependent semantic passes execute. Downstream passes SHALL consume those
-fields from the completed record without production AST materialization.
+Narrowing and forced narrowing SHALL update each arena node's selected datatype
+and scope directly in the active context's datatype record. The compiler SHALL
+validate the completed persistent records before dependent semantic passes run,
+and downstream passes SHALL consume those fields without AST storage.
 
 #### Scenario: Narrowing selects a datatype
 
@@ -111,12 +111,12 @@ fields from the completed record without production AST materialization.
 #### Scenario: A downstream semantic consumer executes
 
 - **WHEN** a pass after narrowing requests selected datatype or scope
-- **THEN** it obtains the completed value from the datatype record without requiring AST copy-back
+- **THEN** it obtains the completed value from the datatype record without an AST field or copy-back
 
 #### Scenario: A producer uses a transient node
 
-- **WHEN** a datatype producer creates a stack-local or canonical node without a datatype record
-- **THEN** typed access falls back to that node's producer-local AST field
+- **WHEN** a datatype producer uses a stack-local or immutable shared node that cannot be a persistent record key
+- **THEN** its working datatype state is retained only in the active context's transient datatype table
 
 ### Requirement: Declaration resolution is context-owned
 

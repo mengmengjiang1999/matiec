@@ -69,7 +69,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
     {
       search_varfb_instance_type = new search_varfb_instance_type_c(scope);
       search_var_instance_decl   = new search_var_instance_decl_c  (scope);
-      
+
       this->set_variable_prefix(variable_prefix);
       fcall_number = 0;
       fbname = name;
@@ -108,7 +108,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
       }
 
       s4o.print(s4o.indent_spaces);
-      s4o.print("static inline ");      
+      s4o.print("static inline ");
       function_type_prefix->accept(*this);
       s4o.print(" __");
       fbname->accept(*this);
@@ -420,9 +420,9 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
     // SYM_REF2(il_instruction_c, label, il_instruction)
     void *visit(il_instruction_c *symbol) {
       /* all previous IL instructions should have the same datatype (checked in stage3), so we get the datatype from the first previous IL instruction we find */
-      implicit_variable_current.datatype = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_selected_datatype(matiec::analysis_flow_predecessors(symbol)[0]);
-      if (NULL != symbol->il_instruction)  symbol->il_instruction->accept(*this); 
-      implicit_variable_current.datatype = NULL;
+      implicit_variable_current.datatype() = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_selected_datatype(matiec::analysis_flow_predecessors(symbol)[0]);
+      if (NULL != symbol->il_instruction)  symbol->il_instruction->accept(*this);
+      implicit_variable_current.datatype() = NULL;
       return NULL;
     }
 
@@ -435,14 +435,14 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
     }
 
     /*  il_jump_operator label */
-    // SYM_REF2(il_jump_operation_c, il_jump_operator, label)    
+    // SYM_REF2(il_jump_operation_c, il_jump_operator, label)
     void *visit(il_jump_operation_c *symbol) {
       return NULL;
     }
 
     void *visit(il_function_call_c *symbol) {
       symbol_c* function_type_prefix = NULL;
-      symbol_c* function_name = NULL;     
+      symbol_c* function_name = NULL;
       symbol_c* function_type_suffix = NULL;
       DECLARE_PARAM_LIST()
 
@@ -453,22 +453,22 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
       function_declaration_c *f_decl = resolution == NULL ? NULL :
           (function_declaration_c *)resolution->declaration;
       if (f_decl == NULL) ERROR;
-      
+
       /* determine the base data type returned by the function being called... */
       function_type_prefix = search_base_type_c::get_basetype_decl(f_decl->type_name);
-      
-      function_name = symbol->function_name;      
-      
+
+      function_name = symbol->function_name;
+
       /* loop through each function parameter, find the value we should pass
        * to it, and then output the c equivalent...
        */
-      
+
       function_param_iterator_c fp_iterator(f_decl);
       identifier_c *param_name;
         /* flag to remember whether we have already used the value stored in the default variable to pass to the first parameter */
-      bool used_defvar = false;       
+      bool used_defvar = false;
         /* flag to cirreclty handle calls to extensible standard functions (i.e. functions with variable number of input parameters) */
-      bool found_first_extensible_parameter = false;  
+      bool found_first_extensible_parameter = false;
       for(int i = 1; (param_name = fp_iterator.next()) != NULL; i++) {
         if (fp_iterator.is_extensible_param() && (!found_first_extensible_parameter)) {
           /* We are calling an extensible function. Before passing the extensible
@@ -494,14 +494,14 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
           ADD_PARAM_LIST(param_name, param_value, param_type, function_param_iterator_c::direction_in)
           found_first_extensible_parameter = true;
         }
-    
+
         symbol_c *param_type = fp_iterator.param_type();
         if (param_type == NULL) ERROR;
-      
+
         function_param_iterator_c::param_direction_t param_direction = fp_iterator.param_direction();
-      
+
         symbol_c *param_value = NULL;
-      
+
         /* Get the value from a foo(<param_name> = <param_value>) style call */
         /* NOTE: the following line of code is not required in this case, but it doesn't
          * harm to leave it in, as in the case of a non-formal syntax function call,
@@ -521,7 +521,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
          * use the default variable as a source of data to pass to those parameters!
          */
         if ((param_value == NULL) && (!used_defvar) && !fp_iterator.is_en_eno_param_implicit()) {
-	  if (NULL == implicit_variable_current.datatype) ERROR;
+	  if (NULL == implicit_variable_current.datatype()) ERROR;
           param_value = &this->implicit_variable_current;
           used_defvar = true;
         }
@@ -530,7 +530,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
         if ((param_value == NULL) && !fp_iterator.is_en_eno_param_implicit()) {
           param_value = function_call_param_iterator.next_nf();
         }
-        
+
         /* if no more parameter values in function call, and the current parameter
          * of the function declaration is an extensible parameter, we
          * have reached the end, and should simply jump out of the for loop.
@@ -538,7 +538,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
         if ((param_value == NULL) && (fp_iterator.is_extensible_param())) {
           break;
         }
-      
+
         /* We do not yet support embedded IL lists, so we abort the compiler if we find one */
         /* Note that in IL function calls the syntax does not allow embeded IL lists, so this check is not necessary here! */
         /*
@@ -552,7 +552,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
           /* First check whether default value specified in function declaration...*/
           param_value = fp_iterator.default_value();
         }
-      
+
         ADD_PARAM_LIST(param_name, param_value, param_type, fp_iterator.param_direction())
       } /* for(...) */
 
@@ -573,9 +573,9 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
       /* (fdecl_mutiplicity > 1)  => calling overloaded function */
       int fdecl_mutiplicity =  function_symtable.count(symbol->function_name);
       if (fdecl_mutiplicity == 0) ERROR;
-      if (fdecl_mutiplicity == 1) 
+      if (fdecl_mutiplicity == 1)
         /* function being called is NOT overloaded! */
-        f_decl = NULL; 
+        f_decl = NULL;
 
       if (has_output_params)
         generate_inline(function_name, function_type_prefix, function_type_suffix, param_list, f_decl);
@@ -593,17 +593,17 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
        * Notice that they will be overwriten while processing the parenthsized instruction list.
        */
       // il_default_variable_c old_implicit_variable_current = this->implicit_variable_current;      // no longer needed as we do not call symbol->il_expr_operator->accept(*this);
-      
+
       /* Stage2 will insert an artificial (and equivalent) LD <il_operand> to the simple_instr_list if necessary. We can therefore ignore the 'il_operand' entry! */
       //if (NULL != symbol->il_operand) { do nothing!! }
 
       /* Now do the parenthesised instructions... */
-      /* NOTE: the following code line will get the variable this->implicit_variable_current.datatype updated!  */
+      /* NOTE: the following code line will get the variable this->implicit_variable_current.datatype() updated!  */
       symbol->simple_instr_list->accept(*this);
 
       /* Now do the operation, using the previous result! */
       /* NOTE: Actually, we do not need to call this, as it can never be a function call, which is what we are handling here... */
-      // this->implicit_variable_current.datatype = old_current_default_variable_data_type;
+      // this->implicit_variable_current.datatype() = old_current_default_variable_data_type;
       // symbol->il_expr_operator->accept(*this);
       return NULL;
     }
@@ -628,7 +628,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
       /* determine the base data type returned by the function being called... */
       function_type_prefix = search_base_type_c::get_basetype_decl(f_decl->type_name);
       if (NULL == function_type_prefix) ERROR;
-      
+
       function_name = symbol->function_name;
 
       /* loop through each function parameter, find the value we should pass
@@ -664,9 +664,9 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
           ADD_PARAM_LIST(param_name, param_value, param_type, function_param_iterator_c::direction_in)
           found_first_extensible_parameter = true;
         }
-        
+
         bool is_variadic_position = false;
-        if (fp_iterator.is_extensible_param()) {      
+        if (fp_iterator.is_extensible_param()) {
           /* since we are handling an extensible parameter, we must add the index to the
            * parameter name so we can go looking for the value passed to the correct
            * extended parameter (e.g. IN1, IN2, IN3, IN4, ...)
@@ -679,18 +679,18 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
           /* In the C runtime, the first extensible param is named (op1), the rest go through ... */
           is_variadic_position = (fp_iterator.extensible_param_index() > fp_iterator.first_extensible_param_index());
         }
-    
+
         symbol_c *param_type = fp_iterator.param_type();
         if (param_type == NULL) ERROR;
-      
+
         function_param_iterator_c::param_direction_t param_direction = fp_iterator.param_direction();
-      
+
         symbol_c *param_value = NULL;
-      
+
         /* Get the value from a foo(<param_name> = <param_value>) style call */
         if (param_value == NULL)
           param_value = function_call_param_iterator.search_f(param_name);
-      
+
         /* Get the value from a foo(<param_value>) style call */
         /* NOTE: the following line of code is not required in this case, but it doesn't
          * harm to leave it in, as in the case of a formal syntax function call,
@@ -702,7 +702,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
         if ((param_value == NULL) && !fp_iterator.is_en_eno_param_implicit()) {
           param_value = function_call_param_iterator.next_nf();
         }
-        
+
         /* if no more parameter values in function call, and the current parameter
          * of the function declaration is an extensible parameter, we
          * have reached the end, and should simply jump out of the for loop.
@@ -710,7 +710,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
         if ((param_value == NULL) && (fp_iterator.is_extensible_param())) {
           break;
         }
-        
+
         /* We do not yet support embedded IL lists, so we abort the compiler if we find one */
         {simple_instr_list_c *instruction_list = dynamic_cast<simple_instr_list_c *>(param_value);
          if (NULL != instruction_list) STAGE4_ERROR(param_value, param_value, "The compiler does not yet support formal invocations in IL that contain embedded IL lists. Aborting!");
@@ -742,9 +742,9 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
       /* (fdecl_mutiplicity > 1)  => calling overloaded function */
       int fdecl_mutiplicity =  function_symtable.count(symbol->function_name);
       if (fdecl_mutiplicity == 0) ERROR;
-      if (fdecl_mutiplicity == 1) 
+      if (fdecl_mutiplicity == 1)
         /* function being called is NOT overloaded! */
-        f_decl = NULL; 
+        f_decl = NULL;
 
       if (has_output_params)
         generate_inline(function_name, function_type_prefix, function_type_suffix, param_list, f_decl);
@@ -763,10 +763,10 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
     // SYM_REF1(il_simple_instruction_c, il_simple_instruction, symbol_c *prev_il_instruction;)
     void *visit(il_simple_instruction_c *symbol) {
       /* all previous IL instructions should have the same datatype (checked in stage3), so we get the datatype from the first previous IL instruction we find */
-      implicit_variable_current.datatype = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_selected_datatype(matiec::analysis_flow_predecessors(symbol)[0]);
+      implicit_variable_current.datatype() = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_selected_datatype(matiec::analysis_flow_predecessors(symbol)[0]);
       symbol->il_simple_instruction->accept(*this);
-      implicit_variable_current.datatype = NULL;
-      return NULL;      
+      implicit_variable_current.datatype() = NULL;
+      return NULL;
     }
 
 
@@ -797,7 +797,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
       if (NULL != symbol->   formal_param_list) parameter_assignment_list = symbol->   formal_param_list;
       if (NULL != symbol->nonformal_param_list) parameter_assignment_list = symbol->nonformal_param_list;
       // NOTE-> We support the non-standard feature of POUS with no in, out and inout parameters, so this is no longer an internal error!
-      // if (NULL == parameter_assignment_list) ERROR; 
+      // if (NULL == parameter_assignment_list) ERROR;
 
       function_call_param_iterator_c function_call_param_iterator(symbol);
 
@@ -819,7 +819,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
       function_param_iterator_c fp_iterator(f_decl);
       identifier_c *param_name;
         /* flag to cirreclty handle calls to extensible standard functions (i.e. functions with variable number of input parameters) */
-      bool found_first_extensible_parameter = false;  
+      bool found_first_extensible_parameter = false;
       for(int i = 1; (param_name = fp_iterator.next()) != NULL; i++) {
         if (fp_iterator.is_extensible_param() && (!found_first_extensible_parameter)) {
           /* We are calling an extensible function. Before passing the extensible
@@ -845,9 +845,9 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
           ADD_PARAM_LIST(param_name, param_value, param_type, function_param_iterator_c::direction_in)
           found_first_extensible_parameter = true;
         }
-    
+
         bool is_variadic_position = false;
-        if (fp_iterator.is_extensible_param()) {      
+        if (fp_iterator.is_extensible_param()) {
           /* since we are handling an extensible parameter, we must add the index to the
            * parameter name so we can go looking for the value passed to the correct
            * extended parameter (e.g. IN1, IN2, IN3, IN4, ...)
@@ -860,14 +860,14 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
           /* In the C runtime, the first extensible param is named (op1), the rest go through ... */
           is_variadic_position = (fp_iterator.extensible_param_index() > fp_iterator.first_extensible_param_index());
         }
-        
+
         symbol_c *param_type = fp_iterator.param_type();
         if (param_type == NULL) ERROR;
 
         function_param_iterator_c::param_direction_t param_direction = fp_iterator.param_direction();
 
         symbol_c *param_value = NULL;
-    
+
         /* Get the value from a foo(<param_name> = <param_value>) style call */
         if (param_value == NULL)
           param_value = function_call_param_iterator.search_f(param_name);
@@ -876,7 +876,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
         if ((param_value == NULL) && !fp_iterator.is_en_eno_param_implicit()) {
           param_value = function_call_param_iterator.next_nf();
         }
-        
+
         /* if no more parameter values in function call, and the current parameter
          * of the function declaration is an extensible parameter, we
          * have reached the end, and should simply jump out of the for loop.
@@ -884,7 +884,7 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
         if ((param_value == NULL) && (fp_iterator.is_extensible_param())) {
           break;
         }
-    
+
         if ((param_value == NULL) && (param_direction == function_param_iterator_c::direction_in)) {
           /* No value given for parameter, so we must use the default... */
           /* First check whether default value specified in function declaration...*/
@@ -912,9 +912,9 @@ class generate_c_inlinefcall_c: public generate_c_base_and_typeid_c {
       /* (fdecl_mutiplicity > 1)  => calling overloaded function */
       int fdecl_mutiplicity =  function_symtable.count(symbol->function_name);
       if (fdecl_mutiplicity == 0) ERROR;
-      if (fdecl_mutiplicity == 1) 
+      if (fdecl_mutiplicity == 1)
         /* function being called is NOT overloaded! */
-        f_decl = NULL; 
+        f_decl = NULL;
 
       if (has_output_params)
         generate_inline(function_name, function_type_prefix, function_type_suffix, param_list, f_decl);
