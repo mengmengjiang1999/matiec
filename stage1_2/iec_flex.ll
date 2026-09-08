@@ -149,13 +149,13 @@
 /* Variable defined by the bison parser,
  * where the value of the tokens will be stored
  */
-extern YYSTYPE yylval;
+extern thread_local YYSTYPE yylval;
 
 /* The name of the file currently being parsed...
  * Note that flex accesses and updates this global variable
  * apropriately whenever it comes across an (*#include <filename> *) directive...
  */
-const char *current_filename = NULL;
+thread_local const char *current_filename = NULL;
 
 
 
@@ -565,7 +565,7 @@ file_include_pragma			{file_include_pragma_beg}{file_include_pragma_filename}{fi
  *       Nevertheless this is still OK, as we are only interested in the relative
  *       ordering of tokens...
  */
-static long int current_order = 0;
+static thread_local long int current_order = 0;
   
 typedef struct {
     int eof;
@@ -588,12 +588,12 @@ typedef struct {
 	  const char *filename;
 	} include_stack_t;
 
-tracking_t * current_tracking = NULL;
-tracking_t  previous_tracking;
-include_stack_t include_stack[MAX_INCLUDE_DEPTH];
-int include_stack_ptr = 0;
+thread_local tracking_t * current_tracking = NULL;
+thread_local tracking_t  previous_tracking;
+thread_local include_stack_t include_stack[MAX_INCLUDE_DEPTH];
+thread_local int include_stack_ptr = 0;
 
-const char *INCLUDE_DIRECTORIES[] = {
+thread_local const char *INCLUDE_DIRECTORIES[] = {
 	DEFAULT_LIBDIR,
 	".",
 	"/lib",
@@ -2241,9 +2241,9 @@ void unput_and_mark(const char mark_char) {
  * the body_state.
  */
 /* The buffer used by the body_state state */
-char *bodystate_buffer        = NULL;
-bool  bodystate_is_whitespace = 1; // TRUE (1) if buffer is empty, or only contains whitespace.
-tracking_t bodystate_init_tracking;
+thread_local char *bodystate_buffer        = NULL;
+thread_local bool  bodystate_is_whitespace = 1; // TRUE (1) if buffer is empty, or only contains whitespace.
+thread_local tracking_t bodystate_init_tracking;
 
 /* append text to bodystate_buffer */
 void  append_bodystate_buffer(const char *text, int is_whitespace) {
@@ -2377,7 +2377,7 @@ FILE *parse_source_as(const char *source, size_t size,
 #include "../util/symtable.hh"
 
 yystype yylval;
-YYLTYPE yylloc;
+thread_local YYLTYPE yylloc;
 
 
 

@@ -50,6 +50,8 @@
 
 /* file with the declarations of symbol tables... */
 #include "../util/symtable.hh"
+#include "../compiler/parser_state.hh"
+#include "../compiler/parser_symbol_tables.hh"
 #include "stage1_2.hh"
 
 
@@ -212,19 +214,22 @@ void rst_pop_state(void);
  *       <configuration_name , configuration_decl>
  */
 typedef symtable_c<int>             library_element_symtable_t;
-extern  library_element_symtable_t  library_element_symtable;
+#define library_element_symtable \
+  (::matiec::active_parser_state().symbols().library_elements)
 
 /* A symbol table to store the declared variables of
  * the function currently being parsed...
  */
 typedef symtable_c<int>             variable_name_symtable_t;
-extern  variable_name_symtable_t    variable_name_symtable;
+#define variable_name_symtable \
+  (::matiec::active_parser_state().symbols().variable_names)
 
 /* A symbol table to store the declared direct variables of
  * the function currently being parsed...
  */
 typedef symtable_c<int>             direct_variable_symtable_t;
-extern  direct_variable_symtable_t  direct_variable_symtable;
+#define direct_variable_symtable \
+  (::matiec::active_parser_state().symbols().direct_variables)
 
 /* Function only called from within flex!
  *

@@ -1,4 +1,5 @@
 #include "compiler/parser_state.hh"
+#include "compiler/parser_symbol_tables.hh"
 
 namespace matiec {
 namespace {
@@ -6,7 +7,12 @@ thread_local ParserState *current_parser_state = nullptr;
 thread_local ParserState fallback_parser_state;
 }  // namespace
 
-void ParserState::reset_transient() {
+ParserState::ParserState() : symbols_(new ParserSymbolTables) {}
+
+ParserState::~ParserState() = default;
+
+void ParserState::reset_for_parse() {
+  symbols_->clear();
   preparse = false;
   goto_body = false;
   goto_sfc_qualifier = false;
@@ -14,6 +20,10 @@ void ParserState::reset_transient() {
   goto_task_init = false;
   pop_state = false;
 }
+
+ParserSymbolTables &ParserState::symbols() { return *symbols_; }
+
+const ParserSymbolTables &ParserState::symbols() const { return *symbols_; }
 
 ActiveParserStateScope::ActiveParserStateScope(ParserState &state)
     : previous_(current_parser_state) {

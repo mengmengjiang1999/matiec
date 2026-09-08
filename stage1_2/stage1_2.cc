@@ -117,31 +117,6 @@ int  get_pop_state(void) {return matiec::active_parser_state().pop_state;}
 void rst_pop_state(void) {matiec::active_parser_state().pop_state = false;}
 
 
-/*********************************/
-/* The global symbol tables...   */
-/*********************************/
-/* NOTE: only accessed indirectly by the lexical parser (flex)
- *       through the function get_identifier_token()
- */
-/* A symbol table to store all the library elements */
-/* e.g.: <function_name , function_decl>
- *       <fb_name , fb_decl>
- *       <type_name , type_decl>
- *       <program_name , program_decl>
- *       <configuration_name , configuration_decl>
- */
-/* static */ library_element_symtable_t library_element_symtable;
-
-/* A symbol table to store the declared variables of
- * the function currently being parsed...
- */
-/* static */ variable_name_symtable_t   variable_name_symtable;
-
-/* A symbol table to store the declared direct variables of
- * the function currently being parsed...
- */
-/* static */ direct_variable_symtable_t direct_variable_symtable;
-
 /* Function only called from within flex!
  *
  * search for a symbol in either of the two symbol tables

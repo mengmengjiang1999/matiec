@@ -30,9 +30,11 @@ strings from that compilation. Do not retain AST pointers after the context is
 destroyed.
 
 Two compilations may run sequentially in one process with separate contexts.
-The generated Flex/Bison frontend and legacy symbol-table initialization are
-still synchronous compatibility boundaries and are not thread-safe. Their
-remaining process-wide state is documented in
+The generated Flex/Bison frontend may also parse independent contexts
+concurrently on separate threads: its mutable session data is thread-local and
+its classification tables are context-owned. Full-pipeline parallel compilation
+is not yet a supported API because direct AST construction still depends on an
+active arena compatibility binding. The remaining boundary is documented in
 `docs/architecture/legacy-global-state-adapters.md`.
 
 ## Pipeline

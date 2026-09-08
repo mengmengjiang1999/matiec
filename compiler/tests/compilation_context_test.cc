@@ -1,4 +1,5 @@
 #include "compiler/compilation_context.hh"
+#include "compiler/parser_symbol_tables.hh"
 
 #include <cassert>
 
@@ -61,10 +62,15 @@ int main() {
   }
   first.parser_state().options.pre_parsing = true;
   first.parser_state().goto_body = true;
+  first.parser_state().symbols().library_elements.insert("FirstProgram", 1);
   assert(!second.parser_state().options.pre_parsing);
   assert(!second.parser_state().goto_body);
-  first.parser_state().reset_transient();
+  assert(second.parser_state().symbols().library_elements.find("FirstProgram") ==
+         second.parser_state().symbols().library_elements.end());
+  first.parser_state().reset_for_parse();
   assert(!first.parser_state().goto_body);
+  assert(first.parser_state().symbols().library_elements.find("FirstProgram") ==
+         first.parser_state().symbols().library_elements.end());
   {
     matiec::ActiveParserStateScope first_scope(first.parser_state());
     assert(&matiec::active_parser_state() == &first.parser_state());

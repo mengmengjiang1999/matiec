@@ -24,6 +24,7 @@ mutate caller-provided options.
 - **WHEN** separate contexts compile sources containing different declarations
 - **THEN** each context exposes only the declaration metadata and symbol-table
   entries from its own source
+
 ### Requirement: Thin executable boundary
 The command-line executable SHALL translate arguments into compiler options, invoke the compiler API, render diagnostics, and choose the final process status without implementing compiler phases itself.
 
@@ -74,13 +75,16 @@ next compilation.
 
 ### Requirement: Parser state is context-owned
 
-Each compilation context SHALL own its parser runtime options and transient lexer
-transition controls, and SHALL reset transient controls before parsing.
+Each compilation context SHALL own its parser runtime options, transient lexer
+transition controls, and parser classification tables, and SHALL reset transient
+controls and classification entries before parsing.
 
 #### Scenario: Parser contexts coexist
 
-- **WHEN** two contexts configure different parser options
-- **THEN** each context retains its own option values and transition controls
+- **WHEN** two contexts configure different parser options and parse different
+  declarations
+- **THEN** each context retains only its own option values, transition controls,
+  and classification entries
 
 #### Scenario: Parser adapter scopes nest
 

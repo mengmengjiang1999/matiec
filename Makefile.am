@@ -20,6 +20,7 @@ TESTS = \
 	enumeration_analysis_store_test \
 	generator_analysis_store_test \
 	sequential_compilation_test \
+	concurrent_frontend_test \
 	in_memory_generator_test \
 	tests/generated_c/runtests \
 	tests/initialization/runtests \
@@ -46,11 +47,13 @@ EXTRA_DIST = \
 	tests/cli/profile-fixtures/object-method-private.st \
 	tests/cli/profile-fixtures/object-method-unknown.st \
 	compiler/experimental_syntax_model.hh \
+	compiler/parser_symbol_tables.hh \
 	tests/generated_c/runtests \
 	tests/initialization/ok_array_scalar.st \
 	tests/syntax/sfc/sfc.txt \
 	tests/sanitizers/runtests \
 	config/revision.sh \
+	config/thread_localize_generated_frontend.pl \
 	.git_archival.txt
 
 .PHONY: check-asan check-ubsan
@@ -94,7 +97,7 @@ iec2c_SOURCES = main.cc
 
 iec2iec_SOURCES = main.cc
 
-check_PROGRAMS = modern_library_registry_test flow_analysis_store_test constant_analysis_store_test datatype_analysis_store_test resolution_analysis_store_test enumeration_analysis_store_test generator_analysis_store_test sequential_compilation_test in_memory_generator_test
+check_PROGRAMS = modern_library_registry_test flow_analysis_store_test constant_analysis_store_test datatype_analysis_store_test resolution_analysis_store_test enumeration_analysis_store_test generator_analysis_store_test sequential_compilation_test concurrent_frontend_test in_memory_generator_test
 
 modern_library_registry_test_SOURCES = \
 	tests/compiler/modern_library_registry_test.cc
@@ -127,6 +130,12 @@ generator_analysis_store_test_LDADD = $(iec2c_LDADD)
 sequential_compilation_test_SOURCES = \
 	tests/compiler/sequential_compilation_test.cc
 sequential_compilation_test_LDADD = $(iec2c_LDADD)
+
+concurrent_frontend_test_SOURCES = \
+	tests/compiler/concurrent_frontend_test.cc
+concurrent_frontend_test_CXXFLAGS = $(AM_CXXFLAGS) -pthread
+concurrent_frontend_test_LDFLAGS = -pthread
+concurrent_frontend_test_LDADD = $(iec2c_LDADD)
 
 in_memory_generator_test_SOURCES = \
 	tests/compiler/in_memory_generator_test.cc

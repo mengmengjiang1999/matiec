@@ -1,6 +1,8 @@
 #ifndef MATIEC_COMPILER_PARSER_STATE_HH
 #define MATIEC_COMPILER_PARSER_STATE_HH
 
+#include <memory>
+
 struct runtime_options_t {
   bool allow_void_datatype = false;
   bool allow_missing_var_in = false;
@@ -22,7 +24,15 @@ struct runtime_options_t {
 
 namespace matiec {
 
+class ParserSymbolTables;
+
 struct ParserState {
+  ParserState();
+  ~ParserState();
+
+  ParserState(const ParserState &) = delete;
+  ParserState &operator=(const ParserState &) = delete;
+
   runtime_options_t options;
   bool preparse = false;
   bool goto_body = false;
@@ -31,7 +41,12 @@ struct ParserState {
   bool goto_task_init = false;
   bool pop_state = false;
 
-  void reset_transient();
+  void reset_for_parse();
+  ParserSymbolTables &symbols();
+  const ParserSymbolTables &symbols() const;
+
+ private:
+  std::unique_ptr<ParserSymbolTables> symbols_;
 };
 
 class ActiveParserStateScope {

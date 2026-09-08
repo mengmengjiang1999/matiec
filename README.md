@@ -227,7 +227,10 @@ flowchart LR
 store, parser state, source manager, and output manager for one compilation. The source manager accepts either a path or
 owned source bytes with an independent diagnostic display name. Destroying the context releases its AST
 nodes and retained parser strings. Separate contexts support repeated,
-sequential compilations without leaking state between runs.
+sequential compilations without leaking state between runs. The generated
+frontend also supports overlapping parses for independent contexts on separate
+threads; full parallel compilation becomes a supported API after the remaining
+AST-allocation compatibility binding is removed and end-to-end coverage lands.
 
 Semantic flow, constants, datatype candidates, final datatype/scope selections,
 invocation declaration resolution, and scope-specific enumeration tables are
@@ -277,11 +280,12 @@ available at the generator-component boundary.
 
 ### Legacy code is contained
 
-Parser runtime options and transition controls are context-owned. The generated
-Flex/Bison scanner buffers, include stack, Bison lookahead, and legacy symbol
-tables still have process-wide compatibility state isolated behind
-`LegacyGlobalStateAdapter`; parallel compilation in one process is therefore not
-supported yet.
+Parser runtime options, transition controls, and classification tables are
+context-owned. Mutable Flex/Bison scanner and parser session variables are
+thread-local and clean builds verify that transformation before compiling the
+generated sources. `LegacyGlobalStateAdapter` still supplies the active parser
+context, while legacy direct AST construction uses a temporary thread-local arena
+binding. A public parallel compilation API is therefore not supported yet.
 
 ## Embed from C++
 
@@ -399,7 +403,7 @@ ownership, or memory-lifetime changes.
 
 ## Roadmap boundaries
 
-- Reentrant generated frontend and parallel in-process compilation
+- Explicit parser AST allocation and supported parallel in-process compilation
 - Versioned embedding API/ABI
 - Direct graphical FBD and LD input
 - Validation against later IEC 61131-3 editions
@@ -413,15 +417,13 @@ results stay in `AnalysisStore`, and all semantic and generator result fields
 have been removed from the AST. Stage 3 and Stage 4 receive the owning context's
 store explicitly, without a compatibility result store or ambient binding.
 
-The reentrancy boundary is now the active architecture track. The remaining
-shared state is limited to the generated Flex/Bison scanner and parser, the
-parser's classification tables, and the temporary active AST-arena binding.
-Declaration symbol tables are now owned by each `CompilationContext`; legacy
-consumers use a nested thread-local access scope without sharing table storage.
-The remaining boundaries support sequential context
-reuse but still prevent concurrent `Compiler::compile()` calls. The planned
-migration order is generated frontend state, explicit arena allocation, and
-finally parallel in-process regression coverage.
+The reentrancy boundary is now the active architecture track. Generated
+Flex/Bison state is isolated per thread, and parser classification plus
+declaration symbol tables are owned by each `CompilationContext`. Concurrent
+frontend regression coverage exercises distinct contexts without a global lock.
+The remaining temporary boundary is direct AST construction through the active
+arena binding; after that binding is removed, the final milestone is a supported
+parallel in-process API with end-to-end regression coverage.
 
 ## Project origin and license
 

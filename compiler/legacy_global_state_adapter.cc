@@ -9,7 +9,7 @@ namespace matiec {
 LegacyGlobalStateAdapter::LegacyGlobalStateAdapter(
     CompilationContext &context, const CompilerOptions &options)
     : context_(context), parser_state_scope_(context.parser_state()) {
-  context_.parser_state().reset_transient();
+  context_.parser_state().reset_for_parse();
   runtime_options.allow_void_datatype = options.allow_void_datatype;
   runtime_options.allow_missing_var_in = options.allow_missing_var_in;
   runtime_options.disable_implicit_en_eno = options.disable_implicit_en_eno;
