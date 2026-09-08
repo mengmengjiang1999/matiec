@@ -71,6 +71,7 @@ class visitor_c; // forward declaration
 
 
 class symbol_c; // forward declaration
+class const_value_c; // forward declaration
 
 namespace matiec {
 std::vector<symbol_c *> &analysis_datatype_candidates_mut(symbol_c *symbol);
@@ -80,6 +81,8 @@ symbol_c *&analysis_selected_datatype_ref(symbol_c *symbol);
 symbol_c *analysis_selected_datatype(const symbol_c *symbol);
 symbol_c *&analysis_scope_ref(symbol_c *symbol);
 symbol_c *analysis_scope(const symbol_c *symbol);
+const const_value_c &analysis_constant_value(const symbol_c *symbol);
+const_value_c &analysis_constant_value_mut(symbol_c *symbol);
 }
 
 
@@ -224,9 +227,14 @@ class symbol_c {
     symbol_c *&scope() { return matiec::analysis_scope_ref(this); }
     symbol_c *scope() const { return matiec::analysis_scope(this); }
 
-    /*** constant folding ***/
-    /* If the symbol has a constant numerical value, this will be set to that value by constant_folding_c */
-    const_value_c const_value;
+    /* Transitional producer accessors. Constant analysis storage belongs to the
+     * active compilation's AnalysisStore, not to the AST node. */
+    const_value_c &const_value() {
+      return matiec::analysis_constant_value_mut(this);
+    }
+    const const_value_c &const_value() const {
+      return matiec::analysis_constant_value(this);
+    }
     
     /*** Enumeration datatype checking ***/    
     /* Not all symbols will contain the following anotations, which is why they are not declared here in symbol_c

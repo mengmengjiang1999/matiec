@@ -9,7 +9,7 @@ memory; the target is one lifetime boundary per `CompilationContext`.
 
 | Allocation | Current producer | Current references | Current release | Migration rule |
 | --- | --- | --- | --- | --- |
-| AST nodes (`symbol_c` subclasses) | Bison actions in `stage1_2/iec_bison.yy`, Stage 3 producer-local scratch, and a few generator helpers | Parent/child fields are non-owning raw pointers; `parent` and `token` borrow nodes. Datatype candidates, selections, and scopes live only in persistent or transient `AnalysisStore` records | Usually none; `symbol_c` has a virtual but empty destructor | Allocate all per-compilation nodes in `AstArena`; node links remain non-owning |
+| AST nodes (`symbol_c` subclasses) | Bison actions in `stage1_2/iec_bison.yy`, Stage 3 producer-local scratch, and a few generator helpers | Parent/child fields are non-owning raw pointers; `parent` and `token` borrow nodes. Flow edges, constant values, datatype candidates, selections, and scopes live only in persistent or transient `AnalysisStore` records | Arena destruction invokes virtual destructors | Allocate all per-compilation nodes in `AstArena`; node links remain non-owning and semantic state remains context-owned |
 | AST list storage (`list_c::elements`) | `list_c` constructors and `realloc` in `absyntax/absyntax.cc` | Owned only by the containing list node; entries borrow child nodes and token text | None because `list_c` has no destructor | Release the backing buffer when the arena destroys the list; do not recursively delete entries |
 | Lexer token text | `strdup()` in `stage1_2/iec_flex.ll` | Passed into `token_c::value` and sometimes retained as source filenames or lookup keys | Only short-lived scratch copies are freed; text retained by tokens is not | Copy token text into arena-owned storage and preserve stable `const char *` addresses |
 | Source/include filenames | `strdup()` in lexer include handling | Borrowed by source-location fields on every node created while the file is active | Include-stack bookkeeping is partially freed; filenames intentionally survive | Intern/copy filenames into arena-owned storage before assigning node locations |
@@ -20,9 +20,9 @@ memory; the target is one lifetime boundary per `CompilationContext`.
 
 ## Important aliasing constraints
 
-- AST edge fields are observers. Arena destruction, not individual nodes, will own
-  recursive lifetime. Destructors must therefore release only private storage and
-  never delete referenced child nodes.
+- Structural AST edge fields are observers. Semantic IL flow edges are separate
+  AnalysisStore records. Arena destruction, not individual nodes, owns recursive
+  lifetime, so destructors release only private storage and never referenced children.
 - `remove_forward_dependencies_c` deliberately creates two roots that share every
   child node. Treating either root as a recursive owner would double-delete the
   tree.

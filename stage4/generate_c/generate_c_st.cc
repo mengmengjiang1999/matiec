@@ -1275,8 +1275,8 @@ void *visit(for_statement_c *symbol) {
     integer_c              integer_oneval("1");
     add_expression_c       add_expression(symbol->control_variable, &integer_oneval);
     assignment_statement_c inc_assignment(symbol->control_variable, &add_expression);
-    integer_oneval.const_value._int64 .set(1);                    // set the stage3 anottation we need
-    integer_oneval.const_value._uint64.set(1);                    // set the stage3 anottation we need
+    integer_oneval.const_value()._int64 .set(1);                    // set the stage3 anottation we need
+    integer_oneval.const_value()._uint64.set(1);                    // set the stage3 anottation we need
     integer_oneval.datatype() = matiec::analysis_selected_datatype(symbol->control_variable); // set the stage3 anottation we need
     add_expression.datatype() = matiec::analysis_selected_datatype(symbol->control_variable); // set the stage3 anottation we need
     inc_assignment.accept(*this);

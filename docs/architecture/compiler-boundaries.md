@@ -55,16 +55,16 @@ Lower layers report through `DiagnosticEngine` and return failures. Only the
 CLI adapter in `main.cc` converts the final result to a process exit status.
 
 `CompilationContext::analysis()` is the typed, arena-checked semantic result
-boundary. Flow edges and datatype working records are produced directly there;
-constant values are published at their completed phase boundary. A
-compilation-scoped active-store guard lets
-legacy-shaped visitors read completed flow and constant records without AST
-copy-back, while missing records fall back to producer-local transient state.
+boundary. Flow edges, constant values, and datatype working records are produced
+directly there. A compilation-scoped active-store guard lets legacy-shaped
+visitors read and update those records without AST copy-back. Non-arena helper
+nodes use context-owned transient flow, constant, or datatype records; an absent
+flow record exposes empty predecessor and successor sequences.
 Candidate filling updates typed vectors used by narrowing; narrowing updates
 selected datatypes and scopes used by later semantic checks and Stage 4. The AST
-base class contains none of those datatype-analysis fields. Non-arena helper
-values use a context-owned transient datatype table that is cleared with the
-store. Invocation
+base class contains none of those datatype-analysis fields or constant values,
+and IL instruction nodes contain no flow-edge vectors. Transient tables are
+cleared with the store. Invocation
 declaration resolution is also published after narrowing,
 scope-specific enumeration multimaps after enumeration checking, and named
 generator annotations are updated live during Stage 4. All typed record families
@@ -78,10 +78,10 @@ compatibility tables. Generator visitors exchange implicit-type identifiers
 through typed records and do not publish or materialize AST annotation maps.
 No whole-tree compatibility materializer remains in the compiler or its tests;
 focused tests verify record authority directly.
-The result-store migration is complete and datatype producer annotations have
-left the AST. Removing the other producer-local compatibility fields and
-replacing the scoped active-store bridge with explicit analysis dependencies are
-the remaining cleanup boundaries.
+The result-store migration is complete and flow, constant, and datatype producer
+annotations have left the AST. Removing resolution, enumeration, and generator
+compatibility fields and replacing the scoped active-store bridge with explicit
+analysis dependencies are the remaining cleanup boundaries.
 
 ## Generated output
 

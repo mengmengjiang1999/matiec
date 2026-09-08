@@ -764,7 +764,7 @@ void *print_datatypes_error_c::visit(il_instruction_c *symbol) {
 		 * Instead of creating two 'global' (within the class) variables, we create a single il_instruction_c variable (fake_prev_il_instruction),
 		 * and shove that data into this single variable.
 		 */
-		tmp_prev_il_instruction.prev_il_instruction = matiec::analysis_flow_predecessors(symbol);
+		matiec::analysis_flow_predecessors_mut(&tmp_prev_il_instruction) = matiec::analysis_flow_predecessors(symbol);
 		intersect_prev_candidate_datatype_lists(&tmp_prev_il_instruction);
 		if (are_all_datatypes_equal(matiec::analysis_flow_predecessors(symbol)))
 			if (matiec::analysis_flow_predecessors(symbol).size() > 0)
@@ -916,7 +916,7 @@ void *print_datatypes_error_c::visit(il_simple_instruction_c *symbol)	{
     tmp_prev_il_instruction.candidate_datatypes() =
         matiec::analysis_datatype_candidates(
             matiec::analysis_flow_predecessors(symbol)[0]);
-  tmp_prev_il_instruction.prev_il_instruction = matiec::analysis_flow_predecessors(symbol);
+  matiec::analysis_flow_predecessors_mut(&tmp_prev_il_instruction) = matiec::analysis_flow_predecessors(symbol);
 #endif
 
   /* the print error algorithm will need access to the intersected candidate_datatype lists of all prev_il_instructions, as well as the
@@ -924,7 +924,7 @@ void *print_datatypes_error_c::visit(il_simple_instruction_c *symbol)	{
    * Instead of creating two 'global' (within the class) variables, we create a single il_instruction_c variable (fake_prev_il_instruction),
    * and shove that data into this single variable.
    */
-  tmp_prev_il_instruction.prev_il_instruction = matiec::analysis_flow_predecessors(symbol);
+  matiec::analysis_flow_predecessors_mut(&tmp_prev_il_instruction) = matiec::analysis_flow_predecessors(symbol);
   intersect_prev_candidate_datatype_lists(&tmp_prev_il_instruction);
   if (are_all_datatypes_equal(matiec::analysis_flow_predecessors(symbol)))
     if (matiec::analysis_flow_predecessors(symbol).size() > 0)

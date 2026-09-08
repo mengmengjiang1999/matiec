@@ -1819,8 +1819,8 @@ void *fill_candidate_datatypes_c::visit(il_instruction_c *symbol) {
 		intersect_prev_candidate_datatype_lists(symbol);
 	} else {
 		il_instruction_c fake_prev_il_instruction = *symbol;
-		fake_prev_il_instruction.prev_il_instruction =
-			matiec::analysis_flow_predecessors(symbol);
+		matiec::analysis_flow_predecessors_mut(&fake_prev_il_instruction) =
+		    matiec::analysis_flow_predecessors(symbol);
 		intersect_prev_candidate_datatype_lists(&fake_prev_il_instruction);
 
 		if (matiec::analysis_flow_predecessors(symbol).size() == 0)  prev_il_instruction = NULL;

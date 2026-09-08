@@ -1084,7 +1084,7 @@ void *narrow_candidate_datatypes_c::visit(il_instruction_c *symbol) {
 		 * Instead of creating two 'global' (within the class) variables, we create a single il_instruction_c variable (fake_prev_il_instruction),
 		 * and shove that data into this single variable.
 		 */
-		tmp_prev_il_instruction.prev_il_instruction = matiec::analysis_flow_predecessors(symbol);
+		matiec::analysis_flow_predecessors_mut(&tmp_prev_il_instruction) = matiec::analysis_flow_predecessors(symbol);
 		intersect_prev_candidate_datatype_lists(&tmp_prev_il_instruction);
 		/* Tell the il_instruction the datatype that it must generate - this was chosen by the next il_instruction (remember: we are iterating backwards!) */
 		fake_prev_il_instruction = &tmp_prev_il_instruction;
@@ -1274,7 +1274,7 @@ void *narrow_candidate_datatypes_c::visit(il_simple_instruction_c *symbol)	{
     tmp_prev_il_instruction.candidate_datatypes() =
         matiec::analysis_datatype_candidates(
             matiec::analysis_flow_predecessors(symbol)[0]);
-  tmp_prev_il_instruction.prev_il_instruction = matiec::analysis_flow_predecessors(symbol);
+  matiec::analysis_flow_predecessors_mut(&tmp_prev_il_instruction) = matiec::analysis_flow_predecessors(symbol);
 
    /* copy the candidate_datatypes list */
   fake_prev_il_instruction = &tmp_prev_il_instruction;

@@ -165,16 +165,16 @@
 
 
 
-#define SET_CVALUE(dtype, symbol, new_value)  ((symbol)->const_value._##dtype.set(new_value))
-#define GET_CVALUE(dtype, symbol)             ((symbol)->const_value._##dtype.get())
-#define SET_OVFLOW(dtype, symbol)             ((symbol)->const_value._##dtype.set_overflow())
-#define SET_NONCONST(dtype, symbol)           ((symbol)->const_value._##dtype.set_nonconst())
+#define SET_CVALUE(dtype, symbol, new_value)  ((symbol)->const_value()._##dtype.set(new_value))
+#define GET_CVALUE(dtype, symbol)             ((symbol)->const_value()._##dtype.get())
+#define SET_OVFLOW(dtype, symbol)             ((symbol)->const_value()._##dtype.set_overflow())
+#define SET_NONCONST(dtype, symbol)           ((symbol)->const_value()._##dtype.set_nonconst())
 
-#define VALID_CVALUE(dtype, symbol)           ((symbol)->const_value._##dtype.is_valid())
-#define IS_OVFLOW(dtype, symbol)              ((symbol)->const_value._##dtype.is_overflow())
-#define IS_NONCONST(dtype, symbol)            ((symbol)->const_value._##dtype.is_nonconst())
-#define IS_UNDEFINED(dtype, symbol)           ((symbol)->const_value._##dtype.is_undefined())
-#define ISZERO_CVALUE(dtype, symbol)          ((symbol)->const_value._##dtype.is_zero())
+#define VALID_CVALUE(dtype, symbol)           ((symbol)->const_value()._##dtype.is_valid())
+#define IS_OVFLOW(dtype, symbol)              ((symbol)->const_value()._##dtype.is_overflow())
+#define IS_NONCONST(dtype, symbol)            ((symbol)->const_value()._##dtype.is_nonconst())
+#define IS_UNDEFINED(dtype, symbol)           ((symbol)->const_value()._##dtype.is_undefined())
+#define ISZERO_CVALUE(dtype, symbol)          ((symbol)->const_value()._##dtype.is_zero())
 
 
 #define ISEQUAL_CVALUE(dtype, symbol1, symbol2) \
@@ -589,7 +589,7 @@ static void CHECK_OVERFLOW_real64(symbol_c *res_ptr) {
 /* NOTE: the MOVE standard function is equivalent to the ':=' in ST syntax */
 static void *handle_move(symbol_c *to, symbol_c *from) {
 	if (NULL == from) return NULL;
-	to->const_value = from->const_value;
+	to->const_value() = from->const_value();
 	return NULL;
 }
 
@@ -720,7 +720,7 @@ static void *handle_pow(symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 
 /* If the cvalues of all the prev_il_intructions have the same VALID value, then set the local cvalue to that value, otherwise, set it to NONCONST! */
 #define intersect_prev_CVALUE_(dtype, symbol) {                                                                   \
-	symbol->const_value._##dtype = matiec::analysis_flow_predecessors(symbol)[0]->const_value._##dtype;                      \
+	symbol->const_value()._##dtype = matiec::analysis_flow_predecessors(symbol)[0]->const_value()._##dtype;                      \
 	for (unsigned int i = 1; i < matiec::analysis_flow_predecessors(symbol).size(); i++) {                                   \
 		if (!ISEQUAL_CVALUE(dtype, symbol, matiec::analysis_flow_predecessors(symbol)[i]))                               \
 			{SET_NONCONST(dtype, symbol); break;}                                                     \
@@ -954,8 +954,8 @@ void *constant_folding_c::visit(il_instruction_c *symbol) {
 		intersect_prev_cvalues(symbol);
 	} else {
 		il_instruction_c fake_prev_il_instruction = *symbol;
-		fake_prev_il_instruction.prev_il_instruction =
-			matiec::analysis_flow_predecessors(symbol);
+		matiec::analysis_flow_predecessors_mut(&fake_prev_il_instruction) =
+		    matiec::analysis_flow_predecessors(symbol);
 		intersect_prev_cvalues(&fake_prev_il_instruction);
 
 		if (matiec::analysis_flow_predecessors(symbol).size() == 0)  prev_il_instruction = NULL;
@@ -964,7 +964,7 @@ void *constant_folding_c::visit(il_instruction_c *symbol) {
 		prev_il_instruction = NULL;
 
 		/* This object has (inherits) the same cvalues as the il_instruction */
-		symbol->const_value = symbol->il_instruction->const_value;
+		symbol->const_value() = symbol->il_instruction->const_value();
 	}
 
 	return NULL;
@@ -981,7 +981,7 @@ void *constant_folding_c::visit(il_simple_operation_c *symbol) {
 	symbol->il_simple_operator->accept(*this);
 	il_operand = NULL;
 	/* This object has (inherits) the same cvalues as the il_instruction */
-	symbol->const_value = symbol->il_simple_operator->const_value;
+	symbol->const_value() = symbol->il_simple_operator->const_value();
 	return NULL;
 }
 
@@ -1012,7 +1012,7 @@ void *constant_folding_c::visit(il_expression_c *symbol) {
   il_operand = NULL;
   
   /* This object has (inherits) the same cvalues as the il_instruction */
-  symbol->const_value = symbol->il_expr_operator->const_value;
+  symbol->const_value() = symbol->il_expr_operator->const_value();
   
   /* Since stage2 will insert an artificial (and equivalent) LD <il_operand> to the simple_instr_list when an 'il_operand' exists, we know
    * that if (symbol->il_operand != NULL), then the first IL instruction in the simple_instr_list will be the equivalent and artificial
@@ -1021,7 +1021,7 @@ void *constant_folding_c::visit(il_expression_c *symbol) {
    */
   if ((NULL != symbol->il_operand) && ((NULL == symbol->simple_instr_list) || (0 == ((list_c *)symbol->simple_instr_list)->n))) ERROR; // stage2 is not behaving as we expect it to!
   if  (NULL != symbol->il_operand)
-    symbol->il_operand->const_value = ((list_c *)symbol->simple_instr_list)->get_element(0)->const_value;
+    symbol->il_operand->const_value() = ((list_c *)symbol->simple_instr_list)->get_element(0)->const_value();
 
   return NULL;
 }
@@ -1034,7 +1034,7 @@ void *constant_folding_c::visit(il_jump_operation_c *symbol) {
   symbol->il_jump_operator->accept(*this);
   il_operand = NULL;
   /* This object has (inherits) the same cvalues as the il_jump_operator */
-  symbol->const_value = symbol->il_jump_operator->const_value;
+  symbol->const_value() = symbol->il_jump_operator->const_value();
   return NULL;
 }
 
@@ -1075,7 +1075,7 @@ void *constant_folding_c::visit(simple_instr_list_c *symbol) {
     symbol->get_element(i)->accept(*this);
 
   /* This object has (inherits) the same cvalues as the il_jump_operator */
-  symbol->const_value = symbol->get_element(symbol->n-1)->const_value;
+  symbol->const_value() = symbol->get_element(symbol->n-1)->const_value();
   return NULL;
 }
 
@@ -1090,7 +1090,7 @@ void *constant_folding_c::visit(il_simple_instruction_c *symbol) {
   prev_il_instruction = NULL;
 
   /* This object has (inherits) the same cvalues as the il_jump_operator */
-  symbol->const_value = symbol->il_simple_instruction->const_value;
+  symbol->const_value() = symbol->il_simple_instruction->const_value();
   return NULL;
 }
 
@@ -1376,7 +1376,7 @@ void *constant_propagation_c::visit(library_c *symbol) {
 void *constant_propagation_c::visit(symbolic_variable_c *symbol) {
 	std::string varName = get_var_name_c::get_name(symbol->var_name)->value;
 	if (values->count(varName) > 0) 
-		symbol->const_value = (*values)[varName];
+		symbol->const_value() = (*values)[varName];
 	return NULL;
 }
 #endif  // DO_CONSTANT_PROPAGATION__
@@ -1384,7 +1384,7 @@ void *constant_propagation_c::visit(symbolic_variable_c *symbol) {
 void *constant_propagation_c::visit(symbolic_constant_c *symbol) {
 	std::string varName = get_var_name_c::get_name(symbol->var_name)->value;
 	if (values->count(varName) > 0) 
-		symbol->const_value = (*values)[varName];
+		symbol->const_value() = (*values)[varName];
 	return NULL;
 }
 
@@ -1456,13 +1456,13 @@ void *constant_propagation_c::handle_var_list_decl(symbol_c *var_list, symbol_c 
       // debug_c::print(list->get_element(i));
       ERROR;
     }
-    list->get_element(i)->const_value = init_value->const_value;
+    list->get_element(i)->const_value() = init_value->const_value();
     if (fixed_init_value_) {
-      (*values)[var_name->value] = init_value->const_value;
+      (*values)[var_name->value] = init_value->const_value();
       if (is_global_var)
         // also store it in the var_global_values map!!
         // Notice that global variables are also placed in the values map!!
-        var_global_values[var_name->value] = init_value->const_value;
+        var_global_values[var_name->value] = init_value->const_value();
     }
   }
   return NULL;
@@ -1596,7 +1596,7 @@ void *constant_propagation_c::visit(external_declaration_c *symbol) {
        * 
        * NOTE: comparison is inverted with '!'
        */
-      if (! (symbol->specification->const_value == var_global_values[get_var_name_c::get_name(symbol->global_var_name)->value]))
+      if (! (symbol->specification->const_value() == var_global_values[get_var_name_c::get_name(symbol->global_var_name)->value]))
         STAGE3_ERROR(0, symbol, symbol, "The initial value of this external variable is ambiguous (the Program/FB in which "
                                         "this external variable is declared has been used to instantiate a Program/FB in more "
                                         "than one configuration and/or resource - and each resource sets the corresponding global "
@@ -1604,13 +1604,13 @@ void *constant_propagation_c::visit(external_declaration_c *symbol) {
     }
     
     // only now do we copy the const value from the var_global to the var_external.
-    symbol->specification->const_value = var_global_values[get_var_name_c::get_name(symbol->global_var_name)->value];
+    symbol->specification->const_value() = var_global_values[get_var_name_c::get_name(symbol->global_var_name)->value];
   }
   
-  symbol->global_var_name->const_value = symbol->specification->const_value;
+  symbol->global_var_name->const_value() = symbol->specification->const_value();
   if (fixed_init_value_) {
-//  (*values)[symbol->global_var_name->get_value()] = symbol->specification->const_value;
-    (*values)[get_var_name_c::get_name(symbol->global_var_name)->value] = symbol->specification->const_value;
+//  (*values)[symbol->global_var_name->get_value()] = symbol->specification->const_value();
+    (*values)[get_var_name_c::get_name(symbol->global_var_name)->value] = symbol->specification->const_value();
   }
   // If the datatype specification is a subrange or array, do constant folding of all the literals in that type declaration... (ex: literals in array subrange limits)
   symbol->specification->accept(*this);  // should never get to change the const_value of the symbol->specification symbol (only its children!).
@@ -1982,8 +1982,8 @@ void *constant_propagation_c::visit(assignment_statement_c *symbol) {
 
 	symbol->r_exp->accept(*this);
 	symbol->l_exp->accept(*this); // if the lvalue has an array, do contant folding of the array indexes!
-	symbol->l_exp->const_value = symbol->r_exp->const_value;
-	(*values)[get_var_name_c::get_name(symbol->l_exp)->value] = symbol->l_exp->const_value;
+	symbol->l_exp->const_value() = symbol->r_exp->const_value();
+	(*values)[get_var_name_c::get_name(symbol->l_exp)->value] = symbol->l_exp->const_value();
 	return NULL;
 }
 

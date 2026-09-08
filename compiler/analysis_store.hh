@@ -70,6 +70,10 @@ class AnalysisStore {
                      AnalysisStatus status = AnalysisStatus::valid);
   bool set_generator_symbol(const symbol_c *key, const std::string &name,
                             symbol_c *value);
+  FlowAnalysisRecord &flow_working(symbol_c *key);
+  const FlowAnalysisRecord *flow_working(const symbol_c *key) const;
+  ConstantAnalysisRecord &constant_working(symbol_c *key);
+  const ConstantAnalysisRecord *constant_working(const symbol_c *key) const;
   DatatypeAnalysisRecord &datatype_working(symbol_c *key);
   const DatatypeAnalysisRecord *datatype_working(
       const symbol_c *key) const;
@@ -125,7 +129,10 @@ class AnalysisStore {
 
   const AstArena &arena_;
   Table<FlowAnalysisRecord> flow_;
+  std::unordered_map<const symbol_c *, FlowAnalysisRecord> transient_flow_;
   Table<ConstantAnalysisRecord> constants_;
+  std::unordered_map<const symbol_c *, ConstantAnalysisRecord>
+      transient_constants_;
   Table<DatatypeAnalysisRecord> datatypes_;
   std::unordered_map<const symbol_c *, DatatypeAnalysisRecord>
       transient_datatypes_;
@@ -161,6 +168,9 @@ const std::vector<symbol_c *> &analysis_flow_successors(
 const std::vector<symbol_c *> &analysis_flow_successors(
     const il_simple_instruction_c *symbol);
 const const_value_c &analysis_constant_value(const symbol_c *symbol);
+std::vector<symbol_c *> &analysis_flow_predecessors_mut(symbol_c *symbol);
+std::vector<symbol_c *> &analysis_flow_successors_mut(symbol_c *symbol);
+const_value_c &analysis_constant_value_mut(symbol_c *symbol);
 const DatatypeAnalysisRecord *analysis_datatype(const symbol_c *symbol);
 const std::vector<symbol_c *> &analysis_datatype_candidates(
     const symbol_c *symbol);

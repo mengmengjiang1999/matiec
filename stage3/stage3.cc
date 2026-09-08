@@ -46,7 +46,6 @@
 #include "array_range_check.hh"
 #include "case_elements_check.hh"
 #include "constant_folding.hh"
-#include "constant_analysis_store.hh"
 #include "resolution_analysis_store.hh"
 #include "enumeration_analysis_store.hh"
 #include "declaration_check.hh"
@@ -96,10 +95,9 @@ static int flow_control_analysis(symbol_c *tree_root,
  */
 static int constant_propagation(symbol_c *tree_root,
                                 matiec::DiagnosticEngine &diagnostics,
-                                matiec::AnalysisStore &analysis){
+                                matiec::AnalysisStore &){
     constant_propagation_c constant_propagation(tree_root, diagnostics);
     tree_root->accept(constant_propagation);
-    if (!publish_constant_analysis(tree_root, analysis)) return 1;
     return constant_propagation.get_error_count();
 }
 

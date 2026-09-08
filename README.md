@@ -236,10 +236,13 @@ as it emits output. All six typed record families now have production boundaries
 Completed flow edges, constant values, candidate datatypes, selected datatypes,
 and declaration scopes are read through compilation-scoped typed accessors by
 semantic passes and Stage 4, so no completed analysis family is copied back onto
-AST nodes in production. Candidate filling and narrowing also update datatype
-records directly; the AST base class no longer stores candidate, selected-type,
-or declaration-scope annotations. Context-owned transient datatype records cover
-stack-local and immutable shared helpers. Lvalue validation and Stage 4 read invocation resolution directly
+AST nodes in production. Flow analysis and constant propagation update their
+records directly; IL instruction nodes no longer store edge vectors and the AST
+base no longer stores constant values. Candidate filling and narrowing likewise
+update datatype records directly, and the AST base contains no candidate,
+selected-type, or declaration-scope annotations. Context-owned transient flow,
+constant, and datatype records cover stack-local and immutable shared helpers.
+Lvalue validation and Stage 4 read invocation resolution directly
 from the store, so completed resolution results are no longer copied back onto
 the AST for downstream use. Completed scope-specific enumeration tables likewise
 remain store-owned; no production pass requires their AST compatibility copies.
@@ -397,7 +400,7 @@ ownership, or memory-lifetime changes.
 ## Roadmap boundaries
 
 - Reentrant generated frontend and parallel in-process compilation
-- Removal of producer-local semantic compatibility annotations from AST nodes
+- Removal of resolution, enumeration, and generator compatibility annotations from AST nodes
 - Explicit analysis dependencies without an active-store compatibility scope
 - Versioned embedding API/ABI
 - Direct graphical FBD and LD input
@@ -408,9 +411,10 @@ defined by the tests and [OpenSpec requirements](openspec/specs/).
 
 Context-owned semantic analysis storage is complete: all six typed record
 families have production boundaries and completed results stay in the
-`AnalysisStore`. Datatype annotations have also been removed from the AST. The
-remaining annotation work removes the other producer-local legacy fields and
-their compatibility access path; it does not introduce another result store.
+`AnalysisStore`. Flow, constant, and datatype annotations have also been removed
+from the AST. The remaining annotation work removes resolution, enumeration, and
+generator producer-local fields and their compatibility access path; it does not
+introduce another result store.
 
 ## Project origin and license
 

@@ -122,6 +122,34 @@ bool AnalysisStore::set_generator_symbol(const symbol_c *key,
   return true;
 }
 
+FlowAnalysisRecord &AnalysisStore::flow_working(symbol_c *key) {
+  if (key != nullptr && arena_.owns(key)) return flow_[key].value;
+  return transient_flow_[key];
+}
+
+const FlowAnalysisRecord *AnalysisStore::flow_working(
+    const symbol_c *key) const {
+  const AnalysisEntry<FlowAnalysisRecord> *persistent = flow(key);
+  if (persistent != nullptr) return &persistent->value;
+  std::unordered_map<const symbol_c *, FlowAnalysisRecord>::const_iterator
+      transient = transient_flow_.find(key);
+  return transient == transient_flow_.end() ? nullptr : &transient->second;
+}
+
+ConstantAnalysisRecord &AnalysisStore::constant_working(symbol_c *key) {
+  if (key != nullptr && arena_.owns(key)) return constants_[key].value;
+  return transient_constants_[key];
+}
+
+const ConstantAnalysisRecord *AnalysisStore::constant_working(
+    const symbol_c *key) const {
+  const AnalysisEntry<ConstantAnalysisRecord> *persistent = constant(key);
+  if (persistent != nullptr) return &persistent->value;
+  std::unordered_map<const symbol_c *, ConstantAnalysisRecord>::const_iterator
+      transient = transient_constants_.find(key);
+  return transient == transient_constants_.end() ? nullptr : &transient->second;
+}
+
 DatatypeAnalysisRecord &AnalysisStore::datatype_working(symbol_c *key) {
   if (key != nullptr && arena_.owns(key)) return datatypes_[key].value;
   return transient_datatypes_[key];
@@ -185,7 +213,9 @@ std::size_t AnalysisStore::generator_size() const { return generators_.size(); }
 
 void AnalysisStore::clear() {
   flow_.clear();
+  transient_flow_.clear();
   constants_.clear();
+  transient_constants_.clear();
   datatypes_.clear();
   transient_datatypes_.clear();
   resolutions_.clear();
@@ -206,9 +236,7 @@ AnalysisStore *active_analysis_store() { return current_analysis_store; }
 
 const FlowAnalysisRecord *analysis_flow(const symbol_c *symbol) {
   if (current_analysis_store == nullptr) return nullptr;
-  const AnalysisEntry<FlowAnalysisRecord> *entry =
-      current_analysis_store->flow(symbol);
-  return entry == nullptr ? nullptr : &entry->value;
+  return current_analysis_store->flow_working(symbol);
 }
 
 const std::vector<symbol_c *> &analysis_flow_predecessors(
@@ -221,14 +249,12 @@ const std::vector<symbol_c *> &analysis_flow_predecessors(
 
 const std::vector<symbol_c *> &analysis_flow_predecessors(
     const il_instruction_c *symbol) {
-  const FlowAnalysisRecord *record = analysis_flow(symbol);
-  return record == nullptr ? symbol->prev_il_instruction : record->predecessors;
+  return analysis_flow_predecessors(static_cast<const symbol_c *>(symbol));
 }
 
 const std::vector<symbol_c *> &analysis_flow_predecessors(
     const il_simple_instruction_c *symbol) {
-  const FlowAnalysisRecord *record = analysis_flow(symbol);
-  return record == nullptr ? symbol->prev_il_instruction : record->predecessors;
+  return analysis_flow_predecessors(static_cast<const symbol_c *>(symbol));
 }
 
 const std::vector<symbol_c *> &analysis_flow_successors(
@@ -241,25 +267,36 @@ const std::vector<symbol_c *> &analysis_flow_successors(
 
 const std::vector<symbol_c *> &analysis_flow_successors(
     const il_instruction_c *symbol) {
-  const FlowAnalysisRecord *record = analysis_flow(symbol);
-  return record == nullptr ? symbol->next_il_instruction : record->successors;
+  return analysis_flow_successors(static_cast<const symbol_c *>(symbol));
 }
 
 const std::vector<symbol_c *> &analysis_flow_successors(
     const il_simple_instruction_c *symbol) {
-  const FlowAnalysisRecord *record = analysis_flow(symbol);
-  return record == nullptr ? symbol->next_il_instruction : record->successors;
+  return analysis_flow_successors(static_cast<const symbol_c *>(symbol));
+}
+
+std::vector<symbol_c *> &analysis_flow_predecessors_mut(symbol_c *symbol) {
+  assert(current_analysis_store != nullptr && symbol != nullptr);
+  return current_analysis_store->flow_working(symbol).predecessors;
+}
+
+std::vector<symbol_c *> &analysis_flow_successors_mut(symbol_c *symbol) {
+  assert(current_analysis_store != nullptr && symbol != nullptr);
+  return current_analysis_store->flow_working(symbol).successors;
 }
 
 const const_value_c &analysis_constant_value(const symbol_c *symbol) {
   static const const_value_c empty;
   if (symbol == nullptr) return empty;
-  if (current_analysis_store != nullptr) {
-    const AnalysisEntry<ConstantAnalysisRecord> *entry =
-        current_analysis_store->constant(symbol);
-    if (entry != nullptr) return entry->value.value;
-  }
-  return symbol->const_value;
+  if (current_analysis_store == nullptr) return empty;
+  const ConstantAnalysisRecord *record =
+      current_analysis_store->constant_working(symbol);
+  return record == nullptr ? empty : record->value;
+}
+
+const_value_c &analysis_constant_value_mut(symbol_c *symbol) {
+  assert(current_analysis_store != nullptr && symbol != nullptr);
+  return current_analysis_store->constant_working(symbol).value;
 }
 
 const DatatypeAnalysisRecord *analysis_datatype(const symbol_c *symbol) {

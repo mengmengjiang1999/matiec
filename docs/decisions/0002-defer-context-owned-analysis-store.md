@@ -85,8 +85,9 @@ require AST copy-back. Legacy-shaped consumers use a narrowly scoped
 thread-local active-store guard that is installed and restored by the compiler;
 this supersedes the original prohibition above while preserving nested context
 isolation. This document remains the historical rationale for the staged
-approach. Test-only materializers have also been removed. The remaining
-follow-up removes the non-datatype producer-local compatibility fields and
-finally the scoped active-store bridge; datatype candidates, selections, and
-scopes no longer occupy AST fields. This does not reopen the completed
-result-store design.
+approach. Test-only materializers have also been removed. Flow vectors, constant
+values, datatype candidates, selections, and scopes no longer occupy AST fields;
+their producers update persistent or transient context records directly. The
+remaining follow-up removes resolution, enumeration, and generator compatibility
+fields and finally the scoped active-store bridge. This does not reopen the
+completed result-store design.
