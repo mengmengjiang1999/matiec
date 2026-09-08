@@ -393,13 +393,20 @@ ownership, or memory-lifetime changes.
 ## Roadmap boundaries
 
 - Reentrant generated frontend and parallel in-process compilation
-- Context-owned semantic analysis storage instead of AST annotations
+- Removal of producer-local semantic compatibility annotations from AST nodes
+- Explicit analysis dependencies without an active-store compatibility scope
 - Versioned embedding API/ABI
 - Direct graphical FBD and LD input
 - Validation against later IEC 61131-3 editions
 
 These are boundaries, not promises or scheduled milestones. Current behavior is
 defined by the tests and [OpenSpec requirements](openspec/specs/).
+
+Context-owned semantic analysis storage is complete: all six typed record
+families have production boundaries and completed results stay in the
+`AnalysisStore`. The remaining annotation work removes producer-local legacy
+fields and their compatibility access path; it does not introduce another
+result store.
 
 ## Project origin and license
 

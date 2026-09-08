@@ -85,4 +85,6 @@ require AST copy-back. Legacy-shaped consumers use a narrowly scoped
 thread-local active-store guard that is installed and restored by the compiler;
 this supersedes the original prohibition above while preserving nested context
 isolation. This document remains the historical rationale for the staged
-approach; removing producer-local compatibility fields is separate follow-up work.
+approach. The remaining follow-up removes test-only materializers, then
+producer-local compatibility fields, and finally the scoped active-store bridge;
+it does not reopen the completed result-store design.
