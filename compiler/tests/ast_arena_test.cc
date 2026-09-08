@@ -1,5 +1,6 @@
 #include "compiler/ast_arena.hh"
 #include "compiler/compilation_context.hh"
+#include "absyntax/absyntax.hh"
 
 #include <cassert>
 #include <cstring>
@@ -62,6 +63,15 @@ int main() {
   assert(destruction_count == 2);
   assert(destruction_order[0] == 2);
   assert(destruction_order[1] == 1);
+
+  {
+    matiec::CompilationContext context;
+    integer_c *literal = context.ast_arena().make<integer_c>("42");
+    assert(context.ast_arena().owns(literal));
+    assert(context.ast_arena().allocation_count() == 1);
+    delete literal;
+    assert(context.ast_arena().allocation_count() == 0);
+  }
 
   matiec::CompilationContext first_context;
   matiec::CompilationContext second_context;

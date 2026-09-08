@@ -5,10 +5,14 @@
 namespace matiec {
 
 CompilationContext::CompilationContext()
-    : outputs_(diagnostics_), analysis_(ast_arena_) {}
+    : outputs_(diagnostics_), analysis_(ast_arena_) {
+  parser_state_.bind_ast_arena(ast_arena_);
+}
 
 CompilationContext::CompilationContext(CompilerOptions options)
-    : options_(std::move(options)), outputs_(diagnostics_), analysis_(ast_arena_) {}
+    : options_(std::move(options)), outputs_(diagnostics_), analysis_(ast_arena_) {
+  parser_state_.bind_ast_arena(ast_arena_);
+}
 
 CompilerOptions &CompilationContext::options() {
   return options_;

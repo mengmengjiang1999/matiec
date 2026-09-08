@@ -317,6 +317,7 @@ class symbol_c {
     virtual void *accept(visitor_c &visitor) {return NULL;};
 
   private:
+    friend class matiec::AstArena;
     friend class matiec::AnalysisStore;
     matiec::AstArena *arena_owner_;
 };

@@ -13,7 +13,6 @@ int main() {
   matiec::MemoryOutputSink memory;
   matiec::OutputManager outputs(diagnostics, memory);
   matiec::AstArena arena;
-  matiec::ActiveAstArenaScope arena_scope(arena);
   matiec::AnalysisStore analysis(arena);
 
   integer_c literal("42");

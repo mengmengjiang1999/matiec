@@ -1,16 +1,11 @@
 #include "compiler/ast_arena.hh"
+#include "compiler/parser_state.hh"
 
 #include <cstring>
 #include <cstdlib>
 #include <memory>
 
 namespace matiec {
-
-namespace {
-
-thread_local AstArena *current_ast_arena = nullptr;
-
-}  // namespace
 
 AstArena::~AstArena() {
   clear();
@@ -81,22 +76,10 @@ void AstArena::destroy_string(void *address) {
   delete[] static_cast<char *>(address);
 }
 
-ActiveAstArenaScope::ActiveAstArenaScope(AstArena &arena)
-    : previous_(current_ast_arena) {
-  current_ast_arena = &arena;
-}
-
-ActiveAstArenaScope::~ActiveAstArenaScope() {
-  current_ast_arena = previous_;
-}
-
-AstArena *active_ast_arena() {
-  return current_ast_arena;
-}
-
 char *retain_ast_string(const char *value) {
   if (value == nullptr) return nullptr;
-  if (current_ast_arena != nullptr) return current_ast_arena->copy_string(value);
+  AstArena *arena = active_parser_state().ast_arena();
+  if (arena != nullptr) return arena->copy_string(value);
 
   const std::size_t length = std::strlen(value);
   char *copy = static_cast<char *>(std::malloc(length + 1));

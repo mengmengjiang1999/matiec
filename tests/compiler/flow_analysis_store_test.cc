@@ -5,7 +5,6 @@
 
 int main() {
   matiec::CompilationContext context;
-  matiec::ActiveAstArenaScope arena_scope(context.ast_arena());
   instruction_list_c *instructions =
       context.ast_arena().make<instruction_list_c>();
   il_instruction_c *first =

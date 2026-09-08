@@ -21,6 +21,10 @@ void ParserState::reset_for_parse() {
   pop_state = false;
 }
 
+void ParserState::bind_ast_arena(AstArena &arena) { ast_arena_ = &arena; }
+
+AstArena *ParserState::ast_arena() const { return ast_arena_; }
+
 ParserSymbolTables &ParserState::symbols() { return *symbols_; }
 
 const ParserSymbolTables &ParserState::symbols() const { return *symbols_; }

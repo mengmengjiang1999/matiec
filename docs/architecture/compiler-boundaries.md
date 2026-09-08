@@ -32,17 +32,18 @@ destroyed.
 Two compilations may run sequentially in one process with separate contexts.
 The generated Flex/Bison frontend may also parse independent contexts
 concurrently on separate threads: its mutable session data is thread-local and
-its classification tables are context-owned. Full-pipeline parallel compilation
-is not yet a supported API because direct AST construction still depends on an
-active arena compatibility binding. The remaining boundary is documented in
-`docs/architecture/legacy-global-state-adapters.md`.
+its classification tables are context-owned. Parser sessions carry their
+context-owned AST arenas, so direct parser and synthetic-node construction also
+remains isolated without a separate active-arena binding. A supported
+full-pipeline parallel API and end-to-end regression coverage remain the next
+public boundary.
 
 ## Pipeline
 
 The compiler executes these boundaries in order:
 
-1. `LegacyGlobalStateAdapter::parse()` runs lexical and syntax analysis inside
-   the context's active AST arena.
+1. `LegacyGlobalStateAdapter::parse()` runs lexical and syntax analysis in the
+   context's parser session, which carries the owning AST arena.
 2. Experimental AST analysis and compatibility passes validate native constructs
    that still use legacy semantic implementations. Access-variable metadata is
    collected here, function-block method calls are resolved, and profile-owned

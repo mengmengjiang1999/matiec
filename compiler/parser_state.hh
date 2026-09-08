@@ -24,6 +24,7 @@ struct runtime_options_t {
 
 namespace matiec {
 
+class AstArena;
 class ParserSymbolTables;
 
 struct ParserState {
@@ -42,10 +43,13 @@ struct ParserState {
   bool pop_state = false;
 
   void reset_for_parse();
+  void bind_ast_arena(AstArena &arena);
+  AstArena *ast_arena() const;
   ParserSymbolTables &symbols();
   const ParserSymbolTables &symbols() const;
 
  private:
+  AstArena *ast_arena_ = nullptr;
   std::unique_ptr<ParserSymbolTables> symbols_;
 };
 

@@ -3,9 +3,12 @@
 
 #include <cstddef>
 #include <memory>
+#include <type_traits>
 #include <unordered_set>
 #include <utility>
 #include <vector>
+
+class symbol_c;
 
 namespace matiec {
 
@@ -23,6 +26,11 @@ class AstArena {
   T *make(Args &&...args) {
     std::unique_ptr<T> object(new T(std::forward<Args>(args)...));
     T *result = object.get();
+    if constexpr (std::is_base_of<symbol_c, T>::value) {
+      if (result->arena_owner_ != nullptr && result->arena_owner_ != this)
+        result->arena_owner_->release(result);
+      result->arena_owner_ = this;
+    }
     adopt(result, &destroy<T>);
     object.release();
     return result;
@@ -56,19 +64,6 @@ class AstArena {
   bool clearing_ = false;
 };
 
-class ActiveAstArenaScope {
- public:
-  explicit ActiveAstArenaScope(AstArena &arena);
-  ~ActiveAstArenaScope();
-
-  ActiveAstArenaScope(const ActiveAstArenaScope &) = delete;
-  ActiveAstArenaScope &operator=(const ActiveAstArenaScope &) = delete;
-
- private:
-  AstArena *previous_;
-};
-
-AstArena *active_ast_arena();
 char *retain_ast_string(const char *value);
 
 }  // namespace matiec

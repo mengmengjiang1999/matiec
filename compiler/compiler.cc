@@ -60,7 +60,6 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
         return context.diagnostics().result();
       }
     }
-    ActiveAstArenaScope ast_arena_scope(context.ast_arena());
     ActiveDeclarationSymbolTablesScope declaration_symbols_scope(
         context.declaration_symbols());
     CompilerOptions &options = context.options();

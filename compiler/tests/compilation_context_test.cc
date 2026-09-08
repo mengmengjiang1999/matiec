@@ -1,5 +1,6 @@
 #include "compiler/compilation_context.hh"
 #include "compiler/parser_symbol_tables.hh"
+#include "absyntax/absyntax.hh"
 
 #include <cassert>
 
@@ -74,11 +75,23 @@ int main() {
   {
     matiec::ActiveParserStateScope first_scope(first.parser_state());
     assert(&matiec::active_parser_state() == &first.parser_state());
+    integer_c *first_literal = new integer_c("1");
+    char *first_token = matiec::retain_ast_string("first-token");
+    assert(first.ast_arena().owns(first_literal));
+    assert(first.ast_arena().owns(first_token));
     {
       matiec::ActiveParserStateScope second_scope(second.parser_state());
       assert(&matiec::active_parser_state() == &second.parser_state());
+      integer_c *second_literal = new integer_c("2");
+      char *second_token = matiec::retain_ast_string("second-token");
+      assert(second.ast_arena().owns(second_literal));
+      assert(second.ast_arena().owns(second_token));
+      assert(!first.ast_arena().owns(second_literal));
     }
     assert(&matiec::active_parser_state() == &first.parser_state());
+    integer_c *restored_literal = new integer_c("3");
+    assert(first.ast_arena().owns(restored_literal));
+    assert(!second.ast_arena().owns(restored_literal));
   }
   assert(first.diagnostics().has_errors());
   assert(!second.diagnostics().has_errors());

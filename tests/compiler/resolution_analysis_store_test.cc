@@ -5,7 +5,6 @@
 
 int main() {
   matiec::CompilationContext context;
-  matiec::ActiveAstArenaScope arena_scope(context.ast_arena());
   function_invocation_c *call =
       context.ast_arena().make<function_invocation_c>();
   integer_c *first = context.ast_arena().make<integer_c>("1");
@@ -44,7 +43,6 @@ int main() {
   assert(stage4_resolution_record(detached, call) == nullptr);
 
   matiec::CompilationContext other;
-  matiec::ActiveAstArenaScope other_scope(other.ast_arena());
   integer_c *foreign = other.ast_arena().make<integer_c>("3");
   matiec::ResolutionAnalysisRecord invalid = entry->value;
   invalid.declaration = foreign;

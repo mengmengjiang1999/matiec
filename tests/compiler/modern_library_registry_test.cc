@@ -3,6 +3,7 @@
 #include "absyntax/absyntax.hh"
 #include "compiler/ast_arena.hh"
 #include "compiler/diagnostic_engine.hh"
+#include "compiler/parser_state.hh"
 
 #include <cassert>
 
@@ -23,7 +24,9 @@ function_declaration_c *user_assert() {
 
 int main() {
   matiec::AstArena arena;
-  matiec::ActiveAstArenaScope scope(arena);
+  matiec::ParserState parser_state;
+  parser_state.bind_ast_arena(arena);
+  matiec::ActiveParserStateScope scope(parser_state);
 
   {
     library_c *library = new library_c;

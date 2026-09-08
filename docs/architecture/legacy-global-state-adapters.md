@@ -18,6 +18,9 @@ The adapter currently owns the transition into two legacy areas:
   `LegacyGlobalStateAdapter::parse()`;
 * parser classification tables are owned by the active context's `ParserState`
   and are cleared before every parse;
+* the same parser state carries a non-owning pointer to its context's `AstArena`,
+  so legacy direct node construction and retained lexer strings join the correct
+  compilation lifetime without a second active-state binding;
 * `absyntax_utils_init()` populates the context-owned function, function-block,
   program, and datatype declaration tables; callers enter it only through
   `LegacyGlobalStateAdapter::initialize_symbol_tables()` while legacy consumers
@@ -40,7 +43,6 @@ supported full-pipeline parallel API.
 | Parser compatibility access | `ParserState` | context-owned options, transition controls, and classification tables selected by a nested thread-local pointer | Pass an explicit parser session to scanner and grammar helpers |
 | Generated scanner/parser | Flex/Bison compatibility interface | buffers, include stack, locations, semantic value, lookahead, error count, and start conditions are thread-local | Replace compatibility globals with reentrant scanner and pure-parser parameters if recursive same-thread parsing is required |
 | Declaration compatibility access | `DeclarationSymbolTables` | context-owned entries selected by a nested thread-local pointer | Pass declaration tables explicitly to remaining visitors |
-| AST allocation | `ActiveAstArenaScope` | context-owned arena selected by a thread-local active pointer | Pass the context arena explicitly through parser and synthetic-node constructors |
 
 Stage 3 and Stage 4 analysis data is not part of this inventory: it is already
 owned by `AnalysisStore` and passed explicitly. File-static debug flags and
@@ -52,30 +54,27 @@ each compile. `ActiveDeclarationSymbolTablesScope` is a thread-local pointer-onl
 compatibility surface for existing visitors; nested scopes restore their caller,
 and no declaration entries live in process-wide storage.
 
-## AST allocation boundary
+## Parser-carried AST allocation
 
-`ActiveAstArenaScope` is a separate, thread-local compatibility binding used
-while legacy parser and visitor code still constructs `symbol_c` subclasses
-with direct `new` expressions. The `Compiler` binds the current context's
-arena for the complete parse, semantic, and generation sequence; the
-`symbol_c` base constructor then registers each concrete node for destruction.
-The scanner uses the same binding for retained token and filename strings.
+The separate active-arena binding has been removed. `CompilationContext` binds
+its arena to its owned `ParserState`, and the existing nested parser-state scope
+selects that arena for legacy parser actions and synthetic helpers that still use
+direct `new`. Retained token and filename strings follow the same parser session.
+Nested parser scopes restore their caller and therefore restore the allocation
+target without maintaining another thread-local pointer.
 
-The binding restores any previous arena when it leaves scope, so nested use
-does not leak the inner context. Generated scanner/parser state is independently
-thread-isolated; the arena binding exists to avoid changing hundreds of parser
-actions before explicit allocation parameters are introduced. New code
-must use `CompilationContext::ast_arena()` directly rather than read the active
-binding.
+New component code should call `CompilationContext::ast_arena().make<T>()`
+directly. That operation explicitly attaches AST-derived objects to the named
+arena, even when no parser session is active or another session is temporarily
+active.
 
 ## Migration rule
 
 No new mutable process-wide compiler state may be added to this adapter. New state
 belongs in `CompilationContext` or one of its services. As parser and symbol
 APIs gain explicit context parameters, their corresponding adapter methods,
-`current_parser_state`, and the `runtime_options` compatibility surface must be removed. The thread-local
-AST allocation binding must likewise be removed when parser and pass APIs carry
-the context explicitly.
+`current_parser_state`, and the `runtime_options` compatibility surface must be
+removed. AST ownership no longer has a separate compatibility binding.
 
 ## Final-state audit
 

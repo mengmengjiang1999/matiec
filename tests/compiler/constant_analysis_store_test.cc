@@ -5,7 +5,6 @@
 
 int main() {
   matiec::CompilationContext context;
-  matiec::ActiveAstArenaScope arena_scope(context.ast_arena());
   integer_c *literal = context.ast_arena().make<integer_c>("42");
   constant_propagation_c propagation(literal, context.diagnostics(),
                                      context.analysis());

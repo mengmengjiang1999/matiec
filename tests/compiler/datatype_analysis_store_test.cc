@@ -4,7 +4,6 @@
 
 int main() {
   matiec::CompilationContext context;
-  matiec::ActiveAstArenaScope arena_scope(context.ast_arena());
   integer_c *literal = context.ast_arena().make<integer_c>("42");
   int_type_name_c *candidate = context.ast_arena().make<int_type_name_c>();
   literal->candidate_datatypes(context.analysis()).push_back(candidate);
@@ -28,7 +27,6 @@ int main() {
          &shared_candidate);
 
   matiec::CompilationContext other;
-  matiec::ActiveAstArenaScope other_scope(other.ast_arena());
   int_type_name_c *foreign = other.ast_arena().make<int_type_name_c>();
   matiec::DatatypeAnalysisRecord invalid;
   invalid.candidates.push_back(foreign);

@@ -229,8 +229,10 @@ owned source bytes with an independent diagnostic display name. Destroying the c
 nodes and retained parser strings. Separate contexts support repeated,
 sequential compilations without leaking state between runs. The generated
 frontend also supports overlapping parses for independent contexts on separate
-threads; full parallel compilation becomes a supported API after the remaining
-AST-allocation compatibility binding is removed and end-to-end coverage lands.
+threads. Parser sessions carry their context-owned AST arenas, so direct parser
+and synthetic-node allocation is isolated without a second active binding. Full
+parallel compilation becomes a supported API after the batch interface and
+end-to-end coverage land.
 
 Semantic flow, constants, datatype candidates, final datatype/scope selections,
 invocation declaration resolution, and scope-specific enumeration tables are
@@ -284,8 +286,9 @@ Parser runtime options, transition controls, and classification tables are
 context-owned. Mutable Flex/Bison scanner and parser session variables are
 thread-local and clean builds verify that transformation before compiling the
 generated sources. `LegacyGlobalStateAdapter` still supplies the active parser
-context, while legacy direct AST construction uses a temporary thread-local arena
-binding. A public parallel compilation API is therefore not supported yet.
+context; that parser session carries the context-owned arena used by legacy
+direct AST construction and retained strings. The separate active-arena binding
+has been removed. A public parallel compilation API is not yet supported.
 
 ## Embed from C++
 
@@ -403,7 +406,7 @@ ownership, or memory-lifetime changes.
 
 ## Roadmap boundaries
 
-- Explicit parser AST allocation and supported parallel in-process compilation
+- Supported parallel in-process compilation
 - Versioned embedding API/ABI
 - Direct graphical FBD and LD input
 - Validation against later IEC 61131-3 editions
@@ -421,9 +424,9 @@ The reentrancy boundary is now the active architecture track. Generated
 Flex/Bison state is isolated per thread, and parser classification plus
 declaration symbol tables are owned by each `CompilationContext`. Concurrent
 frontend regression coverage exercises distinct contexts without a global lock.
-The remaining temporary boundary is direct AST construction through the active
-arena binding; after that binding is removed, the final milestone is a supported
-parallel in-process API with end-to-end regression coverage.
+Parser sessions now carry the context-owned AST arena, and the separate active
+arena binding has been removed. The final milestone is a supported parallel
+in-process API with end-to-end regression coverage.
 
 ## Project origin and license
 

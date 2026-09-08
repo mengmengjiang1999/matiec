@@ -59,7 +59,7 @@ void destroy_arena_symbol(void *address) {
 symbol_c::symbol_c(
                    int first_line, int first_column, const char *ffile, long int first_order,
                    int last_line,  int last_column,  const char *lfile, long int last_order ) {
-  this->arena_owner_ = matiec::active_ast_arena();
+  this->arena_owner_ = matiec::active_parser_state().ast_arena();
   if (this->arena_owner_ != NULL)
     this->arena_owner_->adopt(this, &destroy_arena_symbol);
   this->first_file   = ffile,

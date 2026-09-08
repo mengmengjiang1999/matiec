@@ -5,7 +5,6 @@
 
 int main() {
   matiec::CompilationContext context;
-  matiec::ActiveAstArenaScope arena_scope(context.ast_arena());
   integer_c *literal = context.ast_arena().make<integer_c>("42");
   identifier_c *implicit_type =
       context.ast_arena().make<identifier_c>("__implicit_1");
@@ -30,7 +29,6 @@ int main() {
          nullptr);
 
   matiec::CompilationContext other;
-  matiec::ActiveAstArenaScope other_scope(other.ast_arena());
   identifier_c *foreign = other.ast_arena().make<identifier_c>("foreign");
   matiec::GeneratorAnalysisRecord invalid = entry->value;
   invalid.symbols["foreign"] = foreign;

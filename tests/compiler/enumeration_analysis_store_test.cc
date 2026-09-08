@@ -5,7 +5,6 @@
 
 int main() {
   matiec::CompilationContext context;
-  matiec::ActiveAstArenaScope arena_scope(context.ast_arena());
   library_c *library = context.ast_arena().make<library_c>();
   integer_c *first = context.ast_arena().make<integer_c>("1");
   integer_c *second = context.ast_arena().make<integer_c>("2");
@@ -31,7 +30,6 @@ int main() {
   assert(transient.enumvalue_symtable(context.analysis()).size() == 1);
 
   matiec::CompilationContext other;
-  matiec::ActiveAstArenaScope other_scope(other.ast_arena());
   integer_c *foreign = other.ast_arena().make<integer_c>("3");
   matiec::EnumerationAnalysisRecord invalid = entry->value;
   invalid.values.insert(std::make_pair("Foreign", foreign));

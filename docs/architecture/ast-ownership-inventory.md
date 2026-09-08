@@ -63,10 +63,11 @@ this migration set.
    stable string allocations, and destroys them in reverse allocation order.
 2. Add focused tests for node destruction, derived destructors, stable strings,
    and independent arena lifetimes.
-3. Route parser node construction and retained lexer strings through the active
-   compilation arena. Generated frontend session variables are now thread-local,
-   while an explicit temporary arena adapter remains until parser allocation
-   paths carry the context directly.
+3. Route parser node construction and retained lexer strings through the
+   context-owned parser session. Generated frontend session variables are
+   thread-local, the parser state carries its arena, and no separate active-arena
+   adapter remains. Explicit `AstArena::make()` calls attach nodes directly to
+   the named arena.
 4. Register the reordered root and persistent Stage 3 synthetic nodes with the
    same arena. Convert generator-only temporary nodes to values or stack objects.
 5. Replace stateful singletons, then test invalid-to-valid and differing-option
