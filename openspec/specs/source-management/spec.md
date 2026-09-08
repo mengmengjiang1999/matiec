@@ -1,7 +1,8 @@
 # source-management Specification
 
 ## Purpose
-TBD - created by archiving change add-source-manager. Update Purpose after archive.
+Define source identity, owned in-memory input, replayability, and compatibility
+with existing file and include behavior.
 ## Requirements
 ### Requirement: Source identity is independent of storage
 

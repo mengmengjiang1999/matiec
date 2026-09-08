@@ -1,7 +1,8 @@
 # ast-lifecycle Specification
 
 ## Purpose
-TBD - created by archiving change refactor-compiler-architecture. Update Purpose after archive.
+Define deterministic ownership and teardown for AST nodes, retained source text,
+and analysis references across repeated compilations.
 ## Requirements
 ### Requirement: Deterministic AST lifetime
 All AST nodes and parser-owned source strings created for a compilation SHALL be released when that compilation context is destroyed.

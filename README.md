@@ -413,6 +413,14 @@ results stay in `AnalysisStore`, and all semantic and generator result fields
 have been removed from the AST. Stage 3 and Stage 4 receive the owning context's
 store explicitly, without a compatibility result store or ambient binding.
 
+The reentrancy boundary is now the active architecture track. The remaining
+shared state is limited to the generated Flex/Bison scanner and parser, the
+parser's classification tables, the legacy declaration symbol tables, and the
+temporary active AST-arena binding. These boundaries support sequential context
+reuse but still prevent concurrent `Compiler::compile()` calls. The planned
+migration order is symbol tables, generated frontend state, explicit arena
+allocation, and finally parallel in-process regression coverage.
+
 ## Project origin and license
 
 MATIEC is derived from the original IEC 61131-3 compiler based on the

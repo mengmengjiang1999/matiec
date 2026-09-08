@@ -32,6 +32,19 @@ This adapter is deliberately synchronous and does not claim thread safety.
 Sequential compilation is covered by context-reuse regressions; generated scanner
 state and symbol tables still prevent concurrent compilation.
 
+## Reentrancy inventory
+
+| Boundary | Current owner | Shared state | Removal milestone |
+| --- | --- | --- | --- |
+| Parser classification | `stage1_2` compatibility boundary | library-element, variable-name, and direct-variable tables | Pass a context-owned parser symbol state to scanner callbacks |
+| Generated scanner/parser | Flex/Bison globals | buffers, include stack, locations, semantic value, lookahead, error count, and scanner start conditions | Generate reentrant scanner and pure parser interfaces with an explicit parse session |
+| Declaration lookup | `absyntax_utils_init()` compatibility boundary | function, function-block, program, datatype, and enum lookup tables | Store lookup tables in `CompilationContext` and pass them to consumers |
+| AST allocation | `ActiveAstArenaScope` | thread-local active arena used by legacy direct `new` actions | Pass the context arena explicitly through parser and synthetic-node constructors |
+
+Stage 3 and Stage 4 analysis data is not part of this inventory: it is already
+owned by `AnalysisStore` and passed explicitly. File-static debug flags and
+immutable canonical datatype sentinels do not contain compilation results.
+
 ## AST allocation boundary
 
 `ActiveAstArenaScope` is a separate, thread-local compatibility binding used
@@ -52,8 +65,8 @@ binding.
 
 No new mutable process-wide compiler state may be added to this adapter. New state
 belongs in `CompilationContext` or one of its services. As parser and symbol
-APIs gain explicit context parameters, their corresponding adapter methods and
-the `runtime_options` compatibility structure must be removed. The thread-local
+APIs gain explicit context parameters, their corresponding adapter methods,
+`current_parser_state`, and the `runtime_options` compatibility surface must be removed. The thread-local
 AST allocation binding must likewise be removed when parser and pass APIs carry
 the context explicitly.
 

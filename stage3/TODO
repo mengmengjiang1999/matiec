@@ -1,8 +1,11 @@
+Stage 3 maintenance notes
+=========================
 
+There are currently no known unimplemented Stage 3 correctness checks tracked in
+this file.
 
- Things that we must still check for in stage 3:
-
-
-1) Handling of CONSTANTs:
-
- 1.a) "Any program organization unit attempts to modify the value of a variable that has been declared with the CONSTANT qualifier;"
+The historical CONSTANT-assignment item is implemented by
+`lvalue_check_c::check_assignment_to_constant()` in `stage3/lvalue_check.cc`.
+New semantic gaps should be recorded in the language feature catalogue or an
+OpenSpec change with regression evidence instead of being added as an unscoped
+TODO.

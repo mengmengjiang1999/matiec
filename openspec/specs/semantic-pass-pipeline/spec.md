@@ -1,7 +1,8 @@
 # semantic-pass-pipeline Specification
 
 ## Purpose
-TBD - created by archiving change refactor-compiler-architecture. Update Purpose after archive.
+Define ordered semantic passes, structured diagnostics, pass isolation, and
+explicit context-owned analysis dependencies.
 ## Requirements
 ### Requirement: Explicit semantic pass order
 Semantic checks SHALL be registered and executed through a pipeline whose order and prerequisites are visible in one location.

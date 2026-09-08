@@ -1,7 +1,8 @@
 # build-modernization Specification
 
 ## Purpose
-TBD - created by archiving change refactor-compiler-architecture. Update Purpose after archive.
+Keep the authoritative Autotools build reproducible across supported compilers,
+clean checkouts, archives, and future equivalent build frontends.
 ## Requirements
 ### Requirement: Reproducible clean build
 

@@ -1,7 +1,8 @@
 # compilation-context Specification
 
 ## Purpose
-TBD - created by archiving change refactor-compiler-architecture. Update Purpose after archive.
+Define the per-compilation ownership boundary, compiler API responsibilities,
+and controlled migration away from legacy process-wide state.
 ## Requirements
 ### Requirement: Per-compilation state
 
@@ -171,3 +172,15 @@ or immutable compiler symbols with no arena owner.
 #### Scenario: Two compilations execute sequentially
 - **WHEN** separate compilation contexts execute on one thread
 - **THEN** each pass and generator accesses only the store supplied by its own context
+
+### Requirement: Maintained compatibility-boundary inventory
+
+The project SHALL document every remaining mutable process-wide or thread-local
+compilation boundary, its current owner, and the milestone that removes it.
+
+#### Scenario: A compatibility boundary changes
+
+- **WHEN** a change removes, splits, or introduces a shared-state compatibility
+  boundary
+- **THEN** the architecture inventory and reader-facing roadmap are updated in
+  the same change

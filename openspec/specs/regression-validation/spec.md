@@ -1,7 +1,8 @@
 # regression-validation Specification
 
 ## Purpose
-TBD - created by archiving change refactor-compiler-architecture. Update Purpose after archive.
+Define the maintained regression entry points, artifact isolation, evidence
+coverage, and cross-platform hosted validation contract.
 ## Requirements
 ### Requirement: Automated regression entry point
 The project SHALL provide a single build-system test command that runs maintained compiler regression suites and returns a non-zero status when any suite fails.

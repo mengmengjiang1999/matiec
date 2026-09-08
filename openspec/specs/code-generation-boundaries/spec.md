@@ -1,7 +1,8 @@
 # code-generation-boundaries Specification
 
 ## Purpose
-TBD - created by archiving change refactor-compiler-architecture. Update Purpose after archive.
+Define independently compiled generators, injectable output destinations, and
+behavior-preserving generation contracts.
 ## Requirements
 ### Requirement: Injectable output destinations
 Code generators SHALL emit through an output abstraction that supports filesystem and in-memory destinations with consistent error propagation.
