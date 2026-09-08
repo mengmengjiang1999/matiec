@@ -4,6 +4,7 @@
 #include "ast_arena.hh"
 #include "analysis_store.hh"
 #include "compiler_types.hh"
+#include "declaration_symbol_tables.hh"
 #include "diagnostic_engine.hh"
 #include "experimental_syntax_model.hh"
 #include "output_manager.hh"
@@ -31,6 +32,9 @@ class CompilationContext {
   AnalysisStore &analysis();
   const AnalysisStore &analysis() const;
 
+  DeclarationSymbolTables &declaration_symbols();
+  const DeclarationSymbolTables &declaration_symbols() const;
+
   ParserState &parser_state();
   const ParserState &parser_state() const;
 
@@ -52,6 +56,7 @@ class CompilationContext {
   OutputManager outputs_;
   AstArena ast_arena_;
   AnalysisStore analysis_;
+  DeclarationSymbolTables declaration_symbols_;
   ParserState parser_state_;
   SourceManager sources_;
   ExperimentalSyntaxModel experimental_syntax_;

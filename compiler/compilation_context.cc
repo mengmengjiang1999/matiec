@@ -38,6 +38,14 @@ AnalysisStore &CompilationContext::analysis() { return analysis_; }
 
 const AnalysisStore &CompilationContext::analysis() const { return analysis_; }
 
+DeclarationSymbolTables &CompilationContext::declaration_symbols() {
+  return declaration_symbols_;
+}
+
+const DeclarationSymbolTables &CompilationContext::declaration_symbols() const {
+  return declaration_symbols_;
+}
+
 ParserState &CompilationContext::parser_state() { return parser_state_; }
 
 const ParserState &CompilationContext::parser_state() const {

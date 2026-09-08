@@ -12,6 +12,7 @@ libcompiler_a_SOURCES = \
 	compilation_context.cc \
 	compiler.cc \
 	compiler_types.cc \
+	declaration_symbol_tables.cc \
 	diagnostic_engine.cc \
 	legacy_global_state_adapter.cc \
 	language_feature_catalog.cc \

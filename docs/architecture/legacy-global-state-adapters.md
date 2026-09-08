@@ -15,9 +15,10 @@ The adapter currently owns the transition into two legacy areas:
 * `stage1_2()` retains generated scanner buffers, include-stack data, Bison
   lookahead/error variables, and the pre-parse/definitive-parse driver boundary;
   callers enter it only through `LegacyGlobalStateAdapter::parse()`;
-* `absyntax_utils_init()` populates the legacy global function, function-block,
-  program, type, and enumerated-value symbol tables; callers enter it only
-  through `LegacyGlobalStateAdapter::initialize_symbol_tables()`.
+* `absyntax_utils_init()` populates the context-owned function, function-block,
+  program, and datatype declaration tables; callers enter it only through
+  `LegacyGlobalStateAdapter::initialize_symbol_tables()` while legacy consumers
+  use the current thread's nested access scope.
 
 Semantic and generator analysis is not part of this adapter. Stage 3 and Stage 4
 receive the context-owned `AnalysisStore` explicitly; no thread-local active
@@ -30,7 +31,7 @@ are no longer members of that process-wide state.
 
 This adapter is deliberately synchronous and does not claim thread safety.
 Sequential compilation is covered by context-reuse regressions; generated scanner
-state and symbol tables still prevent concurrent compilation.
+state and parser classification tables still prevent concurrent compilation.
 
 ## Reentrancy inventory
 
@@ -38,12 +39,17 @@ state and symbol tables still prevent concurrent compilation.
 | --- | --- | --- | --- |
 | Parser classification | `stage1_2` compatibility boundary | library-element, variable-name, and direct-variable tables | Pass a context-owned parser symbol state to scanner callbacks |
 | Generated scanner/parser | Flex/Bison globals | buffers, include stack, locations, semantic value, lookahead, error count, and scanner start conditions | Generate reentrant scanner and pure parser interfaces with an explicit parse session |
-| Declaration lookup | `absyntax_utils_init()` compatibility boundary | function, function-block, program, datatype, and enum lookup tables | Store lookup tables in `CompilationContext` and pass them to consumers |
 | AST allocation | `ActiveAstArenaScope` | thread-local active arena used by legacy direct `new` actions | Pass the context arena explicitly through parser and synthetic-node constructors |
 
 Stage 3 and Stage 4 analysis data is not part of this inventory: it is already
 owned by `AnalysisStore` and passed explicitly. File-static debug flags and
 immutable canonical datatype sentinels do not contain compilation results.
+
+Declaration lookup storage has crossed this boundary. `CompilationContext` owns
+its function, function-block, program, and datatype tables and clears them before
+each compile. `ActiveDeclarationSymbolTablesScope` is a thread-local pointer-only
+compatibility surface for existing visitors; nested scopes restore their caller,
+and no declaration entries live in process-wide storage.
 
 ## AST allocation boundary
 

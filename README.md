@@ -415,11 +415,13 @@ store explicitly, without a compatibility result store or ambient binding.
 
 The reentrancy boundary is now the active architecture track. The remaining
 shared state is limited to the generated Flex/Bison scanner and parser, the
-parser's classification tables, the legacy declaration symbol tables, and the
-temporary active AST-arena binding. These boundaries support sequential context
+parser's classification tables, and the temporary active AST-arena binding.
+Declaration symbol tables are now owned by each `CompilationContext`; legacy
+consumers use a nested thread-local access scope without sharing table storage.
+The remaining boundaries support sequential context
 reuse but still prevent concurrent `Compiler::compile()` calls. The planned
-migration order is symbol tables, generated frontend state, explicit arena
-allocation, and finally parallel in-process regression coverage.
+migration order is generated frontend state, explicit arena allocation, and
+finally parallel in-process regression coverage.
 
 ## Project origin and license
 

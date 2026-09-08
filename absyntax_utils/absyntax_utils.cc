@@ -57,6 +57,7 @@
 #include "../util/symtable.hh"
 #include "../util/dsymtable.hh"
 #include "../absyntax/visitor.hh"
+#include "../compiler/declaration_symbol_tables.hh"
 #include "../main.hh" // required for ERROR() and ERROR_MSG() macros.
 
 
@@ -103,24 +104,6 @@ int compare_identifiers(symbol_c *ident1, symbol_c *ident2) {
 
 
 
-/* A symbol table with all globally declared functions... */
-dsymtable_c<function_declaration_c *> function_symtable;
-
-/* A symbol table with all globally declared functions block types... */
-symtable_c<function_block_declaration_c *> function_block_type_symtable;
-
-/* A symbol table with all globally declared program types... */
-symtable_c<program_declaration_c *> program_type_symtable;
-
-/* A symbol table with all user declared type definitions... */
-/* Note that function block types and program types have their
- * own symbol tables, so do not get placed in this symbol table!
- *
- * The symbol_c * associated to the value will point to the data type declaration.
- */
-symtable_c<symbol_c *> type_symtable;
-
-
 /***********************************************************************/
 /***********************************************************************/
 /***********************************************************************/
@@ -131,9 +114,11 @@ class populate_symtables_c: public iterator_visitor_c {
 
   private:
 	symbol_c *current_enumerated_type;
+	matiec::DeclarationSymbolTables &tables_;
 
   public:
-    populate_symtables_c(void) {
+    explicit populate_symtables_c(matiec::DeclarationSymbolTables &tables)
+      : tables_(tables) {
     	current_enumerated_type = NULL;
     };
     virtual ~populate_symtables_c(void) {}
@@ -179,11 +164,11 @@ class populate_symtables_c: public iterator_visitor_c {
   /********************************/
 
   /*  subrange_type_name ':' subrange_spec_init */
-  void *visit(subrange_type_declaration_c *symbol) {type_symtable.insert(symbol->subrange_type_name, symbol->subrange_spec_init); return NULL;}
+  void *visit(subrange_type_declaration_c *symbol) {tables_.types.insert(symbol->subrange_type_name, symbol->subrange_spec_init); return NULL;}
 
   /*  enumerated_type_name ':' enumerated_spec_init */
   void *visit(enumerated_type_declaration_c *symbol) {
-    type_symtable.insert(symbol->enumerated_type_name, symbol);
+    tables_.types.insert(symbol->enumerated_type_name, symbol);
     current_enumerated_type = symbol->enumerated_type_name;
     symbol->enumerated_spec_init->accept(*this);
     current_enumerated_type = NULL;
@@ -193,15 +178,15 @@ class populate_symtables_c: public iterator_visitor_c {
   /* enumerated_specification ASSIGN enumerated_value */
   void *visit(enumerated_spec_init_c *symbol) {return symbol->enumerated_specification->accept(*this);}
   /*  identifier ':' array_spec_init */
-  void *visit(array_type_declaration_c *symbol) {type_symtable.insert(symbol->identifier, symbol->array_spec_init); return NULL;}
+  void *visit(array_type_declaration_c *symbol) {tables_.types.insert(symbol->identifier, symbol->array_spec_init); return NULL;}
   /*  simple_type_name ':' simple_spec_init */
-  void *visit(simple_type_declaration_c *symbol) {type_symtable.insert(symbol->simple_type_name, symbol->simple_spec_init); return NULL;}
+  void *visit(simple_type_declaration_c *symbol) {tables_.types.insert(symbol->simple_type_name, symbol->simple_spec_init); return NULL;}
   /*  structure_type_name ':' structure_specification */
-  void *visit(structure_type_declaration_c *symbol) {type_symtable.insert(symbol->structure_type_name, symbol->structure_specification); return NULL;}
+  void *visit(structure_type_declaration_c *symbol) {tables_.types.insert(symbol->structure_type_name, symbol->structure_specification); return NULL;}
   /*  string_type_name ':' elementary_string_type_name string_type_declaration_size string_type_declaration_init */
-  void *visit(string_type_declaration_c *symbol) {type_symtable.insert(symbol->string_type_name, symbol); return NULL;}
+  void *visit(string_type_declaration_c *symbol) {tables_.types.insert(symbol->string_type_name, symbol); return NULL;}
   /* identifier ':' ref_spec_init */
-  void *visit(ref_type_decl_c *symbol) {type_symtable.insert(symbol->ref_type_name, symbol); return NULL;}
+  void *visit(ref_type_decl_c *symbol) {tables_.types.insert(symbol->ref_type_name, symbol); return NULL;}
 
   /*********************/
   /* B 1.4 - Variables */
@@ -226,7 +211,7 @@ class populate_symtables_c: public iterator_visitor_c {
   /* | FUNCTION derived_function_name ':' derived_type_name io_OR_function_var_declarations_list function_body END_FUNCTION */
   void *visit(function_declaration_c *symbol) {
     TRACE("function_declaration_c");
-    function_symtable.insert(symbol->derived_function_name, symbol);
+    tables_.functions.insert(symbol->derived_function_name, symbol);
   
     /* symbol->derived_function_name->accept(*this);  */ /* Function name */
     /* symbol->type_name->accept(*this);              */ /* return data type */
@@ -244,7 +229,7 @@ class populate_symtables_c: public iterator_visitor_c {
   //SYM_REF4(function_block_declaration_c, fblock_name, var_declarations, fblock_body, unused)
   void *visit(function_block_declaration_c *symbol) {
     TRACE("function_block_declaration_c");
-    function_block_type_symtable.insert(symbol->fblock_name, symbol);
+    tables_.function_blocks.insert(symbol->fblock_name, symbol);
   /*
     symbol->fblock_name->accept(*this);
     symbol->var_declarations->accept(*this);
@@ -262,7 +247,7 @@ class populate_symtables_c: public iterator_visitor_c {
   //SYM_REF4(program_declaration_c, program_type_name, var_declarations, function_block_body, unused)
   void *visit(program_declaration_c *symbol) {
     TRACE("program_declaration_c");
-    program_type_symtable.insert(symbol->program_type_name, symbol);
+    tables_.programs.insert(symbol->program_type_name, symbol);
   /*
     symbol->program_type_name->accept(*this);
     symbol->var_declarations->accept(*this);
@@ -277,9 +262,10 @@ class populate_symtables_c: public iterator_visitor_c {
 
 
 
-void absyntax_utils_init(symbol_c *tree_root) {
-  populate_symtables_c populate_symbols;
+void absyntax_utils_init(symbol_c *tree_root,
+                         matiec::DeclarationSymbolTables &tables) {
+  tables.clear();
+  populate_symtables_c populate_symbols(tables);
 
   tree_root->accept(populate_symbols);
 }
-

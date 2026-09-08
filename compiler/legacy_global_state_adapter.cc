@@ -53,7 +53,7 @@ int LegacyGlobalStateAdapter::parse_source(const std::string &source,
 }
 
 void LegacyGlobalStateAdapter::initialize_symbol_tables(symbol_c *tree_root) const {
-  absyntax_utils_init(tree_root);
+  absyntax_utils_init(tree_root, context_.declaration_symbols());
 }
 
 }  // namespace matiec

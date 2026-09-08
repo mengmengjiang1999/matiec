@@ -8,8 +8,9 @@ and controlled migration away from legacy process-wide state.
 
 Each compilation SHALL use an explicit context that contains compiler options,
 diagnostics, source identity and optional source bytes, structured experimental
-syntax metadata, symbol state, AST storage, and output configuration for that
-compilation. Derived phase permissions SHALL NOT mutate caller-provided options.
+syntax metadata, declaration symbol tables, AST storage, analysis records, and
+output configuration for that compilation. Derived phase permissions SHALL NOT
+mutate caller-provided options.
 
 #### Scenario: A context is reused across profiles
 
@@ -21,8 +22,8 @@ compilation. Derived phase permissions SHALL NOT mutate caller-provided options.
 #### Scenario: Two contexts recognize experimental declarations
 
 - **WHEN** separate contexts compile sources containing different declarations
-- **THEN** each context exposes only the declaration metadata from its own source
-
+- **THEN** each context exposes only the declaration metadata and symbol-table
+  entries from its own source
 ### Requirement: Thin executable boundary
 The command-line executable SHALL translate arguments into compiler options, invoke the compiler API, render diagnostics, and choose the final process status without implementing compiler phases itself.
 

@@ -42,6 +42,23 @@ int main() {
   assert(first.experimental_syntax().namespaces.empty());
   assert(first.analysis().size() == 0);
   assert(second.analysis().size() == 0);
+  first.declaration_symbols().function_blocks.insert("FirstBlock", nullptr);
+  assert(first.declaration_symbols().function_blocks.count("FirstBlock") == 1);
+  assert(second.declaration_symbols().function_blocks.count("FirstBlock") == 0);
+  {
+    matiec::ActiveDeclarationSymbolTablesScope first_symbols(
+        first.declaration_symbols());
+    assert(&matiec::active_declaration_symbol_tables() ==
+           &first.declaration_symbols());
+    {
+      matiec::ActiveDeclarationSymbolTablesScope second_symbols(
+          second.declaration_symbols());
+      assert(&matiec::active_declaration_symbol_tables() ==
+             &second.declaration_symbols());
+    }
+    assert(&matiec::active_declaration_symbol_tables() ==
+           &first.declaration_symbols());
+  }
   first.parser_state().options.pre_parsing = true;
   first.parser_state().goto_body = true;
   assert(!second.parser_state().options.pre_parsing);
