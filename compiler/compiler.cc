@@ -16,6 +16,12 @@
 #include "stage4/stage4.hh"
 
 #include <string>
+#include <algorithm>
+#include <atomic>
+#include <exception>
+#include <thread>
+#include <unordered_map>
+#include <vector>
 
 namespace matiec {
 
@@ -135,6 +141,75 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
                ? context.diagnostics().result()
                : CompilationResult::failure();
   }
+}
+
+std::vector<CompilationResult> Compiler::compile_parallel(
+    const std::vector<std::reference_wrapper<CompilationContext>> &contexts,
+    std::size_t max_concurrency) const {
+  std::vector<CompilationResult> results(contexts.size());
+  if (contexts.empty()) return results;
+
+  std::unordered_map<CompilationContext *, std::size_t> occurrences;
+  for (const std::reference_wrapper<CompilationContext> &context : contexts)
+    ++occurrences[&context.get()];
+
+  std::vector<bool> duplicate(contexts.size(), false);
+  std::size_t accepted_count = 0;
+  for (std::size_t index = 0; index < contexts.size(); ++index) {
+    CompilationContext &context = contexts[index].get();
+    if (occurrences[&context] > 1) {
+      duplicate[index] = true;
+      continue;
+    }
+    ++accepted_count;
+  }
+
+  for (const std::pair<CompilationContext *const, std::size_t> &entry :
+       occurrences) {
+    if (entry.second > 1)
+      entry.first->diagnostics().error(
+          "A compilation context may appear only once in a parallel batch");
+  }
+  for (std::size_t index = 0; index < contexts.size(); ++index) {
+    if (duplicate[index])
+      results[index] = contexts[index].get().diagnostics().result();
+  }
+  if (accepted_count == 0) return results;
+
+  std::size_t worker_count = max_concurrency;
+  if (worker_count == 0) worker_count = std::thread::hardware_concurrency();
+  if (worker_count == 0) worker_count = 1;
+  worker_count = std::min(worker_count, accepted_count);
+
+  std::atomic<std::size_t> next_index(0);
+  std::vector<std::exception_ptr> exceptions(contexts.size());
+  const auto run_worker = [&] {
+    while (true) {
+      const std::size_t index = next_index.fetch_add(1);
+      if (index >= contexts.size()) return;
+      if (duplicate[index]) continue;
+      try {
+        results[index] = compile(contexts[index].get());
+      } catch (...) {
+        exceptions[index] = std::current_exception();
+      }
+    }
+  };
+
+  std::vector<std::thread> workers;
+  workers.reserve(worker_count);
+  try {
+    for (std::size_t index = 0; index < worker_count; ++index)
+      workers.emplace_back(run_worker);
+  } catch (...) {
+    for (std::thread &worker : workers) worker.join();
+    throw;
+  }
+  for (std::thread &worker : workers) worker.join();
+  for (const std::exception_ptr &exception : exceptions) {
+    if (exception) std::rethrow_exception(exception);
+  }
+  return results;
 }
 
 }  // namespace matiec

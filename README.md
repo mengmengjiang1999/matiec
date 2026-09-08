@@ -230,9 +230,9 @@ nodes and retained parser strings. Separate contexts support repeated,
 sequential compilations without leaking state between runs. The generated
 frontend also supports overlapping parses for independent contexts on separate
 threads. Parser sessions carry their context-owned AST arenas, so direct parser
-and synthetic-node allocation is isolated without a second active binding. Full
-parallel compilation becomes a supported API after the batch interface and
-end-to-end coverage land.
+and synthetic-node allocation is isolated without a second active binding.
+`Compiler::compile_parallel()` runs the full pipeline for a bounded batch of
+distinct contexts and preserves input order in its results.
 
 Semantic flow, constants, datatype candidates, final datatype/scope selections,
 invocation declaration resolution, and scope-specific enumeration tables are
@@ -288,7 +288,8 @@ thread-local and clean builds verify that transformation before compiling the
 generated sources. `LegacyGlobalStateAdapter` still supplies the active parser
 context; that parser session carries the context-owned arena used by legacy
 direct AST construction and retained strings. The separate active-arena binding
-has been removed. A public parallel compilation API is not yet supported.
+has been removed. Full-pipeline parallel compilation is supported for distinct
+contexts on separate worker threads.
 
 ## Embed from C++
 
@@ -320,6 +321,20 @@ a named temporary file:
 ```cpp
 context.set_source("memory://counter.st", source_text);
 ```
+
+Independent contexts can be compiled as an ordered, bounded batch:
+
+```cpp
+std::vector<std::reference_wrapper<matiec::CompilationContext>> jobs = {
+    std::ref(first_context), std::ref(second_context)};
+std::vector<matiec::CompilationResult> results =
+    matiec::Compiler().compile_parallel(jobs, 2);
+```
+
+Each context must appear only once in a batch and must use an independent output
+directory. A `max_concurrency` value of zero selects a positive worker count
+automatically. Returned results always correspond to the input context at the
+same index; one failed compilation does not stop the other jobs.
 
 Filesystem include pragmas still resolve through `include_directory`.
 
@@ -353,6 +368,7 @@ The regression suite covers:
 - compiler services, diagnostics, AST ownership, and pass metadata;
 - pass ordering, prerequisites, and failure short-circuiting;
 - invalid-then-valid sequential compilation;
+- bounded full-pipeline parallel compilation with failure and output isolation;
 - CLI behavior and syntax/initialization regressions;
 - in-memory and byte-characterized generator output;
 - generated-C compilation, ABI symbols, linking, and representative runtime
@@ -406,7 +422,6 @@ ownership, or memory-lifetime changes.
 
 ## Roadmap boundaries
 
-- Supported parallel in-process compilation
 - Versioned embedding API/ABI
 - Direct graphical FBD and LD input
 - Validation against later IEC 61131-3 editions
@@ -425,8 +440,9 @@ Flex/Bison state is isolated per thread, and parser classification plus
 declaration symbol tables are owned by each `CompilationContext`. Concurrent
 frontend regression coverage exercises distinct contexts without a global lock.
 Parser sessions now carry the context-owned AST arena, and the separate active
-arena binding has been removed. The final milestone is a supported parallel
-in-process API with end-to-end regression coverage.
+arena binding has been removed. `Compiler::compile_parallel()` and its
+full-pipeline regression now cover ordered results, mixed success/failure,
+independent parser/AST/diagnostic state, and isolated generated output.
 
 ## Project origin and license
 

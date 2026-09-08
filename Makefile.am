@@ -21,6 +21,7 @@ TESTS = \
 	generator_analysis_store_test \
 	sequential_compilation_test \
 	concurrent_frontend_test \
+	parallel_compilation_test \
 	in_memory_generator_test \
 	tests/generated_c/runtests \
 	tests/initialization/runtests \
@@ -97,7 +98,7 @@ iec2c_SOURCES = main.cc
 
 iec2iec_SOURCES = main.cc
 
-check_PROGRAMS = modern_library_registry_test flow_analysis_store_test constant_analysis_store_test datatype_analysis_store_test resolution_analysis_store_test enumeration_analysis_store_test generator_analysis_store_test sequential_compilation_test concurrent_frontend_test in_memory_generator_test
+check_PROGRAMS = modern_library_registry_test flow_analysis_store_test constant_analysis_store_test datatype_analysis_store_test resolution_analysis_store_test enumeration_analysis_store_test generator_analysis_store_test sequential_compilation_test concurrent_frontend_test parallel_compilation_test in_memory_generator_test
 
 modern_library_registry_test_SOURCES = \
 	tests/compiler/modern_library_registry_test.cc
@@ -133,9 +134,11 @@ sequential_compilation_test_LDADD = $(iec2c_LDADD)
 
 concurrent_frontend_test_SOURCES = \
 	tests/compiler/concurrent_frontend_test.cc
-concurrent_frontend_test_CXXFLAGS = $(AM_CXXFLAGS) -pthread
-concurrent_frontend_test_LDFLAGS = -pthread
 concurrent_frontend_test_LDADD = $(iec2c_LDADD)
+
+parallel_compilation_test_SOURCES = \
+	tests/compiler/parallel_compilation_test.cc
+parallel_compilation_test_LDADD = $(iec2c_LDADD)
 
 in_memory_generator_test_SOURCES = \
 	tests/compiler/in_memory_generator_test.cc

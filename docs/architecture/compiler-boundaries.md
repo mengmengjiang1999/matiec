@@ -29,14 +29,20 @@ Destroying the context releases all AST nodes and retained parser
 strings from that compilation. Do not retain AST pointers after the context is
 destroyed.
 
-Two compilations may run sequentially in one process with separate contexts.
-The generated Flex/Bison frontend may also parse independent contexts
+Two compilations may run sequentially or concurrently in one process with
+separate contexts. The generated Flex/Bison frontend parses independent contexts
 concurrently on separate threads: its mutable session data is thread-local and
 its classification tables are context-owned. Parser sessions carry their
 context-owned AST arenas, so direct parser and synthetic-node construction also
-remains isolated without a separate active-arena binding. A supported
-full-pipeline parallel API and end-to-end regression coverage remain the next
-public boundary.
+remains isolated without a separate active-arena binding.
+
+`Compiler::compile_parallel()` is the supported full-pipeline batch entry point.
+It accepts caller-owned context references, bounds the short-lived worker pool,
+and returns one result per context in input order. Each context must be unique in
+the batch and use an independent output directory; duplicate context positions
+are rejected before workers start. A failure in one job does not stop accepted
+jobs. A zero concurrency limit selects a positive worker count automatically.
+Unexpected worker exceptions are rethrown only after every worker is joined.
 
 ## Pipeline
 
@@ -168,6 +174,7 @@ publishing the canonical path or `ACCESS.csv` row.
   and typed result.
 - New generators accept an output abstraction; they do not open files directly.
 - New AST allocations and retained strings use the context's `AstArena`.
+- Parallel jobs use distinct contexts and independent output directories.
 - New lower-layer failures become diagnostics/results, not `exit()` calls.
 - Changes to generated output update characterization or ABI expectations only
   when the behavior change is deliberate and separately reviewed.

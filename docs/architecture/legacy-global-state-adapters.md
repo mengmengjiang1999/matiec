@@ -33,8 +33,8 @@ analysis binding remains.
 Generated mutable variables are marked `thread_local` by a checked,
 post-generation build step. Independent contexts can therefore execute the
 frontend concurrently on separate threads without a process-wide lock. This is
-not recursive reentrancy on one thread, and the project does not yet expose a
-supported full-pipeline parallel API.
+not recursive reentrancy on one thread. `Compiler::compile_parallel()` exposes
+the supported bounded full-pipeline API for distinct contexts.
 
 ## Reentrancy inventory
 
