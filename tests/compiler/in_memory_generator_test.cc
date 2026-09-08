@@ -1,4 +1,5 @@
 #include "compiler/ast_arena.hh"
+#include "compiler/analysis_store.hh"
 #include "compiler/diagnostic_engine.hh"
 #include "compiler/output_manager.hh"
 #include "compiler/output_sink.hh"
@@ -13,9 +14,10 @@ int main() {
   matiec::OutputManager outputs(diagnostics, memory);
   matiec::AstArena arena;
   matiec::ActiveAstArenaScope arena_scope(arena);
+  matiec::AnalysisStore analysis(arena);
 
   integer_c literal("42");
-  stage4out_c output(outputs);
+  stage4out_c output(outputs, "  ", &analysis);
   visitor_c *generator =
       new_generate_c_st_generator(&output, NULL, &literal, NULL);
 

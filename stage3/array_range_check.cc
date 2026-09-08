@@ -47,8 +47,8 @@
 #include "../compiler/analysis_store.hh"
 
 
-#define GET_CVALUE(dtype, symbol)             (matiec::analysis_constant_value(symbol)._##dtype.get())
-#define VALID_CVALUE(dtype, symbol)           (matiec::analysis_constant_value(symbol)._##dtype.is_valid())
+#define GET_CVALUE(dtype, symbol)             (matiec::analysis_constant_value(analysis_, symbol)._##dtype.get())
+#define VALID_CVALUE(dtype, symbol)           (matiec::analysis_constant_value(analysis_, symbol)._##dtype.is_valid())
 
 /*  The cmp_unsigned_signed function compares two numbers u and s.
  *  It returns an integer indicating the relationship between the numbers:
@@ -75,8 +75,9 @@ static inline uint64_t magnitude_of_negative(const int64_t value) {
 }
 
 array_range_check_c::array_range_check_c(symbol_c *ignore,
-                                         matiec::DiagnosticEngine &diagnostics)
-    : diagnostics_(diagnostics) {
+                                         matiec::DiagnosticEngine &diagnostics,
+                                         const matiec::AnalysisStore &analysis)
+    : analysis_(analysis), diagnostics_(diagnostics) {
 	error_count = 0;
 	current_display_error_level = 0;
 	search_varfb_instance_type = NULL;
@@ -274,9 +275,9 @@ void *array_range_check_c::visit(array_initial_elements_list_c *symbol) {
 	 * Note that narrow_candidate_datatypes_c always sets it to the array's base type declaration.
 	 */
 	array_specification_c *array_spec = NULL;
-	if (NULL != matiec::analysis_selected_datatype(symbol))
+	if (NULL != matiec::analysis_selected_datatype(analysis_, symbol))
 		array_spec = dynamic_cast<array_specification_c *>(
-			matiec::analysis_selected_datatype(symbol));
+			matiec::analysis_selected_datatype(analysis_, symbol));
 	if (NULL == array_spec) return NULL;
 
 	/* Determine how many elements the array may store, i.e. the product of all its dimensions.

@@ -81,12 +81,13 @@ arena-checked `AnalysisStore`; flow, constant, datatype, resolution, enumeration
 and generator record families all have production publication boundaries.
 Compatibility materializers are no longer used by production. Completed flow,
 constant, datatype, resolution, enumeration, and generator records no longer
-require AST copy-back. Legacy-shaped consumers use a narrowly scoped
-thread-local active-store guard that is installed and restored by the compiler;
-this supersedes the original prohibition above while preserving nested context
-isolation. This document remains the historical rationale for the staged
-approach. Test-only materializers have also been removed. Flow vectors, constant
+require AST copy-back. The temporary thread-local active-store guard has also
+been removed: legacy-shaped accessors, semantic visitors, helpers, and generators
+now receive the context-owned store explicitly. This document remains the
+historical rationale for the staged approach. Test-only materializers have also
+been removed. Flow vectors, constant
 values, datatype candidates/selections/scopes, resolution, enumeration, and
 generator metadata no longer occupy AST fields; their producers update persistent
-or transient context records directly. The remaining follow-up removes the scoped
-active-store bridge. This does not reopen the completed result-store design.
+or transient context records directly. The completed explicit-dependency change
+preserves the result-store design while restoring the original prohibition on
+ambient analysis state.

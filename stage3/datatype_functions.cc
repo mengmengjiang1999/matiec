@@ -386,12 +386,14 @@ const struct widen_entry widen_CMP_table[] = {
 /* Search for a datatype inside a candidate_datatypes list.
  * Returns: position of datatype in the list, or -1 if not found.
  */
-int search_in_candidate_datatype_list(symbol_c *datatype, const std::vector <symbol_c *> &candidate_datatypes) {
+int search_in_candidate_datatype_list(
+    const matiec::AnalysisStore &analysis_, symbol_c *datatype,
+    const std::vector<symbol_c *> &candidate_datatypes) {
 	if (NULL == datatype)
 		return -1;
 
 	for(unsigned int i = 0; i < candidate_datatypes.size(); i++)
-		if (get_datatype_info_c::is_type_equal(datatype, candidate_datatypes[i]))
+		if (get_datatype_info_c::is_type_equal(analysis_, datatype, candidate_datatypes[i]))
 			return i;
 	/* Not found ! */
 	return -1;
@@ -400,8 +402,10 @@ int search_in_candidate_datatype_list(symbol_c *datatype, const std::vector <sym
 /* Remove a datatype inside a candidate_datatypes list.
  * Returns: If successful it returns true, false otherwise.
  */
-bool remove_from_candidate_datatype_list(symbol_c *datatype, std::vector <symbol_c *> &candidate_datatypes) {
-	int pos = search_in_candidate_datatype_list(datatype, candidate_datatypes);
+bool remove_from_candidate_datatype_list(
+    const matiec::AnalysisStore &analysis_, symbol_c *datatype,
+    std::vector<symbol_c *> &candidate_datatypes) {
+	int pos = search_in_candidate_datatype_list(analysis_, datatype, candidate_datatypes);
 	if (pos < 0)
 		return false;
 
@@ -416,18 +420,20 @@ bool remove_from_candidate_datatype_list(symbol_c *datatype, std::vector <symbol
  * In essence, list1 will contain the result of the intersection of list1 with list2.
  * In other words, modify list1 so it only contains the elelements that are simultaneously in list1 and list2!
  */
-void intersect_candidate_datatype_list(symbol_c *list1 /*origin, dest.*/, symbol_c *list2 /*with*/) {
+void intersect_candidate_datatype_list(matiec::AnalysisStore &analysis_,
+                                       symbol_c *list1 /*origin, dest.*/,
+                                       symbol_c *list2 /*with*/) {
 	if ((NULL == list1) || (NULL == list2))
 		/* In principle, we should never call it with NULL values. Best to abort the compiler just in case! */
 		return;
 
-	for(std::vector<symbol_c *>::iterator i = list1->candidate_datatypes().begin(); i < list1->candidate_datatypes().end(); ) {
+	for(std::vector<symbol_c *>::iterator i = list1->candidate_datatypes(analysis_).begin(); i < list1->candidate_datatypes(analysis_).end(); ) {
 		/* Note that we do _not_ increment i in the for() loop!
 		 * When we erase an element from position i, a new element will take it's place, that must also be tested!
 		 */
-		if (search_in_candidate_datatype_list(*i, list2->candidate_datatypes()) < 0)
+		if (search_in_candidate_datatype_list(analysis_, *i, list2->candidate_datatypes(analysis_)) < 0)
 			/* remove this element! This will change the value of candidate_datatypes.size() */
-			list1->candidate_datatypes().erase(i);
+			list1->candidate_datatypes(analysis_).erase(i);
 		else i++;
 	}
 }
@@ -436,19 +442,17 @@ void intersect_candidate_datatype_list(symbol_c *list1 /*origin, dest.*/, symbol
 
 
 /* intersect the candidate_datatype lists of all prev_il_intructions, and set the local candidate_datatype list to the result! */
-void intersect_prev_candidate_datatype_lists(il_instruction_c *symbol) {
-	if (matiec::analysis_flow_predecessors(symbol).empty())
+void intersect_prev_candidate_datatype_lists(matiec::AnalysisStore &analysis_,
+                                             il_instruction_c *symbol) {
+	if (matiec::analysis_flow_predecessors(analysis_, symbol).empty())
 		return;
 
-	symbol->candidate_datatypes() = matiec::analysis_datatype_candidates(
-		matiec::analysis_flow_predecessors(symbol)[0]);
-	for (unsigned int i = 1; i < matiec::analysis_flow_predecessors(symbol).size(); i++) {
-		intersect_candidate_datatype_list(symbol /*origin, dest.*/, matiec::analysis_flow_predecessors(symbol)[i] /*with*/);
+	symbol->candidate_datatypes(analysis_) = matiec::analysis_datatype_candidates(analysis_,
+		matiec::analysis_flow_predecessors(analysis_, symbol)[0]);
+	for (unsigned int i = 1; i < matiec::analysis_flow_predecessors(analysis_, symbol).size(); i++) {
+		intersect_candidate_datatype_list(analysis_, symbol /*origin, dest.*/, matiec::analysis_flow_predecessors(analysis_, symbol)[i] /*with*/);
 	}
 }
-
-
-
 
 
 

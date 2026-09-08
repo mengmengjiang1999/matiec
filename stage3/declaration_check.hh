@@ -42,9 +42,11 @@ class declaration_check_c : public iterator_visitor_c {
     symbol_c *current_pou_decl;
     symbol_c *current_resource_decl;
     matiec::SemanticDiagnostics diagnostics_;
+    matiec::AnalysisStore &analysis_;
 
 public:
-    declaration_check_c(symbol_c *ignore, matiec::DiagnosticEngine &diagnostics);
+    declaration_check_c(symbol_c *ignore, matiec::DiagnosticEngine &diagnostics,
+                        matiec::AnalysisStore &analysis);
     virtual ~declaration_check_c(void);
     int get_error_count();
 

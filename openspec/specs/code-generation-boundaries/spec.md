@@ -166,3 +166,10 @@ completed datatype records onto AST fields.
 
 - **WHEN** a generator utility requests the scope of an arena-owned variable node
 - **THEN** it receives the scope published in that node's typed record
+
+### Requirement: Generators declare analysis dependencies
+Stage 4 generator components SHALL receive semantic and generator analysis access explicitly through their construction or helper interfaces.
+
+#### Scenario: A generator resolves a call
+- **WHEN** a Stage 4 generator needs a resolved declaration, datatype, constant, flow edge, or generator record
+- **THEN** it reads the result through its explicitly supplied analysis dependency

@@ -60,6 +60,7 @@ class check_extern_c: public iterator_visitor_c {
   
   private:
     matiec::SemanticDiagnostics &diagnostics_;
+    matiec::AnalysisStore &analysis_;
     int current_display_error_level;
     symbol_c *current_pou_decl;
     symbol_c *current_resource_decl;
@@ -70,8 +71,9 @@ class check_extern_c: public iterator_visitor_c {
     static int error_count;
     
     check_extern_c(matiec::SemanticDiagnostics &diagnostics,
-                   symbol_c *current_pou, symbol_c *current_resource)
-        : diagnostics_(diagnostics) {
+                   matiec::AnalysisStore &analysis, symbol_c *current_pou,
+                   symbol_c *current_resource)
+        : diagnostics_(diagnostics), analysis_(analysis) {
       current_display_error_level = 0;
       current_pou_decl      = current_pou;
       current_resource_decl = current_resource;
@@ -128,7 +130,7 @@ class check_extern_c: public iterator_visitor_c {
           /* For the moment, we will just use search_base_type_c instead... */
           symbol_c *glo_type = search_base_type_c::get_basetype_decl(glo_decl);
           symbol_c *ext_type = search_base_type_c::get_basetype_decl(ext_decl);
-          if (! get_datatype_info_c::is_type_equal(glo_type, ext_type))
+          if (! get_datatype_info_c::is_type_equal(analysis_, glo_type, ext_type))
             STAGE3_ERROR(0, ext_decl, ext_decl, "Declaration error.  Data type mismatch between external and global variable declarations.");
         }
       }
@@ -253,8 +255,9 @@ class constant_function_block_check_c: public iterator_visitor_c {
 
 
 declaration_check_c::declaration_check_c(
-    symbol_c *ignore, matiec::DiagnosticEngine &diagnostics)
-    : diagnostics_(diagnostics) {
+    symbol_c *ignore, matiec::DiagnosticEngine &diagnostics,
+    matiec::AnalysisStore &analysis)
+    : diagnostics_(diagnostics), analysis_(analysis) {
   current_display_error_level = 0;
   current_pou_decl = NULL;
   current_resource_decl = NULL;
@@ -320,7 +323,7 @@ END_RESOURCE
 // SYM_REF4(resource_declaration_c, resource_name, resource_type_name, global_var_declarations, resource_declaration, enumvalue_symtable_t enumvalue_symtable;)
 void *declaration_check_c::visit(resource_declaration_c *symbol) {
   // check if any FB instantiated inside this resource (in a VAR_GLOBAL) has any VAR_EXTERNAL declarations incompatible with the configuration's VAR_GLOBALs
-  check_extern_c check_extern(diagnostics_, current_pou_decl,
+  check_extern_c check_extern(diagnostics_, analysis_, current_pou_decl,
                               current_resource_decl);
   symbol->global_var_declarations->accept(check_extern);   
   // Now check the Programs instantiated in this resource
@@ -344,7 +347,7 @@ void *declaration_check_c::visit(program_configuration_c *symbol) {
   if ((iter_f == function_block_type_symtable.end()) && (iter_p == program_type_symtable.end())) 
     ERROR;  // Should never occur! stage1_2 guarantees that we are sure to find a declaration in FB or Program symtable.
 
-  check_extern_c check_extern(diagnostics_, current_pou_decl,
+  check_extern_c check_extern(diagnostics_, analysis_, current_pou_decl,
                               current_resource_decl);
   p_decl->accept(check_extern);
   return NULL;

@@ -165,16 +165,16 @@
 
 
 
-#define SET_CVALUE(dtype, symbol, new_value)  ((symbol)->const_value()._##dtype.set(new_value))
-#define GET_CVALUE(dtype, symbol)             ((symbol)->const_value()._##dtype.get())
-#define SET_OVFLOW(dtype, symbol)             ((symbol)->const_value()._##dtype.set_overflow())
-#define SET_NONCONST(dtype, symbol)           ((symbol)->const_value()._##dtype.set_nonconst())
+#define SET_CVALUE(dtype, symbol, new_value)  ((symbol)->const_value(analysis_)._##dtype.set(new_value))
+#define GET_CVALUE(dtype, symbol)             ((symbol)->const_value(analysis_)._##dtype.get())
+#define SET_OVFLOW(dtype, symbol)             ((symbol)->const_value(analysis_)._##dtype.set_overflow())
+#define SET_NONCONST(dtype, symbol)           ((symbol)->const_value(analysis_)._##dtype.set_nonconst())
 
-#define VALID_CVALUE(dtype, symbol)           ((symbol)->const_value()._##dtype.is_valid())
-#define IS_OVFLOW(dtype, symbol)              ((symbol)->const_value()._##dtype.is_overflow())
-#define IS_NONCONST(dtype, symbol)            ((symbol)->const_value()._##dtype.is_nonconst())
-#define IS_UNDEFINED(dtype, symbol)           ((symbol)->const_value()._##dtype.is_undefined())
-#define ISZERO_CVALUE(dtype, symbol)          ((symbol)->const_value()._##dtype.is_zero())
+#define VALID_CVALUE(dtype, symbol)           ((symbol)->const_value(analysis_)._##dtype.is_valid())
+#define IS_OVFLOW(dtype, symbol)              ((symbol)->const_value(analysis_)._##dtype.is_overflow())
+#define IS_NONCONST(dtype, symbol)            ((symbol)->const_value(analysis_)._##dtype.is_nonconst())
+#define IS_UNDEFINED(dtype, symbol)           ((symbol)->const_value(analysis_)._##dtype.is_undefined())
+#define ISZERO_CVALUE(dtype, symbol)          ((symbol)->const_value(analysis_)._##dtype.is_zero())
 
 
 #define ISEQUAL_CVALUE(dtype, symbol1, symbol2) \
@@ -398,7 +398,7 @@ real64_t extract_real_value(symbol_c *sym, bool *overflow) {
  */
 
 /* res = a + b */
-static void CHECK_OVERFLOW_uint64_SUM(symbol_c *res, symbol_c *a, symbol_c *b) {
+static void CHECK_OVERFLOW_uint64_SUM(matiec::AnalysisStore &analysis_, symbol_c *res, symbol_c *a, symbol_c *b) {
 	if (!VALID_CVALUE(uint64, res))
 		return;
 	/* Test by post-condition: If sum is smaller than either operand => overflow! */
@@ -410,7 +410,7 @@ static void CHECK_OVERFLOW_uint64_SUM(symbol_c *res, symbol_c *a, symbol_c *b) {
 
 
 /* res = a - b */
-static void CHECK_OVERFLOW_uint64_SUB(symbol_c *res, symbol_c *a, symbol_c *b) {
+static void CHECK_OVERFLOW_uint64_SUB(matiec::AnalysisStore &analysis_, symbol_c *res, symbol_c *a, symbol_c *b) {
 	if (!VALID_CVALUE(uint64, res))
 		return;
 	/* Test by post-condition: If diference is larger than a => overflow! */
@@ -422,7 +422,7 @@ static void CHECK_OVERFLOW_uint64_SUB(symbol_c *res, symbol_c *a, symbol_c *b) {
 
 
 /* res = a * b */
-static void CHECK_OVERFLOW_uint64_MUL(symbol_c *res, symbol_c *a, symbol_c *b) {
+static void CHECK_OVERFLOW_uint64_MUL(matiec::AnalysisStore &analysis_, symbol_c *res, symbol_c *a, symbol_c *b) {
 	if (!VALID_CVALUE(uint64, res))
 		return;
 	/* Test by pre-condition: If (UINT64_MAX / a) < b => overflow! */
@@ -434,7 +434,7 @@ static void CHECK_OVERFLOW_uint64_MUL(symbol_c *res, symbol_c *a, symbol_c *b) {
 
 
 /* res = a / b */
-static void CHECK_OVERFLOW_uint64_DIV(symbol_c *res, symbol_c *a, symbol_c *b) {
+static void CHECK_OVERFLOW_uint64_DIV(matiec::AnalysisStore &analysis_, symbol_c *res, symbol_c *a, symbol_c *b) {
 	if (!VALID_CVALUE(uint64, res))
 		return;
 	if (GET_CVALUE(uint64, b) == 0) /* division by zero! */
@@ -443,7 +443,7 @@ static void CHECK_OVERFLOW_uint64_DIV(symbol_c *res, symbol_c *a, symbol_c *b) {
 
 
 /* res = a MOD b */
-static void CHECK_OVERFLOW_uint64_MOD(symbol_c *res, symbol_c *a, symbol_c *b) {
+static void CHECK_OVERFLOW_uint64_MOD(matiec::AnalysisStore &analysis_, symbol_c *res, symbol_c *a, symbol_c *b) {
 	if (!VALID_CVALUE(uint64, res))
 		return;
 	/* no overflow condition exists, including division by zero, which IEC 61131-3 considers legal for MOD operation! */
@@ -453,7 +453,7 @@ static void CHECK_OVERFLOW_uint64_MOD(symbol_c *res, symbol_c *a, symbol_c *b) {
 
 
 /* res = - a */
-static void CHECK_OVERFLOW_uint64_NEG(symbol_c *res, symbol_c *a) {
+static void CHECK_OVERFLOW_uint64_NEG(matiec::AnalysisStore &analysis_, symbol_c *res, symbol_c *a) {
 	/* The only legal operation is res = -0, everything else is an overflow! */
 	if (VALID_CVALUE(uint64, a) && (GET_CVALUE(uint64, a) != 0))
 		SET_OVFLOW(uint64, res);
@@ -465,7 +465,7 @@ static void CHECK_OVERFLOW_uint64_NEG(symbol_c *res, symbol_c *a) {
 
 
 /* res = a + b */
-static void CHECK_OVERFLOW_int64_SUM(symbol_c *res, symbol_c *a_ptr, symbol_c *b_ptr) {
+static void CHECK_OVERFLOW_int64_SUM(matiec::AnalysisStore &analysis_, symbol_c *res, symbol_c *a_ptr, symbol_c *b_ptr) {
 	if (!VALID_CVALUE(int64, res))
 		return;
 	int64_t a = GET_CVALUE(int64, a_ptr);
@@ -478,7 +478,7 @@ static void CHECK_OVERFLOW_int64_SUM(symbol_c *res, symbol_c *a_ptr, symbol_c *b
 
 
 /* res = a - b */
-static void CHECK_OVERFLOW_int64_SUB(symbol_c *res, symbol_c *a_ptr, symbol_c *b_ptr) {
+static void CHECK_OVERFLOW_int64_SUB(matiec::AnalysisStore &analysis_, symbol_c *res, symbol_c *a_ptr, symbol_c *b_ptr) {
 	if (!VALID_CVALUE(int64, res))
 		return;
 	int64_t a = GET_CVALUE(int64, a_ptr);
@@ -491,7 +491,7 @@ static void CHECK_OVERFLOW_int64_SUB(symbol_c *res, symbol_c *a_ptr, symbol_c *b
 
 
 /* res = a * b */
-static void CHECK_OVERFLOW_int64_MUL(symbol_c *res, symbol_c *a_ptr, symbol_c *b_ptr) {
+static void CHECK_OVERFLOW_int64_MUL(matiec::AnalysisStore &analysis_, symbol_c *res, symbol_c *a_ptr, symbol_c *b_ptr) {
 	if (!VALID_CVALUE(int64, res))
 		return;
 	int64_t a = GET_CVALUE(int64, a_ptr);
@@ -505,7 +505,7 @@ static void CHECK_OVERFLOW_int64_MUL(symbol_c *res, symbol_c *a_ptr, symbol_c *b
 
 
 /* res = a / b */
-static void CHECK_OVERFLOW_int64_DIV(symbol_c *res, symbol_c *a_ptr, symbol_c *b_ptr) {
+static void CHECK_OVERFLOW_int64_DIV(matiec::AnalysisStore &analysis_, symbol_c *res, symbol_c *a_ptr, symbol_c *b_ptr) {
 	if (!VALID_CVALUE(int64, res))
 		return;
 	int64_t a = GET_CVALUE(int64, a_ptr);
@@ -516,7 +516,7 @@ static void CHECK_OVERFLOW_int64_DIV(symbol_c *res, symbol_c *a_ptr, symbol_c *b
 
 
 /* res = a MOD b */
-static void CHECK_OVERFLOW_int64_MOD(symbol_c *res, symbol_c *a_ptr, symbol_c *b_ptr) {
+static void CHECK_OVERFLOW_int64_MOD(matiec::AnalysisStore &analysis_, symbol_c *res, symbol_c *a_ptr, symbol_c *b_ptr) {
 	if (!VALID_CVALUE(int64, res))
 		return;
 	int64_t a = GET_CVALUE(int64, a_ptr);
@@ -535,7 +535,7 @@ static void CHECK_OVERFLOW_int64_MOD(symbol_c *res, symbol_c *a_ptr, symbol_c *b
 
 
 /* res = - a */
-static void CHECK_OVERFLOW_int64_NEG(symbol_c *res, symbol_c *a) {
+static void CHECK_OVERFLOW_int64_NEG(matiec::AnalysisStore &analysis_, symbol_c *res, symbol_c *a) {
 	if (!VALID_CVALUE(int64, res))
 		return;
 	if (GET_CVALUE(int64, a) == INT64_MIN)
@@ -545,7 +545,7 @@ static void CHECK_OVERFLOW_int64_NEG(symbol_c *res, symbol_c *a) {
 
 
 
-static void CHECK_OVERFLOW_real64(symbol_c *res_ptr) {
+static void CHECK_OVERFLOW_real64(matiec::AnalysisStore &analysis_, symbol_c *res_ptr) {
 	if (!VALID_CVALUE(real64, res_ptr))
 		return;
 	real64_t res = GET_CVALUE(real64, res_ptr);
@@ -587,15 +587,15 @@ static void CHECK_OVERFLOW_real64(symbol_c *res_ptr) {
 
 
 /* NOTE: the MOVE standard function is equivalent to the ':=' in ST syntax */
-static void *handle_move(symbol_c *to, symbol_c *from) {
+static void *handle_move(matiec::AnalysisStore &analysis_, symbol_c *to, symbol_c *from) {
 	if (NULL == from) return NULL;
-	to->const_value() = from->const_value();
+	to->const_value(analysis_) = from->const_value(analysis_);
 	return NULL;
 }
 
 
 /* unary negation (multiply by -1) */
-static void *handle_neg(symbol_c *symbol, symbol_c *oper) {
+static void *handle_neg(matiec::AnalysisStore &analysis_, symbol_c *symbol, symbol_c *oper) {
 	if (NULL == oper) return NULL;
 	/* NOTE: The oper may never be an integer/real literal, '-1' and '-2.2' are stored as an neg_integer_c/neg_real_c instead.
 	 *       Because of this, we MUST NOT handle the INT_MIN special situation that is handled in neg_integer_c visitor!
@@ -605,15 +605,15 @@ static void *handle_neg(symbol_c *symbol, symbol_c *oper) {
 	 *       v2 =  -(-v1);                                                 <------ ILLEGAL (since it -v1 is overflow!)
 	 *       v2 =  -(-9223372036854775808 );                               <------ MUST also be ILLEGAL 
 	 */
-	DO_UNARY_OPER(uint64, -, oper);	CHECK_OVERFLOW_uint64_NEG(symbol, oper);  /* handle the uint_v := -0 situation! */
-	DO_UNARY_OPER( int64, -, oper);	CHECK_OVERFLOW_int64_NEG (symbol, oper);
-	DO_UNARY_OPER(real64, -, oper);	CHECK_OVERFLOW_real64(symbol);
+	DO_UNARY_OPER(uint64, -, oper);	CHECK_OVERFLOW_uint64_NEG(analysis_, symbol, oper);  /* handle the uint_v := -0 situation! */
+	DO_UNARY_OPER( int64, -, oper);	CHECK_OVERFLOW_int64_NEG(analysis_, symbol, oper);
+	DO_UNARY_OPER(real64, -, oper);	CHECK_OVERFLOW_real64(analysis_, symbol);
 	return NULL;
 }
 
 
 /* unary boolean negation (NOT) */
-static void *handle_not(symbol_c *symbol, symbol_c *oper) {
+static void *handle_not(matiec::AnalysisStore &analysis_, symbol_c *symbol, symbol_c *oper) {
 	if (NULL == oper) return NULL;
 	DO_UNARY_OPER(  bool, !, oper);
 	DO_UNARY_OPER(uint64, ~, oper);
@@ -621,7 +621,7 @@ static void *handle_not(symbol_c *symbol, symbol_c *oper) {
 }
 
 
-static void *handle_or (symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
+static void *handle_or(matiec::AnalysisStore &analysis_, symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 	if ((NULL == oper1) || (NULL == oper2)) return NULL;
 	DO_BINARY_OPER(  bool, ||, bool  , oper1, oper2);
 	DO_BINARY_OPER(uint64, | , uint64, oper1, oper2);
@@ -629,7 +629,7 @@ static void *handle_or (symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 }
 
 
-static void *handle_xor(symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
+static void *handle_xor(matiec::AnalysisStore &analysis_, symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 	if ((NULL == oper1) || (NULL == oper2)) return NULL;
 	DO_BINARY_OPER(  bool, ^, bool  , oper1, oper2);
 	DO_BINARY_OPER(uint64, ^, uint64, oper1, oper2);
@@ -637,7 +637,7 @@ static void *handle_xor(symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 }
 
 
-static void *handle_and(symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
+static void *handle_and(matiec::AnalysisStore &analysis_, symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 	if ((NULL == oper1) || (NULL == oper2)) return NULL;
 	DO_BINARY_OPER(  bool, &&, bool, oper1, oper2);
 	DO_BINARY_OPER(uint64, & , uint64, oper1, oper2);
@@ -645,43 +645,43 @@ static void *handle_and(symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 }
 
 
-static void *handle_add(symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
+static void *handle_add(matiec::AnalysisStore &analysis_, symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 	if ((NULL == oper1) || (NULL == oper2)) return NULL;
-	DO_BINARY_OPER(uint64, +, uint64, oper1, oper2);   CHECK_OVERFLOW_uint64_SUM(symbol, oper1, oper2);
-	DO_BINARY_OPER( int64, +,  int64, oper1, oper2);   CHECK_OVERFLOW_int64_SUM (symbol, oper1, oper2);
-	DO_BINARY_OPER(real64, +, real64, oper1, oper2);   CHECK_OVERFLOW_real64    (symbol);
+	DO_BINARY_OPER(uint64, +, uint64, oper1, oper2);   CHECK_OVERFLOW_uint64_SUM(analysis_, symbol, oper1, oper2);
+	DO_BINARY_OPER( int64, +,  int64, oper1, oper2);   CHECK_OVERFLOW_int64_SUM(analysis_, symbol, oper1, oper2);
+	DO_BINARY_OPER(real64, +, real64, oper1, oper2);   CHECK_OVERFLOW_real64(analysis_, symbol);
 	return NULL;
 }
 
 
-static void *handle_sub(symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
+static void *handle_sub(matiec::AnalysisStore &analysis_, symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 	if ((NULL == oper1) || (NULL == oper2)) return NULL;
-	DO_BINARY_OPER(uint64, -, uint64, oper1, oper2);   CHECK_OVERFLOW_uint64_SUB(symbol, oper1, oper2);
-	DO_BINARY_OPER( int64, -,  int64, oper1, oper2);   CHECK_OVERFLOW_int64_SUB (symbol, oper1, oper2);
-	DO_BINARY_OPER(real64, -, real64, oper1, oper2);   CHECK_OVERFLOW_real64    (symbol);
+	DO_BINARY_OPER(uint64, -, uint64, oper1, oper2);   CHECK_OVERFLOW_uint64_SUB(analysis_, symbol, oper1, oper2);
+	DO_BINARY_OPER( int64, -,  int64, oper1, oper2);   CHECK_OVERFLOW_int64_SUB(analysis_, symbol, oper1, oper2);
+	DO_BINARY_OPER(real64, -, real64, oper1, oper2);   CHECK_OVERFLOW_real64(analysis_, symbol);
 	return NULL;
 }
 
 
-static void *handle_mul(symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
+static void *handle_mul(matiec::AnalysisStore &analysis_, symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 	if ((NULL == oper1) || (NULL == oper2)) return NULL;
-	DO_BINARY_OPER(uint64, *, uint64, oper1, oper2);   CHECK_OVERFLOW_uint64_MUL(symbol, oper1, oper2);
-	DO_BINARY_OPER( int64, *,  int64, oper1, oper2);   CHECK_OVERFLOW_int64_MUL (symbol, oper1, oper2);
-	DO_BINARY_OPER(real64, *, real64, oper1, oper2);   CHECK_OVERFLOW_real64    (symbol);
+	DO_BINARY_OPER(uint64, *, uint64, oper1, oper2);   CHECK_OVERFLOW_uint64_MUL(analysis_, symbol, oper1, oper2);
+	DO_BINARY_OPER( int64, *,  int64, oper1, oper2);   CHECK_OVERFLOW_int64_MUL(analysis_, symbol, oper1, oper2);
+	DO_BINARY_OPER(real64, *, real64, oper1, oper2);   CHECK_OVERFLOW_real64(analysis_, symbol);
 	return NULL;
 }
 
 
-static void *handle_div(symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
+static void *handle_div(matiec::AnalysisStore &analysis_, symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 	if ((NULL == oper1) || (NULL == oper2)) return NULL;
-	if (ISZERO_CVALUE(uint64, oper2))  {SET_OVFLOW(uint64, symbol);} else {DO_BINARY_OPER(uint64, /, uint64, oper1, oper2); CHECK_OVERFLOW_uint64_DIV(symbol, oper1, oper2);};
-	if (ISZERO_CVALUE( int64, oper2))  {SET_OVFLOW( int64, symbol);} else {DO_BINARY_OPER( int64, /,  int64, oper1, oper2); CHECK_OVERFLOW_int64_DIV (symbol, oper1, oper2);};
-	if (ISZERO_CVALUE(real64, oper2))  {SET_OVFLOW(real64, symbol);} else {DO_BINARY_OPER(real64, /, real64, oper1, oper2); CHECK_OVERFLOW_real64(symbol);};
+	if (ISZERO_CVALUE(uint64, oper2))  {SET_OVFLOW(uint64, symbol);} else {DO_BINARY_OPER(uint64, /, uint64, oper1, oper2); CHECK_OVERFLOW_uint64_DIV(analysis_, symbol, oper1, oper2);};
+	if (ISZERO_CVALUE( int64, oper2))  {SET_OVFLOW( int64, symbol);} else {DO_BINARY_OPER( int64, /,  int64, oper1, oper2); CHECK_OVERFLOW_int64_DIV(analysis_, symbol, oper1, oper2);};
+	if (ISZERO_CVALUE(real64, oper2))  {SET_OVFLOW(real64, symbol);} else {DO_BINARY_OPER(real64, /, real64, oper1, oper2); CHECK_OVERFLOW_real64(analysis_, symbol);};
 	return NULL;
 }
 
 
-static void *handle_mod(symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
+static void *handle_mod(matiec::AnalysisStore &analysis_, symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 	if ((NULL == oper1) || (NULL == oper2)) return NULL;
 	/* IEC 61131-3 standard says IN1 MOD IN2 must be equivalent to
 	 *  IF (IN2 = 0) THEN OUT:=0 ; ELSE OUT:=IN1 - (IN1/IN2)*IN2 ; END_IF
@@ -689,13 +689,13 @@ static void *handle_mod(symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 	 * Note that, when IN1 = INT64_MIN, and IN2 = -1, an overflow occurs in the division,
 	 * so although the MOD operation should be OK, acording to the above definition, we actually have an overflow!!
 	 */
-	if (ISZERO_CVALUE(uint64, oper2))  {SET_CVALUE(uint64, symbol, 0);} else {DO_BINARY_OPER(uint64, %, uint64, oper1, oper2); CHECK_OVERFLOW_uint64_MOD(symbol, oper1, oper2);};
-	if (ISZERO_CVALUE( int64, oper2))  {SET_CVALUE( int64, symbol, 0);} else {DO_BINARY_OPER( int64, %,  int64, oper1, oper2); CHECK_OVERFLOW_int64_MOD (symbol, oper1, oper2);};
+	if (ISZERO_CVALUE(uint64, oper2))  {SET_CVALUE(uint64, symbol, 0);} else {DO_BINARY_OPER(uint64, %, uint64, oper1, oper2); CHECK_OVERFLOW_uint64_MOD(analysis_, symbol, oper1, oper2);};
+	if (ISZERO_CVALUE( int64, oper2))  {SET_CVALUE( int64, symbol, 0);} else {DO_BINARY_OPER( int64, %,  int64, oper1, oper2); CHECK_OVERFLOW_int64_MOD(analysis_, symbol, oper1, oper2);};
 	return NULL;
 }
 
 
-static void *handle_pow(symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
+static void *handle_pow(matiec::AnalysisStore &analysis_, symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 	/* NOTE: If the const_value in symbol->r_exp is within the limits of both int64 and uint64, then we do both operations.
 	 *       That is OK, as the result should be identicial (we do create an unnecessary CVALUE variable, but who cares?).
 	 *       If only one is valid, then that is the oper we will do!
@@ -704,7 +704,7 @@ static void *handle_pow(symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 		SET_CVALUE(real64, symbol, pow(GET_CVALUE(real64, oper1), GET_CVALUE( int64, oper2)));
 	if (VALID_CVALUE(real64, oper1) && VALID_CVALUE(uint64, oper2))
 		SET_CVALUE(real64, symbol, pow(GET_CVALUE(real64, oper1), GET_CVALUE(uint64, oper2)));
-	CHECK_OVERFLOW_real64(symbol);
+	CHECK_OVERFLOW_real64(analysis_, symbol);
 	return NULL;
 }
 
@@ -720,15 +720,16 @@ static void *handle_pow(symbol_c *symbol, symbol_c *oper1, symbol_c *oper2) {
 
 /* If the cvalues of all the prev_il_intructions have the same VALID value, then set the local cvalue to that value, otherwise, set it to NONCONST! */
 #define intersect_prev_CVALUE_(dtype, symbol) {                                                                   \
-	symbol->const_value()._##dtype = matiec::analysis_flow_predecessors(symbol)[0]->const_value()._##dtype;                      \
-	for (unsigned int i = 1; i < matiec::analysis_flow_predecessors(symbol).size(); i++) {                                   \
-		if (!ISEQUAL_CVALUE(dtype, symbol, matiec::analysis_flow_predecessors(symbol)[i]))                               \
+	symbol->const_value(analysis_)._##dtype = matiec::analysis_flow_predecessors(analysis_, symbol)[0]->const_value(analysis_)._##dtype;                      \
+	for (unsigned int i = 1; i < matiec::analysis_flow_predecessors(analysis_, symbol).size(); i++) {                                   \
+		if (!ISEQUAL_CVALUE(dtype, symbol, matiec::analysis_flow_predecessors(analysis_, symbol)[i]))                               \
 			{SET_NONCONST(dtype, symbol); break;}                                                     \
 	}                                                                                                         \
 }
 
-static void intersect_prev_cvalues(il_instruction_c *symbol) {
-	if (matiec::analysis_flow_predecessors(symbol).empty())
+static void intersect_prev_cvalues(matiec::AnalysisStore &analysis_,
+                                   il_instruction_c *symbol) {
+	if (matiec::analysis_flow_predecessors(analysis_, symbol).empty())
 		return;
 	intersect_prev_CVALUE_(real64, symbol);
 	intersect_prev_CVALUE_(uint64, symbol);
@@ -748,8 +749,9 @@ static void intersect_prev_cvalues(il_instruction_c *symbol) {
 
 
 constant_folding_c::constant_folding_c(symbol_c *symbol,
-                                       matiec::DiagnosticEngine &diagnostics)
-    : diagnostics_(diagnostics) {
+                                       matiec::DiagnosticEngine &diagnostics,
+                                       matiec::AnalysisStore &analysis)
+    : analysis_(analysis), diagnostics_(diagnostics) {
     error_count = 0;
     warning_found = false;
     current_display_error_level = 0;
@@ -802,7 +804,7 @@ void *constant_folding_c::visit(integer_c *symbol) {
 
 void *constant_folding_c::visit(neg_real_c *symbol) {
 	symbol->exp->accept(*this);
-	DO_UNARY_OPER(real64, -, symbol->exp); CHECK_OVERFLOW_real64(symbol);
+	DO_UNARY_OPER(real64, -, symbol->exp); CHECK_OVERFLOW_real64(analysis_, symbol);
 	if (IS_OVFLOW(real64, symbol->exp)) SET_OVFLOW(real64, symbol);
 	return NULL;
 }
@@ -823,15 +825,15 @@ void *constant_folding_c::visit(neg_integer_c *symbol) {
 	 * an expression would imply that the expression itself would also be set to 'overflow' condition.
 	 * This in turn would then have the compiler produce a whole load of error messages where they are not wanted!
 	 */
-	DO_UNARY_OPER(uint64, -, symbol->exp); CHECK_OVERFLOW_uint64_NEG(symbol, symbol->exp);  /* handle the uintv := -0 situation */
+	DO_UNARY_OPER(uint64, -, symbol->exp); CHECK_OVERFLOW_uint64_NEG(analysis_, symbol, symbol->exp);  /* handle the uintv := -0 situation */
 	if (IS_OVFLOW(uint64, symbol->exp)) SET_OVFLOW(uint64, symbol);
-	DO_UNARY_OPER( int64, -, symbol->exp); CHECK_OVERFLOW_int64_NEG (symbol, symbol->exp);
+	DO_UNARY_OPER( int64, -, symbol->exp); CHECK_OVERFLOW_int64_NEG(analysis_, symbol, symbol->exp);
 	if (IS_OVFLOW( int64, symbol->exp)) SET_OVFLOW( int64, symbol);
 	/* NOTE 1: INT64_MIN = -(INT64_MAX + 1)   ---> assuming two's complement representation!!!
 	 * NOTE 2: if the user happens to want INT_MIN, that value will first be parsed as a positive integer, before being negated here.
 	 * However, the positive value cannot be stored inside an int64! So, in this case, we will get the value from the uint64 cvalue.
 	 *
-	 * This same situation is usually considered an overflow (check handle_neg() function). However, here we have a special
+	 * This same situation is usually considered an overflow (check handle_neg(analysis_, ) function). However, here we have a special
 	 * situation. If we do not allow this, then the user would never the able to use the following code:
 	 *  VAR v : LINT; END_VAR
 	 *    v := -9223372036854775809 ; (* - |INT64_MIN| == INT64_MIN *)
@@ -951,20 +953,20 @@ void *constant_folding_c::visit(il_instruction_c *symbol) {
 		/* This empty/null il_instruction does not change the value of the current/default IL variable.
 		 * So it inherits the candidate_datatypes from it's previous IL instructions!
 		 */
-		intersect_prev_cvalues(symbol);
+		intersect_prev_cvalues(analysis_, symbol);
 	} else {
 		il_instruction_c fake_prev_il_instruction = *symbol;
-		matiec::analysis_flow_predecessors_mut(&fake_prev_il_instruction) =
-		    matiec::analysis_flow_predecessors(symbol);
-		intersect_prev_cvalues(&fake_prev_il_instruction);
+		matiec::analysis_flow_predecessors_mut(analysis_, &fake_prev_il_instruction) =
+		    matiec::analysis_flow_predecessors(analysis_, symbol);
+		intersect_prev_cvalues(analysis_, &fake_prev_il_instruction);
 
-		if (matiec::analysis_flow_predecessors(symbol).size() == 0)  prev_il_instruction = NULL;
+		if (matiec::analysis_flow_predecessors(analysis_, symbol).size() == 0)  prev_il_instruction = NULL;
 		else                                          prev_il_instruction = &fake_prev_il_instruction;
 		symbol->il_instruction->accept(*this);
 		prev_il_instruction = NULL;
 
 		/* This object has (inherits) the same cvalues as the il_instruction */
-		symbol->const_value() = symbol->il_instruction->const_value();
+		symbol->const_value(analysis_) = symbol->il_instruction->const_value(analysis_);
 	}
 
 	return NULL;
@@ -981,7 +983,7 @@ void *constant_folding_c::visit(il_simple_operation_c *symbol) {
 	symbol->il_simple_operator->accept(*this);
 	il_operand = NULL;
 	/* This object has (inherits) the same cvalues as the il_instruction */
-	symbol->const_value() = symbol->il_simple_operator->const_value();
+	symbol->const_value(analysis_) = symbol->il_simple_operator->const_value(analysis_);
 	return NULL;
 }
 
@@ -1012,7 +1014,7 @@ void *constant_folding_c::visit(il_expression_c *symbol) {
   il_operand = NULL;
   
   /* This object has (inherits) the same cvalues as the il_instruction */
-  symbol->const_value() = symbol->il_expr_operator->const_value();
+  symbol->const_value(analysis_) = symbol->il_expr_operator->const_value(analysis_);
   
   /* Since stage2 will insert an artificial (and equivalent) LD <il_operand> to the simple_instr_list when an 'il_operand' exists, we know
    * that if (symbol->il_operand != NULL), then the first IL instruction in the simple_instr_list will be the equivalent and artificial
@@ -1021,7 +1023,7 @@ void *constant_folding_c::visit(il_expression_c *symbol) {
    */
   if ((NULL != symbol->il_operand) && ((NULL == symbol->simple_instr_list) || (0 == ((list_c *)symbol->simple_instr_list)->n))) ERROR; // stage2 is not behaving as we expect it to!
   if  (NULL != symbol->il_operand)
-    symbol->il_operand->const_value() = ((list_c *)symbol->simple_instr_list)->get_element(0)->const_value();
+    symbol->il_operand->const_value(analysis_) = ((list_c *)symbol->simple_instr_list)->get_element(0)->const_value(analysis_);
 
   return NULL;
 }
@@ -1034,7 +1036,7 @@ void *constant_folding_c::visit(il_jump_operation_c *symbol) {
   symbol->il_jump_operator->accept(*this);
   il_operand = NULL;
   /* This object has (inherits) the same cvalues as the il_jump_operator */
-  symbol->const_value() = symbol->il_jump_operator->const_value();
+  symbol->const_value(analysis_) = symbol->il_jump_operator->const_value(analysis_);
   return NULL;
 }
 
@@ -1049,7 +1051,7 @@ void *constant_folding_c::visit(il_jump_operation_c *symbol) {
  */
 /* NOTE: The parameter 'called_fb_declaration'is used to pass data between stage 3 and stage4 (although currently it is not used in stage 4 */
 // SYM_REF4(il_fb_call_c, il_call_operator, fb_name, il_operand_list, il_param_list, symbol_c *called_fb_declaration)
-void *constant_folding_c::visit(il_fb_call_c *symbol) {return handle_move(symbol, prev_il_instruction);}
+void *constant_folding_c::visit(il_fb_call_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
 
 
 /* TODO: handle function invocations... */
@@ -1075,7 +1077,7 @@ void *constant_folding_c::visit(simple_instr_list_c *symbol) {
     symbol->get_element(i)->accept(*this);
 
   /* This object has (inherits) the same cvalues as the il_jump_operator */
-  symbol->const_value() = symbol->get_element(symbol->n-1)->const_value();
+  symbol->const_value(analysis_) = symbol->get_element(symbol->n-1)->const_value(analysis_);
   return NULL;
 }
 
@@ -1083,14 +1085,14 @@ void *constant_folding_c::visit(simple_instr_list_c *symbol) {
 
 // SYM_REF1(il_simple_instruction_c, il_simple_instruction, symbol_c *prev_il_instruction;)
 void *constant_folding_c::visit(il_simple_instruction_c *symbol) {
-  if (matiec::analysis_flow_predecessors(symbol).size() > 1) ERROR; /* There should be no labeled insructions inside an IL expression! */
-  if (matiec::analysis_flow_predecessors(symbol).size() == 0)  prev_il_instruction = NULL;
-  else                                          prev_il_instruction = matiec::analysis_flow_predecessors(symbol)[0];
+  if (matiec::analysis_flow_predecessors(analysis_, symbol).size() > 1) ERROR; /* There should be no labeled insructions inside an IL expression! */
+  if (matiec::analysis_flow_predecessors(analysis_, symbol).size() == 0)  prev_il_instruction = NULL;
+  else                                          prev_il_instruction = matiec::analysis_flow_predecessors(analysis_, symbol)[0];
   symbol->il_simple_instruction->accept(*this);
   prev_il_instruction = NULL;
 
   /* This object has (inherits) the same cvalues as the il_jump_operator */
-  symbol->const_value() = symbol->il_simple_instruction->const_value();
+  symbol->const_value(analysis_) = symbol->il_simple_instruction->const_value(analysis_);
   return NULL;
 }
 
@@ -1105,52 +1107,52 @@ void *constant_folding_c::visit(il_simple_instruction_c *symbol) {
 /*******************/
 /* B 2.2 Operators */
 /*******************/
-void *constant_folding_c::visit(   LD_operator_c *symbol) {return handle_move(symbol, il_operand);}
-void *constant_folding_c::visit(  LDN_operator_c *symbol) {return handle_not (symbol, il_operand);}
+void *constant_folding_c::visit(   LD_operator_c *symbol) {return handle_move(analysis_, symbol, il_operand);}
+void *constant_folding_c::visit(  LDN_operator_c *symbol) {return handle_not(analysis_, symbol, il_operand);}
 
 /* NOTE: we are implementing a constant folding algorithm, not a constant propagation algorithm.
  *       For the constant propagation algorithm, the correct implementation of ST(N)_operator_c would be...
  */
-//void *constant_folding_c::visit(   ST_operator_c *symbol) {return handle_move(il_operand, symbol);}
-//void *constant_folding_c::visit(  STN_operator_c *symbol) {return handle_not (il_operand, symbol);}
-void *constant_folding_c::visit(   ST_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit(  STN_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
+//void *constant_folding_c::visit(   ST_operator_c *symbol) {return handle_move(analysis_, il_operand, symbol);}
+//void *constant_folding_c::visit(  STN_operator_c *symbol) {return handle_not(analysis_, il_operand, symbol);}
+void *constant_folding_c::visit(   ST_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit(  STN_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
 
 /* NOTE: the standard allows syntax in which the NOT operator is followed by an optional <il_operand>
  *              NOT [<il_operand>]
  *       However, it does not define the semantic of the NOT operation when the <il_operand> is specified.
  *       We therefore consider it an error if an il_operand is specified! This error will be caught elsewhere!
  */
-void *constant_folding_c::visit(  NOT_operator_c *symbol) {return handle_not(symbol, prev_il_instruction);}
+void *constant_folding_c::visit(  NOT_operator_c *symbol) {return handle_not(analysis_, symbol, prev_il_instruction);}
 
 /* NOTE: Since we are only implementing a constant folding algorithm, and not a constant propagation algorithm,
  *       the following IL instructions do not change/set the value of the il_operand!
  */
-void *constant_folding_c::visit(    S_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit(    R_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
+void *constant_folding_c::visit(    S_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit(    R_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
 
 /* FB calls leave the value in the accumulator unchanged */
-void *constant_folding_c::visit(   S1_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit(   R1_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit(  CLK_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit(   CU_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit(   CD_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit(   PV_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit(   IN_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit(   PT_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
+void *constant_folding_c::visit(   S1_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit(   R1_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit(  CLK_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit(   CU_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit(   CD_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit(   PV_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit(   IN_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit(   PT_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
 
-void *constant_folding_c::visit(  AND_operator_c *symbol) {return handle_and (symbol, prev_il_instruction, il_operand);}
-void *constant_folding_c::visit(   OR_operator_c *symbol) {return handle_or  (symbol, prev_il_instruction, il_operand);}
-void *constant_folding_c::visit(  XOR_operator_c *symbol) {return handle_xor (symbol, prev_il_instruction, il_operand);}
-void *constant_folding_c::visit( ANDN_operator_c *symbol) {       handle_and (symbol, prev_il_instruction, il_operand); return handle_not(symbol, symbol);}
-void *constant_folding_c::visit(  ORN_operator_c *symbol) {       handle_or  (symbol, prev_il_instruction, il_operand); return handle_not(symbol, symbol);}
-void *constant_folding_c::visit( XORN_operator_c *symbol) {       handle_xor (symbol, prev_il_instruction, il_operand); return handle_not(symbol, symbol);}
+void *constant_folding_c::visit(  AND_operator_c *symbol) {return handle_and(analysis_, symbol, prev_il_instruction, il_operand);}
+void *constant_folding_c::visit(   OR_operator_c *symbol) {return handle_or(analysis_, symbol, prev_il_instruction, il_operand);}
+void *constant_folding_c::visit(  XOR_operator_c *symbol) {return handle_xor(analysis_, symbol, prev_il_instruction, il_operand);}
+void *constant_folding_c::visit( ANDN_operator_c *symbol) {       handle_and(analysis_, symbol, prev_il_instruction, il_operand); return handle_not(analysis_, symbol, symbol);}
+void *constant_folding_c::visit(  ORN_operator_c *symbol) {       handle_or(analysis_, symbol, prev_il_instruction, il_operand); return handle_not(analysis_, symbol, symbol);}
+void *constant_folding_c::visit( XORN_operator_c *symbol) {       handle_xor(analysis_, symbol, prev_il_instruction, il_operand); return handle_not(analysis_, symbol, symbol);}
 
-void *constant_folding_c::visit(  ADD_operator_c *symbol) {return handle_add (symbol, prev_il_instruction, il_operand);}
-void *constant_folding_c::visit(  SUB_operator_c *symbol) {return handle_sub (symbol, prev_il_instruction, il_operand);}
-void *constant_folding_c::visit(  MUL_operator_c *symbol) {return handle_mul (symbol, prev_il_instruction, il_operand);}
-void *constant_folding_c::visit(  DIV_operator_c *symbol) {return handle_div (symbol, prev_il_instruction, il_operand);}
-void *constant_folding_c::visit(  MOD_operator_c *symbol) {return handle_mod (symbol, prev_il_instruction, il_operand);}
+void *constant_folding_c::visit(  ADD_operator_c *symbol) {return handle_add(analysis_, symbol, prev_il_instruction, il_operand);}
+void *constant_folding_c::visit(  SUB_operator_c *symbol) {return handle_sub(analysis_, symbol, prev_il_instruction, il_operand);}
+void *constant_folding_c::visit(  MUL_operator_c *symbol) {return handle_mul(analysis_, symbol, prev_il_instruction, il_operand);}
+void *constant_folding_c::visit(  DIV_operator_c *symbol) {return handle_div(analysis_, symbol, prev_il_instruction, il_operand);}
+void *constant_folding_c::visit(  MOD_operator_c *symbol) {return handle_mod(analysis_, symbol, prev_il_instruction, il_operand);}
 
 void *constant_folding_c::visit(   GT_operator_c *symbol) {       handle_cmp (symbol, prev_il_instruction, il_operand, > );}
 void *constant_folding_c::visit(   GE_operator_c *symbol) {       handle_cmp (symbol, prev_il_instruction, il_operand, >=);}
@@ -1159,15 +1161,15 @@ void *constant_folding_c::visit(   LT_operator_c *symbol) {       handle_cmp (sy
 void *constant_folding_c::visit(   LE_operator_c *symbol) {       handle_cmp (symbol, prev_il_instruction, il_operand, <=);}
 void *constant_folding_c::visit(   NE_operator_c *symbol) {       handle_cmp (symbol, prev_il_instruction, il_operand, !=);}
 
-void *constant_folding_c::visit(  CAL_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit(  RET_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit(  JMP_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit( CALC_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit(CALCN_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit( RETC_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit(RETCN_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit( JMPC_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
-void *constant_folding_c::visit(JMPCN_operator_c *symbol) {return handle_move(symbol, prev_il_instruction);}
+void *constant_folding_c::visit(  CAL_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit(  RET_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit(  JMP_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit( CALC_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit(CALCN_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit( RETC_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit(RETCN_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit( JMPC_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
+void *constant_folding_c::visit(JMPCN_operator_c *symbol) {return handle_move(analysis_, symbol, prev_il_instruction);}
 
 
 
@@ -1178,9 +1180,9 @@ void *constant_folding_c::visit(JMPCN_operator_c *symbol) {return handle_move(sy
 /***********************/
 /* B 3.1 - Expressions */
 /***********************/
-void *constant_folding_c::visit(    or_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_or (symbol, symbol->l_exp, symbol->r_exp);}
-void *constant_folding_c::visit(   xor_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_xor(symbol, symbol->l_exp, symbol->r_exp);}
-void *constant_folding_c::visit(   and_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_and(symbol, symbol->l_exp, symbol->r_exp);}
+void *constant_folding_c::visit(    or_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_or(analysis_, symbol, symbol->l_exp, symbol->r_exp);}
+void *constant_folding_c::visit(   xor_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_xor(analysis_, symbol, symbol->l_exp, symbol->r_exp);}
+void *constant_folding_c::visit(   and_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_and(analysis_, symbol, symbol->l_exp, symbol->r_exp);}
 
 void *constant_folding_c::visit(   equ_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this);        handle_cmp (symbol, symbol->l_exp, symbol->r_exp, ==);}
 void *constant_folding_c::visit(notequ_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this);        handle_cmp (symbol, symbol->l_exp, symbol->r_exp, !=);}
@@ -1189,15 +1191,15 @@ void *constant_folding_c::visit(    gt_expression_c *symbol) {symbol->l_exp->acc
 void *constant_folding_c::visit(    le_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this);        handle_cmp (symbol, symbol->l_exp, symbol->r_exp, <=);}
 void *constant_folding_c::visit(    ge_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this);        handle_cmp (symbol, symbol->l_exp, symbol->r_exp, >=);}
 
-void *constant_folding_c::visit(   add_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_add(symbol, symbol->l_exp, symbol->r_exp);}
-void *constant_folding_c::visit(   sub_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_sub(symbol, symbol->l_exp, symbol->r_exp);}
-void *constant_folding_c::visit(   mul_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_mul(symbol, symbol->l_exp, symbol->r_exp);}
-void *constant_folding_c::visit(   div_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_div(symbol, symbol->l_exp, symbol->r_exp);}
-void *constant_folding_c::visit(   mod_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_mod(symbol, symbol->l_exp, symbol->r_exp);}
-void *constant_folding_c::visit( power_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_pow(symbol, symbol->l_exp, symbol->r_exp);}
+void *constant_folding_c::visit(   add_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_add(analysis_, symbol, symbol->l_exp, symbol->r_exp);}
+void *constant_folding_c::visit(   sub_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_sub(analysis_, symbol, symbol->l_exp, symbol->r_exp);}
+void *constant_folding_c::visit(   mul_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_mul(analysis_, symbol, symbol->l_exp, symbol->r_exp);}
+void *constant_folding_c::visit(   div_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_div(analysis_, symbol, symbol->l_exp, symbol->r_exp);}
+void *constant_folding_c::visit(   mod_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_mod(analysis_, symbol, symbol->l_exp, symbol->r_exp);}
+void *constant_folding_c::visit( power_expression_c *symbol) {symbol->l_exp->accept(*this); symbol->r_exp->accept(*this); return handle_pow(analysis_, symbol, symbol->l_exp, symbol->r_exp);}
 
-void *constant_folding_c::visit(   neg_expression_c *symbol) {symbol->  exp->accept(*this); return handle_neg(symbol, symbol->exp);}
-void *constant_folding_c::visit(   not_expression_c *symbol) {symbol->  exp->accept(*this); return handle_not(symbol, symbol->exp);}
+void *constant_folding_c::visit(   neg_expression_c *symbol) {symbol->  exp->accept(*this); return handle_neg(analysis_, symbol, symbol->exp);}
+void *constant_folding_c::visit(   not_expression_c *symbol) {symbol->  exp->accept(*this); return handle_not(analysis_, symbol, symbol->exp);}
 
 
 
@@ -1219,8 +1221,9 @@ void *constant_folding_c::visit(   not_expression_c *symbol) {symbol->  exp->acc
 
 
 constant_propagation_c::constant_propagation_c(
-    symbol_c *symbol, matiec::DiagnosticEngine &diagnostics)
-  : constant_folding_c(symbol, diagnostics) {
+    symbol_c *symbol, matiec::DiagnosticEngine &diagnostics,
+    matiec::AnalysisStore &analysis)
+  : constant_folding_c(symbol, diagnostics, analysis) {
     current_resource = NULL;
     current_configuration = NULL;
     fixed_init_value_ = false;
@@ -1376,7 +1379,7 @@ void *constant_propagation_c::visit(library_c *symbol) {
 void *constant_propagation_c::visit(symbolic_variable_c *symbol) {
 	std::string varName = get_var_name_c::get_name(symbol->var_name)->value;
 	if (values->count(varName) > 0) 
-		symbol->const_value() = (*values)[varName];
+		symbol->const_value(analysis_) = (*values)[varName];
 	return NULL;
 }
 #endif  // DO_CONSTANT_PROPAGATION__
@@ -1384,7 +1387,7 @@ void *constant_propagation_c::visit(symbolic_variable_c *symbol) {
 void *constant_propagation_c::visit(symbolic_constant_c *symbol) {
 	std::string varName = get_var_name_c::get_name(symbol->var_name)->value;
 	if (values->count(varName) > 0) 
-		symbol->const_value() = (*values)[varName];
+		symbol->const_value(analysis_) = (*values)[varName];
 	return NULL;
 }
 
@@ -1415,7 +1418,7 @@ void *constant_propagation_c::handle_var_list_decl(symbol_c *var_list, symbol_c 
    
   /* Check whether we have situation (1) mentioned above! */ 
   /* find the possible declaration (i.e. the datatype) of the possible FB being instantiated */
-  // NOTE: we do not use symbol->datatype() so this const propagation algorithm will not depend on the fill/narrow datatypes algorithm!
+  // NOTE: we do not use symbol->datatype(analysis_) so this const propagation algorithm will not depend on the fill/narrow datatypes algorithm!
   function_block_type_symtable_t::iterator itr = function_block_type_symtable.end(); // assume not a FB!
   symbol_c *type_symbol = spec_init_sperator_c::get_spec(type_decl);
   token_c  *type_name  = dynamic_cast<token_c *>(type_symbol);
@@ -1456,13 +1459,13 @@ void *constant_propagation_c::handle_var_list_decl(symbol_c *var_list, symbol_c 
       // debug_c::print(list->get_element(i));
       ERROR;
     }
-    list->get_element(i)->const_value() = init_value->const_value();
+    list->get_element(i)->const_value(analysis_) = init_value->const_value(analysis_);
     if (fixed_init_value_) {
-      (*values)[var_name->value] = init_value->const_value();
+      (*values)[var_name->value] = init_value->const_value(analysis_);
       if (is_global_var)
         // also store it in the var_global_values map!!
         // Notice that global variables are also placed in the values map!!
-        var_global_values[var_name->value] = init_value->const_value();
+        var_global_values[var_name->value] = init_value->const_value(analysis_);
     }
   }
   return NULL;
@@ -1596,7 +1599,7 @@ void *constant_propagation_c::visit(external_declaration_c *symbol) {
        * 
        * NOTE: comparison is inverted with '!'
        */
-      if (! (symbol->specification->const_value() == var_global_values[get_var_name_c::get_name(symbol->global_var_name)->value]))
+      if (! (symbol->specification->const_value(analysis_) == var_global_values[get_var_name_c::get_name(symbol->global_var_name)->value]))
         STAGE3_ERROR(0, symbol, symbol, "The initial value of this external variable is ambiguous (the Program/FB in which "
                                         "this external variable is declared has been used to instantiate a Program/FB in more "
                                         "than one configuration and/or resource - and each resource sets the corresponding global "
@@ -1604,13 +1607,13 @@ void *constant_propagation_c::visit(external_declaration_c *symbol) {
     }
     
     // only now do we copy the const value from the var_global to the var_external.
-    symbol->specification->const_value() = var_global_values[get_var_name_c::get_name(symbol->global_var_name)->value];
+    symbol->specification->const_value(analysis_) = var_global_values[get_var_name_c::get_name(symbol->global_var_name)->value];
   }
   
-  symbol->global_var_name->const_value() = symbol->specification->const_value();
+  symbol->global_var_name->const_value(analysis_) = symbol->specification->const_value(analysis_);
   if (fixed_init_value_) {
-//  (*values)[symbol->global_var_name->get_value()] = symbol->specification->const_value();
-    (*values)[get_var_name_c::get_name(symbol->global_var_name)->value] = symbol->specification->const_value();
+//  (*values)[symbol->global_var_name->get_value()] = symbol->specification->const_value(analysis_);
+    (*values)[get_var_name_c::get_name(symbol->global_var_name)->value] = symbol->specification->const_value(analysis_);
   }
   // If the datatype specification is a subrange or array, do constant folding of all the literals in that type declaration... (ex: literals in array subrange limits)
   symbol->specification->accept(*this);  // should never get to change the const_value of the symbol->specification symbol (only its children!).
@@ -1900,7 +1903,7 @@ void *constant_propagation_c::visit(resource_declaration_c *symbol) {
 //          symbol_c *called_prog_declaration;)
 void *constant_propagation_c::visit(program_configuration_c *symbol) {
 	/* find the declaration (i.e. the datatype) of the program being instantiated */
-	// NOTE: we do not use symbol->datatype() so this cost propagation algorithm will not depend on the fill/narrow datatypes algorithm!
+	// NOTE: we do not use symbol->datatype(analysis_) so this cost propagation algorithm will not depend on the fill/narrow datatypes algorithm!
 	program_type_symtable_t::iterator itr = program_type_symtable.find(symbol->program_type_name);
 	if (itr == program_type_symtable.end()) ERROR; // syntax parsing should not allow this!
 	program_declaration_c *prog_type = itr->second;
@@ -1920,7 +1923,7 @@ void *constant_propagation_c::visit(program_configuration_c *symbol) {
 // SYM_REF2(fb_task_c, fb_name, task_name)
 void *constant_propagation_c::visit(fb_task_c *symbol) {
 	/* find the declaration (i.e. the datatype) of the FB being instantiated */
-	// NOTE: we do not use symbol->datatype() so this cost propagation algorithm will not depend on the fill/narrow datatypes algorithm!
+	// NOTE: we do not use symbol->datatype(analysis_) so this cost propagation algorithm will not depend on the fill/narrow datatypes algorithm!
 	symbol_c *fb_type_name = NULL;
 	
 	if ((NULL == fb_type_name) && (NULL != current_configuration)) {
@@ -1982,8 +1985,8 @@ void *constant_propagation_c::visit(assignment_statement_c *symbol) {
 
 	symbol->r_exp->accept(*this);
 	symbol->l_exp->accept(*this); // if the lvalue has an array, do contant folding of the array indexes!
-	symbol->l_exp->const_value() = symbol->r_exp->const_value();
-	(*values)[get_var_name_c::get_name(symbol->l_exp)->value] = symbol->l_exp->const_value();
+	symbol->l_exp->const_value(analysis_) = symbol->r_exp->const_value(analysis_);
+	(*values)[get_var_name_c::get_name(symbol->l_exp)->value] = symbol->l_exp->const_value(analysis_);
 	return NULL;
 }
 

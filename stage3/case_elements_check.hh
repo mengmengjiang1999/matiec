@@ -50,6 +50,7 @@
 class case_elements_check_c: public iterator_visitor_c {
 
   private:
+    const matiec::AnalysisStore &analysis_;
     bool warning_found;
     int error_count;
     int current_display_error_level;
@@ -63,7 +64,8 @@ class case_elements_check_c: public iterator_visitor_c {
 
   public:
     case_elements_check_c(symbol_c *ignore,
-                          matiec::DiagnosticEngine &diagnostics);
+                          matiec::DiagnosticEngine &diagnostics,
+                          const matiec::AnalysisStore &analysis);
     virtual ~case_elements_check_c(void);
     int get_error_count();
 
@@ -79,7 +81,6 @@ class case_elements_check_c: public iterator_visitor_c {
     void *visit(case_statement_c *symbol);
     void *visit(case_list_c      *symbol);
 }; /* case_elements_check_c */
-
 
 
 

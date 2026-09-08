@@ -48,15 +48,16 @@
 #include "../compiler/analysis_store.hh"
 
 
-#define GET_CVALUE(dtype, symbol)             (matiec::analysis_constant_value(symbol)._##dtype.get())
-#define VALID_CVALUE(dtype, symbol)           (matiec::analysis_constant_value(symbol)._##dtype.is_valid())
+#define GET_CVALUE(dtype, symbol)             (matiec::analysis_constant_value(analysis_, symbol)._##dtype.get())
+#define VALID_CVALUE(dtype, symbol)           (matiec::analysis_constant_value(analysis_, symbol)._##dtype.is_valid())
 
 
 
 
 case_elements_check_c::case_elements_check_c(
-    symbol_c *ignore, matiec::DiagnosticEngine &diagnostics)
-    : diagnostics_(diagnostics) {
+    symbol_c *ignore, matiec::DiagnosticEngine &diagnostics,
+    const matiec::AnalysisStore &analysis)
+    : analysis_(analysis), diagnostics_(diagnostics) {
   warning_found = false;
   error_count = 0;
   current_display_error_level = 0;
@@ -77,7 +78,8 @@ int case_elements_check_c::get_error_count() {
 
 
 /* compare two integer constants, and determins if s1 < s2 */
-static bool less_than(symbol_c *s1, symbol_c *s2) {
+static bool less_than(const matiec::AnalysisStore &analysis_, symbol_c *s1,
+                      symbol_c *s2) {
   if (   (VALID_CVALUE( int64, s1))
       && (VALID_CVALUE( int64, s2))
       && (  GET_CVALUE( int64, s1) < GET_CVALUE( int64, s2)))
@@ -108,8 +110,8 @@ void case_elements_check_c::check_subr_subr(symbol_c *s1, symbol_c *s2) {
   symbol_c *l2 = sub2->lower_limit;
   symbol_c *u2 = sub2->upper_limit;
   
-  if (less_than(u1, l2))  return; // no overlap!
-  if (less_than(u2, l1))  return; // no overlap!
+  if (less_than(analysis_, u1, l2))  return; // no overlap!
+  if (less_than(analysis_, u2, l1))  return; // no overlap!
 
   if (   (VALID_CVALUE( int64, l1) || (VALID_CVALUE(uint64, l1)))
       && (VALID_CVALUE( int64, l2) || (VALID_CVALUE(uint64, l2)))
@@ -162,8 +164,8 @@ void case_elements_check_c::check_symb_symb(symbol_c *s1, symbol_c *s2) {
       || (dynamic_cast<subrange_c *>(s2) != NULL)) 
     return; // only run this test if neither s1 nor s2 are subranges!
   
-  const const_value_c &first = matiec::analysis_constant_value(s1);
-  const const_value_c &second = matiec::analysis_constant_value(s2);
+  const const_value_c &first = matiec::analysis_constant_value(analysis_, s1);
+  const const_value_c &second = matiec::analysis_constant_value(analysis_, s2);
   if (   (first.is_const() && second.is_const() && (first == second))
       || (compare_identifiers(s1, s2) == 0))  // if token_c, compare tokens! (compare_identifiers() returns 0 when equal tokens!, -1 when either is not token_c)
     STAGE3_WARNING(s1, s2, "Duplicate element found in CASE options.");

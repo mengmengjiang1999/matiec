@@ -91,11 +91,13 @@
 class generate_datatypes_aliasid_c: fcall_visitor_c {
 
   private:
+    const matiec::AnalysisStore &analysis_;
     //std::map<std::string, int> inline_array_defined;
     std::string current_array_name;
 
   public:
-    generate_datatypes_aliasid_c(void) {};
+    explicit generate_datatypes_aliasid_c(
+        const matiec::AnalysisStore &analysis) : analysis_(analysis) {};
 
     virtual ~generate_datatypes_aliasid_c(void) {
       //inline_array_defined.clear(); // Not really necessary...
@@ -105,15 +107,16 @@ class generate_datatypes_aliasid_c: fcall_visitor_c {
     // by default generate an ERROR if a visit method is called, unless it is explicitly handled in generate_datatypes_aliasid_c
     void fcall(symbol_c *symbol) {ERROR;}
 
-    static identifier_c *create_id(symbol_c *symbol) {
-      generate_datatypes_aliasid_c visitor;
+    static identifier_c *create_id(const matiec::AnalysisStore &analysis,
+                                   symbol_c *symbol) {
+      generate_datatypes_aliasid_c visitor(analysis);
       symbol->accept(visitor);
       char *str2 = matiec::retain_ast_string(visitor.current_array_name.c_str());
       if (NULL == str2) ERROR;
       identifier_c *id = new identifier_c(str2);
       /* Copy all the anotations in the symbol_c object 'symbol' to the newly created 'id' object
        *   This includes the location (in the IEC 61131-3 source file) annotations set in stage1_2,
-       *   the matiec::analysis_selected_datatype(symbol) set in stage3, and any other anotaions that may be created in the future!
+       *   the matiec::analysis_selected_datatype(analysis_, symbol) set in stage3, and any other anotaions that may be created in the future!
        */
       *(dynamic_cast<symbol_c *>(id)) = *(dynamic_cast<symbol_c *>(symbol));
       return id;
@@ -147,8 +150,8 @@ class generate_datatypes_aliasid_c: fcall_visitor_c {
     /* array_specification [ASSIGN array_initialization] */
     /* array_initialization may be NULL ! */
     void *visit(array_spec_init_c *symbol) {
-      if (NULL == matiec::analysis_selected_datatype(symbol)) ERROR;
-      matiec::analysis_selected_datatype(symbol)->accept(*this); // the base datatype should be an array_specification_c !!
+      if (NULL == matiec::analysis_selected_datatype(analysis_, symbol)) ERROR;
+      matiec::analysis_selected_datatype(analysis_, symbol)->accept(*this); // the base datatype should be an array_specification_c !!
       return NULL;
     }
 
@@ -531,9 +534,9 @@ void *visit(enumerated_value_c *symbol) {}
 void *visit(array_type_declaration_c *symbol) {
   TRACE("array_type_declaration_c");
 
-  // NOTE: remeber that symbol->array_spec_init may point to a derived_datatype_identifier_c, which is why we use matiec::analysis_selected_datatype(symbol->array_spec_init) instead!
-  if (NULL == matiec::analysis_selected_datatype(symbol->array_spec_init)) ERROR;
-  identifier_c *id = generate_datatypes_aliasid_c::create_id(matiec::analysis_selected_datatype(symbol->array_spec_init));
+  // NOTE: remeber that symbol->array_spec_init may point to a derived_datatype_identifier_c, which is why we use matiec::analysis_selected_datatype(analysis_, symbol->array_spec_init) instead!
+  if (NULL == matiec::analysis_selected_datatype(analysis_, symbol->array_spec_init)) ERROR;
+  identifier_c *id = generate_datatypes_aliasid_c::create_id(analysis_, matiec::analysis_selected_datatype(analysis_, symbol->array_spec_init));
 
   /* NOTE  An array_type_declaration_c will be created in stage4 for each implicitly defined array,
    *       and this generate_c_typedecl_c will be called to define that array in C.
@@ -564,7 +567,7 @@ end:
    * retained. Arena-owned participants receive the reusable identifier. */
   stage4_set_generator_symbol(s4o, symbol,
       "generate_c_annotaton__implicit_type_id", id);
-  stage4_set_generator_symbol(s4o, matiec::analysis_selected_datatype(symbol),
+  stage4_set_generator_symbol(s4o, matiec::analysis_selected_datatype(analysis_, symbol),
       "generate_c_annotaton__implicit_type_id", id);
   stage4_set_generator_symbol(s4o, symbol->array_spec_init,
       "generate_c_annotaton__implicit_type_id", id);
@@ -1029,12 +1032,14 @@ void *visit(direct_variable_c *symbol) {
 class generate_c_implicit_typedecl_c: public iterator_visitor_c {
   private:
     stage4out_c &s4o;
+    matiec::AnalysisStore &analysis_;
     generate_c_typedecl_c *generate_c_typedecl_;
     generate_c_typedecl_c  generate_c_typedecl_local;
     symbol_c *prefix;
   public:
     generate_c_implicit_typedecl_c(stage4out_c *s4o_ptr, generate_c_typedecl_c *generate_c_typedecl=NULL)
-      : s4o(*s4o_ptr), generate_c_typedecl_local(s4o_ptr) {
+      : s4o(*s4o_ptr), analysis_(*s4o_ptr->mutable_analysis_store()),
+        generate_c_typedecl_local(s4o_ptr) {
         generate_c_typedecl_ = generate_c_typedecl;
         if (NULL == generate_c_typedecl_)
           generate_c_typedecl_ = &generate_c_typedecl_local;
@@ -1057,7 +1062,7 @@ class generate_c_implicit_typedecl_c: public iterator_visitor_c {
 
     /* ref_spec:  REF_TO (non_generic_type_name | function_block_type_name) */
     void *visit(ref_spec_c *symbol) {
-      identifier_c *id = generate_datatypes_aliasid_c::create_id(symbol);
+      identifier_c *id = generate_datatypes_aliasid_c::create_id(analysis_, symbol);
       /* Warning: The following is dangerous...
        * We are asking the generate_c_typedecl_c visitor to visit a newly created ref_spec_init_c object
        * that has not been through stage 3, and therefore does not have stage 3 annotations filled in.
@@ -1110,7 +1115,7 @@ class generate_c_implicit_typedecl_c: public iterator_visitor_c {
 
     /* ARRAY '[' array_subrange_list ']' OF non_generic_type_name */
     void *visit(array_specification_c *symbol) {
-      identifier_c *id = generate_datatypes_aliasid_c::create_id(symbol);
+      identifier_c *id = generate_datatypes_aliasid_c::create_id(analysis_, symbol);
       /* Warning: The following is dangerous...
        * We are asking the generate_c_typedecl_c visitor to visit a newly created array_type_declaration_c object
        * that has not been through stage 3, and therefore does not have stage 3 annotations filled in.
@@ -1118,8 +1123,8 @@ class generate_c_implicit_typedecl_c: public iterator_visitor_c {
        */
       array_spec_init_c        array_spec(symbol, NULL);
       array_type_declaration_c array_decl(id, &array_spec);
-      array_decl.datatype() = matiec::analysis_selected_datatype(symbol);
-      array_spec.datatype() = matiec::analysis_selected_datatype(symbol);
+      array_decl.datatype(analysis_) = matiec::analysis_selected_datatype(analysis_, symbol);
+      array_spec.datatype(analysis_) = matiec::analysis_selected_datatype(analysis_, symbol);
       array_decl.accept(*generate_c_typedecl_);
       if (!stage4_set_generator_symbol(s4o, symbol,
               "generate_c_annotaton__implicit_type_id", id)) ERROR;

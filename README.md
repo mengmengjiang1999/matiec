@@ -247,7 +247,9 @@ update those records directly; lvalue validation and Stage 4 consume them withou
 AST fields or publication walks. Generator annotations remain off the AST and need no
 post-generation publish/materialize cycle. Whole-tree compatibility
 materializers have been removed, so typed records are the only completed-result
-interface.
+interface. Every semantic producer, semantic consumer, and generator receives
+the context-owned store explicitly; there is no active analysis scope or
+thread-local analysis pointer.
 
 ### Semantics are explicit passes
 
@@ -398,7 +400,6 @@ ownership, or memory-lifetime changes.
 ## Roadmap boundaries
 
 - Reentrant generated frontend and parallel in-process compilation
-- Explicit analysis dependencies without an active-store compatibility scope
 - Versioned embedding API/ABI
 - Direct graphical FBD and LD input
 - Validation against later IEC 61131-3 editions
@@ -406,11 +407,11 @@ ownership, or memory-lifetime changes.
 These are boundaries, not promises or scheduled milestones. Current behavior is
 defined by the tests and [OpenSpec requirements](openspec/specs/).
 
-Context-owned semantic analysis storage is complete: all six typed record
-families have production boundaries and completed results stay in the
-`AnalysisStore`. All semantic and generator result fields have been removed from
-the AST. The remaining cleanup replaces the scoped active-store compatibility
-path with explicit analysis dependencies; it does not introduce another result store.
+Context-owned semantic analysis storage and explicit dependency migration are
+complete: all six typed record families have production boundaries, completed
+results stay in `AnalysisStore`, and all semantic and generator result fields
+have been removed from the AST. Stage 3 and Stage 4 receive the owning context's
+store explicitly, without a compatibility result store or ambient binding.
 
 ## Project origin and license
 

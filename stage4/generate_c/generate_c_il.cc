@@ -124,9 +124,9 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
   public:
     generate_c_il_c(stage4out_c *s4o_ptr, symbol_c *name, symbol_c *scope, const char *variable_prefix = NULL)
     : generate_c_base_and_typeid_c(s4o_ptr),
-      implicit_variable_current    (IL_DEFVAR,      NULL),
-      implicit_variable_result     (IL_DEFVAR,      NULL),
-      implicit_variable_result_back(IL_DEFVAR_BACK, NULL)
+      implicit_variable_current    (analysis_, IL_DEFVAR,      NULL),
+      implicit_variable_result     (analysis_, IL_DEFVAR,      NULL),
+      implicit_variable_result_back(analysis_, IL_DEFVAR_BACK, NULL)
     {
       search_fb_instance_decl    = new search_fb_instance_decl_c   (scope);
       search_varfb_instance_type = new search_varfb_instance_type_c(scope);
@@ -155,7 +155,7 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
     /* Declare an implicit IL variable... */
     void declare_implicit_variable(il_default_variable_c *implicit_var) {
       s4o.print(s4o.indent_spaces);
-      implicit_var->datatype() = NULL;
+      implicit_var->datatype(analysis_) = NULL;
 
       s4o.print(IL_DEFVAR_T);
       s4o.print(" ");
@@ -255,20 +255,20 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
     /* A helper function... */
     void *CMP_operator(symbol_c *operand, const char *operation) {
       if (NULL == operand) ERROR;
-      if (NULL == matiec::analysis_selected_datatype(operand)) ERROR;
-      if (NULL == this->implicit_variable_current.datatype()) ERROR;
+      if (NULL == matiec::analysis_selected_datatype(analysis_, operand)) ERROR;
+      if (NULL == this->implicit_variable_current.datatype(analysis_)) ERROR;
 
       this->implicit_variable_result.accept(*this);
       s4o.print(" = ");
       // print_compare_function is in generate_c_base_c, which is inherited by generate_c_il_c
-      print_compare_function(operation, matiec::analysis_selected_datatype(operand), &(this->implicit_variable_current), operand);
+      print_compare_function(operation, matiec::analysis_selected_datatype(analysis_, operand), &(this->implicit_variable_current), operand);
       return NULL;
     }
 
 
     /* A helper function... */
     void C_modifier(void) {
-      if (!get_datatype_info_c::is_BOOL_compatible(implicit_variable_current.datatype())) ERROR;
+      if (!get_datatype_info_c::is_BOOL_compatible(implicit_variable_current.datatype(analysis_))) ERROR;
       s4o.print("if (");
       this->implicit_variable_current.accept(*this);
       s4o.print(") ");
@@ -276,7 +276,7 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
 
     /* A helper function... */
     void CN_modifier(void) {
-      if (!get_datatype_info_c::is_BOOL_compatible(implicit_variable_current.datatype())) ERROR;
+      if (!get_datatype_info_c::is_BOOL_compatible(implicit_variable_current.datatype(analysis_))) ERROR;
       s4o.print("if (!");
       this->implicit_variable_current.accept(*this);
       s4o.print(") ");
@@ -287,8 +287,8 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
       unsigned int vartype = search_var_instance_decl->get_vartype(symbol);
       if (wanted_variablegeneration == fparam_output_vg) {
         if (vartype == search_var_instance_decl_c::external_vt) {
-          if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(symbol))) ERROR;
-          if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(symbol)))
+          if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(analysis_, symbol))) ERROR;
+          if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(analysis_, symbol)))
             s4o.print(GET_EXTERNAL_FB_BY_REF);
           else
             s4o.print(GET_EXTERNAL_BY_REF);
@@ -300,8 +300,8 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
       }
       else {
         if (vartype == search_var_instance_decl_c::external_vt) {
-          if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(symbol))) ERROR;
-          if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(symbol)))
+          if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(analysis_, symbol))) ERROR;
+          if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(analysis_, symbol)))
             s4o.print(GET_EXTERNAL_FB);
           else
             s4o.print(GET_EXTERNAL);
@@ -334,10 +334,10 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
       bool type_is_complex = false;
       if (fb_symbol == NULL) {
         unsigned int vartype = search_var_instance_decl->get_vartype(symbol);
-        type_is_complex = analyse_variable_c::contains_complex_type(symbol);
+        type_is_complex = analyse_variable_c::contains_complex_type(analysis_, symbol);
         if (vartype == search_var_instance_decl_c::external_vt) {
-          if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(symbol))) ERROR;
-          if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(symbol)))
+          if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(analysis_, symbol))) ERROR;
+          if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(analysis_, symbol)))
             s4o.print(SET_EXTERNAL_FB);
           else
             s4o.print(SET_EXTERNAL);
@@ -369,7 +369,7 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
 /*
       s4o.print(",");
       if (negative) {
-        if (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(this->current_operand)))
+        if (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(analysis_, this->current_operand)))
           s4o.print("!");
         else
           s4o.print("~");
@@ -392,7 +392,7 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
       }
       s4o.print(",");
       if (negative) {
-        if (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(this->current_operand)))
+        if (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(analysis_, this->current_operand)))
           s4o.print("!");
         else
           s4o.print("~");
@@ -407,9 +407,9 @@ class generate_c_il_c: public generate_c_base_and_typeid_c, il_default_variable_
 public:
 void *visit(il_default_variable_c *symbol) {
   symbol->var_name->accept(*this);
-  if (NULL != matiec::analysis_selected_datatype(symbol)) {
+  if (NULL != matiec::analysis_selected_datatype(analysis_, symbol)) {
     s4o.print(".");
-    matiec::analysis_selected_datatype(symbol)->accept(*this);
+    matiec::analysis_selected_datatype(analysis_, symbol)->accept(*this);
     s4o.print("var");
   } return NULL;
 }
@@ -513,7 +513,7 @@ void *visit(direct_variable_c *symbol) {
 // SYM_REF2(structured_variable_c, record_variable, field_selector)
 void *visit(structured_variable_c *symbol) {
   TRACE("structured_variable_c");
-  bool type_is_complex = analyse_variable_c::is_complex_type(symbol->record_variable);
+  bool type_is_complex = analyse_variable_c::is_complex_type(analysis_, symbol->record_variable);
   switch (wanted_variablegeneration) {
     case complextype_base_vg:
     case complextype_base_assignment_vg:
@@ -651,8 +651,8 @@ void *visit(instruction_list_c *symbol) {
 // SYM_REF2(il_instruction_c, label, il_instruction)
 void *visit(il_instruction_c *symbol) {
   /* all previous IL instructions should have the same datatype (checked in stage3), so we get the datatype from the first previous IL instruction we find */
-  implicit_variable_current.datatype() = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_selected_datatype(matiec::analysis_flow_predecessors(symbol)[0]);
-  implicit_variable_result .datatype() = matiec::analysis_selected_datatype(symbol);
+  implicit_variable_current.datatype(analysis_) = (matiec::analysis_flow_predecessors(analysis_, symbol).empty())? NULL : matiec::analysis_selected_datatype(analysis_, matiec::analysis_flow_predecessors(analysis_, symbol)[0]);
+  implicit_variable_result.datatype(analysis_) = matiec::analysis_selected_datatype(analysis_, symbol);
 
   if (NULL != symbol->label) {
     symbol->label->accept(*this);
@@ -664,8 +664,8 @@ void *visit(il_instruction_c *symbol) {
     symbol->il_instruction->accept(*this);
   }
 
-  implicit_variable_result .datatype() = NULL;
-  implicit_variable_current.datatype() = NULL;
+  implicit_variable_result.datatype(analysis_) = NULL;
+  implicit_variable_current.datatype(analysis_) = NULL;
   return NULL;
 }
 
@@ -760,7 +760,7 @@ void *visit(il_function_call_c *symbol) {
      * use the IL implicit variable as a source of data to pass to those parameters!
      */
     if ((param_value == NULL) &&  (!used_defvar) && !fp_iterator.is_en_eno_param_implicit()) {
-      if (NULL == implicit_variable_current.datatype()) ERROR;
+      if (NULL == implicit_variable_current.datatype(analysis_)) ERROR;
       param_value = &this->implicit_variable_current;
       used_defvar = true;
     }
@@ -815,7 +815,7 @@ void *visit(il_function_call_c *symbol) {
   if (fdecl_mutiplicity == 0) ERROR;
 
   /* when function returns a void, we do not store the value in the default variable! */
-  if (!get_datatype_info_c::is_VOID(matiec::analysis_selected_datatype(symbol))) {
+  if (!get_datatype_info_c::is_VOID(matiec::analysis_selected_datatype(analysis_, symbol))) {
     this->implicit_variable_result.accept(*this);
     s4o.print(" = ");
   }
@@ -940,7 +940,7 @@ void *visit(il_expression_c *symbol) {
    * in a variable named IL_DEFVAR_BACK. This is done in the visitor
    * to instruction_list_c objects...
    */
-  this->implicit_variable_result_back.datatype() = matiec::analysis_selected_datatype(symbol->simple_instr_list);
+  this->implicit_variable_result_back.datatype(analysis_) = matiec::analysis_selected_datatype(analysis_, symbol->simple_instr_list);
   this->current_operand = &(this->implicit_variable_result_back);
 
   this->implicit_variable_current = old_implicit_variable_current;
@@ -949,7 +949,7 @@ void *visit(il_expression_c *symbol) {
   symbol->il_expr_operator->accept(*this);
 
   this->current_operand = NULL;
-  this->implicit_variable_result_back.datatype() = NULL;
+  this->implicit_variable_result_back.datatype(analysis_) = NULL;
   return NULL;
 }
 
@@ -1220,7 +1220,7 @@ void *visit(il_formal_funct_call_c *symbol) {
     f_decl = NULL;
 
   /* when function returns a void, we do not store the value in the default variable! */
-  if (!get_datatype_info_c::is_VOID(matiec::analysis_selected_datatype(symbol))) {
+  if (!get_datatype_info_c::is_VOID(matiec::analysis_selected_datatype(analysis_, symbol))) {
     this->implicit_variable_result.accept(*this);
     s4o.print(" = ");
   }
@@ -1380,8 +1380,8 @@ void *visit(simple_instr_list_c *symbol) {
   /* copy the result in the IL implicit variable to the variable
    * used to pass the data out to the scope enclosing the current scope!
    */
-  this->implicit_variable_result_back.datatype() = matiec::analysis_selected_datatype(symbol);
-  this->implicit_variable_result     .datatype() = matiec::analysis_selected_datatype(symbol);
+  this->implicit_variable_result_back.datatype(analysis_) = matiec::analysis_selected_datatype(analysis_, symbol);
+  this->implicit_variable_result.datatype(analysis_) = matiec::analysis_selected_datatype(analysis_, symbol);
 
   s4o.print("\n");
   s4o.print(s4o.indent_spaces);
@@ -1401,13 +1401,13 @@ void *visit(simple_instr_list_c *symbol) {
 // SYM_REF1(il_simple_instruction_c, il_simple_instruction, symbol_c *prev_il_instruction;)
 void *visit(il_simple_instruction_c *symbol) {
   /* all previous IL instructions should have the same datatype (checked in stage3), so we get the datatype from the first previous IL instruction we find */
-  implicit_variable_current.datatype() = (matiec::analysis_flow_predecessors(symbol).empty())? NULL : matiec::analysis_selected_datatype(matiec::analysis_flow_predecessors(symbol)[0]);
-  implicit_variable_result .datatype() = matiec::analysis_selected_datatype(symbol);
+  implicit_variable_current.datatype(analysis_) = (matiec::analysis_flow_predecessors(analysis_, symbol).empty())? NULL : matiec::analysis_selected_datatype(analysis_, matiec::analysis_flow_predecessors(analysis_, symbol)[0]);
+  implicit_variable_result.datatype(analysis_) = matiec::analysis_selected_datatype(analysis_, symbol);
 
   symbol->il_simple_instruction->accept(*this);
 
-  implicit_variable_result .datatype() = NULL;
-  implicit_variable_current.datatype() = NULL;
+  implicit_variable_result.datatype(analysis_) = NULL;
+  implicit_variable_current.datatype(analysis_) = NULL;
   return NULL;
 }
 
@@ -1442,7 +1442,7 @@ void *visit(LD_operator_c *symbol) {
 
 
 void *visit(LDN_operator_c *symbol) {
-  XXX_operator(&(this->implicit_variable_result), get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(this->current_operand))?" = !":" = ~", this->current_operand);
+  XXX_operator(&(this->implicit_variable_result), get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(analysis_, this->current_operand))?" = !":" = ~", this->current_operand);
   return NULL;
 }
 
@@ -1451,10 +1451,10 @@ void *visit(ST_operator_c *symbol) {
   if (this->is_variable_prefix_null()) {
     this->current_operand->accept(*this);
     s4o.print(" = ");
-    print_check_function(matiec::analysis_selected_datatype(this->current_operand), (symbol_c*)&(this->implicit_variable_current));
+    print_check_function(matiec::analysis_selected_datatype(analysis_, this->current_operand), (symbol_c*)&(this->implicit_variable_current));
   }
   else {
-    print_setter(this->current_operand, matiec::analysis_selected_datatype(this->current_operand), (symbol_c*)&(this->implicit_variable_current));
+    print_setter(this->current_operand, matiec::analysis_selected_datatype(analysis_, this->current_operand), (symbol_c*)&(this->implicit_variable_current));
   }
   return NULL;
 }
@@ -1464,14 +1464,14 @@ void *visit(STN_operator_c *symbol) {
   if (this->is_variable_prefix_null()) {
     this->current_operand->accept(*this);
     s4o.print(" = ");
-    if (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(this->current_operand)))
+    if (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(analysis_, this->current_operand)))
       s4o.print("!");
     else
       s4o.print("~");
     this->implicit_variable_current.accept(*this);
   }
   else {
-    print_setter(this->current_operand, matiec::analysis_selected_datatype(this->current_operand), (symbol_c*)&(this->implicit_variable_current), NULL, NULL, true);
+    print_setter(this->current_operand, matiec::analysis_selected_datatype(analysis_, this->current_operand), (symbol_c*)&(this->implicit_variable_current), NULL, NULL, true);
   }
   return NULL;
 }
@@ -1485,7 +1485,7 @@ void *visit(NOT_operator_c *symbol) {
    *       The error is caught in stage 3!
    */
   if (NULL != this->current_operand) ERROR;
-  XXX_operator(&(this->implicit_variable_result), get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(symbol))?" = !":" = ~", &(this->implicit_variable_current));
+  XXX_operator(&(this->implicit_variable_result), get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(analysis_, symbol))?" = !":" = ~", &(this->implicit_variable_current));
   return NULL;
 }
 
@@ -1508,15 +1508,15 @@ void *visit(S_operator_c *symbol) {
     return NULL;
   }
 
-  if ((NULL == this->current_operand) || (NULL == matiec::analysis_selected_datatype(this->current_operand))) ERROR;
+  if ((NULL == this->current_operand) || (NULL == matiec::analysis_selected_datatype(analysis_, this->current_operand))) ERROR;
 
   C_modifier();
   this->current_operand->accept(*this);
   s4o.print(" = __");
-  if        (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(this->current_operand))) {
+  if        (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(analysis_, this->current_operand))) {
     s4o.print("BOOL_LITERAL(TRUE)");
-  } else if (get_datatype_info_c::is_ANY_INT_compatible(matiec::analysis_selected_datatype(this->current_operand))) {
-    matiec::analysis_selected_datatype(this->current_operand)->accept(*this);
+  } else if (get_datatype_info_c::is_ANY_INT_compatible(matiec::analysis_selected_datatype(analysis_, this->current_operand))) {
+    matiec::analysis_selected_datatype(analysis_, this->current_operand)->accept(*this);
     s4o.print("_LITERAL(1)");
   } else
     ERROR;
@@ -1542,15 +1542,15 @@ void *visit(R_operator_c *symbol) {
     return NULL;
   }
 
-  if ((NULL == this->current_operand) || (NULL == matiec::analysis_selected_datatype(this->current_operand))) ERROR;
+  if ((NULL == this->current_operand) || (NULL == matiec::analysis_selected_datatype(analysis_, this->current_operand))) ERROR;
 
   C_modifier();
   this->current_operand->accept(*this);
   s4o.print(" = __");
-  if        (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(this->current_operand))) {
+  if        (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(analysis_, this->current_operand))) {
     s4o.print("BOOL_LITERAL(FALSE)");
-  } else if (get_datatype_info_c::is_ANY_INT_compatible(matiec::analysis_selected_datatype(this->current_operand))) {
-    matiec::analysis_selected_datatype(this->current_operand)->accept(*this);
+  } else if (get_datatype_info_c::is_ANY_INT_compatible(matiec::analysis_selected_datatype(analysis_, this->current_operand))) {
+    matiec::analysis_selected_datatype(analysis_, this->current_operand)->accept(*this);
     s4o.print("_LITERAL(0)");
   } else
     ERROR;
@@ -1569,66 +1569,66 @@ void *visit( IN_operator_c *symbol)	{return XXX_CAL_operator( "IN", this->curren
 void *visit( PT_operator_c *symbol)	{return XXX_CAL_operator( "PT", this->current_operand);}
 
 void *visit(AND_operator_c *symbol) {
-  if (!get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(symbol))) ERROR;
+  if (!get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(analysis_, symbol))) ERROR;
   XXX_operator(&(this->implicit_variable_result), " &= ", this->current_operand);
   return NULL;
 }
 
 void *visit(OR_operator_c *symbol) {
-  if (!get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(symbol))) ERROR;
+  if (!get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(analysis_, symbol))) ERROR;
   XXX_operator(&(this->implicit_variable_result), " |= ", this->current_operand);
   return NULL;
 }
 
 void *visit(XOR_operator_c *symbol) {
-  if (!get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(symbol))) ERROR;
+  if (!get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(analysis_, symbol))) ERROR;
   // '^' is a bit by bit exclusive OR !! Also seems to work with boolean types!
   XXX_operator(&(this->implicit_variable_result), " ^= ", this->current_operand);
   return NULL;
 }
 
 void *visit(ANDN_operator_c *symbol) {
-  if (!get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(symbol))) ERROR;
-  XXX_operator(&(this->implicit_variable_result), get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(this->current_operand))?" &= !":" &= ~", this->current_operand);
+  if (!get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(analysis_, symbol))) ERROR;
+  XXX_operator(&(this->implicit_variable_result), get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(analysis_, this->current_operand))?" &= !":" &= ~", this->current_operand);
   return NULL;
 }
 
 void *visit(ORN_operator_c *symbol) {
-  if (!get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(symbol))) ERROR;
-  XXX_operator(&(this->implicit_variable_result), get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(this->current_operand))?" |= !":" |= ~", this->current_operand);
+  if (!get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(analysis_, symbol))) ERROR;
+  XXX_operator(&(this->implicit_variable_result), get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(analysis_, this->current_operand))?" |= !":" |= ~", this->current_operand);
   return NULL;
 }
 
 void *visit(XORN_operator_c *symbol) {
-  if (!get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(symbol))) ERROR;
+  if (!get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(analysis_, symbol))) ERROR;
   // bit by bit exclusive OR !! Also seems to work with boolean types!
-  XXX_operator(&(this->implicit_variable_result), get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(this->current_operand))?" ^= !":" ^= ~", this->current_operand);
+  XXX_operator(&(this->implicit_variable_result), get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(analysis_, this->current_operand))?" ^= !":" ^= ~", this->current_operand);
   return NULL;
 }
 
 void *visit(ADD_operator_c *symbol) {
-  if (get_datatype_info_c::is_TIME_compatible(matiec::analysis_selected_datatype(symbol)) || get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(symbol)))
+  if (get_datatype_info_c::is_TIME_compatible(matiec::analysis_selected_datatype(analysis_, symbol)) || get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(analysis_, symbol)))
         XXX_function(&(this->implicit_variable_result), "__time_add", &(this->implicit_variable_current), this->current_operand);
   else  XXX_operator(&(this->implicit_variable_result), " += ", this->current_operand);
   return NULL;
 }
 
 void *visit(SUB_operator_c *symbol) {
-  if (get_datatype_info_c::is_TIME_compatible(matiec::analysis_selected_datatype(symbol)) || get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(symbol)))
+  if (get_datatype_info_c::is_TIME_compatible(matiec::analysis_selected_datatype(analysis_, symbol)) || get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(analysis_, symbol)))
         XXX_function(&(this->implicit_variable_result), "__time_sub", &(this->implicit_variable_current), this->current_operand);
   else  XXX_operator(&(this->implicit_variable_result), " -= ", this->current_operand);
   return NULL;
 }
 
 void *visit(MUL_operator_c *symbol) {
-  if (get_datatype_info_c::is_TIME_compatible(matiec::analysis_selected_datatype(symbol)))
+  if (get_datatype_info_c::is_TIME_compatible(matiec::analysis_selected_datatype(analysis_, symbol)))
         XXX_function(&(this->implicit_variable_result), "__time_mul", &(this->implicit_variable_current), this->current_operand);
   else  XXX_operator(&(this->implicit_variable_result), " *= ", this->current_operand);
   return NULL;
 }
 
 void *visit(DIV_operator_c *symbol) {
-  if (get_datatype_info_c::is_TIME_compatible(matiec::analysis_selected_datatype(symbol)))
+  if (get_datatype_info_c::is_TIME_compatible(matiec::analysis_selected_datatype(analysis_, symbol)))
         XXX_function(&(this->implicit_variable_result), "__time_div", &(this->implicit_variable_current), this->current_operand);
   else  XXX_operator(&(this->implicit_variable_result), " /= ", this->current_operand);
   return NULL;
@@ -1768,14 +1768,16 @@ void *il_default_variable_c::accept(visitor_c &visitor) {
 
 
 
-il_default_variable_c::il_default_variable_c(const char *var_name_str, symbol_c *current_type) {
+il_default_variable_c::il_default_variable_c(matiec::AnalysisStore &analysis_,
+                                             const char *var_name_str,
+                                             symbol_c *current_type) {
   if (NULL == var_name_str) ERROR;
   /* Note: current_type may start off with NULL */
 
   this->var_name = new identifier_c(var_name_str);
   if (NULL == this->var_name) ERROR;
 
-  this->datatype() = current_type;
+  this->datatype(analysis_) = current_type;
 }
 
 generate_c_il_adapter_c::generate_c_il_adapter_c(stage4out_c *s4o_ptr, symbol_c *name,

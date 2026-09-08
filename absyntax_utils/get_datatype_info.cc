@@ -546,7 +546,9 @@ symbol_c *get_datatype_info_c::get_array_storedtype_id(symbol_c *type_symbol) {
  *       REF_TO datatypes, so in both the relaxed and strict datatype models matiec currently uses a 
  *       relaxed datatype equivalince for REF_TO datatypes.
  */
-bool get_datatype_info_c::is_type_equal(symbol_c *first_type, symbol_c *second_type) {
+bool get_datatype_info_c::is_type_equal(
+    const matiec::AnalysisStore &analysis_, symbol_c *first_type,
+    symbol_c *second_type) {
   if (!is_type_valid( first_type))                                   {return false;}
   if (!is_type_valid(second_type))                                   {return false;}
 
@@ -564,7 +566,7 @@ bool get_datatype_info_c::is_type_equal(symbol_c *first_type, symbol_c *second_t
   /* ANY_DERIVED  */
   // from now on, we are sure both datatypes are derived...
   if (is_ref_to(first_type) && is_ref_to(second_type)) {
-    return is_type_equal(search_base_type_c::get_basetype_decl(get_ref_to(first_type )),
+    return is_type_equal(analysis_, search_base_type_c::get_basetype_decl(get_ref_to(first_type )),
                          search_base_type_c::get_basetype_decl(get_ref_to(second_type)));
   }
 
@@ -575,7 +577,7 @@ bool get_datatype_info_c::is_type_equal(symbol_c *first_type, symbol_c *second_t
   if (false == runtime_options.relaxed_datatype_model)               {return false;}
   
     // check for array equivalence usig the relaxed datatype model
-  if (is_arraytype_equal_relaxed(first_type, second_type))           {return true;}
+  if (is_arraytype_equal_relaxed(analysis_, first_type, second_type)) {return true;}
 
   return false;
 }
@@ -660,7 +662,9 @@ static std::string normalize_subrange_limit(symbol_c *symbol) {
 /* A helper method to get_datatype_info_c::is_type_equal()
  *  Assuming the relaxed datatype model, determine whether the two array datatypes are equal/equivalent
  */
-bool get_datatype_info_c::is_arraytype_equal_relaxed(symbol_c *first_type, symbol_c *second_type) {
+bool get_datatype_info_c::is_arraytype_equal_relaxed(
+    const matiec::AnalysisStore &analysis_, symbol_c *first_type,
+    symbol_c *second_type) {
   symbol_c *basetype_1 = search_base_type_c::get_basetype_decl( first_type);
   symbol_c *basetype_2 = search_base_type_c::get_basetype_decl(second_type);
   array_specification_c *array_1 = dynamic_cast<array_specification_c *>(basetype_1);
@@ -683,26 +687,21 @@ bool get_datatype_info_c::is_arraytype_equal_relaxed(symbol_c *first_type, symbo
     subrange_c *subrange_2 = dynamic_cast<subrange_c *>(subrange_list_2->get_element(i));
     if ((NULL == subrange_1) || (NULL == subrange_2)) ERROR;
     
-    /* check whether the subranges have the same values, using the result of the constant folding agorithm.
-     * This method has the drawback that it inserts a dependency on having to run the constant folding algorithm before
-     *  the get_datatype_info_c::is_type_equal() method is called.
-     *  This is why we implement an alternative method in case the subrange limits have not yet been reduced to a cvalue!
-     */
-    if (    (matiec::analysis_constant_value(subrange_1->lower_limit)._int64.is_valid() || matiec::analysis_constant_value(subrange_1->lower_limit)._uint64.is_valid())
-         && (matiec::analysis_constant_value(subrange_2->lower_limit)._int64.is_valid() || matiec::analysis_constant_value(subrange_2->lower_limit)._uint64.is_valid())
-         && (matiec::analysis_constant_value(subrange_1->upper_limit)._int64.is_valid() || matiec::analysis_constant_value(subrange_1->upper_limit)._uint64.is_valid())
-         && (matiec::analysis_constant_value(subrange_2->upper_limit)._int64.is_valid() || matiec::analysis_constant_value(subrange_2->upper_limit)._uint64.is_valid())
-        ) {
-      if (! (matiec::analysis_constant_value(subrange_1->lower_limit) == matiec::analysis_constant_value(subrange_2->lower_limit))) return false;
-      if (! (matiec::analysis_constant_value(subrange_1->upper_limit) == matiec::analysis_constant_value(subrange_2->upper_limit))) return false;
+    /* Prefer explicitly supplied constant-folding results, while preserving the
+     * source comparison fallback for limits that could not be folded. */
+    if (    (matiec::analysis_constant_value(analysis_, subrange_1->lower_limit)._int64.is_valid() || matiec::analysis_constant_value(analysis_, subrange_1->lower_limit)._uint64.is_valid())
+         && (matiec::analysis_constant_value(analysis_, subrange_2->lower_limit)._int64.is_valid() || matiec::analysis_constant_value(analysis_, subrange_2->lower_limit)._uint64.is_valid())
+         && (matiec::analysis_constant_value(analysis_, subrange_1->upper_limit)._int64.is_valid() || matiec::analysis_constant_value(analysis_, subrange_1->upper_limit)._uint64.is_valid())
+         && (matiec::analysis_constant_value(analysis_, subrange_2->upper_limit)._int64.is_valid() || matiec::analysis_constant_value(analysis_, subrange_2->upper_limit)._uint64.is_valid())) {
+      if (!(matiec::analysis_constant_value(analysis_, subrange_1->lower_limit) == matiec::analysis_constant_value(analysis_, subrange_2->lower_limit))) return false;
+      if (!(matiec::analysis_constant_value(analysis_, subrange_1->upper_limit) == matiec::analysis_constant_value(analysis_, subrange_2->upper_limit))) return false;
     } else {
-      // NOTE: nocasecmp_c() class is defined in absyntax.hh. nocasecmp_c() instantiates an object, and nocasecmp_c()() uses the () operator on that object. 
       if (! nocasecmp_c()(normalize_subrange_limit(subrange_1->lower_limit), normalize_subrange_limit(subrange_2->lower_limit))) return false;
       if (! nocasecmp_c()(normalize_subrange_limit(subrange_1->upper_limit), normalize_subrange_limit(subrange_2->upper_limit))) return false;
     }
   }
 
-  return is_type_equal(search_base_type_c::get_basetype_decl(array_1->non_generic_type_name),
+  return is_type_equal(analysis_, search_base_type_c::get_basetype_decl(array_1->non_generic_type_name),
                        search_base_type_c::get_basetype_decl(array_2->non_generic_type_name));
 }
 
@@ -1435,5 +1434,3 @@ safedt_type_name_c       get_datatype_info_c::safedt_type_name;
 safedate_type_name_c     get_datatype_info_c::safedate_type_name;
 safetod_type_name_c      get_datatype_info_c::safetod_type_name;
 safetime_type_name_c     get_datatype_info_c::safetime_type_name;
-
-

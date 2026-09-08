@@ -5,12 +5,6 @@
 
 namespace matiec {
 
-namespace {
-
-thread_local AnalysisStore *current_analysis_store = nullptr;
-
-}  // namespace
-
 AnalysisStore::AnalysisStore(const AstArena &arena) : arena_(arena) {}
 
 bool AnalysisStore::add_flow_edge(symbol_c *predecessor, symbol_c *successor,
@@ -265,181 +259,171 @@ void AnalysisStore::clear() {
   generators_.clear();
 }
 
-ActiveAnalysisStoreScope::ActiveAnalysisStoreScope(AnalysisStore &analysis)
-    : previous_(current_analysis_store) {
-  current_analysis_store = &analysis;
-}
-
-ActiveAnalysisStoreScope::~ActiveAnalysisStoreScope() {
-  current_analysis_store = previous_;
-}
-
-AnalysisStore *active_analysis_store() { return current_analysis_store; }
-
-const FlowAnalysisRecord *analysis_flow(const symbol_c *symbol) {
-  if (current_analysis_store == nullptr) return nullptr;
-  return current_analysis_store->flow_working(symbol);
+const FlowAnalysisRecord *analysis_flow(const AnalysisStore &analysis,
+                                        const symbol_c *symbol) {
+  return analysis.flow_working(symbol);
 }
 
 const std::vector<symbol_c *> &analysis_flow_predecessors(
-    const symbol_c *symbol) {
+    const AnalysisStore &analysis, const symbol_c *symbol) {
   static const std::vector<symbol_c *> empty;
   if (symbol == nullptr) return empty;
-  const FlowAnalysisRecord *record = analysis_flow(symbol);
+  const FlowAnalysisRecord *record = analysis_flow(analysis, symbol);
   return record == nullptr ? empty : record->predecessors;
 }
 
 const std::vector<symbol_c *> &analysis_flow_predecessors(
-    const il_instruction_c *symbol) {
-  return analysis_flow_predecessors(static_cast<const symbol_c *>(symbol));
+    const AnalysisStore &analysis, const il_instruction_c *symbol) {
+  return analysis_flow_predecessors(analysis,
+                                    static_cast<const symbol_c *>(symbol));
 }
 
 const std::vector<symbol_c *> &analysis_flow_predecessors(
-    const il_simple_instruction_c *symbol) {
-  return analysis_flow_predecessors(static_cast<const symbol_c *>(symbol));
+    const AnalysisStore &analysis, const il_simple_instruction_c *symbol) {
+  return analysis_flow_predecessors(analysis,
+                                    static_cast<const symbol_c *>(symbol));
 }
 
 const std::vector<symbol_c *> &analysis_flow_successors(
-    const symbol_c *symbol) {
+    const AnalysisStore &analysis, const symbol_c *symbol) {
   static const std::vector<symbol_c *> empty;
   if (symbol == nullptr) return empty;
-  const FlowAnalysisRecord *record = analysis_flow(symbol);
+  const FlowAnalysisRecord *record = analysis_flow(analysis, symbol);
   return record == nullptr ? empty : record->successors;
 }
 
 const std::vector<symbol_c *> &analysis_flow_successors(
-    const il_instruction_c *symbol) {
-  return analysis_flow_successors(static_cast<const symbol_c *>(symbol));
+    const AnalysisStore &analysis, const il_instruction_c *symbol) {
+  return analysis_flow_successors(analysis, static_cast<const symbol_c *>(symbol));
 }
 
 const std::vector<symbol_c *> &analysis_flow_successors(
-    const il_simple_instruction_c *symbol) {
-  return analysis_flow_successors(static_cast<const symbol_c *>(symbol));
+    const AnalysisStore &analysis, const il_simple_instruction_c *symbol) {
+  return analysis_flow_successors(analysis, static_cast<const symbol_c *>(symbol));
 }
 
-std::vector<symbol_c *> &analysis_flow_predecessors_mut(symbol_c *symbol) {
-  assert(current_analysis_store != nullptr && symbol != nullptr);
-  return current_analysis_store->flow_working(symbol).predecessors;
+std::vector<symbol_c *> &analysis_flow_predecessors_mut(
+    AnalysisStore &analysis, symbol_c *symbol) {
+  assert(symbol != nullptr);
+  return analysis.flow_working(symbol).predecessors;
 }
 
-std::vector<symbol_c *> &analysis_flow_successors_mut(symbol_c *symbol) {
-  assert(current_analysis_store != nullptr && symbol != nullptr);
-  return current_analysis_store->flow_working(symbol).successors;
+std::vector<symbol_c *> &analysis_flow_successors_mut(
+    AnalysisStore &analysis, symbol_c *symbol) {
+  assert(symbol != nullptr);
+  return analysis.flow_working(symbol).successors;
 }
 
-const const_value_c &analysis_constant_value(const symbol_c *symbol) {
+const const_value_c &analysis_constant_value(const AnalysisStore &analysis,
+                                             const symbol_c *symbol) {
   static const const_value_c empty;
   if (symbol == nullptr) return empty;
-  if (current_analysis_store == nullptr) return empty;
-  const ConstantAnalysisRecord *record =
-      current_analysis_store->constant_working(symbol);
+  const ConstantAnalysisRecord *record = analysis.constant_working(symbol);
   return record == nullptr ? empty : record->value;
 }
 
-const_value_c &analysis_constant_value_mut(symbol_c *symbol) {
-  assert(current_analysis_store != nullptr && symbol != nullptr);
-  return current_analysis_store->constant_working(symbol).value;
+const_value_c &analysis_constant_value_mut(AnalysisStore &analysis,
+                                           symbol_c *symbol) {
+  assert(symbol != nullptr);
+  return analysis.constant_working(symbol).value;
 }
 
-const DatatypeAnalysisRecord *analysis_datatype(const symbol_c *symbol) {
-  if (current_analysis_store == nullptr) return nullptr;
+const DatatypeAnalysisRecord *analysis_datatype(const AnalysisStore &analysis,
+                                                const symbol_c *symbol) {
   const AnalysisEntry<DatatypeAnalysisRecord> *entry =
-      current_analysis_store->datatype(symbol);
+      analysis.datatype(symbol);
   return entry == nullptr ? nullptr : &entry->value;
 }
 
 const std::vector<symbol_c *> &analysis_datatype_candidates(
-    const symbol_c *symbol) {
+    const AnalysisStore &analysis, const symbol_c *symbol) {
   static const std::vector<symbol_c *> empty;
   if (symbol == nullptr) return empty;
-  if (current_analysis_store == nullptr) return empty;
-  const DatatypeAnalysisRecord *record =
-      current_analysis_store->datatype_working(symbol);
+  const DatatypeAnalysisRecord *record = analysis.datatype_working(symbol);
   return record == nullptr ? empty : record->candidates;
 }
 
-std::vector<symbol_c *> &analysis_datatype_candidates_mut(symbol_c *symbol) {
-  assert(current_analysis_store != nullptr && symbol != nullptr);
-  return current_analysis_store->datatype_working(symbol).candidates;
+std::vector<symbol_c *> &analysis_datatype_candidates_mut(
+    AnalysisStore &analysis, symbol_c *symbol) {
+  assert(symbol != nullptr);
+  return analysis.datatype_working(symbol).candidates;
 }
 
-symbol_c *analysis_selected_datatype(const symbol_c *symbol) {
+symbol_c *analysis_selected_datatype(const AnalysisStore &analysis,
+                                     const symbol_c *symbol) {
   if (symbol == nullptr) return nullptr;
-  if (current_analysis_store == nullptr) return nullptr;
-  const DatatypeAnalysisRecord *record =
-      current_analysis_store->datatype_working(symbol);
+  const DatatypeAnalysisRecord *record = analysis.datatype_working(symbol);
   return record == nullptr ? nullptr : record->selected;
 }
 
-symbol_c *&analysis_selected_datatype_ref(symbol_c *symbol) {
-  assert(current_analysis_store != nullptr && symbol != nullptr);
-  return current_analysis_store->datatype_working(symbol).selected;
+symbol_c *&analysis_selected_datatype_ref(AnalysisStore &analysis,
+                                         symbol_c *symbol) {
+  assert(symbol != nullptr);
+  return analysis.datatype_working(symbol).selected;
 }
 
-symbol_c *analysis_scope(const symbol_c *symbol) {
+symbol_c *analysis_scope(const AnalysisStore &analysis, const symbol_c *symbol) {
   if (symbol == nullptr) return nullptr;
-  if (current_analysis_store == nullptr) return nullptr;
-  const DatatypeAnalysisRecord *record =
-      current_analysis_store->datatype_working(symbol);
+  const DatatypeAnalysisRecord *record = analysis.datatype_working(symbol);
   return record == nullptr ? nullptr : record->scope;
 }
 
-symbol_c *&analysis_scope_ref(symbol_c *symbol) {
-  assert(current_analysis_store != nullptr && symbol != nullptr);
-  return current_analysis_store->datatype_working(symbol).scope;
+symbol_c *&analysis_scope_ref(AnalysisStore &analysis, symbol_c *symbol) {
+  assert(symbol != nullptr);
+  return analysis.datatype_working(symbol).scope;
 }
 
-std::vector<symbol_c *> &analysis_resolution_candidates_mut(symbol_c *symbol) {
-  assert(current_analysis_store != nullptr && symbol != nullptr);
-  return current_analysis_store->resolution_working(symbol).candidates;
+std::vector<symbol_c *> &analysis_resolution_candidates_mut(
+    AnalysisStore &analysis, symbol_c *symbol) {
+  assert(symbol != nullptr);
+  return analysis.resolution_working(symbol).candidates;
 }
 
 const std::vector<symbol_c *> &analysis_resolution_candidates(
-    const symbol_c *symbol) {
+    const AnalysisStore &analysis, const symbol_c *symbol) {
   static const std::vector<symbol_c *> empty;
-  if (current_analysis_store == nullptr || symbol == nullptr) return empty;
-  const ResolutionAnalysisRecord *record =
-      current_analysis_store->resolution_working(symbol);
+  if (symbol == nullptr) return empty;
+  const ResolutionAnalysisRecord *record = analysis.resolution_working(symbol);
   return record == nullptr ? empty : record->candidates;
 }
 
-symbol_c *&analysis_resolution_declaration_ref(symbol_c *symbol) {
-  assert(current_analysis_store != nullptr && symbol != nullptr);
-  return current_analysis_store->resolution_working(symbol).declaration;
+symbol_c *&analysis_resolution_declaration_ref(AnalysisStore &analysis,
+                                               symbol_c *symbol) {
+  assert(symbol != nullptr);
+  return analysis.resolution_working(symbol).declaration;
 }
 
-symbol_c *analysis_resolution_declaration(const symbol_c *symbol) {
-  if (current_analysis_store == nullptr || symbol == nullptr) return nullptr;
-  const ResolutionAnalysisRecord *record =
-      current_analysis_store->resolution_working(symbol);
+symbol_c *analysis_resolution_declaration(const AnalysisStore &analysis,
+                                          const symbol_c *symbol) {
+  if (symbol == nullptr) return nullptr;
+  const ResolutionAnalysisRecord *record = analysis.resolution_working(symbol);
   return record == nullptr ? nullptr : record->declaration;
 }
 
-int &analysis_extensible_parameter_count_ref(symbol_c *symbol) {
-  assert(current_analysis_store != nullptr && symbol != nullptr);
-  return current_analysis_store->resolution_working(symbol)
-      .extensible_parameter_count;
+int &analysis_extensible_parameter_count_ref(AnalysisStore &analysis,
+                                             symbol_c *symbol) {
+  assert(symbol != nullptr);
+  return analysis.resolution_working(symbol).extensible_parameter_count;
 }
 
-int analysis_extensible_parameter_count(const symbol_c *symbol) {
-  if (current_analysis_store == nullptr || symbol == nullptr) return 0;
-  const ResolutionAnalysisRecord *record =
-      current_analysis_store->resolution_working(symbol);
+int analysis_extensible_parameter_count(const AnalysisStore &analysis,
+                                        const symbol_c *symbol) {
+  if (symbol == nullptr) return 0;
+  const ResolutionAnalysisRecord *record = analysis.resolution_working(symbol);
   return record == nullptr ? 0 : record->extensible_parameter_count;
 }
 
 symbol_c::enumvalue_symtable_t &analysis_enumeration_values_mut(
-    symbol_c *symbol) {
-  assert(current_analysis_store != nullptr && symbol != nullptr);
-  return current_analysis_store->enumeration_working(symbol).values;
+    AnalysisStore &analysis, symbol_c *symbol) {
+  assert(symbol != nullptr);
+  return analysis.enumeration_working(symbol).values;
 }
 
 const symbol_c::enumvalue_symtable_t &analysis_enumeration_values(
-    const symbol_c *symbol) {
+    const AnalysisStore &analysis, const symbol_c *symbol) {
   static const symbol_c::enumvalue_symtable_t empty;
-  if (current_analysis_store == nullptr || symbol == nullptr) return empty;
-  const EnumerationAnalysisRecord *record =
-      current_analysis_store->enumeration_working(symbol);
+  if (symbol == nullptr) return empty;
+  const EnumerationAnalysisRecord *record = analysis.enumeration_working(symbol);
   return record == nullptr ? empty : record->values;
 }
 

@@ -53,7 +53,8 @@ class forced_narrow_candidate_datatypes_c: public narrow_candidate_datatypes_c {
     virtual void set_datatype_in_prev_il_instructions(symbol_c *datatype, il_instruction_c *symbol);
 
   public:
-    forced_narrow_candidate_datatypes_c(symbol_c *ignore);
+    forced_narrow_candidate_datatypes_c(symbol_c *ignore,
+                                        matiec::AnalysisStore &analysis);
     virtual ~forced_narrow_candidate_datatypes_c(void);
 
     /****************************************/
@@ -84,7 +85,6 @@ class forced_narrow_candidate_datatypes_c: public narrow_candidate_datatypes_c {
     /***************************************/
     void *visit(statement_list_c *symbol);
 }; // forced_narrow_candidate_datatypes_c
-
 
 
 

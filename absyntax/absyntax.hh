@@ -74,21 +74,33 @@ class symbol_c; // forward declaration
 class const_value_c; // forward declaration
 
 namespace matiec {
-std::vector<symbol_c *> &analysis_datatype_candidates_mut(symbol_c *symbol);
+std::vector<symbol_c *> &analysis_datatype_candidates_mut(
+    AnalysisStore &analysis, symbol_c *symbol);
 const std::vector<symbol_c *> &analysis_datatype_candidates(
-    const symbol_c *symbol);
-symbol_c *&analysis_selected_datatype_ref(symbol_c *symbol);
-symbol_c *analysis_selected_datatype(const symbol_c *symbol);
-symbol_c *&analysis_scope_ref(symbol_c *symbol);
-symbol_c *analysis_scope(const symbol_c *symbol);
-const const_value_c &analysis_constant_value(const symbol_c *symbol);
-const_value_c &analysis_constant_value_mut(symbol_c *symbol);
-std::vector<symbol_c *> &analysis_resolution_candidates_mut(symbol_c *symbol);
-const std::vector<symbol_c *> &analysis_resolution_candidates(const symbol_c *symbol);
-symbol_c *&analysis_resolution_declaration_ref(symbol_c *symbol);
-symbol_c *analysis_resolution_declaration(const symbol_c *symbol);
-int &analysis_extensible_parameter_count_ref(symbol_c *symbol);
-int analysis_extensible_parameter_count(const symbol_c *symbol);
+    const AnalysisStore &analysis, const symbol_c *symbol);
+symbol_c *&analysis_selected_datatype_ref(AnalysisStore &analysis,
+                                         symbol_c *symbol);
+symbol_c *analysis_selected_datatype(const AnalysisStore &analysis,
+                                     const symbol_c *symbol);
+symbol_c *&analysis_scope_ref(AnalysisStore &analysis, symbol_c *symbol);
+symbol_c *analysis_scope(const AnalysisStore &analysis,
+                         const symbol_c *symbol);
+const const_value_c &analysis_constant_value(const AnalysisStore &analysis,
+                                             const symbol_c *symbol);
+const_value_c &analysis_constant_value_mut(AnalysisStore &analysis,
+                                           symbol_c *symbol);
+std::vector<symbol_c *> &analysis_resolution_candidates_mut(
+    AnalysisStore &analysis, symbol_c *symbol);
+const std::vector<symbol_c *> &analysis_resolution_candidates(
+    const AnalysisStore &analysis, const symbol_c *symbol);
+symbol_c *&analysis_resolution_declaration_ref(AnalysisStore &analysis,
+                                               symbol_c *symbol);
+symbol_c *analysis_resolution_declaration(const AnalysisStore &analysis,
+                                          const symbol_c *symbol);
+int &analysis_extensible_parameter_count_ref(AnalysisStore &analysis,
+                                             symbol_c *symbol);
+int analysis_extensible_parameter_count(const AnalysisStore &analysis,
+                                        const symbol_c *symbol);
 }
 
 
@@ -216,30 +228,34 @@ class symbol_c {
     long int last_order;    /* relative order in which it is read by lexcial analyser */
 
 
-    /* Transitional producer accessors. Datatype analysis storage belongs to the
-     * active compilation's AnalysisStore, not to the AST node. */
-    std::vector<symbol_c *> &candidate_datatypes() {
-      return matiec::analysis_datatype_candidates_mut(this);
+    /* Explicit accessors preserve the legacy call shape while requiring the
+     * owning compilation's AnalysisStore at every result access. */
+    std::vector<symbol_c *> &candidate_datatypes(matiec::AnalysisStore &analysis) {
+      return matiec::analysis_datatype_candidates_mut(analysis, this);
     }
-    const std::vector<symbol_c *> &candidate_datatypes() const {
-      return matiec::analysis_datatype_candidates(this);
+    const std::vector<symbol_c *> &candidate_datatypes(
+        const matiec::AnalysisStore &analysis) const {
+      return matiec::analysis_datatype_candidates(analysis, this);
     }
-    symbol_c *&datatype() {
-      return matiec::analysis_selected_datatype_ref(this);
+    symbol_c *&datatype(matiec::AnalysisStore &analysis) {
+      return matiec::analysis_selected_datatype_ref(analysis, this);
     }
-    symbol_c *datatype() const {
-      return matiec::analysis_selected_datatype(this);
+    symbol_c *datatype(const matiec::AnalysisStore &analysis) const {
+      return matiec::analysis_selected_datatype(analysis, this);
     }
-    symbol_c *&scope() { return matiec::analysis_scope_ref(this); }
-    symbol_c *scope() const { return matiec::analysis_scope(this); }
+    symbol_c *&scope(matiec::AnalysisStore &analysis) {
+      return matiec::analysis_scope_ref(analysis, this);
+    }
+    symbol_c *scope(const matiec::AnalysisStore &analysis) const {
+      return matiec::analysis_scope(analysis, this);
+    }
 
-    /* Transitional producer accessors. Constant analysis storage belongs to the
-     * active compilation's AnalysisStore, not to the AST node. */
-    const_value_c &const_value() {
-      return matiec::analysis_constant_value_mut(this);
+    const_value_c &const_value(matiec::AnalysisStore &analysis) {
+      return matiec::analysis_constant_value_mut(analysis, this);
     }
-    const const_value_c &const_value() const {
-      return matiec::analysis_constant_value(this);
+    const const_value_c &const_value(
+        const matiec::AnalysisStore &analysis) const {
+      return matiec::analysis_constant_value(analysis, this);
     }
     
     /*** Enumeration datatype checking ***/    
@@ -247,32 +263,36 @@ class symbol_c {
      * They will be declared only inside the symbols that require them (have a look at absyntax.def)
      */
     typedef std::multimap<std::string, symbol_c *, nocasecmp_c> enumvalue_symtable_t;
-    enumvalue_symtable_t &enumvalue_symtable();
-    const enumvalue_symtable_t &enumvalue_symtable() const;
+    enumvalue_symtable_t &enumvalue_symtable(matiec::AnalysisStore &analysis);
+    const enumvalue_symtable_t &enumvalue_symtable(
+        const matiec::AnalysisStore &analysis) const;
 
-    std::vector<symbol_c *> &candidate_functions() {
-      return matiec::analysis_resolution_candidates_mut(this);
+    std::vector<symbol_c *> &candidate_functions(matiec::AnalysisStore &analysis) {
+      return matiec::analysis_resolution_candidates_mut(analysis, this);
     }
-    const std::vector<symbol_c *> &candidate_functions() const {
-      return matiec::analysis_resolution_candidates(this);
+    const std::vector<symbol_c *> &candidate_functions(
+        const matiec::AnalysisStore &analysis) const {
+      return matiec::analysis_resolution_candidates(analysis, this);
     }
-    symbol_c *&called_function_declaration() {
-      return matiec::analysis_resolution_declaration_ref(this);
+    symbol_c *&called_function_declaration(matiec::AnalysisStore &analysis) {
+      return matiec::analysis_resolution_declaration_ref(analysis, this);
     }
-    symbol_c *called_function_declaration() const {
-      return matiec::analysis_resolution_declaration(this);
+    symbol_c *called_function_declaration(
+        const matiec::AnalysisStore &analysis) const {
+      return matiec::analysis_resolution_declaration(analysis, this);
     }
-    symbol_c *&called_fb_declaration() {
-      return matiec::analysis_resolution_declaration_ref(this);
+    symbol_c *&called_fb_declaration(matiec::AnalysisStore &analysis) {
+      return matiec::analysis_resolution_declaration_ref(analysis, this);
     }
-    symbol_c *called_fb_declaration() const {
-      return matiec::analysis_resolution_declaration(this);
+    symbol_c *called_fb_declaration(
+        const matiec::AnalysisStore &analysis) const {
+      return matiec::analysis_resolution_declaration(analysis, this);
     }
-    int &extensible_param_count() {
-      return matiec::analysis_extensible_parameter_count_ref(this);
+    int &extensible_param_count(matiec::AnalysisStore &analysis) {
+      return matiec::analysis_extensible_parameter_count_ref(analysis, this);
     }
-    int extensible_param_count() const {
-      return matiec::analysis_extensible_parameter_count(this);
+    int extensible_param_count(const matiec::AnalysisStore &analysis) const {
+      return matiec::analysis_extensible_parameter_count(analysis, this);
     }
     
     /*

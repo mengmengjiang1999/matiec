@@ -19,6 +19,10 @@ The adapter currently owns the transition into two legacy areas:
   program, type, and enumerated-value symbol tables; callers enter it only
   through `LegacyGlobalStateAdapter::initialize_symbol_tables()`.
 
+Semantic and generator analysis is not part of this adapter. Stage 3 and Stage 4
+receive the context-owned `AnalysisStore` explicitly; no thread-local active
+analysis binding remains.
+
 The remaining parser-boundary variables are reset by `stage1_2()` for sequential
 use, but remain process-wide and are part of the same non-reentrant compatibility
 boundary. Parser options, feature flags, and transient lexer transition controls

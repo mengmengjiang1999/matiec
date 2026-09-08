@@ -60,7 +60,6 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
       }
     }
     ActiveAstArenaScope ast_arena_scope(context.ast_arena());
-    ActiveAnalysisStoreScope analysis_scope(context.analysis());
     CompilerOptions &options = context.options();
 
     NamespaceNormalizeResult namespace_result;

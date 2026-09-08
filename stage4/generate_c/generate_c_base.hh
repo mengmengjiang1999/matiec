@@ -104,6 +104,7 @@ class generate_c_base_c: public iterator_visitor_c {
 
   protected:
     stage4out_c &s4o;
+    matiec::AnalysisStore &analysis_;
 
   private:
     /* Unlike programs that are mapped onto C++ classes, Function Blocks are mapped onto a data structure type
@@ -116,7 +117,8 @@ class generate_c_base_c: public iterator_visitor_c {
     const char *variable_prefix_;
 
   public:
-    generate_c_base_c(stage4out_c *s4o_ptr): s4o(*s4o_ptr) {
+    generate_c_base_c(stage4out_c *s4o_ptr)
+        : s4o(*s4o_ptr), analysis_(*s4o_ptr->mutable_analysis_store()) {
       variable_prefix_ = NULL;
     }
     ~generate_c_base_c(void) {}
@@ -395,9 +397,9 @@ class generate_c_base_c: public iterator_visitor_c {
 /* B 1.2.1 - Numeric Literals */
 /******************************/
     void *visit(real_c *symbol) {
-      if (NULL != matiec::analysis_selected_datatype(symbol) && get_datatype_info_c::is_ANY_REAL_compatible(matiec::analysis_selected_datatype(symbol))) {
+      if (NULL != matiec::analysis_selected_datatype(analysis_, symbol) && get_datatype_info_c::is_ANY_REAL_compatible(matiec::analysis_selected_datatype(analysis_, symbol))) {
         s4o.print("__");
-        matiec::analysis_selected_datatype(symbol)->accept(*this);
+        matiec::analysis_selected_datatype(analysis_, symbol)->accept(*this);
         s4o.print("_LITERAL(");
         print_striped_token(symbol);
         s4o.print(")");
@@ -406,11 +408,11 @@ class generate_c_base_c: public iterator_visitor_c {
       return print_striped_token(symbol);
     }
     void *visit(integer_c *symbol) {
-      if (NULL != matiec::analysis_selected_datatype(symbol) &&
-          (get_datatype_info_c::is_ANY_INT_compatible(matiec::analysis_selected_datatype(symbol)) ||
-           get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(symbol)))) {
+      if (NULL != matiec::analysis_selected_datatype(analysis_, symbol) &&
+          (get_datatype_info_c::is_ANY_INT_compatible(matiec::analysis_selected_datatype(analysis_, symbol)) ||
+           get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(analysis_, symbol)))) {
         s4o.print("__");
-        matiec::analysis_selected_datatype(symbol)->accept(*this);
+        matiec::analysis_selected_datatype(analysis_, symbol)->accept(*this);
         s4o.print("_LITERAL(");
         print_striped_token(symbol);
         s4o.print(")");
@@ -419,11 +421,11 @@ class generate_c_base_c: public iterator_visitor_c {
       return print_striped_token(symbol);
     }
     void *visit(binary_integer_c *symbol) {
-      if (NULL != matiec::analysis_selected_datatype(symbol) &&
-          (get_datatype_info_c::is_ANY_INT_compatible(matiec::analysis_selected_datatype(symbol)) ||
-           get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(symbol)))) {
+      if (NULL != matiec::analysis_selected_datatype(analysis_, symbol) &&
+          (get_datatype_info_c::is_ANY_INT_compatible(matiec::analysis_selected_datatype(analysis_, symbol)) ||
+           get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(analysis_, symbol)))) {
         s4o.print("__");
-        matiec::analysis_selected_datatype(symbol)->accept(*this);
+        matiec::analysis_selected_datatype(analysis_, symbol)->accept(*this);
         s4o.print("_LITERAL(");
         print_striped_binary_token(symbol, 2);
         s4o.print(")");
@@ -432,11 +434,11 @@ class generate_c_base_c: public iterator_visitor_c {
       return print_striped_binary_token(symbol, 2);
     }
     void *visit(octal_integer_c *symbol) {
-      if (NULL != matiec::analysis_selected_datatype(symbol) &&
-          (get_datatype_info_c::is_ANY_INT_compatible(matiec::analysis_selected_datatype(symbol)) ||
-           get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(symbol)))) {
+      if (NULL != matiec::analysis_selected_datatype(analysis_, symbol) &&
+          (get_datatype_info_c::is_ANY_INT_compatible(matiec::analysis_selected_datatype(analysis_, symbol)) ||
+           get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(analysis_, symbol)))) {
         s4o.print("__");
-        matiec::analysis_selected_datatype(symbol)->accept(*this);
+        matiec::analysis_selected_datatype(analysis_, symbol)->accept(*this);
         s4o.print("_LITERAL(0");
         print_striped_token(symbol, 2);
         s4o.print(")");
@@ -446,11 +448,11 @@ class generate_c_base_c: public iterator_visitor_c {
       return print_striped_token(symbol, 2);
     }
     void *visit(hex_integer_c *symbol) {
-      if (NULL != matiec::analysis_selected_datatype(symbol) &&
-          (get_datatype_info_c::is_ANY_INT_compatible(matiec::analysis_selected_datatype(symbol)) ||
-           get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(symbol)))) {
+      if (NULL != matiec::analysis_selected_datatype(analysis_, symbol) &&
+          (get_datatype_info_c::is_ANY_INT_compatible(matiec::analysis_selected_datatype(analysis_, symbol)) ||
+           get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(analysis_, symbol)))) {
         s4o.print("__");
-        matiec::analysis_selected_datatype(symbol)->accept(*this);
+        matiec::analysis_selected_datatype(analysis_, symbol)->accept(*this);
         s4o.print("_LITERAL(0x");
         print_striped_token(symbol, 3);
         s4o.print(")");
@@ -461,9 +463,9 @@ class generate_c_base_c: public iterator_visitor_c {
     }
 
     void *visit(neg_real_c *symbol) {
-      if (NULL != matiec::analysis_selected_datatype(symbol) && get_datatype_info_c::is_ANY_REAL_compatible(matiec::analysis_selected_datatype(symbol))) {
+      if (NULL != matiec::analysis_selected_datatype(analysis_, symbol) && get_datatype_info_c::is_ANY_REAL_compatible(matiec::analysis_selected_datatype(analysis_, symbol))) {
         s4o.print("__");
-        matiec::analysis_selected_datatype(symbol)->accept(*this);
+        matiec::analysis_selected_datatype(analysis_, symbol)->accept(*this);
         s4o.print("_LITERAL(-");
         symbol->exp->accept(*this);
         s4o.print(")");
@@ -475,11 +477,11 @@ class generate_c_base_c: public iterator_visitor_c {
     }
 
     void *visit(neg_integer_c *symbol) {
-      if (NULL != matiec::analysis_selected_datatype(symbol) &&
-          (get_datatype_info_c::is_ANY_INT_compatible(matiec::analysis_selected_datatype(symbol)) ||
-           get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(symbol)))) {
+      if (NULL != matiec::analysis_selected_datatype(analysis_, symbol) &&
+          (get_datatype_info_c::is_ANY_INT_compatible(matiec::analysis_selected_datatype(analysis_, symbol)) ||
+           get_datatype_info_c::is_ANY_BIT_compatible(matiec::analysis_selected_datatype(analysis_, symbol)))) {
         s4o.print("__");
-        matiec::analysis_selected_datatype(symbol)->accept(*this);
+        matiec::analysis_selected_datatype(analysis_, symbol)->accept(*this);
         s4o.print("_LITERAL(-");
         symbol->exp->accept(*this);
         s4o.print(")");
@@ -773,12 +775,12 @@ void *visit(date_and_time_c *symbol) {
 
 /* enumerated_type_name '#' identifier */
 void *visit(enumerated_value_c *symbol) {
-  if (NULL == matiec::analysis_selected_datatype(symbol)) {
+  if (NULL == matiec::analysis_selected_datatype(analysis_, symbol)) {
     debug_c::print(symbol);
     ERROR;
   }
   
-  symbol_c *type_name = get_datatype_info_c::get_id(matiec::analysis_selected_datatype(symbol));
+  symbol_c *type_name = get_datatype_info_c::get_id(matiec::analysis_selected_datatype(analysis_, symbol));
   if (NULL == type_name) {
     ERROR_MSG("C code generator does not currently support anonymous enumerated data types.");
   }
@@ -810,7 +812,7 @@ void *visit(symbolic_variable_c *symbol) {
 // a non-standard extension!!
 void *visit(symbolic_constant_c *symbol) {
   TRACE("symbolic_variable_c");
-  const const_value_c &value = matiec::analysis_constant_value(symbol);
+  const const_value_c &value = matiec::analysis_constant_value(analysis_, symbol);
   if      (value. _int64.is_valid()) s4o.print(value. _int64.get());
   else if (value._uint64.is_valid()) s4o.print(value._uint64.get());
   else ERROR;
@@ -976,8 +978,8 @@ class generate_c_base_and_typeid_c: public generate_c_base_c {
 /* B 1.1 - Letters, digits and identifiers */
 /*******************************************/
     void *visit(derived_datatype_identifier_c *symbol) {
-      if (get_datatype_info_c::is_array(matiec::analysis_selected_datatype(symbol))) {
-        return matiec::analysis_selected_datatype(symbol)->accept(*this);
+      if (get_datatype_info_c::is_array(matiec::analysis_selected_datatype(analysis_, symbol))) {
+        return matiec::analysis_selected_datatype(analysis_, symbol)->accept(*this);
       }
       return print_token(symbol);
     }
@@ -1038,7 +1040,7 @@ void *visit(array_spec_init_c *symbol) {
   symbol_c *implicit_id = stage4_generator_symbol(
       s4o, symbol, "generate_c_annotaton__implicit_type_id");
   if (implicit_id != NULL) return implicit_id->accept(*this);
-  return matiec::analysis_selected_datatype(symbol)->accept(*this);
+  return matiec::analysis_selected_datatype(analysis_, symbol)->accept(*this);
 }
 
 /* ARRAY '[' array_subrange_list ']' OF non_generic_type_name */
@@ -1130,7 +1132,6 @@ void *visit(ref_type_decl_c *symbol) {
 }; /* class generate_c_base_and_typeid_c */
 
 #endif
-
 
 
 

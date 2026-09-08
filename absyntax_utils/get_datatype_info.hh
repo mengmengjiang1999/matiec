@@ -57,7 +57,9 @@ class get_datatype_info_c {
 
     // A helper method to get_datatype_info_c::is_type_equal()
     // Assuming the relaxed datatype model, return whether the two array datatypes are equal/equivalent
-    static bool is_arraytype_equal_relaxed(symbol_c *first_type, symbol_c *second_type);
+    static bool is_arraytype_equal_relaxed(
+        const matiec::AnalysisStore &analysis, symbol_c *first_type,
+        symbol_c *second_type);
   
   public:
     static symbol_c   *get_id    (symbol_c *datatype); /* get the identifier (name) of the datatype); returns NULL if anonymous datatype! Does not work for elementary datatypes!*/
@@ -80,7 +82,8 @@ class get_datatype_info_c {
      * NOTE: Currently stage1_2 only allows the use of the ANY keyword when in conjuntion with
      *       the REF_TO keyword (i.e. REF_TO ANY).
      */
-    static bool is_type_equal(symbol_c *first_type, symbol_c *second_type);
+    static bool is_type_equal(const matiec::AnalysisStore &analysis,
+                              symbol_c *first_type, symbol_c *second_type);
     static bool is_type_valid(symbol_c *type);
 
     static bool is_ref_to                          (symbol_c *type_symbol);    // Defined in IEC 61131-3 v3
@@ -246,4 +249,3 @@ class get_datatype_info_c {
     static safetod_type_name_c      safetod_type_name;
     static safetime_type_name_c     safetime_type_name;               
 };
-

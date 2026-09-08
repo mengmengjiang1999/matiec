@@ -37,6 +37,7 @@ class populate_enumvalue_symtable_c;
 
 class enum_declaration_check_c : public iterator_visitor_c {
   private:
+    matiec::AnalysisStore &analysis_;
     int error_count;
     int current_display_error_level;
     matiec::SemanticDiagnostics diagnostics_;
@@ -45,7 +46,8 @@ class enum_declaration_check_c : public iterator_visitor_c {
     
   public:
      enum_declaration_check_c(symbol_c *ignore,
-                              matiec::DiagnosticEngine &diagnostics);
+                              matiec::DiagnosticEngine &diagnostics,
+                              matiec::AnalysisStore &analysis);
     ~enum_declaration_check_c(void);
     int get_error_count();
 

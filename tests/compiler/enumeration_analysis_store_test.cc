@@ -6,12 +6,11 @@
 int main() {
   matiec::CompilationContext context;
   matiec::ActiveAstArenaScope arena_scope(context.ast_arena());
-  matiec::ActiveAnalysisStoreScope analysis_scope(context.analysis());
   library_c *library = context.ast_arena().make<library_c>();
   integer_c *first = context.ast_arena().make<integer_c>("1");
   integer_c *second = context.ast_arena().make<integer_c>("2");
-  library->enumvalue_symtable().insert(std::make_pair("Ready", first));
-  library->enumvalue_symtable().insert(std::make_pair("READY", second));
+  library->enumvalue_symtable(context.analysis()).insert(std::make_pair("Ready", first));
+  library->enumvalue_symtable(context.analysis()).insert(std::make_pair("READY", second));
 
   assert(context.analysis().enumeration_size() == 1);
   const matiec::AnalysisEntry<matiec::EnumerationAnalysisRecord> *entry =
@@ -25,11 +24,11 @@ int main() {
   matches = context.analysis().enumeration(library)->value.values.equal_range(
       "READY");
   assert(std::distance(matches.first, matches.second) == 2);
-  assert(library->enumvalue_symtable().size() == 2);
+  assert(library->enumvalue_symtable(context.analysis()).size() == 2);
 
   library_c transient;
-  transient.enumvalue_symtable().insert(std::make_pair("Local", first));
-  assert(transient.enumvalue_symtable().size() == 1);
+  transient.enumvalue_symtable(context.analysis()).insert(std::make_pair("Local", first));
+  assert(transient.enumvalue_symtable(context.analysis()).size() == 1);
 
   matiec::CompilationContext other;
   matiec::ActiveAstArenaScope other_scope(other.ast_arena());
@@ -41,7 +40,7 @@ int main() {
 
   context.analysis().clear();
   assert(context.analysis().enumeration_size() == 0);
-  assert(library->enumvalue_symtable().empty());
-  assert(transient.enumvalue_symtable().empty());
+  assert(library->enumvalue_symtable(context.analysis()).empty());
+  assert(transient.enumvalue_symtable(context.analysis()).empty());
   return 0;
 }

@@ -55,7 +55,7 @@
 static int enum_declaration_check(symbol_c *tree_root,
                                   matiec::DiagnosticEngine &diagnostics,
                                   matiec::AnalysisStore &analysis){
-    enum_declaration_check_c enum_declaration_check(NULL, diagnostics);
+    enum_declaration_check_c enum_declaration_check(NULL, diagnostics, analysis);
     tree_root->accept(enum_declaration_check);
     if (!analysis.validate_enumerations()) return 1;
     return enum_declaration_check.get_error_count();
@@ -73,8 +73,9 @@ static int enum_declaration_check(symbol_c *tree_root,
  *   VAR_EXTERN xx: ARRAY [1..max] OF INT; END_VAR;
  */
 static int declaration_safety(symbol_c *tree_root,
-                              matiec::DiagnosticEngine &diagnostics){
-    declaration_check_c declaration_check(tree_root, diagnostics);
+                              matiec::DiagnosticEngine &diagnostics,
+                              matiec::AnalysisStore &analysis){
+    declaration_check_c declaration_check(tree_root, diagnostics, analysis);
     tree_root->accept(declaration_check);
     return declaration_check.get_error_count();
 }
@@ -92,8 +93,8 @@ static int flow_control_analysis(symbol_c *tree_root,
  */
 static int constant_propagation(symbol_c *tree_root,
                                 matiec::DiagnosticEngine &diagnostics,
-                                matiec::AnalysisStore &){
-    constant_propagation_c constant_propagation(tree_root, diagnostics);
+                                matiec::AnalysisStore &analysis){
+    constant_propagation_c constant_propagation(tree_root, diagnostics, analysis);
     tree_root->accept(constant_propagation);
     return constant_propagation.get_error_count();
 }
@@ -108,13 +109,13 @@ static int constant_propagation(symbol_c *tree_root,
 static int type_safety(symbol_c *tree_root,
                        matiec::DiagnosticEngine &diagnostics,
                        matiec::AnalysisStore &analysis){
-	fill_candidate_datatypes_c fill_candidate_datatypes(tree_root);
+	fill_candidate_datatypes_c fill_candidate_datatypes(tree_root, analysis);
 	tree_root->accept(fill_candidate_datatypes);
-	narrow_candidate_datatypes_c narrow_candidate_datatypes(tree_root);
+	narrow_candidate_datatypes_c narrow_candidate_datatypes(tree_root, analysis);
 	tree_root->accept(narrow_candidate_datatypes);
-	print_datatypes_error_c print_datatypes_error(tree_root, diagnostics);
+	print_datatypes_error_c print_datatypes_error(tree_root, diagnostics, analysis);
 	tree_root->accept(print_datatypes_error);
-	forced_narrow_candidate_datatypes_c forced_narrow_candidate_datatypes(tree_root);
+	forced_narrow_candidate_datatypes_c forced_narrow_candidate_datatypes(tree_root, analysis);
 	tree_root->accept(forced_narrow_candidate_datatypes);
 	if (!analysis.validate_datatypes()) return 1;
 	if (!analysis.validate_resolutions()) return 1;
@@ -137,8 +138,9 @@ static int lvalue_check(symbol_c *tree_root,
  * so be sure to call constant_folding() before calling this function!
  */
 static int array_range_check(symbol_c *tree_root,
-                             matiec::DiagnosticEngine &diagnostics){
-	array_range_check_c array_range_check(tree_root, diagnostics);
+                             matiec::DiagnosticEngine &diagnostics,
+                             const matiec::AnalysisStore &analysis){
+	array_range_check_c array_range_check(tree_root, diagnostics, analysis);
 	tree_root->accept(array_range_check);
 	return array_range_check.get_error_count();
 }
@@ -148,8 +150,9 @@ static int array_range_check(symbol_c *tree_root,
  * so be sure to call constant_folding() before calling this function!
  */
 static int case_elements_check(symbol_c *tree_root,
-                               matiec::DiagnosticEngine &diagnostics){
-	case_elements_check_c case_elements_check(tree_root, diagnostics);
+                               matiec::DiagnosticEngine &diagnostics,
+                               const matiec::AnalysisStore &analysis){
+	case_elements_check_c case_elements_check(tree_root, diagnostics, analysis);
 	tree_root->accept(case_elements_check);
 	return case_elements_check.get_error_count();
 }
@@ -202,7 +205,8 @@ int stage3(symbol_c *tree_root, symbol_c **ordered_tree_root,
 		[tree_root](matiec::CompilationContext &pass_context) {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::declaration_safety,
-			declaration_safety(tree_root, pass_context.diagnostics()));
+			declaration_safety(tree_root, pass_context.diagnostics(),
+			                   pass_context.analysis()));
 	});
 	passes.register_pass(matiec::SemanticPassId::type_safety,
 		[tree_root](matiec::CompilationContext &pass_context) {
@@ -222,13 +226,15 @@ int stage3(symbol_c *tree_root, symbol_c **ordered_tree_root,
 		[tree_root](matiec::CompilationContext &pass_context) {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::array_range,
-			array_range_check(tree_root, pass_context.diagnostics()));
+			array_range_check(tree_root, pass_context.diagnostics(),
+			                  pass_context.analysis()));
 	});
 	passes.register_pass(matiec::SemanticPassId::case_elements,
 		[tree_root](matiec::CompilationContext &pass_context) {
 		return matiec::SemanticPassResult::failure(
 			matiec::SemanticPassId::case_elements,
-			case_elements_check(tree_root, pass_context.diagnostics()));
+			case_elements_check(tree_root, pass_context.diagnostics(),
+			                    pass_context.analysis()));
 	});
 	passes.register_pass(matiec::SemanticPassId::dependency_ordering,
 		[tree_root, ordered_tree_root](matiec::CompilationContext &pass_context) {

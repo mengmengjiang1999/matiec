@@ -40,7 +40,7 @@
 
 /*
  *  Choose, from the list of all the possible datatypes each expression may take, the single datatype that it will in fact take.
- *  The resulting (chosen) datatype, will be stored in the symbol_c.datatype() variable, leaving the candidate datatype list untouched!
+ *  The resulting (chosen) datatype is stored in the supplied analysis record, leaving the candidate datatype list untouched.
  *
  *  For rvalue expressions, this decision will be based on the datatype of the lvalue expression.
  *  For lvalue expressions, the candidate datatype list should have a single entry.
@@ -70,6 +70,7 @@ class narrow_candidate_datatypes_c: public iterator_visitor_c {
     il_instruction_c   *current_il_instruction;
 
   protected:
+    matiec::AnalysisStore &analysis_;
     virtual void set_datatype_in_prev_il_instructions(symbol_c *datatype, il_instruction_c *symbol);
 
   private:
@@ -94,7 +95,8 @@ class narrow_candidate_datatypes_c: public iterator_visitor_c {
 
 
   public:
-    narrow_candidate_datatypes_c(symbol_c *ignore);
+    narrow_candidate_datatypes_c(symbol_c *ignore,
+                                 matiec::AnalysisStore &analysis);
     virtual ~narrow_candidate_datatypes_c(void);
 
     symbol_c *base_type(symbol_c *symbol);
@@ -393,5 +395,3 @@ class narrow_candidate_datatypes_c: public iterator_visitor_c {
 
 
 #endif // #ifndef _NARROW_CANDIDATE_DATATYPES_HH
-
-

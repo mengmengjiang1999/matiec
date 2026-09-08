@@ -351,7 +351,8 @@ void print_function_parameter_data_types(stage4out_c *s4o_ptr, symbol_c *declara
 }
 
 
-unsigned long long calculate_time(symbol_c *symbol) {
+unsigned long long calculate_time(const matiec::AnalysisStore &analysis_,
+                                  symbol_c *symbol) {
   if (NULL == symbol) return 0;
   
   interval_c *interval = dynamic_cast<interval_c *>(symbol);
@@ -364,7 +365,7 @@ unsigned long long calculate_time(symbol_c *symbol) {
     /* SYM_REF2(duration_c, neg, interval) */
     if (duration->neg != NULL)
       {STAGE4_ERROR(duration, duration, "Negative TIME literals for interval are not currently supported"); ERROR;}
-    return calculate_time(duration->interval);
+    return calculate_time(analysis_, duration->interval);
   }
 
   if (NULL != interval) {
@@ -432,6 +433,7 @@ unsigned long long calculate_time(symbol_c *symbol) {
 
 class calculate_common_ticktime_c: public iterator_visitor_c {
   private:
+    const matiec::AnalysisStore &analysis_;
     unsigned long long common_ticktime;
 
     /* Tick overflow can't happen at 2^32 because it
@@ -447,7 +449,8 @@ class calculate_common_ticktime_c: public iterator_visitor_c {
     unsigned long common_period;
 
   public:
-    calculate_common_ticktime_c(void){
+    explicit calculate_common_ticktime_c(
+        const matiec::AnalysisStore &analysis) : analysis_(analysis) {
       common_ticktime = 0;
       common_period = 1; /* first tick time equals single/first task period */
     }
@@ -509,7 +512,7 @@ class calculate_common_ticktime_c: public iterator_visitor_c {
 //SYM_REF2(task_configuration_c, task_name, task_initialization)  
     void *visit(task_initialization_c *symbol) {
       if (symbol->interval_data_source != NULL) {
-        unsigned long long time = calculate_time(symbol->interval_data_source);
+        unsigned long long time = calculate_time(analysis_, symbol->interval_data_source);
         if(!update_ticktime(time)) {
           /* time is being stored in ns resolution (MILLISECOND #define is set to 1000000)    */
           /* time is being stored in unsigned long long (ISO C99 guarantees at least 64 bits) */
@@ -670,6 +673,7 @@ class generate_c_pous_c {
     static void handle_function(function_declaration_c *symbol, stage4out_c &s4o, bool print_declaration) {
       generate_c_vardecl_c          *vardecl = NULL;
       generate_c_base_and_typeid_c   print_base(&s4o);
+      const matiec::AnalysisStore &analysis_ = *s4o.analysis_store();
       
       TRACE("function_declaration_c");
 
@@ -736,7 +740,7 @@ class generate_c_pous_c {
        *       so it is safe for stage 4 to assume that this return variable will never be needed
        *       if the function's return type is VOID.
        */
-      if (!get_datatype_info_c::is_VOID(matiec::analysis_selected_datatype(symbol->type_name))) { // only print return variable if return datatype is not VOID
+      if (!get_datatype_info_c::is_VOID(matiec::analysis_selected_datatype(analysis_, symbol->type_name))) { // only print return variable if return datatype is not VOID
         s4o.print(s4o.indent_spaces);
         symbol->type_name->accept(print_base); /* return type */
         s4o.print(" ");
@@ -767,7 +771,7 @@ class generate_c_pous_c {
         s4o.print(s4o.indent_spaces + "*__ENO = __BOOL_LITERAL(FALSE);\n");
         s4o.indent_left();
         s4o.print(s4o.indent_spaces + "}\n");
-        if (!get_datatype_info_c::is_VOID(matiec::analysis_selected_datatype(symbol->type_name))) { // only print return variable if return datatype is not VOID
+        if (!get_datatype_info_c::is_VOID(matiec::analysis_selected_datatype(analysis_, symbol->type_name))) { // only print return variable if return datatype is not VOID
           s4o.print(s4o.indent_spaces + "return ");
           symbol->derived_function_name->accept(print_base);
           s4o.print(";\n");
@@ -790,7 +794,7 @@ class generate_c_pous_c {
       vardecl->print(symbol->var_declarations_list);
       delete vardecl;
       
-      if (!get_datatype_info_c::is_VOID(matiec::analysis_selected_datatype(symbol->type_name))) { // only print 'return <fname>' if return datatype is not VOID
+      if (!get_datatype_info_c::is_VOID(matiec::analysis_selected_datatype(analysis_, symbol->type_name))) { // only print 'return <fname>' if return datatype is not VOID
         s4o.print(s4o.indent_spaces + "return ");
         symbol->derived_function_name->accept(print_base);
         s4o.print(";\n");
@@ -1904,7 +1908,7 @@ END_RESOURCE
             current_task_name->accept(*this);
             s4o.print(" = ");
             if (symbol->interval_data_source != NULL) {
-              unsigned long long int time = calculate_time(symbol->interval_data_source);
+              unsigned long long int time = calculate_time(analysis_, symbol->interval_data_source);
               if (time != 0) {
                 s4o.print("!(tick % ");
                 s4o.print(time / common_ticktime);
@@ -2593,7 +2597,8 @@ class generate_c_c: public iterator_visitor_c {
       current_configuration = symbol;
 
       {
-        calculate_common_ticktime_c calculate_common_ticktime;
+        calculate_common_ticktime_c calculate_common_ticktime(
+            *s4o.analysis_store());
         symbol->accept(calculate_common_ticktime);
         common_ticktime = calculate_common_ticktime.get_common_ticktime();
         if (common_ticktime == 0) {

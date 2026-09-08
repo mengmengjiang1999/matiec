@@ -119,32 +119,6 @@ void print_symbol_c::dump_symbol(symbol_c* symbol) {
   if ((NULL != symbol->token) && (NULL != symbol->token->value))
     fprintf(stderr, "(%s)", symbol->token->value);
 
-  fprintf(stderr, "\t  datatype=");
-  if (NULL == matiec::analysis_selected_datatype(symbol))
-    fprintf(stderr, "NULL\t\t");
-  else {
-    fprintf(stderr, "%s",
-            matiec::analysis_selected_datatype(symbol)->absyntax_cname());
-  }
-  fprintf(stderr, "\t<-{");
-  const std::vector<symbol_c *> &candidates =
-      matiec::analysis_datatype_candidates(symbol);
-  if (candidates.size() == 0) {
-    fprintf(stderr, "\t\t\t\t\t");
-  } else if (candidates.size() <= 2) {
-    for (unsigned int i = 0; i < 2; i++)
-      if (i < candidates.size())
-        fprintf(stderr, " %s,", candidates[i]->absyntax_cname());
-      else
-        fprintf(stderr, "\t\t\t");
-  } else {
-    fprintf(stderr, "(%lu)\t\t\t\t\t",
-            (unsigned long int)candidates.size());
-  }
-  fprintf(stderr, "}\t ");         
-  
-  /* print the const values... */
-  dump_cvalue(matiec::analysis_constant_value(symbol));
   fprintf(stderr, "\t");
 }
 
@@ -152,34 +126,6 @@ void print_symbol_c::dump_symbol(symbol_c* symbol) {
 
 void *print_symbol_c::visit(il_instruction_c *symbol) {
    dump_symbol(symbol);
-
-   /* NOTE: std::map.size() returns a size_type, whose type is dependent on compiler/platform. To be portable, we need to do an explicit type cast. */
-  fprintf(stderr, "  prev_il_=%lu ", (unsigned long int)matiec::analysis_flow_predecessors(symbol).size());
-  if (matiec::analysis_flow_predecessors(symbol).size() == 0)
-    fprintf(stderr, "(----)");
-  else if (matiec::analysis_selected_datatype(
-               matiec::analysis_flow_predecessors(symbol)[0]) == NULL)
-    fprintf(stderr, "(NULL)");
-  else if (!get_datatype_info_c::is_type_valid(
-               matiec::analysis_selected_datatype(
-                   matiec::analysis_flow_predecessors(symbol)[0])))
-    fprintf(stderr, "(****)");
-  else
-    fprintf(stderr, "(    )");
-
-  fprintf(stderr, "  next_il_=%lu ", (unsigned long int)matiec::analysis_flow_successors(symbol).size());
-  if (matiec::analysis_flow_successors(symbol).size() == 0)
-    fprintf(stderr, "(----)");
-  else if (matiec::analysis_selected_datatype(
-               matiec::analysis_flow_successors(symbol)[0]) == NULL)
-    fprintf(stderr, "(NULL)");
-  else if (!get_datatype_info_c::is_type_valid(
-               matiec::analysis_selected_datatype(
-                   matiec::analysis_flow_successors(symbol)[0])))
-    fprintf(stderr, "(****)");
-  else 
-    fprintf(stderr, "(    )");
-  
   fprintf(stderr, "\n");
   
   return NULL;
@@ -247,4 +193,3 @@ void debug_c::print(symbol_c *symbol) {
 void debug_c::print_ast(symbol_c *symbol) {
   print_ast_c::print(symbol);
 }
-

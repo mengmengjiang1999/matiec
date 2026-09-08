@@ -56,10 +56,12 @@ CLI adapter in `main.cc` converts the final result to a process exit status.
 
 `CompilationContext::analysis()` is the typed, arena-checked semantic result
 boundary. Flow edges, constant values, and datatype working records are produced
-directly there. A compilation-scoped active-store guard lets legacy-shaped
-visitors read and update those records without AST copy-back. Non-arena helper
-nodes use context-owned transient flow, constant, or datatype records; an absent
-flow record exposes empty predecessor and successor sequences.
+directly there. Stage 3 visitors, datatype helpers, and Stage 4 generators receive
+the store explicitly through constructors and helper signatures. Legacy-shaped
+node accessors also require the store as an argument, so no active-store guard or
+thread-local analysis pointer is needed. Non-arena helper nodes use context-owned
+transient flow, constant, or datatype records; an absent flow record exposes
+empty predecessor and successor sequences.
 Candidate filling updates typed vectors used by narrowing; narrowing updates
 selected datatypes and scopes used by later semantic checks and Stage 4. The AST
 base class contains none of those datatype-analysis fields or constant values,
@@ -77,9 +79,9 @@ compatibility tables. Generator visitors exchange implicit-type identifiers
 through typed records and do not publish or materialize AST annotation maps.
 No whole-tree compatibility materializer remains in the compiler or its tests;
 focused tests verify record authority directly.
-The result-store migration is complete and all semantic/generator result fields
-have left the AST. Replacing the scoped active-store bridge with explicit analysis
-dependencies is the remaining cleanup boundary.
+The result-store and explicit-dependency migrations are complete. All
+semantic/generator result fields have left the AST, and analysis state is reached
+only through the store supplied by the current compilation context.
 
 ## Generated output
 

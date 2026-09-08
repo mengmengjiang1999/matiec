@@ -56,6 +56,7 @@
 
 class constant_folding_c : public iterator_visitor_c {
   protected:
+    matiec::AnalysisStore &analysis_;
     int error_count;
     bool warning_found;
     int current_display_error_level;
@@ -69,7 +70,8 @@ class constant_folding_c : public iterator_visitor_c {
 
 
   public:
-    constant_folding_c(symbol_c *symbol, matiec::DiagnosticEngine &diagnostics);
+    constant_folding_c(symbol_c *symbol, matiec::DiagnosticEngine &diagnostics,
+                       matiec::AnalysisStore &analysis);
     virtual ~constant_folding_c(void);
     int get_error_count();
  
@@ -209,7 +211,8 @@ class constant_folding_c : public iterator_visitor_c {
 class constant_propagation_c : public constant_folding_c {
   public:
     constant_propagation_c(symbol_c *symbol,
-                           matiec::DiagnosticEngine &diagnostics);
+                           matiec::DiagnosticEngine &diagnostics,
+                           matiec::AnalysisStore &analysis);
     virtual ~constant_propagation_c(void);
     typedef symtable_c<const_value_c> map_values_t;
   private:

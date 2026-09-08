@@ -31,28 +31,24 @@ int main() {
   assert(second_flow->value.predecessors[0] == first);
   assert(second_flow->value.successors.empty());
   {
-    matiec::ActiveAnalysisStoreScope analysis_scope(context.analysis());
-    assert(matiec::analysis_flow_predecessors(first).empty());
-    assert(matiec::analysis_flow_successors(first).size() == 1);
-    assert(matiec::analysis_flow_successors(first)[0] == second);
-    assert(matiec::analysis_flow_predecessors(second).size() == 1);
-    assert(matiec::analysis_flow_predecessors(second)[0] == first);
-    assert(matiec::analysis_flow_successors(second).empty());
+    assert(matiec::analysis_flow_predecessors(context.analysis(), first).empty());
+    assert(matiec::analysis_flow_successors(context.analysis(), first).size() == 1);
+    assert(matiec::analysis_flow_successors(context.analysis(), first)[0] == second);
+    assert(matiec::analysis_flow_predecessors(context.analysis(), second).size() == 1);
+    assert(matiec::analysis_flow_predecessors(context.analysis(), second)[0] == first);
+    assert(matiec::analysis_flow_successors(context.analysis(), second).empty());
 
     il_instruction_c transient(nullptr, nullptr);
-    assert(matiec::analysis_flow_predecessors(&transient).empty());
-    matiec::analysis_flow_predecessors_mut(&transient).push_back(first);
-    assert(matiec::analysis_flow_predecessors(&transient).size() == 1);
-    assert(matiec::analysis_flow_predecessors(&transient)[0] == first);
+    assert(matiec::analysis_flow_predecessors(context.analysis(), &transient).empty());
+    matiec::analysis_flow_predecessors_mut(context.analysis(), &transient).push_back(first);
+    assert(matiec::analysis_flow_predecessors(context.analysis(), &transient).size() == 1);
+    assert(matiec::analysis_flow_predecessors(context.analysis(), &transient)[0] == first);
   }
-  assert(matiec::active_analysis_store() == nullptr);
-
   context.analysis().clear();
   assert(context.analysis().flow_size() == 0);
   {
-    matiec::ActiveAnalysisStoreScope analysis_scope(context.analysis());
     il_instruction_c transient(nullptr, nullptr);
-    assert(matiec::analysis_flow_predecessors(&transient).empty());
+    assert(matiec::analysis_flow_predecessors(context.analysis(), &transient).empty());
   }
   return 0;
 }

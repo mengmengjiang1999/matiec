@@ -112,8 +112,9 @@
 /* set to 1 to see debug info during execution */
 static int debug = 0;
 
-forced_narrow_candidate_datatypes_c::forced_narrow_candidate_datatypes_c(symbol_c *ignore)
- :narrow_candidate_datatypes_c(ignore) {
+forced_narrow_candidate_datatypes_c::forced_narrow_candidate_datatypes_c(
+    symbol_c *ignore, matiec::AnalysisStore &analysis)
+ :narrow_candidate_datatypes_c(ignore, analysis) {
 }
 
 forced_narrow_candidate_datatypes_c::~forced_narrow_candidate_datatypes_c(void) {
@@ -147,23 +148,23 @@ void forced_narrow_candidate_datatypes_c::set_datatype_in_prev_il_instructions(s
 
 void forced_narrow_candidate_datatypes_c::forced_narrow_il_instruction(
     symbol_c *symbol, const std::vector<symbol_c *> &next_il_instruction) {
-  if (NULL == symbol->datatype()) {
-    if (matiec::analysis_datatype_candidates(symbol).empty()) {
-      symbol->datatype() = &(get_datatype_info_c::invalid_type_name); // This will occur in the situations (a) in the above example
+  if (NULL == symbol->datatype(analysis_)) {
+    if (matiec::analysis_datatype_candidates(analysis_, symbol).empty()) {
+      symbol->datatype(analysis_) = &(get_datatype_info_c::invalid_type_name); // This will occur in the situations (a) in the above example
       // return NULL; // No need to return control to the visit() method of the base class... But we do so, just to be safe (called at the end of this function)!
     } else {
       if (next_il_instruction.empty()) {
-        symbol->datatype() = matiec::analysis_datatype_candidates(symbol)[0]; // This will occur in the situations (b) in the above example
+        symbol->datatype(analysis_) = matiec::analysis_datatype_candidates(analysis_, symbol)[0]; // This will occur in the situations (b) in the above example
       } else {
         symbol_c *next_datatype = NULL;
 
         /* find the datatype of the following IL instructions (they should all be identical by now, but we don't have an assertion checking for this. */
         for (unsigned int i=0; i < next_il_instruction.size(); i++)
-          if (NULL != next_il_instruction[i]->datatype())
-            next_datatype = next_il_instruction[i]->datatype();
+          if (NULL != next_il_instruction[i]->datatype(analysis_))
+            next_datatype = next_il_instruction[i]->datatype(analysis_);
         if (get_datatype_info_c::is_type_valid(next_datatype)) {
           //  This will occur in the situations (c) in the above example
-          symbol->datatype() = matiec::analysis_datatype_candidates(symbol)[0];
+          symbol->datatype(analysis_) = matiec::analysis_datatype_candidates(analysis_, symbol)[0];
         } else {
           //  This will occur in the situations (d) in the above example
           // it is not possible to determine the exact situation in the current pass, so we can't do anything just yet. Leave it for the next time around!
@@ -197,7 +198,7 @@ void *forced_narrow_candidate_datatypes_c::visit(instruction_list_c *symbol) {
    */
   /*
   for(int i = symbol->n-1; i >= 0; i--) {
-    if (NULL == symbol->get_element(i)->datatype())
+    if (NULL == symbol->get_element(i)->datatype(analysis_))
       ERROR;
   }
   */
@@ -211,7 +212,7 @@ void *forced_narrow_candidate_datatypes_c::visit(instruction_list_c *symbol) {
 // SYM_REF2(il_instruction_c, label, il_instruction)
 // void *visit(instruction_list_c *symbol);
 void *forced_narrow_candidate_datatypes_c::visit(il_instruction_c *symbol) {
-  forced_narrow_il_instruction(symbol, matiec::analysis_flow_successors(symbol));
+  forced_narrow_il_instruction(symbol, matiec::analysis_flow_successors(analysis_, symbol));
 
   /* return control to the visit() method of the base class! */
   return narrow_candidate_datatypes_c::visit(symbol);  //  This handles the situations (e) in the above example
@@ -258,7 +259,7 @@ void *forced_narrow_candidate_datatypes_c::visit(il_instruction_c *symbol) {
 
 // SYM_REF1(il_simple_instruction_c, il_simple_instruction, symbol_c *prev_il_instruction;)
 void *forced_narrow_candidate_datatypes_c::visit(il_simple_instruction_c*symbol) {
-  forced_narrow_il_instruction(symbol, matiec::analysis_flow_successors(symbol));
+  forced_narrow_il_instruction(symbol, matiec::analysis_flow_successors(analysis_, symbol));
 
   /* return control to the visit() method of the base class! */
   return narrow_candidate_datatypes_c::visit(symbol);  //  This handle the situations (e) in the above example

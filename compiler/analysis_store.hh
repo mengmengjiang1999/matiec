@@ -153,54 +153,56 @@ class AnalysisStore {
   Table<GeneratorAnalysisRecord> generators_;
 };
 
-class ActiveAnalysisStoreScope {
- public:
-  explicit ActiveAnalysisStoreScope(AnalysisStore &analysis);
-  ~ActiveAnalysisStoreScope();
-
-  ActiveAnalysisStoreScope(const ActiveAnalysisStoreScope &) = delete;
-  ActiveAnalysisStoreScope &operator=(const ActiveAnalysisStoreScope &) = delete;
-
- private:
-  AnalysisStore *previous_;
-};
-
-AnalysisStore *active_analysis_store();
-const FlowAnalysisRecord *analysis_flow(const symbol_c *symbol);
+const FlowAnalysisRecord *analysis_flow(const AnalysisStore &analysis,
+                                        const symbol_c *symbol);
 const std::vector<symbol_c *> &analysis_flow_predecessors(
-    const symbol_c *symbol);
+    const AnalysisStore &analysis, const symbol_c *symbol);
 const std::vector<symbol_c *> &analysis_flow_predecessors(
-    const il_instruction_c *symbol);
+    const AnalysisStore &analysis, const il_instruction_c *symbol);
 const std::vector<symbol_c *> &analysis_flow_predecessors(
-    const il_simple_instruction_c *symbol);
+    const AnalysisStore &analysis, const il_simple_instruction_c *symbol);
 const std::vector<symbol_c *> &analysis_flow_successors(
-    const symbol_c *symbol);
+    const AnalysisStore &analysis, const symbol_c *symbol);
 const std::vector<symbol_c *> &analysis_flow_successors(
-    const il_instruction_c *symbol);
+    const AnalysisStore &analysis, const il_instruction_c *symbol);
 const std::vector<symbol_c *> &analysis_flow_successors(
-    const il_simple_instruction_c *symbol);
-const const_value_c &analysis_constant_value(const symbol_c *symbol);
-std::vector<symbol_c *> &analysis_flow_predecessors_mut(symbol_c *symbol);
-std::vector<symbol_c *> &analysis_flow_successors_mut(symbol_c *symbol);
-const_value_c &analysis_constant_value_mut(symbol_c *symbol);
-const DatatypeAnalysisRecord *analysis_datatype(const symbol_c *symbol);
+    const AnalysisStore &analysis, const il_simple_instruction_c *symbol);
+const const_value_c &analysis_constant_value(const AnalysisStore &analysis,
+                                             const symbol_c *symbol);
+std::vector<symbol_c *> &analysis_flow_predecessors_mut(
+    AnalysisStore &analysis, symbol_c *symbol);
+std::vector<symbol_c *> &analysis_flow_successors_mut(
+    AnalysisStore &analysis, symbol_c *symbol);
+const_value_c &analysis_constant_value_mut(AnalysisStore &analysis,
+                                           symbol_c *symbol);
+const DatatypeAnalysisRecord *analysis_datatype(const AnalysisStore &analysis,
+                                                const symbol_c *symbol);
 const std::vector<symbol_c *> &analysis_datatype_candidates(
-    const symbol_c *symbol);
-std::vector<symbol_c *> &analysis_datatype_candidates_mut(symbol_c *symbol);
-symbol_c *analysis_selected_datatype(const symbol_c *symbol);
-symbol_c *&analysis_selected_datatype_ref(symbol_c *symbol);
-symbol_c *analysis_scope(const symbol_c *symbol);
-symbol_c *&analysis_scope_ref(symbol_c *symbol);
-std::vector<symbol_c *> &analysis_resolution_candidates_mut(symbol_c *symbol);
+    const AnalysisStore &analysis, const symbol_c *symbol);
+std::vector<symbol_c *> &analysis_datatype_candidates_mut(
+    AnalysisStore &analysis, symbol_c *symbol);
+symbol_c *analysis_selected_datatype(const AnalysisStore &analysis,
+                                     const symbol_c *symbol);
+symbol_c *&analysis_selected_datatype_ref(AnalysisStore &analysis,
+                                         symbol_c *symbol);
+symbol_c *analysis_scope(const AnalysisStore &analysis, const symbol_c *symbol);
+symbol_c *&analysis_scope_ref(AnalysisStore &analysis, symbol_c *symbol);
+std::vector<symbol_c *> &analysis_resolution_candidates_mut(
+    AnalysisStore &analysis, symbol_c *symbol);
 const std::vector<symbol_c *> &analysis_resolution_candidates(
-    const symbol_c *symbol);
-symbol_c *&analysis_resolution_declaration_ref(symbol_c *symbol);
-symbol_c *analysis_resolution_declaration(const symbol_c *symbol);
-int &analysis_extensible_parameter_count_ref(symbol_c *symbol);
-int analysis_extensible_parameter_count(const symbol_c *symbol);
-symbol_c::enumvalue_symtable_t &analysis_enumeration_values_mut(symbol_c *symbol);
+    const AnalysisStore &analysis, const symbol_c *symbol);
+symbol_c *&analysis_resolution_declaration_ref(AnalysisStore &analysis,
+                                               symbol_c *symbol);
+symbol_c *analysis_resolution_declaration(const AnalysisStore &analysis,
+                                          const symbol_c *symbol);
+int &analysis_extensible_parameter_count_ref(AnalysisStore &analysis,
+                                             symbol_c *symbol);
+int analysis_extensible_parameter_count(const AnalysisStore &analysis,
+                                        const symbol_c *symbol);
+symbol_c::enumvalue_symtable_t &analysis_enumeration_values_mut(
+    AnalysisStore &analysis, symbol_c *symbol);
 const symbol_c::enumvalue_symtable_t &analysis_enumeration_values(
-    const symbol_c *symbol);
+    const AnalysisStore &analysis, const symbol_c *symbol);
 
 }  // namespace matiec
 

@@ -122,11 +122,11 @@ class generate_c_st_c: public generate_c_base_and_typeid_c {
 
 
 void *print_getter(symbol_c *symbol) {
-  unsigned int vartype = analyse_variable_c::first_nonfb_vardecltype(symbol, scope_);
+  unsigned int vartype = analyse_variable_c::first_nonfb_vardecltype(analysis_, symbol, scope_);
   if (wanted_variablegeneration == fparam_output_vg) {
     if (vartype == search_var_instance_decl_c::external_vt) {
-      if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(symbol))) ERROR;
-      if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(symbol)))
+      if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(analysis_, symbol))) ERROR;
+      if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(analysis_, symbol)))
         s4o.print(GET_EXTERNAL_FB_BY_REF);
       else
         s4o.print(GET_EXTERNAL_BY_REF);
@@ -138,8 +138,8 @@ void *print_getter(symbol_c *symbol) {
   }
   else {
     if (vartype == search_var_instance_decl_c::external_vt) {
-      if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(symbol))) ERROR;
-      if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(symbol)))
+      if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(analysis_, symbol))) ERROR;
+      if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(analysis_, symbol)))
         s4o.print(GET_EXTERNAL_FB);
       else
         s4o.print(GET_EXTERNAL);
@@ -173,12 +173,12 @@ void *print_setter(symbol_c* symbol,
 
   unsigned int vartype;
   if (fb_symbol == NULL) {
-    vartype = analyse_variable_c::first_nonfb_vardecltype(symbol, scope_);
-    symbol_c *first_nonfb = analyse_variable_c::find_first_nonfb(symbol);
+    vartype = analyse_variable_c::first_nonfb_vardecltype(analysis_, symbol, scope_);
+    symbol_c *first_nonfb = analyse_variable_c::find_first_nonfb(analysis_, symbol);
     if (first_nonfb == NULL) ERROR;
     if (vartype == search_var_instance_decl_c::external_vt) {
-      if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(first_nonfb))) ERROR;
-      if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(first_nonfb))) // handle situation where we are copying a complete fb -> fb1.fb2.fb3 := fb4 (and fb3 is external!)
+      if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(analysis_, first_nonfb))) ERROR;
+      if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(analysis_, first_nonfb))) // handle situation where we are copying a complete fb -> fb1.fb2.fb3 := fb4 (and fb3 is external!)
         s4o.print(SET_EXTERNAL_FB);
       else
         s4o.print(SET_EXTERNAL);
@@ -337,11 +337,11 @@ void *visit(structured_variable_c *symbol) {
        *
        *        For the above reason, a STEP must be handled as a FB, i.e. it does NOT contain the 'flags' and 'value' elements!
        */
-      if (   get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(symbol->record_variable))
-          || get_datatype_info_c::is_sfc_step      (matiec::analysis_selected_datatype(symbol->record_variable))) {
-        if (NULL == matiec::analysis_scope(symbol->record_variable)) ERROR;
+      if (   get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(analysis_, symbol->record_variable))
+          || get_datatype_info_c::is_sfc_step      (matiec::analysis_selected_datatype(analysis_, symbol->record_variable))) {
+        if (NULL == matiec::analysis_scope(analysis_, symbol->record_variable)) ERROR;
         search_var_instance_decl_c search_var_instance_decl(
-            matiec::analysis_scope(symbol->record_variable));
+            matiec::analysis_scope(analysis_, symbol->record_variable));
         if      (search_var_instance_decl_c::external_vt == search_var_instance_decl.get_vartype(get_var_name_c::get_last_field(symbol->record_variable)))
           s4o.print("->");
         else if (dynamic_cast<deref_operator_c *>(symbol->record_variable) != NULL)
@@ -354,8 +354,8 @@ void *visit(structured_variable_c *symbol) {
     case complextype_suffix_vg:
       symbol->record_variable->accept(*this);
       // the following condition MUST be a negation of the above condition used in the 'case complextype_base_vg:'
-      if (!(   get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(symbol->record_variable))     // if the record variable is not a FB...
-            || get_datatype_info_c::is_sfc_step      (matiec::analysis_selected_datatype(symbol->record_variable)))) { // ...nor an SFC step name, then it will certainly be a structure!
+      if (!(   get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(analysis_, symbol->record_variable))     // if the record variable is not a FB...
+            || get_datatype_info_c::is_sfc_step      (matiec::analysis_selected_datatype(analysis_, symbol->record_variable)))) { // ...nor an SFC step name, then it will certainly be a structure!
         if (dynamic_cast<deref_operator_c *>(symbol->record_variable) != NULL)
           s4o.print("->"); /* please read the comment in visit(deref_operator_c *) tio understand what this line is doing! */
         else
@@ -516,10 +516,10 @@ void *visit(deref_expression_c *symbol) {
     s4o.print("");
   } else {
     /* For code in FBs, and PROGRAMS... */
-    unsigned int vartype = analyse_variable_c::first_nonfb_vardecltype(symbol->exp, scope_);
+    unsigned int vartype = analyse_variable_c::first_nonfb_vardecltype(analysis_, symbol->exp, scope_);
     if (vartype == search_var_instance_decl_c::external_vt) {
-      if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(symbol->exp))) ERROR;
-      if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(symbol->exp)))
+      if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(analysis_, symbol->exp))) ERROR;
+      if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(analysis_, symbol->exp)))
         s4o.print(GET_EXTERNAL_FB_DREF);
       else
         s4o.print(GET_EXTERNAL_DREF);
@@ -556,10 +556,10 @@ void *visit(ref_expression_c *symbol) {
   } else {
     /* For code in FBs, and PROGRAMS... */
     s4o.print("(");
-    unsigned int vartype = analyse_variable_c::first_nonfb_vardecltype(symbol->exp, scope_);
+    unsigned int vartype = analyse_variable_c::first_nonfb_vardecltype(analysis_, symbol->exp, scope_);
     if (vartype == search_var_instance_decl_c::external_vt) {
-      if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(symbol->exp))) ERROR;
-      if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(symbol->exp)))
+      if (!get_datatype_info_c::is_type_valid    (matiec::analysis_selected_datatype(analysis_, symbol->exp))) ERROR;
+      if ( get_datatype_info_c::is_function_block(matiec::analysis_selected_datatype(analysis_, symbol->exp)))
         s4o.print(GET_EXTERNAL_FB_REF);
       else
         s4o.print(GET_EXTERNAL_REF);
@@ -589,16 +589,16 @@ void *visit(ref_expression_c *symbol) {
 
 
 void *visit(or_expression_c *symbol) {
-  if (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(symbol)))
+  if (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(analysis_, symbol)))
     return print_binary_expression(symbol->l_exp, symbol->r_exp, " || ");
-  if (get_datatype_info_c::is_ANY_nBIT_compatible(matiec::analysis_selected_datatype(symbol)))
+  if (get_datatype_info_c::is_ANY_nBIT_compatible(matiec::analysis_selected_datatype(analysis_, symbol)))
     return print_binary_expression(symbol->l_exp, symbol->r_exp, " | ");
   ERROR;
   return NULL;
 }
 
 void *visit(xor_expression_c *symbol) {
-  if (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(symbol))) {
+  if (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(analysis_, symbol))) {
     s4o.print("((");
     symbol->l_exp->accept(*this);
     s4o.print(" && !");
@@ -610,91 +610,91 @@ void *visit(xor_expression_c *symbol) {
     s4o.print("))");
     return NULL;
   }
-  if (get_datatype_info_c::is_ANY_nBIT_compatible(matiec::analysis_selected_datatype(symbol)))
+  if (get_datatype_info_c::is_ANY_nBIT_compatible(matiec::analysis_selected_datatype(analysis_, symbol)))
     return print_binary_expression(symbol->l_exp, symbol->r_exp, " ^ ");
   ERROR;
   return NULL;
 }
 
 void *visit(and_expression_c *symbol) {
-  if (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(symbol)))
+  if (get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(analysis_, symbol)))
     return print_binary_expression(symbol->l_exp, symbol->r_exp, " && ");
-  if (get_datatype_info_c::is_ANY_nBIT_compatible(matiec::analysis_selected_datatype(symbol)))
+  if (get_datatype_info_c::is_ANY_nBIT_compatible(matiec::analysis_selected_datatype(analysis_, symbol)))
     return print_binary_expression(symbol->l_exp, symbol->r_exp, " & ");
   ERROR;
 return NULL;
 }
 
 void *visit(equ_expression_c *symbol) {
-  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(symbol->l_exp)) ||
-      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(symbol->l_exp)) ||
-      get_datatype_info_c::is_ANY_STRING_compatible(matiec::analysis_selected_datatype(symbol->l_exp)))
-    return print_compare_function("EQ", matiec::analysis_selected_datatype(symbol->l_exp), symbol->l_exp, symbol->r_exp);
+  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(analysis_, symbol->l_exp)) ||
+      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(analysis_, symbol->l_exp)) ||
+      get_datatype_info_c::is_ANY_STRING_compatible(matiec::analysis_selected_datatype(analysis_, symbol->l_exp)))
+    return print_compare_function("EQ", matiec::analysis_selected_datatype(analysis_, symbol->l_exp), symbol->l_exp, symbol->r_exp);
   return print_binary_expression(symbol->l_exp, symbol->r_exp, " == ");
 }
 
 void *visit(notequ_expression_c *symbol) {
-  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(symbol->l_exp)) ||
-      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(symbol->l_exp)) ||
-      get_datatype_info_c::is_ANY_STRING_compatible(matiec::analysis_selected_datatype(symbol->l_exp)))
-    return print_compare_function("NE", matiec::analysis_selected_datatype(symbol->l_exp), symbol->l_exp, symbol->r_exp);
+  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(analysis_, symbol->l_exp)) ||
+      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(analysis_, symbol->l_exp)) ||
+      get_datatype_info_c::is_ANY_STRING_compatible(matiec::analysis_selected_datatype(analysis_, symbol->l_exp)))
+    return print_compare_function("NE", matiec::analysis_selected_datatype(analysis_, symbol->l_exp), symbol->l_exp, symbol->r_exp);
   return print_binary_expression(symbol->l_exp, symbol->r_exp, " != ");
 }
 
 void *visit(lt_expression_c *symbol) {
-  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(symbol->l_exp)) ||
-      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(symbol->l_exp)) ||
-      get_datatype_info_c::is_ANY_STRING_compatible(matiec::analysis_selected_datatype(symbol->l_exp)))
-    return print_compare_function("LT", matiec::analysis_selected_datatype(symbol->l_exp), symbol->l_exp, symbol->r_exp);
+  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(analysis_, symbol->l_exp)) ||
+      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(analysis_, symbol->l_exp)) ||
+      get_datatype_info_c::is_ANY_STRING_compatible(matiec::analysis_selected_datatype(analysis_, symbol->l_exp)))
+    return print_compare_function("LT", matiec::analysis_selected_datatype(analysis_, symbol->l_exp), symbol->l_exp, symbol->r_exp);
   return print_binary_expression(symbol->l_exp, symbol->r_exp, " < ");
 }
 
 void *visit(gt_expression_c *symbol) {
-  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(symbol->l_exp)) ||
-      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(symbol->l_exp)) ||
-      get_datatype_info_c::is_ANY_STRING_compatible(matiec::analysis_selected_datatype(symbol->l_exp)))
-    return print_compare_function("GT", matiec::analysis_selected_datatype(symbol->l_exp), symbol->l_exp, symbol->r_exp);
+  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(analysis_, symbol->l_exp)) ||
+      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(analysis_, symbol->l_exp)) ||
+      get_datatype_info_c::is_ANY_STRING_compatible(matiec::analysis_selected_datatype(analysis_, symbol->l_exp)))
+    return print_compare_function("GT", matiec::analysis_selected_datatype(analysis_, symbol->l_exp), symbol->l_exp, symbol->r_exp);
   return print_binary_expression(symbol->l_exp, symbol->r_exp, " > ");
 }
 
 void *visit(le_expression_c *symbol) {
-  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(symbol->l_exp)) ||
-      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(symbol->l_exp)) ||
-      get_datatype_info_c::is_ANY_STRING_compatible(matiec::analysis_selected_datatype(symbol->l_exp)))
-    return print_compare_function("LE", matiec::analysis_selected_datatype(symbol->l_exp), symbol->l_exp, symbol->r_exp);
+  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(analysis_, symbol->l_exp)) ||
+      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(analysis_, symbol->l_exp)) ||
+      get_datatype_info_c::is_ANY_STRING_compatible(matiec::analysis_selected_datatype(analysis_, symbol->l_exp)))
+    return print_compare_function("LE", matiec::analysis_selected_datatype(analysis_, symbol->l_exp), symbol->l_exp, symbol->r_exp);
   return print_binary_expression(symbol->l_exp, symbol->r_exp, " <= ");
 }
 
 void *visit(ge_expression_c *symbol) {
-  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(symbol->l_exp)) ||
-      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(symbol->l_exp)) ||
-      get_datatype_info_c::is_ANY_STRING_compatible(matiec::analysis_selected_datatype(symbol->l_exp)))
-    return print_compare_function("GE", matiec::analysis_selected_datatype(symbol->l_exp), symbol->l_exp, symbol->r_exp);
+  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(analysis_, symbol->l_exp)) ||
+      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(analysis_, symbol->l_exp)) ||
+      get_datatype_info_c::is_ANY_STRING_compatible(matiec::analysis_selected_datatype(analysis_, symbol->l_exp)))
+    return print_compare_function("GE", matiec::analysis_selected_datatype(analysis_, symbol->l_exp), symbol->l_exp, symbol->r_exp);
   return print_binary_expression(symbol->l_exp, symbol->r_exp, " >= ");
 }
 
 void *visit(add_expression_c *symbol) {
-  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(symbol)) ||
-      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(symbol)))
+  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(analysis_, symbol)) ||
+      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(analysis_, symbol)))
     return print_binary_function("__time_add", symbol->l_exp, symbol->r_exp);
   return print_binary_expression(symbol->l_exp, symbol->r_exp, " + ");
 }
 
 void *visit(sub_expression_c *symbol) {
-  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(symbol)) ||
-      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(symbol)))
+  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(analysis_, symbol)) ||
+      get_datatype_info_c::is_ANY_DATE_compatible  (matiec::analysis_selected_datatype(analysis_, symbol)))
     return print_binary_function("__time_sub", symbol->l_exp, symbol->r_exp);
   return print_binary_expression(symbol->l_exp, symbol->r_exp, " - ");
 }
 
 void *visit(mul_expression_c *symbol) {
-  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(symbol)))
+  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(analysis_, symbol)))
     return print_binary_function("__time_mul", symbol->l_exp, symbol->r_exp);
   return print_binary_expression(symbol->l_exp, symbol->r_exp, " * ");
 }
 
 void *visit(div_expression_c *symbol) {
-  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(symbol)))
+  if (get_datatype_info_c::is_TIME_compatible      (matiec::analysis_selected_datatype(analysis_, symbol)))
     return print_binary_function("__time_div", symbol->l_exp, symbol->r_exp);
   return print_binary_expression(symbol->l_exp, symbol->r_exp, " / ");
 }
@@ -722,7 +722,7 @@ void *visit(neg_expression_c *symbol) {
 }
 
 void *visit(not_expression_c *symbol) {
-  return print_unary_expression(symbol->exp, get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(symbol))?"!":"~");
+  return print_unary_expression(symbol->exp, get_datatype_info_c::is_BOOL_compatible(matiec::analysis_selected_datatype(analysis_, symbol))?"!":"~");
 }
 
 void *visit(function_invocation_c *symbol) {
@@ -943,7 +943,7 @@ void *visit(statement_list_c *symbol) {
 /* B 3.2.1 Assignment Statements */
 /*********************************/
 void *visit(assignment_statement_c *symbol) {
-  symbol_c *left_type = matiec::analysis_selected_datatype(symbol->l_exp);
+  symbol_c *left_type = matiec::analysis_selected_datatype(analysis_, symbol->l_exp);
 
   if (this->is_variable_prefix_null()) {
     symbol->l_exp->accept(*this);
@@ -1166,7 +1166,7 @@ void *visit(elseif_statement_c *symbol) {
 }
 
 void *visit(case_statement_c *symbol) {
-  symbol_c *expression_type = matiec::analysis_selected_datatype(symbol->expression);
+  symbol_c *expression_type = matiec::analysis_selected_datatype(analysis_, symbol->expression);
   s4o.print("{\n");
   s4o.indent_right();
   s4o.print(s4o.indent_spaces);
@@ -1275,10 +1275,10 @@ void *visit(for_statement_c *symbol) {
     integer_c              integer_oneval("1");
     add_expression_c       add_expression(symbol->control_variable, &integer_oneval);
     assignment_statement_c inc_assignment(symbol->control_variable, &add_expression);
-    integer_oneval.const_value()._int64 .set(1);                    // set the stage3 anottation we need
-    integer_oneval.const_value()._uint64.set(1);                    // set the stage3 anottation we need
-    integer_oneval.datatype() = matiec::analysis_selected_datatype(symbol->control_variable); // set the stage3 anottation we need
-    add_expression.datatype() = matiec::analysis_selected_datatype(symbol->control_variable); // set the stage3 anottation we need
+    integer_oneval.const_value(analysis_)._int64 .set(1);                    // set the stage3 anottation we need
+    integer_oneval.const_value(analysis_)._uint64.set(1);                    // set the stage3 anottation we need
+    integer_oneval.datatype(analysis_) = matiec::analysis_selected_datatype(analysis_, symbol->control_variable); // set the stage3 anottation we need
+    add_expression.datatype(analysis_) = matiec::analysis_selected_datatype(analysis_, symbol->control_variable); // set the stage3 anottation we need
     inc_assignment.accept(*this);
     //symbol->control_variable->accept(*this);  // this does not work for VAR_GLOBAL variables
     //s4o.print("++");
@@ -1288,7 +1288,7 @@ void *visit(for_statement_c *symbol) {
     /* and have this visitor vist the latter!                                             */
     add_expression_c       add_expression(symbol->control_variable, symbol->by_expression);
     assignment_statement_c inc_assignment(symbol->control_variable, &add_expression);
-    add_expression.datatype() = matiec::analysis_selected_datatype(symbol->control_variable); // set the stage3 anottation we need
+    add_expression.datatype(analysis_) = matiec::analysis_selected_datatype(analysis_, symbol->control_variable); // set the stage3 anottation we need
     inc_assignment.accept(*this);
     //symbol->control_variable->accept(*this);  // this does not work for VAR_GLOBAL variables
     //s4o.print(" += (");

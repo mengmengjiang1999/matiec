@@ -32,7 +32,7 @@
  *
  */
 
-/* NOTE: The algorithm implemented here assumes that the symbol_c.candidate_datatype, and the symbol_c.datatype()
+/* NOTE: The algorithm implemented here assumes that candidate and selected datatype analysis
  *       annotations have already been apropriately filled in!
  *       BEFORE running this visitor, be sure to CALL the fill_candidate_datatypes_c, and the narrow_candidate_datatypes_c visitors!
  */
@@ -52,6 +52,7 @@
 class print_datatypes_error_c: public iterator_visitor_c {
 
   private:
+    matiec::AnalysisStore &analysis_;
     /* The level of detail that the user wants us to display error messages. */
 //     #define error_level_default (1)
     #define error_level_default (1)
@@ -109,7 +110,8 @@ class print_datatypes_error_c: public iterator_visitor_c {
 
   public:
     print_datatypes_error_c(symbol_c *ignore,
-                            matiec::DiagnosticEngine &diagnostics);
+                            matiec::DiagnosticEngine &diagnostics,
+                            matiec::AnalysisStore &analysis);
     virtual ~print_datatypes_error_c(void);
     int get_error_count();
 
@@ -346,7 +348,5 @@ class print_datatypes_error_c: public iterator_visitor_c {
     void *visit(repeat_statement_c *symbol);
 
 }; // print_datatypes_error_c
-
-
 
 

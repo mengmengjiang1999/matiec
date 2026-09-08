@@ -6,15 +6,14 @@
 int main() {
   matiec::CompilationContext context;
   matiec::ActiveAstArenaScope arena_scope(context.ast_arena());
-  matiec::ActiveAnalysisStoreScope analysis_scope(context.analysis());
   function_invocation_c *call =
       context.ast_arena().make<function_invocation_c>();
   integer_c *first = context.ast_arena().make<integer_c>("1");
   integer_c *second = context.ast_arena().make<integer_c>("2");
-  call->candidate_functions().push_back(first);
-  call->candidate_functions().push_back(second);
-  call->called_function_declaration() = second;
-  call->extensible_param_count() = 3;
+  call->candidate_functions(context.analysis()).push_back(first);
+  call->candidate_functions(context.analysis()).push_back(second);
+  call->called_function_declaration(context.analysis()) = second;
+  call->extensible_param_count(context.analysis()) = 3;
 
   assert(context.analysis().resolution_size() == 1);
   const matiec::AnalysisEntry<matiec::ResolutionAnalysisRecord> *entry =
@@ -33,13 +32,13 @@ int main() {
   assert(stored->candidates.size() == 2);
   assert(stored->declaration == second);
   assert(stored->extensible_parameter_count == 3);
-  assert(call->candidate_functions().size() == 2);
-  assert(call->called_function_declaration() == second);
-  assert(call->extensible_param_count() == 3);
+  assert(call->candidate_functions(context.analysis()).size() == 2);
+  assert(call->called_function_declaration(context.analysis()) == second);
+  assert(call->extensible_param_count(context.analysis()) == 3);
 
   function_invocation_c transient;
-  transient.called_function_declaration() = first;
-  assert(transient.called_function_declaration() == first);
+  transient.called_function_declaration(context.analysis()) = first;
+  assert(transient.called_function_declaration(context.analysis()) == first);
 
   stage4out_c detached(context.outputs());
   assert(stage4_resolution_record(detached, call) == nullptr);
@@ -54,7 +53,7 @@ int main() {
 
   context.analysis().clear();
   assert(context.analysis().resolution_size() == 0);
-  assert(call->called_function_declaration() == nullptr);
-  assert(transient.called_function_declaration() == nullptr);
+  assert(call->called_function_declaration(context.analysis()) == nullptr);
+  assert(transient.called_function_declaration(context.analysis()) == nullptr);
   return 0;
 }

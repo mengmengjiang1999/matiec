@@ -56,6 +56,7 @@
 class fill_candidate_datatypes_c: public iterator_visitor_c {
 
   private:
+    matiec::AnalysisStore &analysis_;
     search_var_instance_decl_c *search_var_instance_decl;
     /* When calling a function block, we must first find it's type,
      * by searching through the declarations of the variables currently
@@ -112,7 +113,8 @@ class fill_candidate_datatypes_c: public iterator_visitor_c {
 
 
   public:
-    fill_candidate_datatypes_c(symbol_c *ignore);
+    fill_candidate_datatypes_c(symbol_c *ignore,
+                               matiec::AnalysisStore &analysis);
     virtual ~fill_candidate_datatypes_c(void);
 
 
@@ -412,7 +414,6 @@ class fill_candidate_datatypes_c: public iterator_visitor_c {
     void *visit(repeat_statement_c *symbol);
 
 }; // fill_candidate_datatypes_c
-
 
 
 

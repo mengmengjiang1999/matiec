@@ -77,22 +77,29 @@ extern const struct widen_entry widen_CMP_table[];
 /* Search for a datatype inside a candidate_datatypes list.
  * Returns: position of datatype in the list, or -1 if not found.
  */
-int search_in_candidate_datatype_list(symbol_c *datatype, const std::vector <symbol_c *> &candidate_datatypes);
+int search_in_candidate_datatype_list(
+    const matiec::AnalysisStore &analysis, symbol_c *datatype,
+    const std::vector<symbol_c *> &candidate_datatypes);
 
 /* Remove a datatype inside a candidate_datatypes list.
  * Returns: If successful it returns true, false otherwise.
  */
-bool remove_from_candidate_datatype_list(symbol_c *datatype, std::vector <symbol_c *> &candidate_datatypes);
+bool remove_from_candidate_datatype_list(
+    const matiec::AnalysisStore &analysis, symbol_c *datatype,
+    std::vector<symbol_c *> &candidate_datatypes);
 
 /* Intersect two candidate_datatype_lists.
  * Remove from list1 (origin, dest.) all elements that are not found in list2 (with).
  * In essence, list1 will contain the result of the intersection of list1 with list2.
  * In other words, modify list1 so it only contains the elelements that are simultaneously in list1 and list2!
  */
-void intersect_candidate_datatype_list(symbol_c *list1 /*origin, dest.*/, symbol_c *list2 /*with*/);
+void intersect_candidate_datatype_list(matiec::AnalysisStore &analysis,
+                                       symbol_c *list1 /*origin, dest.*/,
+                                       symbol_c *list2 /*with*/);
 
 /* intersect the candidate_datatype lists of all prev_il_intructions, and set the local candidate_datatype list to the result! */
-void intersect_prev_candidate_datatype_lists(il_instruction_c *symbol);
+void intersect_prev_candidate_datatype_lists(matiec::AnalysisStore &analysis,
+                                             il_instruction_c *symbol);
 
 
 
