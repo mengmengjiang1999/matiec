@@ -9,11 +9,7 @@ class AnalysisStore;
 
 bool publish_datatype_candidates(symbol_c *tree_root,
                                  matiec::AnalysisStore &analysis);
-void materialize_datatype_candidates(symbol_c *tree_root,
-                                     const matiec::AnalysisStore &analysis);
 bool publish_selected_datatypes(symbol_c *tree_root,
                                 matiec::AnalysisStore &analysis);
-void materialize_selected_datatypes(symbol_c *tree_root,
-                                    const matiec::AnalysisStore &analysis);
 
 #endif

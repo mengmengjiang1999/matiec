@@ -29,9 +29,6 @@ int main() {
   assert(std::distance(matches.first, matches.second) == 2);
   assert(library->enumvalue_symtable.empty());
 
-  materialize_enumeration_analysis(library, context.analysis());
-  assert(library->enumvalue_symtable.size() == 2);
-
   matiec::CompilationContext other;
   matiec::ActiveAstArenaScope other_scope(other.ast_arena());
   integer_c *foreign = other.ast_arena().make<integer_c>("3");

@@ -41,11 +41,6 @@ int main() {
   assert(call->called_function_declaration == nullptr);
   assert(call->extensible_param_count == 0);
 
-  materialize_declaration_resolution(call, context.analysis());
-  assert(call->candidate_functions.size() == 2);
-  assert(call->called_function_declaration == second);
-  assert(call->extensible_param_count == 3);
-
   stage4out_c detached(context.outputs());
   assert(stage4_resolution_record(detached, call) == nullptr);
 

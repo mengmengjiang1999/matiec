@@ -1,6 +1,5 @@
 #include "compiler/compilation_context.hh"
 #include "stage4/generator_analysis_access.hh"
-#include "stage4/generator_analysis_store.hh"
 
 #include <cassert>
 
@@ -24,8 +23,7 @@ int main() {
   assert(entry->value.symbols.size() == 1);
   assert(entry->value.symbols.at("implicit_type") == implicit_type);
 
-  materialize_generator_analysis(literal, context.analysis());
-  assert(literal->anotations_map.at("implicit_type") == implicit_type);
+  assert(literal->anotations_map.empty());
 
   stage4out_c detached(context.outputs());
   assert(!stage4_set_generator_symbol(detached, literal, "detached",

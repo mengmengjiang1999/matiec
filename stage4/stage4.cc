@@ -46,9 +46,6 @@
 #include <stdlib.h>
 
 #include "stage4.hh"
-#include "generator_analysis_store.hh"
-#include "../absyntax/visitor.hh"
-#include "../compiler/analysis_store.hh"
 #include "../compiler/compilation_abort.hh"
 #include "../compiler/compilation_context.hh"
 #include "../main.hh" // required for ERROR() and ERROR_MSG() macros.
@@ -59,109 +56,6 @@
 #define FIRST_(symbol1, symbol2) (((symbol1)->first_order < (symbol2)->first_order)   ? (symbol1) : (symbol2))
 #define  LAST_(symbol1, symbol2) (((symbol1)->last_order  > (symbol2)->last_order)    ? (symbol1) : (symbol2))
 #include <stdarg.h>
-
-namespace {
-
-class publish_generator_annotations_c : public iterator_visitor_c {
- public:
-  explicit publish_generator_annotations_c(matiec::AnalysisStore &analysis)
-      : analysis_(analysis) {}
-
-  void publish(symbol_c *symbol) {
-    matiec::GeneratorAnalysisRecord record;
-    record.symbols = symbol->anotations_map;
-    if (!analysis_.set_generator(symbol, record)) succeeded_ = false;
-  }
-
-#define GENERATOR_VISIT(class_name)                                           \
-  void *visit(class_name *symbol) override {                                  \
-    publish(symbol);                                                          \
-    return iterator_visitor_c::visit(symbol);                                 \
-  }
-#define SYM_LIST(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_TOKEN(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_REF0(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_REF1(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_REF2(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_REF3(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_REF4(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_REF5(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_REF6(class_name, ...) GENERATOR_VISIT(class_name)
-#include "../absyntax/absyntax.def"
-#undef SYM_LIST
-#undef SYM_TOKEN
-#undef SYM_REF0
-#undef SYM_REF1
-#undef SYM_REF2
-#undef SYM_REF3
-#undef SYM_REF4
-#undef SYM_REF5
-#undef SYM_REF6
-#undef GENERATOR_VISIT
-
-  bool succeeded() const { return succeeded_; }
-
- private:
-  matiec::AnalysisStore &analysis_;
-  bool succeeded_ = true;
-};
-
-class materialize_generator_annotations_c : public iterator_visitor_c {
- public:
-  explicit materialize_generator_annotations_c(
-      const matiec::AnalysisStore &analysis)
-      : analysis_(analysis) {}
-
-  void materialize(symbol_c *symbol) {
-    const matiec::AnalysisEntry<matiec::GeneratorAnalysisRecord> *entry =
-        analysis_.generator(symbol);
-    if (entry != nullptr) symbol->anotations_map = entry->value.symbols;
-  }
-
-#define GENERATOR_VISIT(class_name)                                           \
-  void *visit(class_name *symbol) override {                                  \
-    materialize(symbol);                                                      \
-    return iterator_visitor_c::visit(symbol);                                 \
-  }
-#define SYM_LIST(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_TOKEN(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_REF0(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_REF1(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_REF2(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_REF3(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_REF4(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_REF5(class_name, ...) GENERATOR_VISIT(class_name)
-#define SYM_REF6(class_name, ...) GENERATOR_VISIT(class_name)
-#include "../absyntax/absyntax.def"
-#undef SYM_LIST
-#undef SYM_TOKEN
-#undef SYM_REF0
-#undef SYM_REF1
-#undef SYM_REF2
-#undef SYM_REF3
-#undef SYM_REF4
-#undef SYM_REF5
-#undef SYM_REF6
-#undef GENERATOR_VISIT
-
- private:
-  const matiec::AnalysisStore &analysis_;
-};
-
-}  // namespace
-
-bool publish_generator_analysis(symbol_c *tree_root,
-                                matiec::AnalysisStore &analysis) {
-  publish_generator_annotations_c publisher(analysis);
-  tree_root->accept(publisher);
-  return publisher.succeeded();
-}
-
-void materialize_generator_analysis(
-    symbol_c *tree_root, const matiec::AnalysisStore &analysis) {
-  materialize_generator_annotations_c materializer(analysis);
-  tree_root->accept(materializer);
-}
 
 void stage4err(const char *stage4_generator_id, symbol_c *symbol1, symbol_c *symbol2, const char *errmsg, ...) {
     va_list argptr;

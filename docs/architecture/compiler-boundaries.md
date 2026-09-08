@@ -74,6 +74,8 @@ Enumeration lookup tables also remain store-owned after their completed pass,
 with no production materialization because downstream passes do not read the AST
 compatibility tables. Generator visitors exchange implicit-type identifiers
 through typed records and do not publish or materialize AST annotation maps.
+No whole-tree compatibility materializer remains in the compiler or its tests;
+focused tests verify record authority directly.
 The result-store migration is complete. Removing producer-local compatibility
 fields and replacing the scoped active-store bridge with explicit analysis
 dependencies are the remaining cleanup boundaries.

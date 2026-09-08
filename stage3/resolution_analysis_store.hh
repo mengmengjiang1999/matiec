@@ -9,7 +9,5 @@ class AnalysisStore;
 
 bool publish_declaration_resolution(symbol_c *tree_root,
                                     matiec::AnalysisStore &analysis);
-void materialize_declaration_resolution(
-    symbol_c *tree_root, const matiec::AnalysisStore &analysis);
 
 #endif

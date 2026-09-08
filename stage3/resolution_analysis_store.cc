@@ -68,63 +68,6 @@ class publish_resolution_c : public iterator_visitor_c {
   bool succeeded_ = true;
 };
 
-class materialize_resolution_c : public iterator_visitor_c {
- public:
-  explicit materialize_resolution_c(const matiec::AnalysisStore &analysis)
-      : analysis_(analysis) {}
-
-  const matiec::ResolutionAnalysisRecord *record(symbol_c *key) const {
-    const matiec::AnalysisEntry<matiec::ResolutionAnalysisRecord> *entry =
-        analysis_.resolution(key);
-    return entry == nullptr ? nullptr : &entry->value;
-  }
-
-#define FUNCTION_RESOLUTION_VISIT(class_name)                                 \
-  void *visit(class_name *symbol) override {                                  \
-    const matiec::ResolutionAnalysisRecord *value = record(symbol);           \
-    if (value != nullptr) {                                                   \
-      symbol->candidate_functions = value->candidates;                        \
-      symbol->called_function_declaration = value->declaration;               \
-      symbol->extensible_param_count = value->extensible_parameter_count;     \
-    }                                                                         \
-    return iterator_visitor_c::visit(symbol);                                 \
-  }
-  FUNCTION_RESOLUTION_VISIT(il_function_call_c)
-  FUNCTION_RESOLUTION_VISIT(il_formal_funct_call_c)
-  FUNCTION_RESOLUTION_VISIT(function_invocation_c)
-#undef FUNCTION_RESOLUTION_VISIT
-
-#define FB_RESOLUTION_VISIT(class_name)                                       \
-  void *visit(class_name *symbol) override {                                  \
-    const matiec::ResolutionAnalysisRecord *value = record(symbol);           \
-    if (value != nullptr) symbol->called_fb_declaration = value->declaration; \
-    return iterator_visitor_c::visit(symbol);                                 \
-  }
-  FB_RESOLUTION_VISIT(il_fb_call_c)
-  FB_RESOLUTION_VISIT(fb_invocation_c)
-  FB_RESOLUTION_VISIT(S_operator_c)
-  FB_RESOLUTION_VISIT(R_operator_c)
-  FB_RESOLUTION_VISIT(S1_operator_c)
-  FB_RESOLUTION_VISIT(R1_operator_c)
-  FB_RESOLUTION_VISIT(CLK_operator_c)
-  FB_RESOLUTION_VISIT(CU_operator_c)
-  FB_RESOLUTION_VISIT(CD_operator_c)
-  FB_RESOLUTION_VISIT(PV_operator_c)
-  FB_RESOLUTION_VISIT(IN_operator_c)
-  FB_RESOLUTION_VISIT(PT_operator_c)
-#undef FB_RESOLUTION_VISIT
-
-  void *visit(object_method_invocation_c *symbol) override {
-    iterator_visitor_c::visit(symbol);
-    if (symbol->compatibility_invocation != nullptr)
-      symbol->compatibility_invocation->accept(*this);
-    return nullptr;
-  }
-
- private:
-  const matiec::AnalysisStore &analysis_;
-};
-
 }  // namespace
 
 bool publish_declaration_resolution(symbol_c *tree_root,
@@ -132,10 +75,4 @@ bool publish_declaration_resolution(symbol_c *tree_root,
   publish_resolution_c publisher(analysis);
   tree_root->accept(publisher);
   return publisher.succeeded();
-}
-
-void materialize_declaration_resolution(
-    symbol_c *tree_root, const matiec::AnalysisStore &analysis) {
-  materialize_resolution_c materializer(analysis);
-  tree_root->accept(materializer);
 }

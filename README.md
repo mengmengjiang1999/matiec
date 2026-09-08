@@ -242,7 +242,9 @@ from the store, so completed resolution results are no longer copied back onto
 the AST for downstream use. Completed scope-specific enumeration tables likewise
 remain store-owned; no production pass requires their AST compatibility copies.
 Generator annotations also remain off the AST in production and need no
-post-generation publish/materialize cycle.
+post-generation publish/materialize cycle. Whole-tree compatibility
+materializers have been removed, so typed records are the only completed-result
+interface.
 
 ### Semantics are explicit passes
 
