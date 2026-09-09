@@ -10,6 +10,15 @@ PROJECT_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
 SANITIZER=${1:-}
 JOBS=${JOBS:-2}
 
+# Apple's system bison is too old for the generated frontend. Prefer the
+# Homebrew toolchain when it is installed, while leaving Linux CI unchanged.
+if test -x /opt/homebrew/opt/bison/bin/bison; then
+  PATH=/opt/homebrew/opt/bison/bin:$PATH
+elif test -x /usr/local/opt/bison/bin/bison; then
+  PATH=/usr/local/opt/bison/bin:$PATH
+fi
+export PATH
+
 case "$SANITIZER" in
   address|undefined) ;;
   *)

@@ -8944,7 +8944,14 @@ static int parse_files(matiec::ParserState &parser_state,
   allow_ref_to_any                     = runtime_options.ref_nonstand_extensions;
   allow_ref_to_in_derived_datatypes    = runtime_options.ref_nonstand_extensions;
   parser_state.syntax_errors = 0;
-  const int library_parse_status = yyparse(parser_state);
+  int library_parse_status = 0;
+  try {
+    library_parse_status = yyparse(parser_state);
+  } catch (...) {
+    reset_lexer_state();
+    fclose(libfile);
+    throw;
+  }
   reset_lexer_state();
   if (library_parse_status != 0) {
     fprintf (stderr, "\nParsing failed because of too many consecutive syntax errors in standard library. Bailing out!\n");
@@ -8988,7 +8995,14 @@ static int parse_files(matiec::ParserState &parser_state,
   parser_state.syntax_errors = 0;
   //allow_ref_to_any = false;    /* we only allow REF_TO ANY in library functions/FBs, no matter what the user asks for in the command line */
 
-  const int main_parse_status = yyparse(parser_state);
+  int main_parse_status = 0;
+  try {
+    main_parse_status = yyparse(parser_state);
+  } catch (...) {
+    reset_lexer_state();
+    fclose(mainfile);
+    throw;
+  }
   reset_lexer_state();
   if (main_parse_status != 0) {
     fprintf (stderr, "\nParsing failed because of too many consecutive syntax errors. Bailing out!\n");

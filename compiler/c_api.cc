@@ -19,6 +19,8 @@ struct matiec_context {
   void *diagnostic_user_data = nullptr;
   matiec_output_callback_t output_callback = nullptr;
   void *output_user_data = nullptr;
+  matiec_include_resolver_callback_t include_resolver = nullptr;
+  void *include_user_data = nullptr;
 };
 
 namespace {
@@ -284,6 +286,62 @@ matiec_status_t matiec_context_set_output_callback(
           return std::make_unique<CallbackOutputSink>(
               std::move(path), context->output_callback,
               context->output_user_data);
+        });
+  });
+}
+
+matiec_status_t matiec_context_set_include_resolver(
+    matiec_context_t *context, matiec_include_resolver_callback_t callback,
+    void *user_data) {
+  return guarded(context, [&] {
+    context->include_resolver = callback;
+    context->include_user_data = user_data;
+    if (callback == nullptr) {
+      context->value.parser_state().set_include_resolver({});
+      return;
+    }
+    context->value.parser_state().set_include_resolver(
+        [context](std::string_view requested, std::string *display_name,
+                  std::string *contents,
+                  std::string *error) -> matiec::IncludeResolveStatus {
+          matiec_source_view_t source = MATIEC_SOURCE_VIEW_INIT;
+          matiec_include_result_t status = MATIEC_INCLUDE_ERROR;
+          try {
+            const std::string requested_copy(requested);
+            status = context->include_resolver(
+                context->include_user_data, requested_copy.c_str(), &source);
+          } catch (...) {
+            *error = "Include resolver callback threw an exception";
+            return matiec::IncludeResolveStatus::error;
+          }
+          if (status == MATIEC_INCLUDE_NOT_FOUND) {
+            *error = "Virtual include was not found: " + std::string(requested);
+            return matiec::IncludeResolveStatus::not_found;
+          }
+          if (status == MATIEC_INCLUDE_USE_FILESYSTEM)
+            return matiec::IncludeResolveStatus::use_filesystem;
+          if (status != MATIEC_INCLUDE_RESOLVED) {
+            *error = "Virtual include resolver failed for: " +
+                     std::string(requested);
+            return matiec::IncludeResolveStatus::error;
+          }
+          if (source.struct_size < sizeof(matiec_source_view_t)) {
+            *error = "Virtual include source view is too small";
+            return matiec::IncludeResolveStatus::error;
+          }
+          if (source.display_name == nullptr || source.display_name[0] == '\0') {
+            *error = "Virtual include display name is required";
+            return matiec::IncludeResolveStatus::error;
+          }
+          if (source.data == nullptr && source.size != 0) {
+            *error = "Virtual include bytes are required for non-empty source";
+            return matiec::IncludeResolveStatus::error;
+          }
+          *display_name = source.display_name;
+          const char *bytes = static_cast<const char *>(source.data);
+          contents->assign(bytes == nullptr ? "" : bytes, source.size);
+          error->clear();
+          return matiec::IncludeResolveStatus::resolved;
         });
   });
 }

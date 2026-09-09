@@ -125,6 +125,8 @@
 
 /* Required for strdup() */
 #include <string.h>
+#include <string>
+#include <utility>
 
 /* Required only for the declaration of abstract syntax classes
  * (class symbol_c; class token_c; class list_c;)
@@ -239,7 +241,7 @@ void unput_text(int n);
  */
 void unput_and_mark(const char mark_char);
 
-void include_file(const char *include_filename);
+void include_file(const char *include_filename, matiec::ParserState &parser_state);
 
 /* The body_state tries to find a ';' before a END_PROGRAM, END_FUNCTION or END_FUNCTION_BLOCK or END_ACTION
  * and ignores ';' inside comments and pragmas. This means that we cannot do this in a signle lex rule.
@@ -572,8 +574,10 @@ typedef struct {
     int lineNumber;
     int currentChar;
     int lineLength;
-    int currentTokenStart;
-    FILE *in_file;
+	    int currentTokenStart;
+	    FILE *in_file;
+	    std::string memory;
+	    size_t memory_offset;
   } tracking_t;
 
 /* A forward declaration of a function defined at the end of this file. */
@@ -1037,7 +1041,7 @@ incompl_location	%[IQM]\*
 
 <include_filename>{file_include_pragma_filename}	{
 			  /* set the internal state variables of lexical analyser to process a new include file */
-			  include_file(yytext);
+			  include_file(yytext, parser_state);
 			  /* switch to whatever state was active before the include file */
 			  yy_pop_state();
 			  /* now process the new file... */
@@ -1076,12 +1080,14 @@ incompl_location	%[IQM]\*
 			       */ 	
 			    yyterminate();
 			  } else {
-			    fclose(yyin);
+			    if (current_tracking->in_file != NULL)
+			      fclose(current_tracking->in_file);
 			    FreeTracking(current_tracking);
 			    --include_stack_ptr;
 			    yy_delete_buffer(YY_CURRENT_BUFFER);
 			    yy_switch_to_buffer((include_stack[include_stack_ptr]).buffer_state);
 			    current_tracking = include_stack[include_stack_ptr].env;
+			    yyin = current_tracking->in_file;
 			      /* removing constness of char *. This is safe actually,
 			       * since the only real const char * that is stored on the stack is
 			       * the first one (i.e. the one that gets stored in include_stack[0],
@@ -2025,7 +2031,15 @@ tracking_t *GetNewTracking(FILE* in_file) {
   new_env->lineLength  = 0;
   new_env->currentTokenStart = 0;
   new_env->in_file = in_file;
+  new_env->memory.clear();
+  new_env->memory_offset = 0;
   return new_env;
+}
+
+tracking_t *GetNewMemoryTracking(std::string bytes) {
+  tracking_t *tracking = GetNewTracking(NULL);
+  tracking->memory = std::move(bytes);
+  return tracking;
 }
 
 
@@ -2036,7 +2050,8 @@ void FreeTracking(tracking_t *tracking) {
 
 void reset_lexer_state(void) {
   while (include_stack_ptr > 0) {
-    fclose(yyin);
+    if (current_tracking->in_file != NULL)
+      fclose(current_tracking->in_file);
     FreeTracking(current_tracking);
     yy_delete_buffer(YY_CURRENT_BUFFER);
     --include_stack_ptr;
@@ -2067,6 +2082,13 @@ void UpdateTracking(const char *text) {
 
 /* GetNextChar: reads a character from input */
 int GetNextChar(char *b, int maxBuffer) {
+  (void)maxBuffer;
+  if (current_tracking->in_file == NULL) {
+    if (current_tracking->memory_offset >= current_tracking->memory.size())
+      return 0;
+    *b = current_tracking->memory[current_tracking->memory_offset++];
+    return 1;
+  }
   int res = fgetc(current_tracking->in_file);
   if ( res == EOF ) 
     return 0;
@@ -2093,14 +2115,22 @@ void print_include_stack(void) {
 
 
 /* set the internal state variables of lexical analyser to process a new include file */
-void handle_include_file_(FILE *filehandle, const char *filename) {
+void activate_include_(tracking_t *tracking, const char *filename) {
   if (include_stack_ptr >= MAX_INCLUDE_DEPTH) {
+    if (tracking->in_file != NULL)
+      fclose(tracking->in_file);
+    FreeTracking(tracking);
     fprintf(stderr, "Includes nested too deeply\n");
     throw matiec::CompilationAbort("Includes nested too deeply", true);
   }
   if (runtime_options.utf8_source_and_strings) {
     matiec::Utf8Error error;
-    if (!matiec::validate_utf8_file(filehandle, &error)) {
+    const bool valid = tracking->in_file != NULL
+        ? matiec::validate_utf8_file(tracking->in_file, &error)
+        : matiec::validate_utf8_bytes(
+              reinterpret_cast<const unsigned char *>(tracking->memory.data()),
+              tracking->memory.size(), &error);
+    if (!valid) {
       fprintf(stderr, "%s:%lu:%lu: error: malformed UTF-8 source: %s\n",
               filename, (unsigned long)error.line, (unsigned long)error.column,
               error.reason.c_str());
@@ -2108,18 +2138,26 @@ void handle_include_file_(FILE *filehandle, const char *filename) {
     }
   }
   
-  yyin = filehandle;
+  yyin = tracking->in_file;
   
   include_stack[include_stack_ptr].buffer_state = YY_CURRENT_BUFFER;
   include_stack[include_stack_ptr].env = current_tracking;
   include_stack[include_stack_ptr].filename = current_filename;
   
   current_filename = matiec::retain_ast_string(filename);
-  current_tracking = GetNewTracking(yyin);
+  current_tracking = tracking;
   include_stack_ptr++;
 
   /* switch input buffer to new file... */
   yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
+}
+
+void handle_include_file_(FILE *filehandle, const char *filename) {
+  activate_include_(GetNewTracking(filehandle), filename);
+}
+
+void handle_include_memory_(std::string bytes, const char *filename) {
+  activate_include_(GetNewMemoryTracking(std::move(bytes)), filename);
 }
 
 
@@ -2146,7 +2184,22 @@ void include_string_(const char *source_code) {
 
 
 /* Open an include file, and set the internal state variables of lexical analyser to process a new include file */
-void include_file(const char *filename) {
+void include_file(const char *filename, matiec::ParserState &parser_state) {
+  if (parser_state.has_include_resolver()) {
+    std::string display_name;
+    std::string contents;
+    std::string error;
+    const matiec::IncludeResolveStatus status = parser_state.resolve_include(
+        filename, &display_name, &contents, &error);
+    if (status == matiec::IncludeResolveStatus::resolved) {
+      handle_include_memory_(std::move(contents), display_name.c_str());
+      return;
+    }
+    if (status != matiec::IncludeResolveStatus::use_filesystem) {
+      fprintf(stderr, "%s\n", error.c_str());
+      throw matiec::CompilationAbort(error);
+    }
+  }
   FILE *filehandle = NULL;
   
   for (int i = 0; (INCLUDE_DIRECTORIES[i] != NULL) && (filehandle == NULL); i++) {

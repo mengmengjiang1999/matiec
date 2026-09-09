@@ -1,7 +1,10 @@
 #ifndef MATIEC_COMPILER_PARSER_STATE_HH
 #define MATIEC_COMPILER_PARSER_STATE_HH
 
+#include <functional>
 #include <memory>
+#include <string>
+#include <string_view>
 
 struct runtime_options_t {
   bool allow_void_datatype = false;
@@ -23,6 +26,10 @@ struct runtime_options_t {
 };
 
 namespace matiec {
+
+enum class IncludeResolveStatus { resolved, use_filesystem, not_found, error };
+using IncludeResolver = std::function<IncludeResolveStatus(
+    std::string_view, std::string *, std::string *, std::string *)>;
 
 class AstArena;
 struct DeclarationSymbolTables;
@@ -51,11 +58,18 @@ struct ParserState {
   DeclarationSymbolTables &declaration_symbols() const;
   ParserSymbolTables &symbols();
   const ParserSymbolTables &symbols() const;
+  void set_include_resolver(IncludeResolver resolver);
+  bool has_include_resolver() const;
+  IncludeResolveStatus resolve_include(std::string_view requested,
+                                       std::string *display_name,
+                                       std::string *contents,
+                                       std::string *error) const;
 
  private:
   AstArena *ast_arena_ = nullptr;
   DeclarationSymbolTables *declaration_symbols_ = nullptr;
   std::unique_ptr<ParserSymbolTables> symbols_;
+  IncludeResolver include_resolver_;
 };
 
 class ActiveParserStateScope {

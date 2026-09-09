@@ -3,6 +3,7 @@
 #include "compiler/parser_symbol_tables.hh"
 
 #include <stdexcept>
+#include <utility>
 
 namespace matiec {
 namespace {
@@ -41,6 +42,21 @@ DeclarationSymbolTables &ParserState::declaration_symbols() const {
 ParserSymbolTables &ParserState::symbols() { return *symbols_; }
 
 const ParserSymbolTables &ParserState::symbols() const { return *symbols_; }
+
+void ParserState::set_include_resolver(IncludeResolver resolver) {
+  include_resolver_ = std::move(resolver);
+}
+
+bool ParserState::has_include_resolver() const {
+  return static_cast<bool>(include_resolver_);
+}
+
+IncludeResolveStatus ParserState::resolve_include(
+    std::string_view requested, std::string *display_name,
+    std::string *contents, std::string *error) const {
+  if (!include_resolver_) return IncludeResolveStatus::not_found;
+  return include_resolver_(requested, display_name, contents, error);
+}
 
 ActiveParserStateScope::ActiveParserStateScope(ParserState &state)
     : previous_(current_parser_state) {

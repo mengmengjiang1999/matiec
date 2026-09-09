@@ -346,7 +346,7 @@ Filesystem include pragmas still resolve through `include_directory`.
 
 This C++ interface remains a source-level integration API. The stable binary
 boundary begins with the C-compatible [`include/matiec/api.h`](include/matiec/api.h)
-version contract. API version 1.3 provides opaque context lifecycle, copied
+version contract. API version 1.4 provides opaque context lifecycle, copied
 memory and file inputs, essential per-compilation options, and structured
 success/error counts without exposing C++ implementation layouts. It also
 supports ordered diagnostic delivery and generated-output callbacks, allowing
@@ -375,6 +375,13 @@ the same indexes as their contexts, and `max_concurrency == 0` selects an
 automatic positive worker count. Contexts must not be duplicated in a batch,
 and shared callback state must be synchronized because callbacks can run on
 worker threads.
+
+Memory-backed compilations may install a virtual include resolver with
+`matiec_context_set_include_resolver`. The resolver supplies copied source bytes
+and diagnostic display names for nested `{#include "..."}` pragmas, allowing a
+complete compile without temporary source files. While installed it is
+authoritative unless it explicitly returns `MATIEC_INCLUDE_USE_FILESYSTEM`;
+clear it to restore unconditional filesystem include lookup.
 
 ## Install the embedding library
 

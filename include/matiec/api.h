@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #define MATIEC_API_VERSION_MAJOR 1u
-#define MATIEC_API_VERSION_MINOR 3u
+#define MATIEC_API_VERSION_MINOR 4u
 #define MATIEC_API_VERSION_PATCH 0u
 
 #define MATIEC_API_VERSION_ENCODE(major, minor, patch) \
@@ -86,6 +86,26 @@ typedef void (*matiec_diagnostic_callback_t)(
 typedef int (*matiec_output_callback_t)(
     void *user_data, const char *path, const void *data, size_t size);
 
+typedef enum matiec_include_result {
+  MATIEC_INCLUDE_NOT_FOUND = 0,
+  MATIEC_INCLUDE_RESOLVED = 1,
+  MATIEC_INCLUDE_USE_FILESYSTEM = 2,
+  MATIEC_INCLUDE_ERROR = -1
+} matiec_include_result_t;
+
+typedef struct matiec_source_view {
+  uint32_t struct_size;
+  const char *display_name;
+  const void *data;
+  size_t size;
+} matiec_source_view_t;
+
+#define MATIEC_SOURCE_VIEW_INIT \
+  { (uint32_t)sizeof(matiec_source_view_t), NULL, NULL, 0u }
+
+typedef matiec_include_result_t (*matiec_include_resolver_callback_t)(
+    void *user_data, const char *requested_name, matiec_source_view_t *source);
+
 #define MATIEC_RESULT_INIT \
   { (uint32_t)sizeof(matiec_result_t), 0u, 0u, 0u }
 
@@ -119,6 +139,9 @@ MATIEC_API matiec_status_t matiec_context_set_diagnostic_callback(
     void *user_data);
 MATIEC_API matiec_status_t matiec_context_set_output_callback(
     matiec_context_t *context, matiec_output_callback_t callback,
+    void *user_data);
+MATIEC_API matiec_status_t matiec_context_set_include_resolver(
+    matiec_context_t *context, matiec_include_resolver_callback_t callback,
     void *user_data);
 MATIEC_API matiec_status_t matiec_compile_batch(
     matiec_context_t *const *contexts, size_t context_count,

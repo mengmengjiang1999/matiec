@@ -48,21 +48,14 @@ compatibility access without an active session SHALL fail explicitly.
 
 ### Requirement: Handwritten frontend entry points name their parser session
 
-Every handwritten file-backed and memory-backed stage 1/2 entry point SHALL
-receive the `ParserState` it initializes and parses. Session classification and
-option setup SHALL operate directly on that supplied object.
+Generated include actions SHALL resolve virtual sources through the ParserState
+passed to that parser invocation. Resolver configuration and nested source bytes
+SHALL NOT use a process-global selector or cross compilation contexts.
 
-#### Scenario: A memory source is parsed
+#### Scenario: Parallel contexts resolve the same include name
 
-- **WHEN** the compiler sends owned source bytes to stage 1/2
-- **THEN** it supplies the owning context's parser session explicitly
-
-#### Scenario: Generated compatibility callbacks execute
-
-- **WHEN** the generated frontend invokes an interim callback without a session
-  parameter
-- **THEN** a scope limited to that generated call selects the explicitly
-  supplied session and restores any outer session afterward
+- **WHEN** two contexts concurrently resolve the same requested name to different bytes
+- **THEN** each parser consumes only the source returned by its own resolver
 
 ### Requirement: Generated parser invocation state is pure
 

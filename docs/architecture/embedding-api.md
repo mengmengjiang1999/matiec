@@ -57,6 +57,20 @@ results and a context diagnostic while independent entries may still succeed.
 Callbacks configured on batch contexts execute on worker threads, so callers
 must synchronize user data shared by more than one context.
 
+Version 1.4 adds a context-owned virtual include resolver. Include requests are
+delivered synchronously with the requested pragma name. A resolved
+`matiec_source_view_t` supplies an exact byte span and display name; the host
+keeps that borrowed storage valid until the next resolver invocation, and the
+compiler copies it before resolving another include. Nested virtual includes
+use the same resolver and preserve their display names in diagnostics.
+
+Once configured, the resolver is authoritative: `NOT_FOUND`, `ERROR`, malformed
+views, and callback exceptions fail compilation without a filesystem fallback.
+The callback may explicitly return `USE_FILESYSTEM` for compiler library data or
+other approved paths. Clearing the callback restores the include-directory search. Resolver callbacks
+run on the compiling thread (worker threads for batch compilation), must not
+re-enter their context, and must synchronize shared user data.
+
 ## Installed package
 
 `make install` provides the public header as `<matiec/api.h>`, a self-contained

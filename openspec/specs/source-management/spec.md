@@ -16,13 +16,15 @@ reported in diagnostics.
 
 ### Requirement: Memory source is replayable
 
-Memory-backed source SHALL support every parser pass without requiring a named
-temporary file.
+The source manager and parser session SHALL support replaying an exact-byte
+memory-backed primary source and memory-backed included sources.
+Callback-provided bytes and display names SHALL be copied into context-owned
+storage before another resolver invocation, including for nested includes.
 
-#### Scenario: Pre-parsing is enabled
+#### Scenario: Borrowed include bytes expire
 
-- **WHEN** a memory source is compiled with pre-parsing enabled
-- **THEN** both parser passes read the complete source and compilation succeeds
+- **WHEN** a resolver returns a source view backed by temporary host storage
+- **THEN** parsing remains valid after the callback returns because the compiler copied it
 
 ### Requirement: File behavior is preserved
 

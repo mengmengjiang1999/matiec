@@ -4,6 +4,6 @@ extern "C" {
 
 uint32_t matiec_api_version(void) { return MATIEC_API_VERSION; }
 
-const char *matiec_api_version_string(void) { return "1.3.0"; }
+const char *matiec_api_version_string(void) { return "1.4.0"; }
 
 }  // extern "C"
