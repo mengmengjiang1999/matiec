@@ -44,6 +44,8 @@
 
 
 #include "../main.hh"
+#include "../compiler/parser_state.hh"
+#include "../compiler/parser_symbol_tables.hh"
 #include "stage1_2.hh"
 #include "iec_bison.hh"
 #include "stage1_2_priv.hh"
@@ -199,11 +201,22 @@ int stage2__(const char *filename, const char *display_filename,
             );
 
 
-int stage1_2(const char *filename, symbol_c **tree_root_ref) {
-  return stage1_2(filename, filename, tree_root_ref);
+static void prepare_parser_session(matiec::ParserState &state) {
+  state.symbols().library_elements.clear();
+  state.symbols().variable_names.clear();
+  state.symbols().direct_variables.clear();
+  if (state.options.register_experimental_assert)
+    state.symbols().library_elements.insert(
+        "ASSERT", prev_declared_derived_function_name_token);
 }
 
-int stage1_2(const char *filename, const char *display_filename,
+int stage1_2(matiec::ParserState &state, const char *filename,
+             symbol_c **tree_root_ref) {
+  return stage1_2(state, filename, filename, tree_root_ref);
+}
+
+int stage1_2(matiec::ParserState &state, const char *filename,
+             const char *display_filename,
              symbol_c **tree_root_ref) {
       /* NOTE: we only call stage2 (bison - syntax analysis) directly, as stage 2 will itself call stage1 (flex - lexical analysis)
        *       automatically as needed
@@ -215,24 +228,17 @@ int stage1_2(const char *filename, const char *display_filename,
        *       These callback functions will get their data from local (to this file) global variables...
        *       We now set those variables...
        */
-  library_element_symtable.clear();
-  variable_name_symtable.clear();
-  direct_variable_symtable.clear();
-  if (runtime_options.register_experimental_assert)
-    library_element_symtable.insert("ASSERT",
-                                    prev_declared_derived_function_name_token);
+  prepare_parser_session(state);
+  matiec::ActiveParserStateScope scope(state);
   return stage2__(filename, display_filename, NULL, 0, tree_root_ref);
 }
 
-int stage1_2_from_source(const char *source, std::size_t source_size,
+int stage1_2_from_source(matiec::ParserState &state, const char *source,
+                         std::size_t source_size,
                          const char *display_filename,
                          symbol_c **tree_root_ref) {
-  library_element_symtable.clear();
-  variable_name_symtable.clear();
-  direct_variable_symtable.clear();
-  if (runtime_options.register_experimental_assert)
-    library_element_symtable.insert("ASSERT",
-                                    prev_declared_derived_function_name_token);
+  prepare_parser_session(state);
+  matiec::ActiveParserStateScope scope(state);
   return stage2__(display_filename, display_filename, source, source_size,
                   tree_root_ref);
 }

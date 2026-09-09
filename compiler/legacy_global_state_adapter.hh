@@ -22,7 +22,6 @@ class LegacyGlobalStateAdapter {
 
  private:
   CompilationContext &context_;
-  ActiveParserStateScope parser_state_scope_;
 };
 
 }  // namespace matiec

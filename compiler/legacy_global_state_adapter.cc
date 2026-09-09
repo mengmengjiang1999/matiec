@@ -8,7 +8,7 @@ namespace matiec {
 
 LegacyGlobalStateAdapter::LegacyGlobalStateAdapter(
     CompilationContext &context, const CompilerOptions &options)
-    : context_(context), parser_state_scope_(context.parser_state()) {
+    : context_(context) {
   context_.parser_state().reset_for_parse();
   runtime_options.allow_void_datatype = options.allow_void_datatype;
   runtime_options.allow_missing_var_in = options.allow_missing_var_in;
@@ -36,20 +36,22 @@ LegacyGlobalStateAdapter::LegacyGlobalStateAdapter(
 LegacyGlobalStateAdapter::~LegacyGlobalStateAdapter() = default;
 
 int LegacyGlobalStateAdapter::parse(symbol_c **tree_root) const {
-  return stage1_2(context_.source_path().c_str(), tree_root);
+  return stage1_2(context_.parser_state(), context_.source_path().c_str(),
+                  tree_root);
 }
 
 int LegacyGlobalStateAdapter::parse(const std::string &source_path,
                                     const std::string &display_path,
                                     symbol_c **tree_root) const {
-  return stage1_2(source_path.c_str(), display_path.c_str(), tree_root);
+  return stage1_2(context_.parser_state(), source_path.c_str(),
+                  display_path.c_str(), tree_root);
 }
 
 int LegacyGlobalStateAdapter::parse_source(const std::string &source,
                                            const std::string &display_path,
                                            symbol_c **tree_root) const {
-  return stage1_2_from_source(source.data(), source.size(), display_path.c_str(),
-                              tree_root);
+  return stage1_2_from_source(context_.parser_state(), source.data(),
+                              source.size(), display_path.c_str(), tree_root);
 }
 
 void LegacyGlobalStateAdapter::initialize_symbol_tables(symbol_c *tree_root) const {

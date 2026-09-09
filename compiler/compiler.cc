@@ -81,6 +81,7 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
       source = std::move(namespace_result.source);
     }
 
+    ActiveParserStateScope compilation_session(context.parser_state());
     LegacyGlobalStateAdapter legacy_state(context, options);
 
     symbol_c *tree_root = NULL;

@@ -42,15 +42,20 @@
 
 #include <cstddef>
 
+namespace matiec { struct ParserState; }
+
 
 
 /* This file includes the interface through which the main function accesses the stage1_2 services */
 
 
-int stage1_2(const char *filename, symbol_c **tree_root);
-int stage1_2(const char *filename, const char *display_filename,
+int stage1_2(matiec::ParserState &state, const char *filename,
              symbol_c **tree_root);
-int stage1_2_from_source(const char *source, std::size_t source_size,
+int stage1_2(matiec::ParserState &state, const char *filename,
+             const char *display_filename,
+             symbol_c **tree_root);
+int stage1_2_from_source(matiec::ParserState &state, const char *source,
+                         std::size_t source_size,
                          const char *display_filename, symbol_c **tree_root);
 
 

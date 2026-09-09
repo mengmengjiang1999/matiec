@@ -24,7 +24,7 @@ The adapter currently owns the transition into two legacy areas:
 * `absyntax_utils_init()` populates the context-owned function, function-block,
   program, and datatype declaration tables; callers enter it only through
   `LegacyGlobalStateAdapter::initialize_symbol_tables()` while legacy consumers
-  use the current thread's nested access scope.
+  use the selected parser session.
 
 Semantic and generator analysis is not part of this adapter. Stage 3 and Stage 4
 receive the context-owned `AnalysisStore` explicitly; no thread-local active
@@ -36,11 +36,17 @@ frontend concurrently on separate threads without a process-wide lock. This is
 not recursive reentrancy on one thread. `Compiler::compile_parallel()` exposes
 the supported bounded full-pipeline API for distinct contexts.
 
+All handwritten file-backed and memory-backed stage 1/2 entry points receive a
+`ParserState&`. They reset classifications and inspect options through that
+argument. A nested selector exists only around the generated call whose legacy
+callbacks still lack a session parameter; Stage 3/4 declaration lookup retains
+a compiler-boundary session until that dependency is removed.
+
 ## Reentrancy inventory
 
 | Boundary | Current owner | Isolation | Removal milestone |
 | --- | --- | --- | --- |
-| Parser compatibility access | `ParserState` | context-owned options, transition controls, and classification tables selected by a nested thread-local pointer | Pass an explicit parser session to scanner and grammar helpers |
+| Parser compatibility access | `ParserState` | explicitly supplied to handwritten stage 1/2 entry points; generated callbacks use a call-scoped thread-local selector | Pass the session as generated scanner and parser parameters |
 | Generated scanner/parser | Flex/Bison compatibility interface | buffers, include stack, locations, semantic value, lookahead, error count, and start conditions are thread-local | Replace compatibility globals with reentrant scanner and pure-parser parameters if recursive same-thread parsing is required |
 | Declaration compatibility access | `DeclarationSymbolTables` | context-owned entries selected by the active parser session; no separate TLS or fallback table | Pass the parser session explicitly to remaining entry points |
 
