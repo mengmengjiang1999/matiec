@@ -49,6 +49,7 @@ int main() {
   assert(second.declaration_symbols().function_blocks.count("FirstBlock") == 0);
   first.parser_state().options.pre_parsing = true;
   first.parser_state().goto_body = true;
+  first.parser_state().syntax_errors = 3;
   first.parser_state().symbols().library_elements.insert("FirstProgram", 1);
   assert(!second.parser_state().options.pre_parsing);
   assert(!second.parser_state().goto_body);
@@ -56,6 +57,7 @@ int main() {
          second.parser_state().symbols().library_elements.end());
   first.parser_state().reset_for_parse();
   assert(!first.parser_state().goto_body);
+  assert(first.parser_state().syntax_errors == 0);
   assert(first.parser_state().symbols().library_elements.find("FirstProgram") ==
          first.parser_state().symbols().library_elements.end());
   {

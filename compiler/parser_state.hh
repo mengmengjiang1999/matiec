@@ -42,6 +42,7 @@ struct ParserState {
   bool goto_sfc_priority = false;
   bool goto_task_init = false;
   bool pop_state = false;
+  int syntax_errors = 0;
 
   void reset_for_parse();
   void bind_ast_arena(AstArena &arena);

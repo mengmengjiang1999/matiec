@@ -22,6 +22,7 @@ void ParserState::reset_for_parse() {
   goto_sfc_priority = false;
   goto_task_init = false;
   pop_state = false;
+  syntax_errors = 0;
 }
 
 void ParserState::bind_ast_arena(AstArena &arena) { ast_arena_ = &arena; }

@@ -12,9 +12,10 @@ The adapter currently owns the transition into two legacy areas:
 * the generated scanner/parser reads parser runtime options and transient
   transition controls through the currently scoped context-owned `ParserState`;
   derived parser permissions never mutate caller-configured options;
-* `stage1_2()` retains generated scanner buffers, include-stack data, Bison
-  lookahead/error variables, and the pre-parse/definitive-parse driver boundary
-  in thread-local sessions; callers enter it only through
+* `stage1_2()` retains generated scanner buffers, include-stack data, and the
+  pre-parse/definitive-parse driver boundary in thread-local sessions; Bison
+  lookahead, value, location, and internal error state are automatic per parser
+  invocation; callers enter the frontend only through
   `LegacyGlobalStateAdapter::parse()`;
 * parser classification tables are owned by the active context's `ParserState`
   and are cleared before every parse;
@@ -30,24 +31,27 @@ Semantic and generator analysis is not part of this adapter. Stage 3 and Stage 4
 receive the context-owned `AnalysisStore` explicitly; no thread-local active
 analysis binding remains.
 
-Generated mutable variables are marked `thread_local` by a checked,
-post-generation build step. Independent contexts can therefore execute the
-frontend concurrently on separate threads without a process-wide lock. This is
-not recursive reentrancy on one thread. `Compiler::compile_parallel()` exposes
+Remaining generated Flex mutable variables are marked `thread_local` by a
+checked post-generation build step. The generated Bison parser is pure and
+receives `ParserState&` explicitly. Independent contexts can therefore execute
+the frontend concurrently on separate threads without a process-wide lock. The
+scanner is not recursively reentrant on one thread. `Compiler::compile_parallel()` exposes
 the supported bounded full-pipeline API for distinct contexts.
 
 All handwritten file-backed and memory-backed stage 1/2 entry points receive a
 `ParserState&`. They reset classifications and inspect options through that
-argument. A nested selector exists only around the generated call whose legacy
-callbacks still lack a session parameter; Stage 3/4 declaration lookup retains
+argument. The generated parser and lexer entry signatures also receive that
+session. A nested selector remains around the generated call for scanner and
+grammar helpers that still use compatibility access; Stage 3/4 declaration lookup retains
 a compiler-boundary session until that dependency is removed.
 
 ## Reentrancy inventory
 
 | Boundary | Current owner | Isolation | Removal milestone |
 | --- | --- | --- | --- |
-| Parser compatibility access | `ParserState` | explicitly supplied to handwritten stage 1/2 entry points; generated callbacks use a call-scoped thread-local selector | Pass the session as generated scanner and parser parameters |
-| Generated scanner/parser | Flex/Bison compatibility interface | buffers, include stack, locations, semantic value, lookahead, error count, and start conditions are thread-local | Replace compatibility globals with reentrant scanner and pure-parser parameters if recursive same-thread parsing is required |
+| Parser compatibility access | `ParserState` | explicitly supplied to handwritten stage 1/2 entry points and generated parser/lexer signatures; selected only for remaining callback helpers | Pass the session explicitly to the remaining helpers |
+| Generated Bison parser | Pure Bison interface | semantic value, location, lookahead, and internal error state are invocation-local; recovered-error reporting is stored in `ParserState` | Complete |
+| Generated Flex scanner | Flex compatibility interface | buffers, include stack, and start conditions are thread-local | Use a reentrant scanner object if recursive same-thread parsing is required |
 | Declaration compatibility access | `DeclarationSymbolTables` | context-owned entries selected by the active parser session; no separate TLS or fallback table | Pass the parser session explicitly to remaining entry points |
 
 Stage 3 and Stage 4 analysis data is not part of this inventory: it is already
@@ -87,9 +91,10 @@ compatibility bindings.
 
 The completion audit searches handwritten and regenerated C++ sources for
 namespace/file-scope mutable definitions and process-termination calls. Mutable
-frontend session definitions are either context-owned or explicitly
-`thread_local`; the generation transformation fails if an expected Flex/Bison
-declaration changes shape. Newly added file-scope constants are immutable.
+frontend session definitions are context-owned, automatic Bison parser state,
+or explicitly `thread_local` Flex state; the generation transformation fails if
+an expected Flex declaration changes shape. Newly added file-scope constants
+are immutable.
 
 There are no `exit()`, `_Exit()`, or `abort()` calls in handwritten parser,
 semantic, or generation entry points. The remaining calls are emitted by the

@@ -284,10 +284,11 @@ available at the generator-component boundary.
 ### Legacy code is contained
 
 Parser runtime options, transition controls, and classification tables are
-context-owned and supplied explicitly to handwritten stage 1/2 entry points.
-Mutable Flex/Bison scanner and parser session variables are
-thread-local and clean builds verify that transformation before compiling the
-generated sources. `LegacyGlobalStateAdapter` still supplies the active parser
+context-owned and supplied explicitly to stage 1/2 entry points. Bison parser
+invocation state is automatic and receives the owning `ParserState&` directly;
+the remaining mutable Flex scanner session variables are thread-local, and
+clean builds verify that transformation before compiling the generated sources.
+`LegacyGlobalStateAdapter` still supplies the active parser
 context; that parser session carries the context-owned arena and declaration
 tables used by legacy direct AST construction, retained strings, and lookup.
 Separate active arena and declaration-table bindings have been removed.
@@ -438,12 +439,12 @@ results stay in `AnalysisStore`, and all semantic and generator result fields
 have been removed from the AST. Stage 3 and Stage 4 receive the owning context's
 store explicitly, without a compatibility result store or ambient binding.
 
-The reentrancy boundary is now the active architecture track. Generated
-Flex/Bison state is isolated per thread, and parser classification plus
+The reentrancy boundary is now the active architecture track. Generated Bison
+state is invocation-local, generated Flex state is isolated per thread, and parser classification plus
 declaration symbol tables are owned by each `CompilationContext` and selected by
 the same parser session rather than a second TLS binding. Handwritten frontend
-entry points now name that session; generated callbacks retain a narrowly scoped
-compatibility selector. Concurrent
+entry points and the generated parser now name that session; scanner callbacks
+retain a narrowly scoped compatibility selector. Concurrent
 frontend regression coverage exercises distinct contexts without a global lock.
 Parser sessions now carry the context-owned AST arena, and the separate active
 arena binding has been removed. `Compiler::compile_parallel()` and its

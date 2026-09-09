@@ -107,20 +107,8 @@ my @flex_variant_groups = (
   ],
 );
 
-my @bison_cc_pairs = (
-  ["\nint yydebug;", "\nthread_local int yydebug;"],
-  ["\nint yychar;", "\nthread_local int yychar;"],
-  ["\nYYSTYPE yylval;", "\nthread_local YYSTYPE yylval;"],
-  ["\nYYLTYPE yylloc", "\nthread_local YYLTYPE yylloc"],
-  ["\nint yynerrs;", "\nthread_local int yynerrs;"],
-);
-
-my @bison_hh_pairs = (
-  ['extern int yydebug;', 'extern thread_local int yydebug;'],
-  ['extern YYSTYPE yylval;', 'extern thread_local YYSTYPE yylval;'],
-  ['extern YYLTYPE yylloc;', 'extern thread_local YYLTYPE yylloc;'],
-);
-
 rewrite($flex_cc, \@flex_pairs, \@flex_variant_groups);
-rewrite($bison_cc, \@bison_cc_pairs, []);
-rewrite($bison_hh, \@bison_hh_pairs, []);
+
+# The Bison parser is pure: lookahead, semantic/location values, and its error
+# counter are automatic variables. Only the legacy Flex scanner still needs the
+# checked thread-local transformation above.

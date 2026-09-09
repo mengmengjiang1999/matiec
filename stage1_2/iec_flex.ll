@@ -146,10 +146,10 @@
 #include "../compiler/utf8_validation.hh"
 
 
-/* Variable defined by the bison parser,
- * where the value of the tokens will be stored
- */
-extern thread_local YYSTYPE yylval;
+#define YY_DECL int yylex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, \
+                          matiec::ParserState &parser_state)
+#define yylval (*yylval_param)
+#define yylloc (*yylloc_param)
 
 /* The name of the file currently being parsed...
  * Note that flex accesses and updates this global variable

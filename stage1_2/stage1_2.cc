@@ -195,7 +195,8 @@ char *strdup3(const char *a, const char *b, const char *c) {
 /***********************************************************************/
 /***********************************************************************/
 
-int stage2__(const char *filename, const char *display_filename,
+int stage2__(matiec::ParserState &state, const char *filename,
+             const char *display_filename,
              const char *source, size_t source_size,
              symbol_c **tree_root_ref
             );
@@ -230,7 +231,7 @@ int stage1_2(matiec::ParserState &state, const char *filename,
        */
   prepare_parser_session(state);
   matiec::ActiveParserStateScope scope(state);
-  return stage2__(filename, display_filename, NULL, 0, tree_root_ref);
+  return stage2__(state, filename, display_filename, NULL, 0, tree_root_ref);
 }
 
 int stage1_2_from_source(matiec::ParserState &state, const char *source,
@@ -239,6 +240,6 @@ int stage1_2_from_source(matiec::ParserState &state, const char *source,
                          symbol_c **tree_root_ref) {
   prepare_parser_session(state);
   matiec::ActiveParserStateScope scope(state);
-  return stage2__(display_filename, display_filename, source, source_size,
+  return stage2__(state, display_filename, display_filename, source, source_size,
                   tree_root_ref);
 }
