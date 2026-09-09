@@ -7,7 +7,10 @@ their current context through narrow compatibility scopes behind
 
 ## State behind the adapter
 
-The adapter currently owns the transition into two legacy areas:
+The adapter currently owns the transition into two legacy areas. It has no
+mutable fallback parser session: required compatibility access outside a scope
+fails explicitly, while standalone AST construction merely omits arena
+attachment.
 
 * the generated scanner/parser reads parser runtime options and transient
   transition controls through the currently scoped context-owned `ParserState`;
@@ -49,7 +52,7 @@ a compiler-boundary session until that dependency is removed.
 
 | Boundary | Current owner | Isolation | Removal milestone |
 | --- | --- | --- | --- |
-| Parser compatibility access | `ParserState` | explicitly supplied to handwritten stage 1/2 entry points and generated parser/lexer signatures; selected only for remaining callback helpers | Pass the session explicitly to the remaining helpers |
+| Parser compatibility access | `ParserState` | explicitly supplied to handwritten stage 1/2 entry points and generated parser/lexer signatures; selected only for remaining callback helpers; no mutable fallback | Pass the session explicitly to the remaining helpers |
 | Generated Bison parser | Pure Bison interface | semantic value, location, lookahead, and internal error state are invocation-local; recovered-error reporting is stored in `ParserState` | Complete |
 | Generated Flex scanner | Flex compatibility interface | buffers, include stack, and start conditions are thread-local | Use a reentrant scanner object if recursive same-thread parsing is required |
 | Declaration compatibility access | `DeclarationSymbolTables` | context-owned entries selected by the active parser session; no separate TLS or fallback table | Pass the parser session explicitly to remaining entry points |
@@ -107,3 +110,8 @@ Repeat the audit after changing the generated frontend, adding a compiler
 service, or introducing a namespace/file-scope variable. The checked generated
 rewrite rejects an unexpected fatal-hook shape or any regenerated frontend
 process-termination call before compilation.
+
+The supported cross-thread reentrancy track is complete and guarded by the
+normal architecture and concurrent-compilation tests. A reentrant Flex scanner
+would be a separate capability for recursive same-thread parsing, not a missing
+part of the supported contract.

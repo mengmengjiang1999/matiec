@@ -7,8 +7,8 @@ AM_LFLAGS = --warn -o$(LEX_OUTPUT_ROOT).c
 
 # Make sure this header file is generated first (by bison), as it is included
 # by other C++ code that will also be compiled.
-FRONTEND_THREAD_LOCAL_STAMP = .generated-frontend-thread-local.stamp
-BUILT_SOURCES = iec_bison.hh $(FRONTEND_THREAD_LOCAL_STAMP)
+FRONTEND_ISOLATION_STAMP = .generated-frontend-isolation.stamp
+BUILT_SOURCES = iec_bison.hh $(FRONTEND_ISOLATION_STAMP)
 
 %.hh: %.h
 	cp $< $@
@@ -17,14 +17,14 @@ CLEANFILES = \
 	iec_flex.cc \
 	iec_bison.cc \
 	iec_bison.hh \
-	$(FRONTEND_THREAD_LOCAL_STAMP)
+	$(FRONTEND_ISOLATION_STAMP)
 
-$(FRONTEND_THREAD_LOCAL_STAMP): iec_flex.cc iec_bison.cc iec_bison.hh $(top_srcdir)/config/thread_localize_generated_frontend.pl
+$(FRONTEND_ISOLATION_STAMP): iec_flex.cc iec_bison.cc iec_bison.hh $(top_srcdir)/config/thread_localize_generated_frontend.pl
 	$(top_srcdir)/config/thread_localize_generated_frontend.pl iec_flex.cc iec_bison.cc iec_bison.hh
 	touch $@
 
 libstage1_2_generated_a-iec_flex.$(OBJEXT) \
-libstage1_2_generated_a-iec_bison.$(OBJEXT): $(FRONTEND_THREAD_LOCAL_STAMP)
+libstage1_2_generated_a-iec_bison.$(OBJEXT): $(FRONTEND_ISOLATION_STAMP)
 
 lib_LIBRARIES = libstage1_2.a
 noinst_LIBRARIES = libstage1_2_generated.a libstage1_2_parser_support.a

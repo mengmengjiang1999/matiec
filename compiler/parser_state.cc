@@ -7,7 +7,6 @@
 namespace matiec {
 namespace {
 thread_local ParserState *current_parser_state = nullptr;
-thread_local ParserState fallback_parser_state;
 }  // namespace
 
 ParserState::ParserState() : symbols_(new ParserSymbolTables) {}
@@ -53,9 +52,12 @@ ActiveParserStateScope::~ActiveParserStateScope() {
 }
 
 ParserState &active_parser_state() {
-  return current_parser_state == nullptr ? fallback_parser_state
-                                         : *current_parser_state;
+  if (current_parser_state == nullptr)
+    throw std::logic_error("No active parser session");
+  return *current_parser_state;
 }
+
+ParserState *active_parser_state_or_null() { return current_parser_state; }
 
 runtime_options_t &active_runtime_options() {
   return active_parser_state().options;

@@ -78,7 +78,8 @@ void AstArena::destroy_string(void *address) {
 
 char *retain_ast_string(const char *value) {
   if (value == nullptr) return nullptr;
-  AstArena *arena = active_parser_state().ast_arena();
+  ParserState *parser_state = active_parser_state_or_null();
+  AstArena *arena = parser_state == nullptr ? nullptr : parser_state->ast_arena();
   if (arena != nullptr) return arena->copy_string(value);
 
   const std::size_t length = std::strlen(value);

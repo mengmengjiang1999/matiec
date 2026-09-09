@@ -59,7 +59,8 @@ void destroy_arena_symbol(void *address) {
 symbol_c::symbol_c(
                    int first_line, int first_column, const char *ffile, long int first_order,
                    int last_line,  int last_column,  const char *lfile, long int last_order ) {
-  this->arena_owner_ = matiec::active_parser_state().ast_arena();
+  matiec::ParserState *parser_state = matiec::active_parser_state_or_null();
+  this->arena_owner_ = parser_state == NULL ? NULL : parser_state->ast_arena();
   if (this->arena_owner_ != NULL)
     this->arena_owner_->adopt(this, &destroy_arena_symbol);
   this->first_file   = ffile,

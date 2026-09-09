@@ -26,6 +26,7 @@ TESTS = \
 	tests/generated_c/runtests \
 	tests/initialization/runtests \
 	tests/cli/runtests \
+	tests/architecture/runtests \
 	tests/syntax/identifier/runtests \
 	tests/characterization/runtests
 

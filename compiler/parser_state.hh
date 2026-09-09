@@ -71,6 +71,7 @@ class ActiveParserStateScope {
 };
 
 ParserState &active_parser_state();
+ParserState *active_parser_state_or_null();
 runtime_options_t &active_runtime_options();
 
 }  // namespace matiec

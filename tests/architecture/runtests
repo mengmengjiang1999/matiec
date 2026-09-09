@@ -1,0 +1,33 @@
+#!/bin/sh
+set -eu
+
+source_root=$(CDPATH= cd -- "$(dirname -- "$0")/../.." && pwd)
+
+require_text() {
+  file=$1
+  text=$2
+  if ! grep -F "$text" "$source_root/$file" >/dev/null; then
+    echo "$file: missing reentrancy invariant: $text" >&2
+    exit 1
+  fi
+}
+
+reject_text() {
+  file=$1
+  text=$2
+  if grep -F "$text" "$source_root/$file" >/dev/null; then
+    echo "$file: forbidden reentrancy fallback remains: $text" >&2
+    exit 1
+  fi
+}
+
+require_text stage1_2/iec_bison.yy "%define api.pure full"
+require_text stage1_2/iec_bison.yy "%parse-param { matiec::ParserState &parser_state }"
+require_text stage1_2/iec_flex.ll "matiec::ParserState &parser_state"
+require_text config/thread_localize_generated_frontend.pl "reject_process_termination"
+require_text compiler/parser_state.cc "No active parser session"
+require_text compiler/parser_state.cc "active_parser_state_or_null"
+reject_text compiler/parser_state.cc "fallback_parser_state"
+require_text README.md "The supported cross-thread reentrancy architecture track is complete."
+
+echo "Reentrancy architecture audit passed."

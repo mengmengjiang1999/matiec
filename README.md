@@ -441,8 +441,9 @@ results stay in `AnalysisStore`, and all semantic and generator result fields
 have been removed from the AST. Stage 3 and Stage 4 receive the owning context's
 store explicitly, without a compatibility result store or ambient binding.
 
-The reentrancy boundary is now the active architecture track. Generated Bison
-state is invocation-local, generated Flex state is isolated per thread, and parser classification plus
+The supported cross-thread reentrancy architecture track is complete. Generated
+Bison state is invocation-local, generated Flex state is isolated per thread,
+and parser classification plus
 declaration symbol tables are owned by each `CompilationContext` and selected by
 the same parser session rather than a second TLS binding. Handwritten frontend
 entry points and the generated parser now name that session; scanner callbacks
@@ -452,6 +453,9 @@ Parser sessions now carry the context-owned AST arena, and the separate active
 arena binding has been removed. `Compiler::compile_parallel()` and its
 full-pipeline regression now cover ordered results, mixed success/failure,
 independent parser/AST/diagnostic state, and isolated generated output.
+The normal regression suite audits these architecture invariants. Recursive
+same-thread entry into the Flex scanner is an explicit boundary, not unfinished
+work in the supported parallel-compilation contract.
 
 ## Project origin and license
 

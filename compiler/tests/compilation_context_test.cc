@@ -3,10 +3,22 @@
 #include "absyntax/absyntax.hh"
 
 #include <cassert>
+#include <stdexcept>
 
 int main() {
   matiec::CompilationContext first;
   matiec::CompilationContext second;
+
+  bool missing_session_rejected = false;
+  try {
+    (void)matiec::active_parser_state();
+  } catch (const std::logic_error &) {
+    missing_session_rejected = true;
+  }
+  assert(missing_session_rejected);
+  integer_c standalone_literal("0");
+  assert(!first.ast_arena().owns(&standalone_literal));
+  assert(!second.ast_arena().owns(&standalone_literal));
 
   first.options().pre_parsing = true;
   first.options().language_profile =
