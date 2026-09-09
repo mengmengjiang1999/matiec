@@ -922,8 +922,8 @@ void *visit(function_invocation_c *symbol) {
 }
 
 void *visit(object_method_invocation_c *symbol) {
-  if (symbol->compatibility_invocation == NULL) ERROR;
-  return symbol->compatibility_invocation->accept(*this);
+  if (symbol->resolved_call == NULL) ERROR;
+  return symbol->resolved_call->accept(*this);
 }
 
 /********************/
@@ -1381,4 +1381,3 @@ visitor_c *new_generate_c_st_generator(stage4out_c *s4o_ptr, symbol_c *name,
                                        symbol_c *scope, const char *variable_prefix) {
   return new generate_c_st_c(s4o_ptr, name, scope, variable_prefix);
 }
-

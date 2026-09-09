@@ -383,6 +383,13 @@ void *lvalue_check_c::visit(function_block_declaration_c *symbol) {
 	delete search_var_instance_decl;
 	search_varfb_instance_type = NULL;
 	search_var_instance_decl = NULL;
+	object_method_declaration_list_c *methods = dynamic_cast<object_method_declaration_list_c *>(symbol->methods);
+	if (methods != NULL)
+		for (int index = 0; index < methods->n; ++index) {
+			object_method_declaration_c *method = dynamic_cast<object_method_declaration_c *>(methods->get_element(index));
+			if (method != NULL && method->semantic_declaration != NULL)
+				method->semantic_declaration->accept(*this);
+		}
 	return NULL;
 }
 
@@ -538,8 +545,8 @@ void *lvalue_check_c::visit(function_invocation_c *symbol) {
 }
 
 void *lvalue_check_c::visit(object_method_invocation_c *symbol) {
-	if (symbol->compatibility_invocation == NULL) ERROR;
-	symbol->compatibility_invocation->accept(*this);
+	if (symbol->resolved_call == NULL) ERROR;
+	symbol->resolved_call->accept(*this);
 	return NULL;
 }
 
@@ -572,6 +579,3 @@ void *lvalue_check_c::visit(for_statement_c *symbol) {
 	control_variables.pop_back();
 	return NULL;
 }
-
-
-

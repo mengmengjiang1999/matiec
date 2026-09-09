@@ -1,35 +1,4 @@
-# object-oriented-elements Specification
-
-## Purpose
-Define the bounded experimental function-block method subset, its deterministic
-lowering ABI, and its isolation from the legacy language profile.
-## Requirements
-### Requirement: Bounded object-oriented subset
-
-The project SHALL document the exact enabled OO subset, SHALL represent supported
-function-block methods as owner-contained primary AST nodes, SHALL represent
-supported instance method invocations as primary AST nodes, and SHALL not imply
-support for unimplemented or unverified elements.
-
-#### Scenario: A supported method is parsed
-
-- **WHEN** experimental source declares a supported public method in a function block
-- **THEN** the owner AST contains one method node with its visibility, return type, parameters, local variables, and body
-
-#### Scenario: A supported method invocation is parsed
-
-- **WHEN** experimental source invokes a supported public method through a declared function-block instance
-- **THEN** the primary AST contains the receiver, method name, arguments, and source range without pre-parser call replacement
-
-#### Scenario: Only methods are implemented in an increment
-
-- **WHEN** classes or interfaces remain incomplete
-- **THEN** the catalogue records their actual status independently
-
-#### Scenario: Unsupported dynamic OO syntax is encountered
-
-- **WHEN** experimental source uses inheritance, interfaces, override, or non-public methods
-- **THEN** compilation fails or the unsupported construct remains explicitly unimplemented
+## MODIFIED Requirements
 
 ### Requirement: Deterministic object ABI
 
@@ -72,13 +41,3 @@ synthetic declarations to the parsed library or preprocessing method source.
 
 - **WHEN** the primary AST contains a public FB method and a declared receiver
 - **THEN** post-parse analysis records method, owner-field, local-shadowing, and receiver metadata with source ranges
-
-### Requirement: Legacy profile isolation
-
-Method syntax MUST remain unavailable in the legacy profile and method keywords
-MUST NOT become reserved there.
-
-#### Scenario: A method declaration is compiled as legacy source
-
-- **WHEN** source containing `METHOD` is compiled with `--std=legacy`
-- **THEN** the legacy parser rejects it

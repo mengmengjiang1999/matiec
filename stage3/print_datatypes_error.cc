@@ -681,6 +681,13 @@ void *print_datatypes_error_c::visit(function_block_declaration_c *symbol) {
 	symbol->fblock_body->accept(*this);
 	delete search_varfb_instance_type;
 	search_varfb_instance_type = NULL;
+	object_method_declaration_list_c *methods = dynamic_cast<object_method_declaration_list_c *>(symbol->methods);
+	if (methods != NULL)
+		for (int index = 0; index < methods->n; ++index) {
+			object_method_declaration_c *method = dynamic_cast<object_method_declaration_c *>(methods->get_element(index));
+			if (method != NULL && method->semantic_declaration != NULL)
+				method->semantic_declaration->accept(*this);
+		}
 	return NULL;
 }
 
@@ -1152,8 +1159,8 @@ void *print_datatypes_error_c::visit(function_invocation_c *symbol) {
 }
 
 void *print_datatypes_error_c::visit(object_method_invocation_c *symbol) {
-	if (symbol->compatibility_invocation == NULL) ERROR;
-	symbol->compatibility_invocation->accept(*this);
+	if (symbol->resolved_call == NULL) ERROR;
+	symbol->resolved_call->accept(*this);
 	return NULL;
 }
 

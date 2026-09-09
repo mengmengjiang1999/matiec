@@ -806,7 +806,7 @@ SYM_LIST(var_init_decl_list_c)
 /* B 1.5.1 - Functions */
 /***********************/
 /* Enumeration lookup results for this scope are stored in AnalysisStore. */
-SYM_REF4(function_declaration_c, derived_function_name, type_name, var_declarations_list, function_body, bool object_method_compatibility = false; bool profile_library_declaration = false;)
+SYM_REF4(function_declaration_c, derived_function_name, type_name, var_declarations_list, function_body, bool profile_library_declaration = false;)
 
 /* intermediate helper symbol for
  * - function_declaration
@@ -829,15 +829,14 @@ SYM_LIST(var2_init_decl_list_c)
 /* Enumeration lookup results for this scope are stored in AnalysisStore. */
 SYM_REF4(function_block_declaration_c, fblock_name, var_declarations, fblock_body, methods)
 
-/* Provisional IEC 61131-3:2025 function-block method structure. Method
- * execution semantics are still provided by compatibility lowering. */
+/* Provisional IEC 61131-3:2025 function-block method structure. */
 SYM_LIST(object_method_declaration_list_c)
 SYM_REF0(object_method_public_c)
 SYM_REF0(object_method_private_c)
 SYM_REF0(object_method_protected_c)
 SYM_REF0(object_method_internal_c)
 SYM_REF2(object_method_header_c, visibility, method_name)
-SYM_REF4(object_method_declaration_c, header, type_name, var_declarations, method_body)
+SYM_REF5(object_method_declaration_c, header, type_name, var_declarations, method_body, semantic_declaration)
 
 /* intermediate helper symbol for function_declaration */
 /*  { io_var_declarations | other_var_declarations }   */
@@ -1233,10 +1232,8 @@ SYM_REF1(not_expression_c, exp)
  */
 SYM_REF3(function_invocation_c, function_name, formal_param_list, nonformal_param_list)
 
-/* Provisional IEC 61131-3:2025 function-block method invocation. The native
- * receiver/method boundary is preserved while compatibility_invocation carries
- * the temporary lowered function call used by the existing semantic pipeline. */
-SYM_REF4(object_method_invocation_c, receiver, method_name, formal_param_list, nonformal_param_list, function_invocation_c *compatibility_invocation = NULL;)
+/* Provisional IEC 61131-3:2025 function-block method invocation. */
+SYM_REF4(object_method_invocation_c, receiver, method_name, formal_param_list, nonformal_param_list, function_invocation_c *resolved_call = NULL;)
 
 
 /********************/

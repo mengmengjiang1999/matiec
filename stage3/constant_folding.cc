@@ -1778,6 +1778,13 @@ void *constant_propagation_c::visit(function_block_declaration_c *symbol) {
 
 	var_global_values.pop(); /* Delete inner scope */
 	values = prev_pou_values;
+	object_method_declaration_list_c *methods = dynamic_cast<object_method_declaration_list_c *>(symbol->methods);
+	if (methods != NULL)
+		for (int index = 0; index < methods->n; ++index) {
+			object_method_declaration_c *method = dynamic_cast<object_method_declaration_c *>(methods->get_element(index));
+			if (method != NULL && method->semantic_declaration != NULL)
+				method->semantic_declaration->accept(*this);
+		}
 	return NULL;
 }
 

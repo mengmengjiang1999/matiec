@@ -954,6 +954,13 @@ void *narrow_candidate_datatypes_c::visit(function_block_declaration_c *symbol) 
 	// A FB declaration can also be used as a Datatype! We now do the narrow algorithm considering it as such!
 	if (matiec::analysis_datatype_candidates(analysis_, symbol).size() == 1)
 		symbol->datatype(analysis_) = matiec::analysis_datatype_candidates(analysis_, symbol)[0];
+	object_method_declaration_list_c *methods = dynamic_cast<object_method_declaration_list_c *>(symbol->methods);
+	if (methods != NULL)
+		for (int index = 0; index < methods->n; ++index) {
+			object_method_declaration_c *method = dynamic_cast<object_method_declaration_c *>(methods->get_element(index));
+			if (method != NULL && method->semantic_declaration != NULL)
+				method->semantic_declaration->accept(*this);
+		}
 	return NULL;
 }
 
@@ -1694,12 +1701,12 @@ void *narrow_candidate_datatypes_c::visit(function_invocation_c *symbol) {
 }
 
 void *narrow_candidate_datatypes_c::visit(object_method_invocation_c *symbol) {
-	if (symbol->compatibility_invocation == NULL) ERROR;
-	symbol->compatibility_invocation->candidate_datatypes(analysis_) =
+	if (symbol->resolved_call == NULL) ERROR;
+	symbol->resolved_call->candidate_datatypes(analysis_) =
 		matiec::analysis_datatype_candidates(analysis_, symbol);
-	symbol->compatibility_invocation->datatype(analysis_) = symbol->datatype(analysis_);
-	symbol->compatibility_invocation->accept(*this);
-	symbol->datatype(analysis_) = symbol->compatibility_invocation->datatype(analysis_);
+	symbol->resolved_call->datatype(analysis_) = symbol->datatype(analysis_);
+	symbol->resolved_call->accept(*this);
+	symbol->datatype(analysis_) = symbol->resolved_call->datatype(analysis_);
 	return NULL;
 }
 

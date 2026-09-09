@@ -109,8 +109,10 @@ See the [access-variable semantics](docs/standards/access-variable-semantics.md)
 the supported path and direction rules.
 
 The first object-oriented increment supports public methods owned by a function
-block with static dispatch. It does not yet implement classes, interfaces,
-inheritance, overrides, properties, or dynamic dispatch. See the
+block with static dispatch, nested call expressions, and declarations loaded from
+filesystem or virtual includes. Native method nodes own their semantic bindings;
+no compatibility declaration is appended to the parsed library. It does not yet
+implement classes, interfaces, inheritance, overrides, properties, or dynamic dispatch. See the
 [object method semantics](docs/standards/object-method-semantics.md).
 
 The experimental standard-library layer also supports standalone

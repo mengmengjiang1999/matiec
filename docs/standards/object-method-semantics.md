@@ -39,10 +39,11 @@ that native node and preserves the `METHOD ... END_METHOD` boundary. Dependency
 ordering retains the complete FB node, so `-p` does not detach or flatten methods.
 
 Method invocations are stored as native receiver-and-method AST nodes. Before
-ordinary datatype analysis, explicit compatibility passes construct the current
-legacy function representation from each native method and bind calls to it. Parser
-input remains the user source: no lowered function text is appended and call text is
-not rewritten. Each owner field is passed
+ordinary datatype analysis, explicit semantic binding attaches the callable view
+needed by the existing datatype pipeline directly to each native declaration and
+call. It does not append synthetic declarations to the parsed library. Parser input
+remains the user source: no lowered function text is appended and call text is not
+rewritten. Each owner field is passed
 after ordinary method parameters through a hidden `VAR_IN_OUT` parameter named
 `MATIECSELF<field>`. The fields remain owned by the caller and are not copied, so
 updates remain visible after the call. Passing fields individually also avoids
@@ -53,19 +54,19 @@ such as `Counter.Increment` receives a deterministic length-prefixed name:
 MATIECMETHOD7COUNTER9INCREMENT
 ```
 
-This spelling is visible in generated C, but the synthetic compatibility declaration
-is omitted from `iec2iec`; it remains an unstable experimental ABI. The native method
+This spelling is visible in generated C but remains an unstable experimental ABI.
+The native method
 itself remains structurally visible exactly once. Method
 overloads are not supported, so an owner cannot declare the same case-insensitive
 method name twice.
 
-The provisional normalizer currently recognizes owner declarations whose type is a
-single named type token. More complex receiver declaration forms and nested method
-invocations remain outside this increment.
+The native binder recognizes owner declarations whose type is a single named type
+token and supports nested method-call expressions. More complex receiver declaration
+forms remain outside this increment.
 
 ## Unsupported constructs
 
 `CLASS`, `INTERFACE`, `EXTENDS`, `IMPLEMENTS`, `OVERRIDE`, `ABSTRACT`, `FINAL`,
 properties, `THIS`, `SUPER`, non-public methods, interface/base references, and
-dynamic dispatch are outside this increment. Method declarations split across
-include files are also unsupported by the normalization stage.
+dynamic dispatch are outside this increment. Method declarations loaded through
+filesystem or virtual includes participate in the same binding pass.

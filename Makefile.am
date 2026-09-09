@@ -40,8 +40,8 @@ noinst_HEADERS = \
 	compiler/modern_library_registry.hh \
 	compiler/namespace_ast_analysis.hh \
 	compiler/object_method_ast_analysis.hh \
-	compiler/object_method_call_lowering.hh \
-	compiler/object_method_compatibility_ast.hh \
+	compiler/object_method_binding.hh \
+	compiler/object_method_call_binding.hh \
 	compiler/output_manager.hh \
 	compiler/output_sink.hh \
 	compiler/parser_state.hh \
@@ -163,6 +163,7 @@ EXTRA_DIST = \
 	tests/cli/profile-fixtures/namespace-internal.st \
 	tests/cli/profile-fixtures/namespace-internal-local.st \
 	tests/cli/profile-fixtures/object-method.st \
+	tests/cli/profile-fixtures/object-method-nested.st \
 	tests/cli/profile-fixtures/object-method-private.st \
 	tests/cli/profile-fixtures/object-method-unknown.st \
 	compiler/experimental_syntax_model.hh \

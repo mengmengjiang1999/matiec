@@ -1212,7 +1212,6 @@ void *visit(var_init_decl_list_c *symbol) {
 /* B 1.5.1 - Functions */
 /***********************/
 void *visit(function_declaration_c *symbol) {
-  if (symbol->object_method_compatibility) return NULL;
   s4o.print("FUNCTION ");
   symbol->derived_function_name->accept(*this);
   s4o.print(" : ");
@@ -2289,7 +2288,6 @@ void *visit(continue_statement_c *symbol) {
 
 visitor_c *new_code_generator(stage4out_c *s4o, const char *builddir)  {return new generate_iec_c(s4o);}
 void delete_code_generator(visitor_c *code_generator) {delete code_generator;}
-
 
 
 

@@ -230,6 +230,21 @@ class populate_symtables_c: public iterator_visitor_c {
   void *visit(function_block_declaration_c *symbol) {
     TRACE("function_block_declaration_c");
     tables_.function_blocks.insert(symbol->fblock_name, symbol);
+    object_method_declaration_list_c *methods =
+        dynamic_cast<object_method_declaration_list_c *>(symbol->methods);
+    if (methods != NULL) {
+      for (int index = 0; index < methods->n; ++index) {
+        object_method_declaration_c *method =
+            dynamic_cast<object_method_declaration_c *>(methods->get_element(index));
+        function_declaration_c *declaration = method == NULL
+            ? NULL
+            : dynamic_cast<function_declaration_c *>(
+                  method->semantic_declaration);
+        if (declaration != NULL)
+          tables_.functions.insert(
+              declaration->derived_function_name, declaration);
+      }
+    }
   /*
     symbol->fblock_name->accept(*this);
     symbol->var_declarations->accept(*this);

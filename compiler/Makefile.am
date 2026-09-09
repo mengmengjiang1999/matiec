@@ -21,8 +21,8 @@ libcompiler_a_SOURCES = \
 	modern_library_registry.cc \
 	namespace_ast_analysis.cc \
 	object_method_ast_analysis.cc \
-	object_method_call_lowering.cc \
-	object_method_compatibility_ast.cc \
+	object_method_binding.cc \
+	object_method_call_binding.cc \
 	output_manager.cc \
 	output_sink.cc \
 	parser_state.cc \

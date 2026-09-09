@@ -1,4 +1,4 @@
-#include "compiler/object_method_call_lowering.hh"
+#include "compiler/object_method_call_binding.hh"
 
 #include "absyntax/absyntax.hh"
 #include "absyntax/visitor.hh"
@@ -53,9 +53,9 @@ symbol_c *field_reference(symbol_c *receiver,
   return reference;
 }
 
-class method_call_lowering_c : public iterator_visitor_c {
+class method_call_binding_c : public iterator_visitor_c {
  public:
-  method_call_lowering_c(const ObjectMethodAnalysisResult &model,
+  method_call_binding_c(const ObjectMethodAnalysisResult &model,
                          DiagnosticEngine &diagnostics)
       : model_(model), diagnostics_(diagnostics) {}
 
@@ -124,10 +124,10 @@ class method_call_lowering_c : public iterator_visitor_c {
 
     poutype_identifier_c *lowered_name =
         located_token<poutype_identifier_c>(method->lowered_name, symbol);
-    symbol_c *compatibility_arguments = arguments->n == 0 ? nullptr : arguments;
-    symbol->compatibility_invocation = new function_invocation_c(
-        lowered_name, formal ? compatibility_arguments : nullptr,
-        formal ? nullptr : compatibility_arguments,
+    symbol_c *bound_arguments = arguments->n == 0 ? nullptr : arguments;
+    symbol->resolved_call = new function_invocation_c(
+        lowered_name, formal ? bound_arguments : nullptr,
+        formal ? nullptr : bound_arguments,
         symbol->first_line, symbol->first_column,
         symbol->first_file, symbol->first_order, symbol->last_line,
         symbol->last_column, symbol->last_file, symbol->last_order);
@@ -142,12 +142,12 @@ class method_call_lowering_c : public iterator_visitor_c {
 
 }  // namespace
 
-bool lower_object_method_calls(
+bool bind_object_method_calls(
     symbol_c *tree_root, const ObjectMethodAnalysisResult &model,
     DiagnosticEngine &diagnostics) {
   if (tree_root == nullptr) return false;
-  method_call_lowering_c lowering(model, diagnostics);
-  tree_root->accept(lowering);
+  method_call_binding_c binding(model, diagnostics);
+  tree_root->accept(binding);
   return !diagnostics.has_errors();
 }
 

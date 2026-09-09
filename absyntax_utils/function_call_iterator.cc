@@ -112,8 +112,8 @@ token_c *function_call_iterator_c::fname(void) {
   }
 
   void *function_call_iterator_c::visit(object_method_invocation_c *symbol) {
-    if (symbol->compatibility_invocation == NULL) ERROR;
-    return symbol->compatibility_invocation->accept(*this);
+    if (symbol->resolved_call == NULL) ERROR;
+    return symbol->resolved_call->accept(*this);
   }
 
 
@@ -148,7 +148,6 @@ token_c *function_call_iterator_c::fname(void) {
     }
     return NULL;
   }
-
 
 
 

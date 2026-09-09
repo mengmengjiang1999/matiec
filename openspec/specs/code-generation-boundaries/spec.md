@@ -46,19 +46,19 @@ contained declarations or changing the provisional lowered C ABI.
 
 ### Requirement: Native method generator boundary
 
-When an experimental construct has a primary AST representation, IEC generation SHALL preserve that native structure, while C generation MAY consume an explicit
-compatibility AST. Compatibility declarations SHALL NOT be injected as parser source
-or emitted as duplicate IEC structure.
+When an experimental construct has a primary AST representation, IEC generation SHALL preserve that native structure. C generation SHALL consume semantic bindings
+attached to native method nodes and SHALL NOT require compatibility declarations in
+the parsed top-level library.
 
 #### Scenario: Native method structure is emitted as IEC
 
 - **WHEN** a function block contains a supported method and source invokes it through an instance
 - **THEN** IEC generation emits the owner-contained method and native call without an appended lowered function declaration
 
-#### Scenario: C is generated from AST compatibility declarations
+#### Scenario: C is generated from native method bindings
 
 - **WHEN** the primary AST contains a supported method and bound invocation
-- **THEN** C generation emits the deterministic lowered implementation and call path from explicit compatibility AST nodes
+- **THEN** C generation emits the deterministic lowered implementation and call path from bindings owned by the native nodes
 
 ### Requirement: Access metadata follows AST analysis
 
@@ -70,15 +70,16 @@ post-parse AST analysis.
 - **WHEN** AST analysis accepts access declarations and C output is requested
 - **THEN** `ACCESS.csv` contains the same deterministic rows as the accepted AST nodes
 
-### Requirement: Object compatibility metadata follows AST analysis
+### Requirement: Object method bindings follow AST analysis
 
-The compiler SHALL construct compatibility declarations and bind method calls only
-from metadata produced by post-parse analysis of the primary AST.
+The compiler SHALL bind native method declarations and calls only from metadata
+produced by post-parse analysis of the primary AST, without a separate compatibility
+normalization phase.
 
-#### Scenario: Compatibility lowering starts
+#### Scenario: Native method binding starts
 
 - **WHEN** the parsed AST contains a supported public method and invocation
-- **THEN** AST analysis completes before compatibility declarations or invocations are created
+- **THEN** AST analysis completes before semantic declaration and call bindings are attached
 
 ### Requirement: Namespace side metadata mirrors parsed structure
 

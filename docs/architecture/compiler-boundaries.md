@@ -51,9 +51,9 @@ The compiler executes these boundaries in order:
 
 1. `LegacyGlobalStateAdapter::parse()` runs lexical and syntax analysis in the
    context's parser session, which carries the owning AST arena.
-2. Experimental AST analysis and compatibility passes validate native constructs
-   that still use legacy semantic implementations. Access-variable metadata is
-   collected here, function-block method calls are resolved, and profile-owned
+2. Experimental AST analysis and native binding passes validate provisional
+   constructs. Access-variable metadata is collected here, function-block method
+   declarations and calls are bound without adding top-level declarations, and profile-owned
    library declarations are registered as AST without source-text injection.
 3. Legacy symbol-table initialization prepares declaration lookup.
 4. `SemanticPassManager` runs the explicit Stage 3 pass order and stops after a
@@ -157,8 +157,9 @@ context cannot expose metadata from an earlier source.
 These records are a migration boundary, not a second semantic tree. Namespace and
 function-block method declarations and invocations now enter the primary AST. An
 explicit post-parse AST analysis derives method, field, and receiver metadata before
-compatibility passes construct function declarations and bind native calls; method
-source is not rescanned, appended, or rewritten before parsing.
+semantic bindings are attached to native declarations and calls. No method
+declaration is appended to the parsed library, and method source is not rescanned,
+injected, or rewritten before parsing.
 Namespace structure and metadata come from native lexer/parser nodes and post-parse
 AST analysis. A parser-state registry performs prepass name classification across
 the entry source and includes; source spelling is never normalized before parsing.

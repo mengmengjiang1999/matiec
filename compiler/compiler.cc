@@ -6,8 +6,8 @@
 #include "compiler/modern_library_registry.hh"
 #include "compiler/namespace_ast_analysis.hh"
 #include "compiler/object_method_ast_analysis.hh"
-#include "compiler/object_method_call_lowering.hh"
-#include "compiler/object_method_compatibility_ast.hh"
+#include "compiler/object_method_binding.hh"
+#include "compiler/object_method_call_binding.hh"
 #include "compiler/utf8_validation.hh"
 
 #include "absyntax/absyntax.hh"
@@ -133,10 +133,10 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     }
 
     if (language_profile_is_experimental(options.language_profile) &&
-        (!construct_object_method_compatibility_ast(
+        (!bind_object_method_semantics(
              tree_root, method_result, context.diagnostics()) ||
-         !lower_object_method_calls(tree_root, method_result,
-                                    context.diagnostics())))
+         !bind_object_method_calls(tree_root, method_result,
+                                   context.diagnostics())))
         return context.diagnostics().result();
 
     if (options.syntax_only)

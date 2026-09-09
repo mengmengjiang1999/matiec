@@ -173,8 +173,12 @@ void analyze_owner(function_block_declaration_c *owner,
     ast.lowered_name = lowered_method_name(owner_name, method_name);
     ast.range = range;
     for (const auto &field : owner_declarations.variables) {
-      if (local_declarations.variables.count(field.first) == 0)
+      if (local_declarations.variables.count(field.first) == 0) {
         ast.owner_fields.push_back(field);
+        const auto receiver = result->instance_types.find(field.first);
+        if (receiver != result->instance_types.end())
+          result->instance_types["MATIECSELF" + field.first] = receiver->second;
+      }
     }
     result->methods.push_back(ast);
   }

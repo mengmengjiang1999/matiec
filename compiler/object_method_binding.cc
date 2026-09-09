@@ -1,4 +1,4 @@
-#include "compiler/object_method_compatibility_ast.hh"
+#include "compiler/object_method_binding.hh"
 
 #include "absyntax/absyntax.hh"
 #include "absyntax/visitor.hh"
@@ -143,7 +143,7 @@ const ObjectMethodAst *find_model_method(
   return nullptr;
 }
 
-function_declaration_c *make_compatibility_function(
+function_declaration_c *make_semantic_declaration(
     const NativeMethod &native, const ObjectMethodAst &model) {
   var_declarations_list_c *native_declarations =
       dynamic_cast<var_declarations_list_c *>(native.method->var_declarations);
@@ -187,14 +187,13 @@ function_declaration_c *make_compatibility_function(
       native.method->last_file, native.method->last_order);
   native.method->type_name->parent = type_parent;
   native.method->method_body->parent = body_parent;
-  function->object_method_compatibility = true;
   add_en_eno_param_decl_c::add_to(function);
   return function;
 }
 
 }  // namespace
 
-bool construct_object_method_compatibility_ast(
+bool bind_object_method_semantics(
     symbol_c *tree_root, const ObjectMethodAnalysisResult &model,
     DiagnosticEngine &diagnostics) {
   library_c *library = dynamic_cast<library_c *>(tree_root);
@@ -206,18 +205,18 @@ bool construct_object_method_compatibility_ast(
     const ObjectMethodAst *method = find_model_method(
         model, native.owner, native.method);
     if (method == nullptr) {
-      diagnostics.error("Missing compatibility metadata for parsed method",
+      diagnostics.error("Missing semantic metadata for parsed method",
                         source_range(native.method));
       continue;
     }
     function_declaration_c *function =
-        make_compatibility_function(native, *method);
+        make_semantic_declaration(native, *method);
     if (function == nullptr) {
-      diagnostics.error("Unsupported method declaration for compatibility AST",
+      diagnostics.error("Unsupported native method declaration",
                         source_range(native.method));
       continue;
     }
-    library->add_element(function);
+    native.method->semantic_declaration = function;
   }
   return !diagnostics.has_errors();
 }

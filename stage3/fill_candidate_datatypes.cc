@@ -1673,6 +1673,13 @@ void *fill_candidate_datatypes_c::visit(function_block_declaration_c *symbol) {
 	 */
 	// The next line is essentially equivalent to doing-->  symbol->candidate_datatypes(analysis_).push_back(symbol);
 	add_datatype_to_candidate_list(symbol, base_type(symbol));
+	object_method_declaration_list_c *methods = dynamic_cast<object_method_declaration_list_c *>(symbol->methods);
+	if (methods != NULL)
+		for (int index = 0; index < methods->n; ++index) {
+			object_method_declaration_c *method = dynamic_cast<object_method_declaration_c *>(methods->get_element(index));
+			if (method != NULL && method->semantic_declaration != NULL)
+				method->semantic_declaration->accept(*this);
+		}
 	return NULL;
 }
 
@@ -2346,10 +2353,10 @@ void *fill_candidate_datatypes_c::visit(function_invocation_c *symbol) {
 }
 
 void *fill_candidate_datatypes_c::visit(object_method_invocation_c *symbol) {
-	if (symbol->compatibility_invocation == NULL) ERROR;
-	symbol->compatibility_invocation->accept(*this);
+	if (symbol->resolved_call == NULL) ERROR;
+	symbol->resolved_call->accept(*this);
 	symbol->candidate_datatypes(analysis_) =
-		symbol->compatibility_invocation->candidate_datatypes(analysis_);
+		symbol->resolved_call->candidate_datatypes(analysis_);
 	return NULL;
 }
 

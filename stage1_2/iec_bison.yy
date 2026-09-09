@@ -5401,7 +5401,7 @@ object_method_var_declarations_list:
 
 object_method_declaration:
   object_method_header ':' non_generic_type_name object_method_var_declarations_list function_body END_METHOD
-	{$$ = new object_method_declaration_c($1, $3, $4, $5, locloc(@$));
+	{$$ = new object_method_declaration_c($1, $3, $4, $5, NULL, locloc(@$));
 	 variable_name_symtable.pop(); direct_variable_symtable.pop();}
 ;
 

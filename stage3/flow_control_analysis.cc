@@ -177,6 +177,13 @@ void *flow_control_analysis_c::visit(function_block_declaration_c *symbol) {
 	symbol->fblock_body->accept(*this);
 	delete search_il_label;
 	search_il_label = NULL;
+	object_method_declaration_list_c *methods = dynamic_cast<object_method_declaration_list_c *>(symbol->methods);
+	if (methods != NULL)
+		for (int index = 0; index < methods->n; ++index) {
+			object_method_declaration_c *method = dynamic_cast<object_method_declaration_c *>(methods->get_element(index));
+			if (method != NULL && method->semantic_declaration != NULL)
+				method->semantic_declaration->accept(*this);
+		}
 	return NULL;
 }
 
