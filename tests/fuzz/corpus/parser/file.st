@@ -1,0 +1,4 @@
+ePROGRAM FileSeed
+VAR value : BOOL; END_VAR
+value := TRUE;
+END_PROGRAM

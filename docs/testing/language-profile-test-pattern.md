@@ -25,3 +25,8 @@ fields, arrays of structures, function-block members, and IN/OUT/IN_OUT calls.
 Negative companions must lock down non-writable output arguments and duplicate
 declarations. The matrix is compiled after unrelated queries in the full suite so
 stale visitor state cannot be mistaken for a valid declaration result.
+
+Parser changes also flow through the bounded production-API harness described in
+[`parser-fuzzing.md`](parser-fuzzing.md). Deterministic fixtures remain the source
+of semantic assertions; fuzzing adds crash, sanitizer, and hang detection across
+input and embedding boundaries.

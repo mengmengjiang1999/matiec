@@ -446,6 +446,9 @@ make check-ubsan
 # ThreadSanitizer (on supported compiler runtimes)
 make check-tsan
 
+# Deterministic libFuzzer smoke campaign across parser/embedding boundaries
+tests/fuzz/runtests smoke
+
 # Version alignment plus a clean source-package build/install/uninstall cycle
 make release-check
 ```
@@ -454,6 +457,14 @@ GitHub Actions runs all three sanitizer suites as independent Linux jobs for eve
 push and pull request. The workflow is also available through manual dispatch.
 Linux ASan jobs include leak detection; Apple Clang runs address checks without
 the unsupported LeakSanitizer mode.
+
+The parser fuzz workflow runs a bounded libFuzzer smoke campaign for pushes and
+pull requests and a longer campaign every week. Both use the public C API to cover
+file input, memory input, virtual includes, cancellation, and resource limits.
+For local AFL++ campaigns, build an isolated driver with
+`tests/fuzz/build-afl /tmp/matiec-parser-afl`, then use
+`tests/fuzz/corpus/parser` as the initial corpus. Generated findings belong in a
+separate output directory and must not be added to the seed corpus.
 
 The regression suite covers:
 
@@ -465,6 +476,7 @@ The regression suite covers:
 - repeated bounded parallel batches with context reuse, mixed failures,
   callback fault injection, and output isolation;
 - CLI behavior and syntax/initialization regressions;
+- deterministic parser fuzz seeds and bounded smoke execution;
 - in-memory and byte-characterized generator output;
 - generated-C compilation, ABI symbols, linking, and representative runtime
   behavior.

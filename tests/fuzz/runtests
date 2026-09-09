@@ -1,0 +1,104 @@
+#!/bin/bash
+
+set -eu
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+PROJECT_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
+MODE=${1:-smoke}
+JOBS=${JOBS:-2}
+FUZZ_SECONDS=${FUZZ_SECONDS:-300}
+
+case "$MODE" in
+  smoke|periodic) ;;
+  *) echo "usage: $0 {smoke|periodic}" >&2; exit 2 ;;
+esac
+
+if test -x /opt/homebrew/opt/bison/bin/bison; then
+  PATH=/opt/homebrew/opt/bison/bin:$PATH
+elif test -x /usr/local/opt/bison/bin/bison; then
+  PATH=/usr/local/opt/bison/bin:$PATH
+fi
+export PATH
+
+CLANG=${CLANG:-clang}
+CLANGXX=${CLANGXX:-clang++}
+command -v "$CLANG" >/dev/null
+command -v "$CLANGXX" >/dev/null
+
+TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/matiec-fuzz.XXXXXX")
+SOURCE_COPY="$TMP_ROOT/source"
+ARTIFACTS=${MATIEC_FUZZ_ARTIFACTS:-$TMP_ROOT/artifacts}
+mkdir -p "$SOURCE_COPY" "$ARTIFACTS"
+
+cleanup() {
+  status=$?
+  trap - EXIT
+  if test "$status" != 0; then
+    echo "Fuzz artifacts: $ARTIFACTS" >&2
+    if test -n "${GITHUB_WORKSPACE:-}"; then
+      mkdir -p "$GITHUB_WORKSPACE/fuzz-artifacts"
+      cp -R "$ARTIFACTS/." "$GITHUB_WORKSPACE/fuzz-artifacts/"
+    fi
+  fi
+  rm -rf "$TMP_ROOT"
+  exit "$status"
+}
+trap cleanup EXIT
+
+if printf '%s\n' \
+    'extern "C" int LLVMFuzzerTestOneInput(const unsigned char *, unsigned long) { return 0; }' \
+    | "$CLANGXX" -x c++ -fsanitize=fuzzer - -o "$TMP_ROOT/fuzzer-probe" \
+        >/dev/null 2>&1; then
+  HAVE_LIBFUZZER=1
+  FUZZ_COMPILE_FLAGS=-fsanitize=fuzzer-no-link
+else
+  HAVE_LIBFUZZER=0
+  FUZZ_COMPILE_FLAGS=
+  if test "$MODE" = periodic; then
+    echo "libFuzzer runtime is required for periodic mode" >&2
+    exit 77
+  fi
+  echo "libFuzzer runtime unavailable; replaying every seed under ASan/UBSan" >&2
+fi
+
+cp -R "$PROJECT_ROOT/." "$SOURCE_COPY"
+find "$SOURCE_COPY" -type f \( -name '*.o' -o -name '*.a' -o -name '*.Po' \) -delete
+find "$SOURCE_COPY" -type d -name .deps -prune -exec rm -rf {} +
+rm -f "$SOURCE_COPY/iec2c" "$SOURCE_COPY/iec2iec"
+
+COMMON_FLAGS="-g -O1 -fno-omit-frame-pointer -fsanitize=address,undefined"
+cd "$SOURCE_COPY"
+autoreconf -fi
+CC="$CLANG" CXX="$CLANGXX" \
+  CFLAGS="$COMMON_FLAGS" \
+  CXXFLAGS="$COMMON_FLAGS $FUZZ_COMPILE_FLAGS" \
+  LDFLAGS="-fsanitize=address,undefined" \
+  ./configure
+make -j"$JOBS"
+
+if test "$HAVE_LIBFUZZER" = 1; then
+  "$CLANGXX" -std=c++17 -DMATIEC_LIBFUZZER -I. \
+    $COMMON_FLAGS -fsanitize=fuzzer tests/fuzz/parser_fuzzer.cc \
+    libmatiec.a -pthread -o "$TMP_ROOT/parser_fuzzer"
+else
+  "$CLANGXX" -std=c++17 -I. $COMMON_FLAGS tests/fuzz/parser_fuzzer.cc \
+    libmatiec.a -pthread -o "$TMP_ROOT/parser_fuzzer"
+fi
+
+export MATIEC_LIBDIR="$SOURCE_COPY/lib"
+case "$(uname -s)" in
+  Darwin) DEFAULT_ASAN_OPTIONS=detect_leaks=0:halt_on_error=1 ;;
+  *) DEFAULT_ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 ;;
+esac
+export ASAN_OPTIONS=${ASAN_OPTIONS:-$DEFAULT_ASAN_OPTIONS}
+export UBSAN_OPTIONS=${UBSAN_OPTIONS:-halt_on_error=1:print_stacktrace=1}
+
+if test "$HAVE_LIBFUZZER" = 0; then
+  "$TMP_ROOT/parser_fuzzer" tests/fuzz/corpus/parser/*
+elif test "$MODE" = smoke; then
+  "$TMP_ROOT/parser_fuzzer" -runs=2000 -max_len=65536 \
+    -artifact_prefix="$ARTIFACTS/" tests/fuzz/corpus/parser
+else
+  "$TMP_ROOT/parser_fuzzer" -max_total_time="$FUZZ_SECONDS" -max_len=1048576 \
+    -artifact_prefix="$ARTIFACTS/" tests/fuzz/corpus/parser
+fi

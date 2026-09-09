@@ -146,11 +146,20 @@ EXTRA_DIST = \
 	matiec.pc.in \
 	config/merge-static-libraries.sh \
 	config/check-release-version.sh \
+	docs/testing/parser-fuzzing.md \
 	tests/package/consumer.c \
 	tests/package/runtests \
 	tests/api/header_compatibility.c \
 	tests/api/public-symbols.txt \
 	tests/api/runtests \
+	tests/fuzz/parser_fuzzer.cc \
+	tests/fuzz/runtests \
+	tests/fuzz/build-afl \
+	tests/fuzz/corpus/parser/memory.st \
+	tests/fuzz/corpus/parser/file.st \
+	tests/fuzz/corpus/parser/include.st \
+	tests/fuzz/corpus/parser/cancel.st \
+	tests/fuzz/corpus/parser/limits.st \
 	tests/cli/profile-fixtures/reference.st \
 	tests/cli/profile-fixtures/reference-null.st \
 	tests/cli/profile-fixtures/reference-incompatible.st \

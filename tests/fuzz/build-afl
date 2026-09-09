@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -eu
+
+if test "$#" != 1; then
+  echo "usage: $0 OUTPUT_BINARY" >&2
+  exit 2
+fi
+
+SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+PROJECT_ROOT=$(cd "$SCRIPT_DIR/../.." && pwd)
+OUTPUT=$1
+case "$OUTPUT" in
+  /*) ;;
+  *) OUTPUT="$(pwd)/$OUTPUT" ;;
+esac
+AFL_CC=${AFL_CC:-afl-clang-fast}
+AFL_CXX=${AFL_CXX:-afl-clang-fast++}
+JOBS=${JOBS:-2}
+command -v "$AFL_CC" >/dev/null
+command -v "$AFL_CXX" >/dev/null
+
+TMP_ROOT=$(mktemp -d "${TMPDIR:-/tmp}/matiec-afl.XXXXXX")
+trap 'rm -rf "$TMP_ROOT"' EXIT
+cp -R "$PROJECT_ROOT/." "$TMP_ROOT/source"
+cd "$TMP_ROOT/source"
+find . -type f \( -name '*.o' -o -name '*.a' -o -name '*.Po' \) -delete
+find . -type d -name .deps -prune -exec rm -rf {} +
+autoreconf -fi
+CC="$AFL_CC" CXX="$AFL_CXX" ./configure
+make -j"$JOBS"
+"$AFL_CXX" -std=c++17 -I. tests/fuzz/parser_fuzzer.cc \
+  libmatiec.a -pthread -o "$OUTPUT"

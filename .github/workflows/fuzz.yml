@@ -1,0 +1,40 @@
+name: parser-fuzzing
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 3 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  libfuzzer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes autoconf automake bison clang flex libclang-rt-dev libfl-dev make
+
+      - name: Run bounded parser fuzzing
+        run: |
+          if test "${{ github.event_name }}" = schedule; then
+            FUZZ_SECONDS=300 tests/fuzz/runtests periodic
+          else
+            tests/fuzz/runtests smoke
+          fi
+
+      - name: Preserve crash reproducers
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: parser-fuzz-reproducers
+          path: fuzz-artifacts
+          if-no-files-found: ignore
