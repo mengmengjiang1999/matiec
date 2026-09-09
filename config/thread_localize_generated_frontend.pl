@@ -46,6 +46,16 @@ sub rewrite {
   close $output or die "$path: $!\n";
 }
 
+sub reject_process_termination {
+  my ($path) = @_;
+  open my $input, '<', $path or die "$path: $!\n";
+  local $/;
+  my $content = <$input>;
+  close $input or die "$path: $!\n";
+  die "$path: generated frontend still terminates the process\n"
+      if $content =~ /\b(?:exit|_Exit|abort)\s*\(/;
+}
+
 die "usage: $0 FLEX_CC BISON_CC BISON_HH\n" unless @ARGV == 3;
 my ($flex_cc, $bison_cc, $bison_hh) = @ARGV;
 
@@ -88,6 +98,8 @@ my @flex_pairs = (
    'static thread_local int yy_start_stack_depth = 0;'],
   ['static int *yy_start_stack = NULL;',
    'static thread_local int *yy_start_stack = NULL;'],
+  ["\t\t\tfprintf( stderr, \"%s\\n\", msg );\n\texit( YY_EXIT_FAILURE );",
+   '  throw matiec::CompilationAbort(msg);'],
 );
 
 my @flex_variant_groups = (
@@ -108,6 +120,8 @@ my @flex_variant_groups = (
 );
 
 rewrite($flex_cc, \@flex_pairs, \@flex_variant_groups);
+reject_process_termination($flex_cc);
+reject_process_termination($bison_cc);
 
 # The Bison parser is pure: lookahead, semantic/location values, and its error
 # counter are automatic variables. Only the legacy Flex scanner still needs the

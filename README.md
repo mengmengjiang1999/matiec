@@ -272,7 +272,9 @@ enum declarations
 ```
 
 A failed pass stops its dependants. Lower layers report diagnostics and typed
-results rather than terminating the process.
+results rather than terminating the process. Generated scanner fatal paths also
+throw `CompilationAbort`, which the compiler boundary converts to a failed
+result while leaving an embedding host in control.
 
 ### Output is a boundary
 

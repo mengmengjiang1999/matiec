@@ -96,17 +96,14 @@ or explicitly `thread_local` Flex state; the generation transformation fails if
 an expected Flex declaration changes shape. Newly added file-scope constants
 are immutable.
 
-There are no `exit()`, `_Exit()`, or `abort()` calls in handwritten parser,
-semantic, or generation entry points. The remaining calls are emitted by the
-checked-in Flex/Bison skeletons in `stage1_2/iec_flex.cc` and
-`stage1_2/iec_bison.cc` for skeleton-level allocation and I/O failures. Those
-generated files are entered only through `LegacyGlobalStateAdapter::parse()`.
-Grammar
-actions and handwritten lower layers report diagnostics, return failures, or
-throw `CompilationAbort`; `Compiler::compile()` catches that internal unwind
-at the embedding boundary.
+There are no `exit()`, `_Exit()`, or `abort()` calls in handwritten or generated
+parser, semantic, or generation entry points. Flex skeleton fatal paths throw
+`CompilationAbort`; Bison memory exhaustion reports an error and returns a
+nonzero parser status. Grammar actions and handwritten lower layers likewise
+report diagnostics, return failures, or throw `CompilationAbort`.
+`Compiler::compile()` catches that internal unwind at the embedding boundary.
 
 Repeat the audit after changing the generated frontend, adding a compiler
-service, or introducing a namespace/file-scope variable. Generated-skeleton
-termination paths should disappear when fatal hooks are replaced; until then
-they must not be called directly outside this adapter.
+service, or introducing a namespace/file-scope variable. The checked generated
+rewrite rejects an unexpected fatal-hook shape or any regenerated frontend
+process-termination call before compilation.
