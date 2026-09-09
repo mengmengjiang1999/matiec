@@ -5,30 +5,25 @@ TBD - created by archiving change define-versioned-embedding-api. Update Purpose
 ## Requirements
 ### Requirement: Versioned public embedding ABI
 
-The project SHALL install the versioned C embedding header, a self-contained
-static `libmatiec` containing the C code generator, compiler IEC library data,
-generated-C runtime headers, and `pkg-config` metadata. An external C source
-consumer SHALL compile against the staged header, link through a C++ linker, and
-execute without source-tree include or archive paths.
+The project SHALL install the public C header, a self-contained static archive,
+and a platform-versioned shared library whose ABI major version matches
+`MATIEC_API_VERSION_MAJOR`. The shared library SHALL export the declared
+`matiec_*` API and SHALL NOT expose compiler implementation symbols.
 
-#### Scenario: A consumer installs and links
+#### Scenario: A consumer links dynamically
 
-- **WHEN** a caller stages installation and queries `pkg-config` from that prefix
-- **THEN** it can compile a C translation unit, link `libmatiec`, and execute API
-  version discovery
+- **WHEN** a staged-install consumer links with `pkg-config matiec`
+- **THEN** it loads the versioned shared library and successfully compiles IEC source
 
-#### Scenario: Compiler library data is installed
+#### Scenario: A consumer links statically
 
-- **WHEN** an installed embedding host configures the documented shared-data
-  include directory
-- **THEN** the compiler can load the same IEC library definitions as a source
-  tree build
+- **WHEN** a consumer explicitly links the installed `libmatiec.a`
+- **THEN** the same public API remains usable
 
 #### Scenario: The package is uninstalled
 
-- **WHEN** the caller runs the generated uninstall target for the same staging
-  root
-- **THEN** the public header, metadata, library, and installed data are removed
+- **WHEN** `make uninstall` runs for the staged prefix
+- **THEN** the static archive, shared artifact, version links, header, metadata, and data files are removed
 
 ### Requirement: Public API compatibility contract
 

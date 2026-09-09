@@ -60,7 +60,8 @@ must synchronize user data shared by more than one context.
 ## Installed package
 
 `make install` provides the public header as `<matiec/api.h>`, a self-contained
-static `libmatiec.a` with the C code generator, and `matiec.pc` metadata. Compile
+static `libmatiec.a`, a platform-versioned shared library with ABI major 1, and
+`matiec.pc` metadata. Compile
 C source with a C compiler, then use a C++ linker for the final executable
 because the library implementation uses the C++ runtime:
 
@@ -72,9 +73,11 @@ c++ host.o $(pkg-config --libs matiec) -pthread -o host
 The compiler's IEC definitions install under
 `${datadir}/matiec/lib`; pass that path to
 `matiec_context_set_include_directory`. Generated-C runtime headers install in
-the `C` child directory. The initial package is static-only; the public C ABI is
-stable, but a shared-library release and its platform versioning policy remain a
-separate concern.
+the `C` child directory. ELF hosts install an SONAME-compatible
+`libmatiec.so.1`; Darwin hosts install `libmatiec.1.dylib` with a matching
+install name. Unversioned links are intended for development, while runtime
+consumers bind to the ABI-major name. Internal C++ symbols use hidden
+visibility; only the public `matiec_*` C ABI is exported.
 
 ## Compatibility maintenance
 

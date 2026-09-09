@@ -384,12 +384,13 @@ make
 make install
 ```
 
-The install contains `<matiec/api.h>`, a self-contained static
-`libmatiec.a`, `matiec.pc`, IEC library definitions under
+The install contains `<matiec/api.h>`, self-contained static and ABI-versioned
+shared `libmatiec` libraries, `matiec.pc`, IEC library definitions under
 `share/matiec/lib`, and generated-C runtime headers under
 `share/matiec/lib/C`. A C host should compile its source with `cc` and perform
-the final static-library link with `c++`; `pkg-config --cflags --libs matiec`
-provides the installed include and library paths. Configure each embedding
+the final link with `c++`; `pkg-config --cflags --libs matiec` selects the shared
+library by default, while explicitly naming `libmatiec.a` retains static linking.
+Configure each embedding
 context's include directory to the installed `share/matiec/lib` path.
 
 Run `make check-api` to validate the exported `matiec_*` symbol allowlist,

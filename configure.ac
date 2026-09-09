@@ -5,6 +5,7 @@ AC_PREREQ([2.69])
 AC_INIT([matiec], [0.1], [msousa@fe.up.pt, beremiz-devel@lists.sourceforge.net])
 AC_CONFIG_HEADERS([config/config.h])
 AC_CONFIG_AUX_DIR(config)
+AC_CANONICAL_HOST
 
 AM_INIT_AUTOMAKE([1.16 foreign parallel-tests subdir-objects])
 
@@ -65,6 +66,25 @@ AC_FUNC_MALLOC
 AC_FUNC_MKTIME
 AC_FUNC_REALLOC
 AC_CHECK_FUNCS([clock_gettime memset pow strcasecmp strdup strtoul strtoull])
+
+case "$host_os" in
+  darwin*)
+    MATIEC_SHARED_REAL=libmatiec.1.3.0.dylib
+    MATIEC_SHARED_ABI=libmatiec.1.dylib
+    MATIEC_SHARED_LINK=libmatiec.dylib
+    MATIEC_SHARED_MODE=darwin
+    ;;
+  *)
+    MATIEC_SHARED_REAL=libmatiec.so.1.3.0
+    MATIEC_SHARED_ABI=libmatiec.so.1
+    MATIEC_SHARED_LINK=libmatiec.so
+    MATIEC_SHARED_MODE=elf
+    ;;
+esac
+AC_SUBST([MATIEC_SHARED_REAL])
+AC_SUBST([MATIEC_SHARED_ABI])
+AC_SUBST([MATIEC_SHARED_LINK])
+AC_SUBST([MATIEC_SHARED_MODE])
 
 
 AC_CONFIG_MACRO_DIR([config])

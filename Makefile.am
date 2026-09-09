@@ -16,8 +16,12 @@ TESTS_ENVIRONMENT = \
 	PACKAGE_INCLUDEDIR='$(includedir)' \
 	PACKAGE_LIBDIR='$(libdir)' \
 	PACKAGE_DATADIR='$(datadir)' \
+	PACKAGE_SHARED_REAL='$(MATIEC_SHARED_REAL)' \
+	PACKAGE_SHARED_ABI='$(MATIEC_SHARED_ABI)' \
+	PACKAGE_SHARED_LINK='$(MATIEC_SHARED_LINK)' \
 	PACKAGE_CONSUMER='$(abs_top_srcdir)/tests/package/consumer.c' \
 	MATIEC_API_ARCHIVE='$(abs_top_builddir)/libmatiec.a' \
+	MATIEC_API_SHARED='$(abs_top_builddir)/$(MATIEC_SHARED_REAL)' \
 	MATIEC_API_SYMBOLS='$(abs_top_srcdir)/tests/api/public-symbols.txt' \
 	MATIEC_API_HEADER_TEST='$(abs_top_srcdir)/tests/api/header_compatibility.c' \
 	MATIEC_API_INCLUDE='$(abs_top_srcdir)/include' \
@@ -143,11 +147,33 @@ MATIEC_COMPONENT_ARCHIVES = \
 
 matiecarchivedir = $(libdir)
 nodist_matiecarchive_DATA = libmatiec.a
-CLEANFILES = libmatiec.a
+matiecshareddir = $(libdir)
+nodist_matiecshared_DATA = $(MATIEC_SHARED_REAL)
+CLEANFILES = libmatiec.a $(MATIEC_SHARED_REAL)
 
 libmatiec.a: $(MATIEC_COMPONENT_ARCHIVES) $(top_srcdir)/config/merge-static-libraries.sh
 	$(SHELL) $(top_srcdir)/config/merge-static-libraries.sh "$(AR)" "$@" $(MATIEC_COMPONENT_ARCHIVES)
 	$(RANLIB) "$@"
+
+$(MATIEC_SHARED_REAL): $(MATIEC_COMPONENT_ARCHIVES)
+	if test "$(MATIEC_SHARED_MODE)" = darwin; then \
+	  $(CXX) $(CXXFLAGS) $(LDFLAGS) -dynamiclib -Wl,-install_name,$(libdir)/$(MATIEC_SHARED_ABI) \
+	    -Wl,-all_load $(MATIEC_COMPONENT_ARCHIVES) -pthread $(LIBS) -o "$@"; \
+	else \
+	  $(CXX) $(CXXFLAGS) $(LDFLAGS) -shared -Wl,-soname,$(MATIEC_SHARED_ABI) \
+	    -Wl,--whole-archive $(MATIEC_COMPONENT_ARCHIVES) -Wl,--no-whole-archive \
+	    -pthread $(LIBS) -o "$@"; \
+	fi
+
+install-data-hook:
+	cd "$(DESTDIR)$(libdir)" && \
+	  rm -f "$(MATIEC_SHARED_ABI)" "$(MATIEC_SHARED_LINK)" && \
+	  $(LN_S) "$(MATIEC_SHARED_REAL)" "$(MATIEC_SHARED_ABI)" && \
+	  $(LN_S) "$(MATIEC_SHARED_ABI)" "$(MATIEC_SHARED_LINK)"
+
+uninstall-hook:
+	rm -f "$(DESTDIR)$(libdir)/$(MATIEC_SHARED_ABI)" \
+	  "$(DESTDIR)$(libdir)/$(MATIEC_SHARED_LINK)"
 
 MATIEC_REVISION = $(shell $(SHELL) $(top_srcdir)/config/revision.sh $(top_srcdir))
 AM_CXXFLAGS += -DMATIEC_REVISION="\"${MATIEC_REVISION}\""

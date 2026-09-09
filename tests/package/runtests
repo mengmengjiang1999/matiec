@@ -12,6 +12,9 @@ installed_lib="$stage$PACKAGE_LIBDIR"
 installed_data="$stage$PACKAGE_DATADIR/matiec/lib"
 test -f "$installed_include/matiec/api.h"
 test -f "$installed_lib/libmatiec.a"
+test -f "$installed_lib/$PACKAGE_SHARED_REAL"
+test -L "$installed_lib/$PACKAGE_SHARED_ABI"
+test -L "$installed_lib/$PACKAGE_SHARED_LINK"
 test -f "$installed_lib/pkgconfig/matiec.pc"
 test -f "$installed_data/ieclib.txt"
 test -f "$installed_data/C/iec_types.h"
@@ -20,9 +23,14 @@ ${CC:-cc} ${CPPFLAGS:-} ${CFLAGS:-} -I"$installed_include" \
   -c "$PACKAGE_CONSUMER" \
   -o "$work/consumer.o"
 ${CXX:-c++} ${CXXFLAGS:-} "$work/consumer.o" -L"$installed_lib" \
-  -lmatiec -pthread ${LDFLAGS:-} \
-  -o "$work/consumer"
-"$work/consumer" "$installed_data"
+  -lmatiec -pthread ${LDFLAGS:-} -o "$work/consumer-shared"
+LD_LIBRARY_PATH="$installed_lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" \
+DYLD_LIBRARY_PATH="$installed_lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" \
+  "$work/consumer-shared" "$installed_data"
+
+${CXX:-c++} ${CXXFLAGS:-} "$work/consumer.o" "$installed_lib/libmatiec.a" \
+  -pthread ${LDFLAGS:-} -o "$work/consumer-static"
+"$work/consumer-static" "$installed_data"
 
 if command -v pkg-config >/dev/null 2>&1; then
   PKG_CONFIG_PATH="$installed_lib/pkgconfig" \
@@ -32,5 +40,8 @@ fi
 "${MAKE:-make}" uninstall DESTDIR="$stage"
 test ! -e "$installed_include/matiec/api.h"
 test ! -e "$installed_lib/libmatiec.a"
+test ! -e "$installed_lib/$PACKAGE_SHARED_REAL"
+test ! -e "$installed_lib/$PACKAGE_SHARED_ABI"
+test ! -e "$installed_lib/$PACKAGE_SHARED_LINK"
 test ! -e "$installed_lib/pkgconfig/matiec.pc"
 test ! -e "$installed_data/ieclib.txt"

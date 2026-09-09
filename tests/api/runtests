@@ -2,6 +2,7 @@
 set -eu
 
 archive=${MATIEC_API_ARCHIVE:-libmatiec.a}
+shared=${MATIEC_API_SHARED:-}
 expected=${MATIEC_API_SYMBOLS:-tests/api/public-symbols.txt}
 header=${MATIEC_API_HEADER_TEST:-tests/api/header_compatibility.c}
 source_include=${MATIEC_API_INCLUDE:-include}
@@ -16,6 +17,20 @@ nm -g "$archive" | awk '
   }
 ' | LC_ALL=C sort -u > "$work/actual-symbols.txt"
 diff -u "$expected" "$work/actual-symbols.txt"
+
+if test -n "$shared"; then
+  case $shared in
+    *.dylib) nm -gU "$shared" ;;
+    *) nm -D --defined-only "$shared" ;;
+  esac | awk '
+    NF >= 2 && $NF ~ /^_?matiec_/ {
+      name = $NF
+      sub(/^_/, "", name)
+      print name
+    }
+  ' | LC_ALL=C sort -u > "$work/actual-shared-symbols.txt"
+  diff -u "$expected" "$work/actual-shared-symbols.txt"
+fi
 
 ${CC:-cc} ${CPPFLAGS:-} ${CFLAGS:-} -std=c11 -I"$source_include" \
   -c "$header" -o "$work/header-c.o"
