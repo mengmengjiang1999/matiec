@@ -5,32 +5,51 @@
 #include <utility>
 
 namespace matiec {
+namespace {
+std::string generic_code(DiagnosticSeverity severity, DiagnosticPhase phase) {
+  const char severity_letter[] = {'N', 'W', 'E', 'F'};
+  const unsigned phase_number = static_cast<unsigned>(phase);
+  return std::string("MATIEC-") + severity_letter[static_cast<unsigned>(severity)] +
+         std::to_string(phase_number > 4 ? 0 : phase_number) + "000";
+}
+}  // namespace
 
 void DiagnosticEngine::report(DiagnosticSeverity severity, std::string message,
-                              SourceRange range) {
+                              SourceRange range, std::string code) {
   if (limit_ != 0 && diagnostics_.size() >= limit_) {
     limit_exceeded_ = true;
     diagnostics_.back() = {DiagnosticSeverity::fatal,
-                           "Diagnostic limit exceeded", {}};
+                           "Diagnostic limit exceeded", {},
+                           "MATIEC-F0003", phase_};
     return;
   }
-  diagnostics_.push_back({severity, std::move(message), std::move(range)});
+  if (code.empty()) code = generic_code(severity, phase_);
+  diagnostics_.push_back(
+      {severity, std::move(message), std::move(range), std::move(code), phase_});
 }
 
-void DiagnosticEngine::note(std::string message, SourceRange range) {
-  report(DiagnosticSeverity::note, std::move(message), std::move(range));
+void DiagnosticEngine::note(std::string message, SourceRange range,
+                            std::string code) {
+  report(DiagnosticSeverity::note, std::move(message), std::move(range),
+         std::move(code));
 }
 
-void DiagnosticEngine::warning(std::string message, SourceRange range) {
-  report(DiagnosticSeverity::warning, std::move(message), std::move(range));
+void DiagnosticEngine::warning(std::string message, SourceRange range,
+                               std::string code) {
+  report(DiagnosticSeverity::warning, std::move(message), std::move(range),
+         std::move(code));
 }
 
-void DiagnosticEngine::error(std::string message, SourceRange range) {
-  report(DiagnosticSeverity::error, std::move(message), std::move(range));
+void DiagnosticEngine::error(std::string message, SourceRange range,
+                             std::string code) {
+  report(DiagnosticSeverity::error, std::move(message), std::move(range),
+         std::move(code));
 }
 
-void DiagnosticEngine::fatal(std::string message, SourceRange range) {
-  report(DiagnosticSeverity::fatal, std::move(message), std::move(range));
+void DiagnosticEngine::fatal(std::string message, SourceRange range,
+                             std::string code) {
+  report(DiagnosticSeverity::fatal, std::move(message), std::move(range),
+         std::move(code));
 }
 
 const std::vector<Diagnostic> &DiagnosticEngine::diagnostics() const {
@@ -81,5 +100,9 @@ void DiagnosticEngine::clear() {
 void DiagnosticEngine::set_limit(std::size_t maximum) { limit_ = maximum; }
 
 bool DiagnosticEngine::limit_exceeded() const { return limit_exceeded_; }
+
+void DiagnosticEngine::set_phase(DiagnosticPhase phase) { phase_ = phase; }
+
+DiagnosticPhase DiagnosticEngine::phase() const { return phase_; }
 
 }  // namespace matiec

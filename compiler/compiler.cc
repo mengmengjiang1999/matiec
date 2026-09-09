@@ -26,12 +26,14 @@
 namespace matiec {
 
 CompilationResult Compiler::compile(CompilationContext &context) const {
+  context.diagnostics().set_phase(DiagnosticPhase::source);
   context.analysis().clear();
   context.declaration_symbols().clear();
   context.experimental_syntax().clear();
   context.outputs().begin_compilation();
   if (context.source_path().empty()) {
-    context.diagnostics().error("No source path was provided");
+    context.diagnostics().error("No source path was provided", {},
+                                "MATIEC-E1001");
     return context.diagnostics().result();
   }
 
@@ -47,12 +49,14 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
       std::string error;
       if (!context.sources().load(&source, &error)) {
         context.diagnostics().error("Cannot load source " +
-                                    context.source_path() + ": " + error);
+                                        context.source_path() + ": " + error,
+                                    {}, "MATIEC-E1002");
         return context.diagnostics().result();
       }
       source_loaded = true;
       if (source.size() > context.limits().max_source_bytes) {
-        context.diagnostics().fatal("Source byte limit exceeded");
+        context.diagnostics().fatal("Source byte limit exceeded", {},
+                                    "MATIEC-F1003");
         return context.diagnostics().result();
       }
     }
@@ -62,7 +66,8 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
       std::string error;
       if (!context.sources().load(&source, &error)) {
         context.diagnostics().error("Cannot load source " +
-                                    context.source_path() + ": " + error);
+                                        context.source_path() + ": " + error,
+                                    {}, "MATIEC-E1002");
         return context.diagnostics().result();
       }
     }
@@ -82,8 +87,9 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
               source.size(), &utf8_error)) {
         SourceLocation location{context.source_path(), utf8_error.line,
                                 utf8_error.column, utf8_error.offset};
-        context.diagnostics().error("Malformed UTF-8 source: " + utf8_error.reason,
-                                    {location, location});
+        context.diagnostics().error(
+            "Malformed UTF-8 source: " + utf8_error.reason,
+            {location, location, true}, "MATIEC-E1004");
         return context.diagnostics().result();
       }
     }
@@ -102,6 +108,7 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
       source = std::move(namespace_result.source);
     }
 
+    context.diagnostics().set_phase(DiagnosticPhase::parser);
     ActiveParserStateScope compilation_session(context.parser_state());
     LegacyGlobalStateAdapter legacy_state(context, options);
 
@@ -112,6 +119,7 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     if (parse_status < 0)
       return CompilationResult::failure();
     cancellation_checkpoint();
+    context.diagnostics().set_phase(DiagnosticPhase::semantic);
 
     if (language_profile_is_experimental(options.language_profile)) {
       if (!register_experimental_modern_library_from_ast(
@@ -149,6 +157,7 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
       return context.diagnostics().result();
 
     cancellation_checkpoint();
+    context.diagnostics().set_phase(DiagnosticPhase::generation);
     if (stage4(ordered_tree_root, context) < 0)
       return context.diagnostics().result();
 
@@ -159,8 +168,11 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
 
     return CompilationResult::success();
   } catch (const CompilationAbort &abort) {
-    if (!abort.diagnostic_reported())
-      context.diagnostics().fatal(abort.what());
+    if (!abort.diagnostic_reported()) {
+      const bool cancelled = std::string(abort.what()) == "Compilation cancelled";
+      context.diagnostics().fatal(
+          abort.what(), {}, cancelled ? "MATIEC-F0001" : "MATIEC-F2000");
+    }
     return context.diagnostics().has_errors()
                ? context.diagnostics().result()
                : CompilationResult::failure();
@@ -191,8 +203,11 @@ std::vector<CompilationResult> Compiler::compile_parallel(
   for (const std::pair<CompilationContext *const, std::size_t> &entry :
        occurrences) {
     if (entry.second > 1)
+      entry.first->diagnostics().set_phase(DiagnosticPhase::api);
+    if (entry.second > 1)
       entry.first->diagnostics().error(
-          "A compilation context may appear only once in a parallel batch");
+          "A compilation context may appear only once in a parallel batch", {},
+          "MATIEC-E0002");
   }
   for (std::size_t index = 0; index < contexts.size(); ++index) {
     if (duplicate[index])

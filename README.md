@@ -346,7 +346,7 @@ Filesystem include pragmas still resolve through `include_directory`.
 
 This C++ interface remains a source-level integration API. The stable binary
 boundary begins with the C-compatible [`include/matiec/api.h`](include/matiec/api.h)
-version contract. API version 1.5 provides opaque context lifecycle, copied
+version contract. API version 1.6 provides opaque context lifecycle, copied
 memory and file inputs, essential per-compilation options, and structured
 success/error counts without exposing C++ implementation layouts. It also
 supports ordered diagnostic delivery and generated-output callbacks, allowing
@@ -364,7 +364,7 @@ if (matiec_context_create(&context) == MATIEC_STATUS_OK) {
   for (size_t i = 0; i < matiec_context_diagnostic_count(context); ++i) {
     matiec_diagnostic_t diagnostic = MATIEC_DIAGNOSTIC_INIT;
     matiec_context_get_diagnostic(context, i, &diagnostic);
-    /* consume diagnostic.message and its optional source range */
+    /* consume stable diagnostic.code, phase, message, and optional range */
   }
   matiec_context_destroy(context);
 }
@@ -391,6 +391,12 @@ context compiles. Cancellation remains sticky until
 `matiec_context_reset_cancel`, making context reuse explicit and predictable.
 Cancellation and exhausted budgets return a normal API status with
 `result.succeeded == 0` and an explanatory diagnostic.
+
+Diagnostics expose stable `MATIEC-{N,W,E,F}dddd` identifiers and an API,
+source, parser, semantic, or generation phase. `range_valid` explicitly guards
+the file/line/column range; `offset_valid` independently guards zero-based byte
+offsets. This lets IDE integrations classify and navigate diagnostics without
+parsing presentation text.
 
 ## Install the embedding library
 

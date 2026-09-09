@@ -80,8 +80,26 @@ matiec_diagnostic_severity_t convert_severity(
   }
 }
 
+matiec_diagnostic_phase_t convert_phase(matiec::DiagnosticPhase phase) {
+  switch (phase) {
+    case matiec::DiagnosticPhase::api:
+      return MATIEC_DIAGNOSTIC_PHASE_API;
+    case matiec::DiagnosticPhase::source:
+      return MATIEC_DIAGNOSTIC_PHASE_SOURCE;
+    case matiec::DiagnosticPhase::parser:
+      return MATIEC_DIAGNOSTIC_PHASE_PARSER;
+    case matiec::DiagnosticPhase::semantic:
+      return MATIEC_DIAGNOSTIC_PHASE_SEMANTIC;
+    case matiec::DiagnosticPhase::generation:
+      return MATIEC_DIAGNOSTIC_PHASE_GENERATION;
+    default:
+      return MATIEC_DIAGNOSTIC_PHASE_UNKNOWN;
+  }
+}
+
 void fill_diagnostic(const matiec::Diagnostic &source,
                      matiec_diagnostic_t *destination) {
+  const uint32_t destination_size = destination->struct_size;
   destination->severity = convert_severity(source.severity);
   destination->message = source.message.c_str();
   if (source.range.valid()) {
@@ -97,6 +115,21 @@ void fill_diagnostic(const matiec::Diagnostic &source,
     destination->end_line = 0;
     destination->end_column = 0;
   }
+  if (destination_size >= offsetof(matiec_diagnostic_t, phase))
+    destination->code = source.code.c_str();
+  if (destination_size >= offsetof(matiec_diagnostic_t, range_valid))
+    destination->phase = convert_phase(source.phase);
+  if (destination_size >= offsetof(matiec_diagnostic_t, begin_offset))
+    destination->range_valid = source.range.valid() ? 1u : 0u;
+  if (destination_size >= offsetof(matiec_diagnostic_t, end_offset))
+    destination->begin_offset = source.range.begin.offset;
+  if (destination_size >= offsetof(matiec_diagnostic_t, offset_valid))
+    destination->end_offset = source.range.end.offset;
+  if (destination_size >= offsetof(matiec_diagnostic_t, reserved)) {
+    destination->offset_valid = source.range.offsets_valid ? 1u : 0u;
+  }
+  if (destination_size >= sizeof(matiec_diagnostic_t))
+    destination->reserved = 0;
 }
 
 void deliver_diagnostics(matiec_context_t *context) {
@@ -254,7 +287,7 @@ matiec_status_t matiec_context_get_diagnostic(
   if (context == nullptr) return MATIEC_STATUS_INVALID_ARGUMENT;
   if (diagnostic == nullptr)
     return invalid(context, "Diagnostic view is required");
-  if (diagnostic->struct_size < sizeof(matiec_diagnostic_t))
+  if (diagnostic->struct_size < MATIEC_DIAGNOSTIC_LEGACY_SIZE)
     return invalid(context, "Diagnostic structure is too small");
   const std::vector<matiec::Diagnostic> &items =
       context->value.diagnostics().diagnostics();

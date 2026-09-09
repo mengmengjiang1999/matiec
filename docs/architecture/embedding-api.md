@@ -85,6 +85,16 @@ stages. Hosts must call `matiec_context_reset_cancel` before deliberately
 reusing a cancelled context; reset and all other configuration operations must
 not race with compilation.
 
+Version 1.6 extends `matiec_diagnostic_t` after its original prefix with a
+stable code, compiler phase, explicit range validity, and optional zero-based
+byte offsets. Codes use `MATIEC-{N,W,E,F}dddd`; message wording remains
+presentation text and may evolve independently. `range_valid` guards the
+file/line/column fields, while `offset_valid` guards the half-open byte offsets.
+
+Diagnostic retrieval accepts `MATIEC_DIAGNOSTIC_LEGACY_SIZE` and writes only
+the original fields for such callers. Full-size structures initialized with
+`MATIEC_DIAGNOSTIC_INIT`, including callback views, receive all 1.6 metadata.
+
 ## Installed package
 
 `make install` provides the public header as `<matiec/api.h>`, a self-contained

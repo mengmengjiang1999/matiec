@@ -85,7 +85,8 @@ void OutputManager::record_failure(OutputSink &sink,
     diagnostics_.error(
         result.message.empty()
             ? "Error writing generated output"
-            : "Error writing generated output: " + result.message);
+            : "Error writing generated output: " + result.message,
+        {}, "MATIEC-E4001");
   }
 }
 

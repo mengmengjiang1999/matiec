@@ -25,12 +25,13 @@ int main() {
 
   const matiec::SourceLocation begin{"program.st", 4, 2, 18};
   const matiec::SourceLocation end{"program.st", 4, 7, 23};
-  const matiec::SourceRange range{begin, end};
+  const matiec::SourceRange range{begin, end, true};
   assert(begin.valid());
   assert(range.valid());
 
   const matiec::Diagnostic diagnostic{
-      matiec::DiagnosticSeverity::warning, "example", range};
+      matiec::DiagnosticSeverity::warning, "example", range,
+      "MATIEC-W3000", matiec::DiagnosticPhase::semantic};
   assert(std::string(matiec::diagnostic_severity_name(diagnostic.severity)) == "warning");
 
   const matiec::CompilationResult success = matiec::CompilationResult::success(2);

@@ -53,6 +53,7 @@ struct SourceLocation {
 struct SourceRange {
   SourceLocation begin;
   SourceLocation end;
+  bool offsets_valid = false;
 
   bool valid() const;
 };
@@ -64,10 +65,21 @@ enum class DiagnosticSeverity {
   fatal
 };
 
+enum class DiagnosticPhase {
+  api,
+  source,
+  parser,
+  semantic,
+  generation,
+  unknown
+};
+
 struct Diagnostic {
   DiagnosticSeverity severity = DiagnosticSeverity::error;
   std::string message;
   SourceRange range;
+  std::string code;
+  DiagnosticPhase phase = DiagnosticPhase::unknown;
 };
 
 struct CompilationResult {

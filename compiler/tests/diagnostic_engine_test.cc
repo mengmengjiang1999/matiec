@@ -9,6 +9,7 @@ int main() {
   const matiec::SourceRange range{
       {"program.st", 8, 3, 40}, {"program.st", 8, 9, 46}};
 
+  diagnostics.set_phase(matiec::DiagnosticPhase::semantic);
   diagnostics.note("checking declaration");
   diagnostics.warning("deprecated form", range);
   diagnostics.error("invalid declaration", range);
@@ -18,6 +19,10 @@ int main() {
   assert(diagnostics.warning_count() == 1);
   assert(diagnostics.error_count() == 2);
   assert(diagnostics.has_errors());
+  assert(diagnostics.diagnostics()[2].code == "MATIEC-E3000");
+  assert(diagnostics.diagnostics()[2].phase ==
+         matiec::DiagnosticPhase::semantic);
+  assert(diagnostics.diagnostics()[2].range.valid());
   assert(!diagnostics.result().succeeded());
 
   std::ostringstream rendered;

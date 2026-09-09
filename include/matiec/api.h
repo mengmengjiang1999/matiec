@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #define MATIEC_API_VERSION_MAJOR 1u
-#define MATIEC_API_VERSION_MINOR 5u
+#define MATIEC_API_VERSION_MINOR 6u
 #define MATIEC_API_VERSION_PATCH 0u
 
 #define MATIEC_API_VERSION_ENCODE(major, minor, patch) \
@@ -66,6 +66,15 @@ typedef enum matiec_diagnostic_severity {
   MATIEC_DIAGNOSTIC_FATAL = 3
 } matiec_diagnostic_severity_t;
 
+typedef enum matiec_diagnostic_phase {
+  MATIEC_DIAGNOSTIC_PHASE_API = 0,
+  MATIEC_DIAGNOSTIC_PHASE_SOURCE = 1,
+  MATIEC_DIAGNOSTIC_PHASE_PARSER = 2,
+  MATIEC_DIAGNOSTIC_PHASE_SEMANTIC = 3,
+  MATIEC_DIAGNOSTIC_PHASE_GENERATION = 4,
+  MATIEC_DIAGNOSTIC_PHASE_UNKNOWN = 5
+} matiec_diagnostic_phase_t;
+
 typedef struct matiec_diagnostic {
   uint32_t struct_size;
   matiec_diagnostic_severity_t severity;
@@ -75,11 +84,22 @@ typedef struct matiec_diagnostic {
   uint64_t column;
   uint64_t end_line;
   uint64_t end_column;
+  const char *code;
+  matiec_diagnostic_phase_t phase;
+  uint32_t range_valid;
+  uint64_t begin_offset;
+  uint64_t end_offset;
+  uint32_t offset_valid;
+  uint32_t reserved;
 } matiec_diagnostic_t;
+
+#define MATIEC_DIAGNOSTIC_LEGACY_SIZE \
+  ((uint32_t)offsetof(matiec_diagnostic_t, code))
 
 #define MATIEC_DIAGNOSTIC_INIT \
   { (uint32_t)sizeof(matiec_diagnostic_t), MATIEC_DIAGNOSTIC_ERROR, NULL, NULL, \
-    0u, 0u, 0u, 0u }
+    0u, 0u, 0u, 0u, NULL, MATIEC_DIAGNOSTIC_PHASE_UNKNOWN, 0u, 0u, 0u, \
+    0u, 0u }
 
 typedef void (*matiec_diagnostic_callback_t)(
     void *user_data, const matiec_diagnostic_t *diagnostic);
