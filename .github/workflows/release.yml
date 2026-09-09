@@ -1,0 +1,56 @@
+name: release-artifacts
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  source-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes autoconf automake bison flex g++ libfl-dev make pkg-config
+
+      - name: Verify tag and declared versions
+        env:
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: config/check-release-version.sh
+
+      - name: Build and verify source distribution
+        run: |
+          autoreconf --install
+          ./configure
+          make --jobs=2 distcheck
+
+      - name: Generate checksum
+        run: sha256sum matiec-*.tar.gz > matiec-source.sha256
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: matiec-source-${{ github.ref_name }}
+          path: |
+            matiec-*.tar.gz
+            matiec-source.sha256
+          if-no-files-found: error
+
+      - name: Publish GitHub Release artifacts
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
+            gh release create "$GITHUB_REF_NAME" --generate-notes --verify-tag
+          gh release upload "$GITHUB_REF_NAME" matiec-*.tar.gz \
+            matiec-source.sha256 --clobber

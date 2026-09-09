@@ -1,5 +1,88 @@
 include common.mk
 
+# Public and internal headers are explicit distribution inputs so a release
+# archive can be rebuilt without relying on the original checkout.
+noinst_HEADERS = \
+	absyntax/absyntax.hh \
+	absyntax/visitor.hh \
+	absyntax_utils/absyntax_utils.hh \
+	absyntax_utils/add_en_eno_param_decl.hh \
+	absyntax_utils/array_dimension_iterator.hh \
+	absyntax_utils/case_element_iterator.hh \
+	absyntax_utils/debug_ast.hh \
+	absyntax_utils/decompose_var_instance_name.hh \
+	absyntax_utils/function_call_iterator.hh \
+	absyntax_utils/function_call_param_iterator.hh \
+	absyntax_utils/function_param_iterator.hh \
+	absyntax_utils/get_datatype_info.hh \
+	absyntax_utils/get_sizeof_datatype.hh \
+	absyntax_utils/get_var_name.hh \
+	absyntax_utils/search_base_type.hh \
+	absyntax_utils/search_fb_instance_decl.hh \
+	absyntax_utils/search_fb_typedecl.hh \
+	absyntax_utils/search_il_label.hh \
+	absyntax_utils/search_var_instance_decl.hh \
+	absyntax_utils/search_varfb_instance_type.hh \
+	absyntax_utils/spec_init_separator.hh \
+	absyntax_utils/type_initial_value.hh \
+	compiler/access_variable_ast.hh \
+	compiler/access_variable_normalizer.hh \
+	compiler/analysis_store.hh \
+	compiler/ast_arena.hh \
+	compiler/compilation_abort.hh \
+	compiler/compilation_context.hh \
+	compiler/compiler.hh \
+	compiler/compiler_types.hh \
+	compiler/declaration_symbol_tables.hh \
+	compiler/diagnostic_engine.hh \
+	compiler/language_feature_catalog.hh \
+	compiler/legacy_global_state_adapter.hh \
+	compiler/modern_library_registry.hh \
+	compiler/namespace_ast_analysis.hh \
+	compiler/namespace_normalizer.hh \
+	compiler/object_method_ast_analysis.hh \
+	compiler/object_method_call_lowering.hh \
+	compiler/object_method_compatibility_ast.hh \
+	compiler/output_manager.hh \
+	compiler/output_sink.hh \
+	compiler/parser_state.hh \
+	compiler/semantic_pass.hh \
+	compiler/semantic_pass_manager.hh \
+	compiler/source_manager.hh \
+	compiler/utf8_validation.hh \
+	main.hh \
+	stage1_2/create_enumtype_conversion_functions.hh \
+	stage1_2/stage1_2.hh \
+	stage1_2/stage1_2_priv.hh \
+	stage3/array_range_check.hh \
+	stage3/case_elements_check.hh \
+	stage3/constant_folding.hh \
+	stage3/datatype_functions.hh \
+	stage3/declaration_check.hh \
+	stage3/enum_declaration_check.hh \
+	stage3/fill_candidate_datatypes.hh \
+	stage3/flow_control_analysis.hh \
+	stage3/forced_narrow_candidate_datatypes.hh \
+	stage3/lvalue_check.hh \
+	stage3/narrow_candidate_datatypes.hh \
+	stage3/print_datatypes_error.hh \
+	stage3/remove_forward_dependencies.hh \
+	stage3/semantic_diagnostic_macros.hh \
+	stage3/semantic_diagnostics.hh \
+	stage3/stage3.hh \
+	stage4/generate_c/generate_c.hh \
+	stage4/generate_c/generate_c_base.hh \
+	stage4/generate_c/generate_c_internal.hh \
+	stage4/generate_c/plc.h \
+	stage4/generate_c/types.h \
+	stage4/generate_iec/generate_iec.hh \
+	stage4/generator_analysis_access.hh \
+	stage4/resolution_analysis_access.hh \
+	stage4/stage4.hh \
+	util/dsymtable.hh \
+	util/strdup.hh \
+	util/symtable.hh
+
 bin_PROGRAMS = iec2c iec2iec
 
 SUBDIRS = compiler absyntax absyntax_utils stage1_2 stage3 stage4
@@ -56,12 +139,14 @@ TESTS = \
 	tests/package/runtests
 
 EXTRA_DIST = \
-	$(TESTS) \
+	$(DISTCHECK_SUPPORT) \
+	$(filter-out $(check_PROGRAMS),$(TESTS)) \
 	tests/characterization/expected.sha256 \
 	tests/characterization/instruction_list.il \
 	include/matiec/api.h \
 	matiec.pc.in \
 	config/merge-static-libraries.sh \
+	config/check-release-version.sh \
 	tests/package/consumer.c \
 	tests/package/runtests \
 	tests/api/header_compatibility.c \
@@ -91,7 +176,77 @@ EXTRA_DIST = \
 	config/thread_localize_generated_frontend.pl \
 	.git_archival.txt
 
-.PHONY: check-api check-asan check-ubsan check-tsan
+# Files consumed through generated-source includes or runtime test discovery
+# are not inferred by Automake and must be named explicitly.
+DISTCHECK_SUPPORT = \
+	.github/workflows/release.yml \
+	absyntax/absyntax.def \
+	docs/releasing.md \
+	stage1_2/standard_function_names.c \
+	tests/cli/profile-fixtures/assert-invalid.st \
+	tests/cli/profile-fixtures/assert-multiline.st \
+	tests/cli/profile-fixtures/assert.st \
+	tests/cli/profile-fixtures/legacy-assert-function.st \
+	tests/cli/profile-fixtures/var-access-hierarchical-invalid.st \
+	tests/cli/profile-fixtures/var-access-hierarchical.st \
+	tests/cli/profile-fixtures/var-access-unresolved.st \
+	tests/cli/profile-fixtures/var-access.st \
+	tests/initialization/bad_array_scalar_for_struct_element.st \
+	tests/initialization/bad_array_size_overflow.st \
+	tests/initialization/bad_array_string_for_scalar_element.st \
+	tests/initialization/bad_array_struct_for_scalar_element.st \
+	tests/initialization/bad_array_too_many_in_struct.st \
+	tests/initialization/bad_array_too_many_multidim.st \
+	tests/initialization/bad_array_too_many_nested.st \
+	tests/initialization/bad_array_too_many_of_struct.st \
+	tests/initialization/bad_array_too_many_repeated.st \
+	tests/initialization/bad_array_too_many_values.st \
+	tests/initialization/bad_array_unknown_struct_element.st \
+	tests/initialization/bad_array_unsigned_lower_bound.st \
+	tests/initialization/bad_constant_function_block.st \
+	tests/initialization/bad_struct_array_for_scalar_element.st \
+	tests/initialization/bad_struct_scalar_for_struct_element.st \
+	tests/initialization/bad_struct_unknown_element.st \
+	tests/initialization/ok_array_enum.st \
+	tests/initialization/ok_array_enum_in_typedecl.st \
+	tests/initialization/ok_array_fewer_values.st \
+	tests/initialization/ok_array_inline_in_struct.st \
+	tests/initialization/ok_array_int64_min_bound.st \
+	tests/initialization/ok_array_multidim.st \
+	tests/initialization/ok_array_nested.st \
+	tests/initialization/ok_array_of_struct.st \
+	tests/initialization/ok_array_of_struct_in_struct.st \
+	tests/initialization/ok_array_of_struct_repeated.st \
+	tests/initialization/ok_array_repeated_value.st \
+	tests/initialization/ok_array_scalar_in_struct.st \
+	tests/initialization/ok_array_scalar_in_typedecl.st \
+	tests/initialization/ok_function_block_instance.st \
+	tests/initialization/ok_struct_element_order.st \
+	tests/initialization/ok_struct_enum.st \
+	tests/initialization/ok_struct_nested.st \
+	tests/syntax/identifier/basic_code.test \
+	tests/syntax/identifier/identifier_as_configuration.test \
+	tests/syntax/identifier/identifier_as_datatype.test \
+	tests/syntax/identifier/identifier_as_enumerationvalue.test \
+	tests/syntax/identifier/identifier_as_function1.test \
+	tests/syntax/identifier/identifier_as_function2.test \
+	tests/syntax/identifier/identifier_as_functionblock.test \
+	tests/syntax/identifier/identifier_as_label.test \
+	tests/syntax/identifier/identifier_as_program.test \
+	tests/syntax/identifier/identifier_as_variable1.test \
+	tests/syntax/identifier/identifier_as_variable2.test \
+	tests/syntax/identifier/identifier_in_sfc.test \
+	util/dsymtable.cc \
+	util/symtable.cc
+
+.PHONY: check-api check-asan check-ubsan check-tsan check-release-version release-check
+
+check-local: check-release-version
+
+check-release-version:
+	$(SHELL) $(top_srcdir)/config/check-release-version.sh
+
+release-check: check-release-version distcheck
 
 check-api: all
 	$(TESTS_ENVIRONMENT) $(SHELL) $(top_srcdir)/tests/api/runtests

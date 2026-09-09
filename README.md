@@ -13,7 +13,8 @@ and textual Sequential Function Chart programs.
 ![License](https://img.shields.io/badge/license-GPL--3.0%2B-blue)
 
 [Get started](#quick-start) · [Use the compiler](#usage) ·
-[Explore the architecture](#architecture) · [Read the docs](#documentation)
+[Explore the architecture](#architecture) · [Read the docs](#documentation) ·
+[Release 1.6.0](docs/releasing.md)
 
 </div>
 
@@ -442,6 +443,9 @@ make check-ubsan
 
 # ThreadSanitizer (on supported compiler runtimes)
 make check-tsan
+
+# Version alignment plus a clean source-package build/install/uninstall cycle
+make release-check
 ```
 
 GitHub Actions runs all three sanitizer suites as independent Linux jobs for every
@@ -486,6 +490,7 @@ openspec/changes/      Archived change records
 - [IEC 61131-3 演进与实验性 2025 Profile 决策](docs/standards/iec61131-3-evolution.zh-CN.md)
 - [Compiler boundaries](docs/architecture/compiler-boundaries.md)
 - [Versioned embedding API](docs/architecture/embedding-api.md)
+- [Release process](docs/releasing.md)
 - [Legacy global-state adapters](docs/architecture/legacy-global-state-adapters.md)
 - [AST ownership inventory](docs/architecture/ast-ownership-inventory.md)
 - [Architecture decisions](docs/decisions/)
@@ -506,11 +511,11 @@ boundaries:
 - changes to `configure.ac` or `Makefile.am` include refreshed Autotools files.
 
 Run `make check` before publishing. Use the sanitizer targets for parser-state,
-ownership, memory-lifetime, or concurrency changes.
+ownership, memory-lifetime, or concurrency changes. Before tagging a release,
+run `make release-check` and follow the [release process](docs/releasing.md).
 
 ## Roadmap boundaries
 
-- Versioned embedding API/ABI
 - Direct graphical FBD and LD input
 - Validation against later IEC 61131-3 editions
 

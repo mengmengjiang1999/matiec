@@ -143,5 +143,7 @@ documents a borrowed view or transfer.
 
 The existing `matiec::Compiler` and `matiec::CompilationContext` classes
 remain supported source-integration interfaces, but their C++ layouts and STL
-signatures are not part of the stable binary ABI. The package version reported
-by the command-line tools is independent from the embedding API version.
+signatures are not part of the stable binary ABI. Beginning with release 1.6.0,
+the package, public API, runtime API string, pkg-config metadata, and full shared
+library filename use the same version. `make check-release-version` enforces
+that policy; see the [release process](../releasing.md).

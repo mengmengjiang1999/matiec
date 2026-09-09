@@ -75,6 +75,7 @@ version; incompatible changes SHALL require a major API version change.
 - **WHEN** a C++17 translation unit includes the installed public header
 - **THEN** it compiles with C linkage declarations and no C++ implementation
   types exposed
+
 ### Requirement: Callback failures are context-local
 
 The embedding adapter SHALL contain resolver and output callback failures within
@@ -84,3 +85,13 @@ their owning compilation and SHALL NOT stop independent batch jobs.
 
 - **WHEN** a C++ host callback throws while another context compiles
 - **THEN** the owning result fails with a diagnostic and the independent result completes normally
+
+### Requirement: Release and API versions are aligned
+
+The 1.6 release line SHALL use the same semantic version for the package,
+runtime embedding API string, public API macros, and shared-library real name.
+
+#### Scenario: A host inspects installed metadata
+
+- **WHEN** version 1.6.0 is installed
+- **THEN** pkg-config, the runtime API, and the shared-library filename report 1.6.0

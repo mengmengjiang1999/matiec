@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([matiec], [0.1], [msousa@fe.up.pt, beremiz-devel@lists.sourceforge.net])
+AC_INIT([matiec], [1.6.0], [msousa@fe.up.pt, beremiz-devel@lists.sourceforge.net])
 AC_CONFIG_HEADERS([config/config.h])
 AC_CONFIG_AUX_DIR(config)
 AC_CANONICAL_HOST

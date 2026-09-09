@@ -20,6 +20,12 @@ CLEANFILES = \
 	$(FRONTEND_ISOLATION_STAMP)
 
 $(FRONTEND_ISOLATION_STAMP): iec_flex.cc iec_bison.cc iec_bison.hh $(top_srcdir)/config/thread_localize_generated_frontend.pl
+	if test "$(srcdir)" != "."; then \
+	  cp "$(srcdir)/iec_flex.cc" iec_flex.cc; \
+	  cp "$(srcdir)/iec_bison.cc" iec_bison.cc; \
+	  cp "$(srcdir)/iec_bison.hh" iec_bison.hh; \
+	  chmod u+w iec_flex.cc iec_bison.cc iec_bison.hh; \
+	fi
 	$(top_srcdir)/config/thread_localize_generated_frontend.pl iec_flex.cc iec_bison.cc iec_bison.hh
 	touch $@
 
