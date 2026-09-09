@@ -6,9 +6,17 @@ SUBDIRS = compiler absyntax absyntax_utils stage1_2 stage3 stage4
 
 TESTS_ENVIRONMENT = \
 	CC='$(CC)' \
+	CPPFLAGS='$(CPPFLAGS)' \
+	CFLAGS='$(CFLAGS)' \
+	CXXFLAGS='$(CXXFLAGS)' \
+	LDFLAGS='$(LDFLAGS)' \
 	IEC2C='$(abs_top_builddir)/iec2c' \
 	IEC2IEC='$(abs_top_builddir)/iec2iec' \
 	MATIEC_LIBDIR='$(abs_top_srcdir)/lib' \
+	PACKAGE_INCLUDEDIR='$(includedir)' \
+	PACKAGE_LIBDIR='$(libdir)' \
+	PACKAGE_DATADIR='$(datadir)' \
+	PACKAGE_CONSUMER='$(abs_top_srcdir)/tests/package/consumer.c' \
 	SEQUENTIAL_VALID_INPUT='$(abs_top_srcdir)/tests/initialization/ok_array_scalar.st'
 
 TESTS = \
@@ -31,13 +39,18 @@ TESTS = \
 	tests/cli/runtests \
 	tests/architecture/runtests \
 	tests/syntax/identifier/runtests \
-	tests/characterization/runtests
+	tests/characterization/runtests \
+	tests/package/runtests
 
 EXTRA_DIST = \
 	$(TESTS) \
 	tests/characterization/expected.sha256 \
 	tests/characterization/instruction_list.il \
 	include/matiec/api.h \
+	matiec.pc.in \
+	config/merge-static-libraries.sh \
+	tests/package/consumer.c \
+	tests/package/runtests \
 	tests/cli/profile-fixtures/reference.st \
 	tests/cli/profile-fixtures/reference-null.st \
 	tests/cli/profile-fixtures/reference-incompatible.st \
@@ -71,6 +84,58 @@ check-ubsan:
 	tests/sanitizers/runtests undefined
 
 ACLOCAL_AMFLAGS=-I config
+
+matiecincludedir = $(includedir)/matiec
+matiecinclude_HEADERS = include/matiec/api.h
+
+pkgconfigdir = $(libdir)/pkgconfig
+nodist_pkgconfig_DATA = matiec.pc
+
+matieclibdir = $(datadir)/matiec/lib
+dist_matieclib_DATA = \
+	lib/bistable.txt \
+	lib/counter.txt \
+	lib/derivative_st.txt \
+	lib/edge_detection.txt \
+	lib/hysteresis_st.txt \
+	lib/ieclib.txt \
+	lib/integral_st.txt \
+	lib/pid_st.txt \
+	lib/ramp_st.txt \
+	lib/rtc.txt \
+	lib/sema.txt \
+	lib/standard_FB.txt \
+	lib/standard_functions.txt \
+	lib/timer.txt
+
+matiecruntimedir = $(matieclibdir)/C
+dist_matiecruntime_DATA = \
+	lib/C/accessor.h \
+	lib/C/iec_std_FB.h \
+	lib/C/iec_std_FB_no_ENENO.h \
+	lib/C/iec_std_functions.h \
+	lib/C/iec_std_lib.h \
+	lib/C/iec_types.h \
+	lib/C/iec_types_all.h
+
+MATIEC_COMPONENT_ARCHIVES = \
+	compiler/libcompiler.a \
+	stage1_2/libstage1_2.a \
+	stage1_2/libstage1_2_generated.a \
+	stage1_2/libstage1_2_parser_support.a \
+	stage3/libstage3.a \
+	stage4/libstage4_common.a \
+	stage4/generate_c/libstage4_c.a \
+	absyntax/libabsyntax.a \
+	absyntax_utils/libabsyntax_utils.a
+
+matiecarchivedir = $(libdir)
+nodist_matiecarchive_DATA = libmatiec.a
+CLEANFILES = libmatiec.a
+
+libmatiec.a: $(MATIEC_COMPONENT_ARCHIVES) $(top_srcdir)/config/merge-static-libraries.sh
+	$(SHELL) $(top_srcdir)/config/merge-static-libraries.sh "$(AR)" "$@" $(MATIEC_COMPONENT_ARCHIVES)
+	$(RANLIB) "$@"
 
 MATIEC_REVISION = $(shell $(SHELL) $(top_srcdir)/config/revision.sh $(top_srcdir))
 AM_CXXFLAGS += -DMATIEC_REVISION="\"${MATIEC_REVISION}\""

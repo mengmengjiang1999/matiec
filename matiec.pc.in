@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+datarootdir=@datarootdir@
+datadir=@datadir@
+matieclibdir=${datadir}/matiec/lib
+
+Name: matiec
+Description: IEC 61131-3 compiler embedding API
+Version: @PACKAGE_VERSION@
+Libs: -L${libdir} -lmatiec
+Cflags: -I${includedir}

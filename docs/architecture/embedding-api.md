@@ -57,6 +57,25 @@ results and a context diagnostic while independent entries may still succeed.
 Callbacks configured on batch contexts execute on worker threads, so callers
 must synchronize user data shared by more than one context.
 
+## Installed package
+
+`make install` provides the public header as `<matiec/api.h>`, a self-contained
+static `libmatiec.a` with the C code generator, and `matiec.pc` metadata. Compile
+C source with a C compiler, then use a C++ linker for the final executable
+because the library implementation uses the C++ runtime:
+
+```sh
+cc $(pkg-config --cflags matiec) -c host.c
+c++ host.o $(pkg-config --libs matiec) -pthread -o host
+```
+
+The compiler's IEC definitions install under
+`${datadir}/matiec/lib`; pass that path to
+`matiec_context_set_include_directory`. Generated-C runtime headers install in
+the `C` child directory. The initial package is static-only; the public C ABI is
+stable, but a shared-library release and its platform versioning policy remain a
+separate concern.
+
 Compatibility follows these rules:
 
 - a major increment may remove symbols, change signatures, or change ownership;

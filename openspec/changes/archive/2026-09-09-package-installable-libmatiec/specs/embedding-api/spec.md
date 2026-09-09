@@ -1,8 +1,5 @@
-# embedding-api Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change define-versioned-embedding-api. Update Purpose after archive.
-## Requirements
 ### Requirement: Versioned public embedding ABI
 
 The project SHALL install the versioned C embedding header, a self-contained

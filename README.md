@@ -376,6 +376,22 @@ automatic positive worker count. Contexts must not be duplicated in a batch,
 and shared callback state must be synchronized because callbacks can run on
 worker threads.
 
+## Install the embedding library
+
+```sh
+./configure --prefix=/desired/prefix
+make
+make install
+```
+
+The install contains `<matiec/api.h>`, a self-contained static
+`libmatiec.a`, `matiec.pc`, IEC library definitions under
+`share/matiec/lib`, and generated-C runtime headers under
+`share/matiec/lib/C`. A C host should compile its source with `cc` and perform
+the final static-library link with `c++`; `pkg-config --cflags --libs matiec`
+provides the installed include and library paths. Configure each embedding
+context's include directory to the installed `share/matiec/lib` path.
+
 See the
 [embedding API contract](docs/architecture/embedding-api.md). AST pointers are
 context-owned and must not outlive their `CompilationContext`.

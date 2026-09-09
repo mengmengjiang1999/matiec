@@ -1,0 +1,36 @@
+#!/bin/sh
+set -eu
+
+stage=$(mktemp -d "${TMPDIR:-/tmp}/matiec-install.XXXXXX")
+work=$(mktemp -d "${TMPDIR:-/tmp}/matiec-consumer.XXXXXX")
+trap 'rm -rf "$stage" "$work"' EXIT HUP INT TERM
+
+"${MAKE:-make}" install DESTDIR="$stage"
+
+installed_include="$stage$PACKAGE_INCLUDEDIR"
+installed_lib="$stage$PACKAGE_LIBDIR"
+installed_data="$stage$PACKAGE_DATADIR/matiec/lib"
+test -f "$installed_include/matiec/api.h"
+test -f "$installed_lib/libmatiec.a"
+test -f "$installed_lib/pkgconfig/matiec.pc"
+test -f "$installed_data/ieclib.txt"
+test -f "$installed_data/C/iec_types.h"
+
+${CC:-cc} ${CPPFLAGS:-} ${CFLAGS:-} -I"$installed_include" \
+  -c "$PACKAGE_CONSUMER" \
+  -o "$work/consumer.o"
+${CXX:-c++} ${CXXFLAGS:-} "$work/consumer.o" -L"$installed_lib" \
+  -lmatiec -pthread ${LDFLAGS:-} \
+  -o "$work/consumer"
+"$work/consumer" "$installed_data"
+
+if command -v pkg-config >/dev/null 2>&1; then
+  PKG_CONFIG_PATH="$installed_lib/pkgconfig" \
+  PKG_CONFIG_SYSROOT_DIR="$stage" pkg-config --exists matiec
+fi
+
+"${MAKE:-make}" uninstall DESTDIR="$stage"
+test ! -e "$installed_include/matiec/api.h"
+test ! -e "$installed_lib/libmatiec.a"
+test ! -e "$installed_lib/pkgconfig/matiec.pc"
+test ! -e "$installed_data/ieclib.txt"
