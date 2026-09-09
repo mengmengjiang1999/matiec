@@ -7,11 +7,13 @@ namespace matiec {
 CompilationContext::CompilationContext()
     : outputs_(diagnostics_), analysis_(ast_arena_) {
   parser_state_.bind_ast_arena(ast_arena_);
+  parser_state_.bind_declaration_symbols(declaration_symbols_);
 }
 
 CompilationContext::CompilationContext(CompilerOptions options)
     : options_(std::move(options)), outputs_(diagnostics_), analysis_(ast_arena_) {
   parser_state_.bind_ast_arena(ast_arena_);
+  parser_state_.bind_declaration_symbols(declaration_symbols_);
 }
 
 CompilerOptions &CompilationContext::options() {

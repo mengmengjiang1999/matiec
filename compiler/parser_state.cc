@@ -1,5 +1,8 @@
 #include "compiler/parser_state.hh"
+#include "compiler/declaration_symbol_tables.hh"
 #include "compiler/parser_symbol_tables.hh"
+
+#include <stdexcept>
 
 namespace matiec {
 namespace {
@@ -24,6 +27,16 @@ void ParserState::reset_for_parse() {
 void ParserState::bind_ast_arena(AstArena &arena) { ast_arena_ = &arena; }
 
 AstArena *ParserState::ast_arena() const { return ast_arena_; }
+
+void ParserState::bind_declaration_symbols(DeclarationSymbolTables &tables) {
+  declaration_symbols_ = &tables;
+}
+
+DeclarationSymbolTables &ParserState::declaration_symbols() const {
+  if (declaration_symbols_ == nullptr)
+    throw std::logic_error("ParserState has no declaration symbol tables");
+  return *declaration_symbols_;
+}
 
 ParserSymbolTables &ParserState::symbols() { return *symbols_; }
 

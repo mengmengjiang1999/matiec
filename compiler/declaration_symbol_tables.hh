@@ -17,15 +17,6 @@ struct DeclarationSymbolTables {
 
 DeclarationSymbolTables &active_declaration_symbol_tables();
 
-class ActiveDeclarationSymbolTablesScope {
- public:
-  explicit ActiveDeclarationSymbolTablesScope(DeclarationSymbolTables &tables);
-  ~ActiveDeclarationSymbolTablesScope();
-
- private:
-  DeclarationSymbolTables *previous_;
-};
-
 }  // namespace matiec
 
 #endif

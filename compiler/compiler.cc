@@ -66,8 +66,6 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
         return context.diagnostics().result();
       }
     }
-    ActiveDeclarationSymbolTablesScope declaration_symbols_scope(
-        context.declaration_symbols());
     CompilerOptions &options = context.options();
 
     NamespaceNormalizeResult namespace_result;

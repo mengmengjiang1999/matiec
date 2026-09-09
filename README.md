@@ -229,8 +229,9 @@ owned source bytes with an independent diagnostic display name. Destroying the c
 nodes and retained parser strings. Separate contexts support repeated,
 sequential compilations without leaking state between runs. The generated
 frontend also supports overlapping parses for independent contexts on separate
-threads. Parser sessions carry their context-owned AST arenas, so direct parser
-and synthetic-node allocation is isolated without a second active binding.
+threads. Parser sessions carry their context-owned AST arenas and declaration
+tables, so direct allocation and legacy declaration lookup remain aligned with
+one selected context without secondary active bindings.
 `Compiler::compile_parallel()` runs the full pipeline for a bounded batch of
 distinct contexts and preserves input order in its results.
 
@@ -286,10 +287,11 @@ Parser runtime options, transition controls, and classification tables are
 context-owned. Mutable Flex/Bison scanner and parser session variables are
 thread-local and clean builds verify that transformation before compiling the
 generated sources. `LegacyGlobalStateAdapter` still supplies the active parser
-context; that parser session carries the context-owned arena used by legacy
-direct AST construction and retained strings. The separate active-arena binding
-has been removed. Full-pipeline parallel compilation is supported for distinct
-contexts on separate worker threads.
+context; that parser session carries the context-owned arena and declaration
+tables used by legacy direct AST construction, retained strings, and lookup.
+Separate active arena and declaration-table bindings have been removed.
+Full-pipeline parallel compilation is supported for distinct contexts on
+separate worker threads.
 
 ## Embed from C++
 
@@ -437,7 +439,8 @@ store explicitly, without a compatibility result store or ambient binding.
 
 The reentrancy boundary is now the active architecture track. Generated
 Flex/Bison state is isolated per thread, and parser classification plus
-declaration symbol tables are owned by each `CompilationContext`. Concurrent
+declaration symbol tables are owned by each `CompilationContext` and selected by
+the same parser session rather than a second TLS binding. Concurrent
 frontend regression coverage exercises distinct contexts without a global lock.
 Parser sessions now carry the context-owned AST arena, and the separate active
 arena binding has been removed. `Compiler::compile_parallel()` and its

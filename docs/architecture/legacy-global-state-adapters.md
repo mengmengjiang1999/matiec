@@ -42,7 +42,7 @@ the supported bounded full-pipeline API for distinct contexts.
 | --- | --- | --- | --- |
 | Parser compatibility access | `ParserState` | context-owned options, transition controls, and classification tables selected by a nested thread-local pointer | Pass an explicit parser session to scanner and grammar helpers |
 | Generated scanner/parser | Flex/Bison compatibility interface | buffers, include stack, locations, semantic value, lookahead, error count, and start conditions are thread-local | Replace compatibility globals with reentrant scanner and pure-parser parameters if recursive same-thread parsing is required |
-| Declaration compatibility access | `DeclarationSymbolTables` | context-owned entries selected by a nested thread-local pointer | Pass declaration tables explicitly to remaining visitors |
+| Declaration compatibility access | `DeclarationSymbolTables` | context-owned entries selected by the active parser session; no separate TLS or fallback table | Pass the parser session explicitly to remaining entry points |
 
 Stage 3 and Stage 4 analysis data is not part of this inventory: it is already
 owned by `AnalysisStore` and passed explicitly. File-static debug flags and
@@ -50,9 +50,9 @@ immutable canonical datatype sentinels do not contain compilation results.
 
 Declaration lookup storage has crossed this boundary. `CompilationContext` owns
 its function, function-block, program, and datatype tables and clears them before
-each compile. `ActiveDeclarationSymbolTablesScope` is a thread-local pointer-only
-compatibility surface for existing visitors; nested scopes restore their caller,
-and no declaration entries live in process-wide storage.
+each compile. Its `ParserState` holds a non-owning link to those tables, so the
+existing parser-session selector also serves legacy visitors. The independent
+declaration-table TLS, mutable fallback, and nesting scope have been removed.
 
 ## Parser-carried AST allocation
 
@@ -74,7 +74,8 @@ No new mutable process-wide compiler state may be added to this adapter. New sta
 belongs in `CompilationContext` or one of its services. As parser and symbol
 APIs gain explicit context parameters, their corresponding adapter methods,
 `current_parser_state`, and the `runtime_options` compatibility surface must be
-removed. AST ownership no longer has a separate compatibility binding.
+removed. AST ownership and declaration lookup no longer have separate
+compatibility bindings.
 
 ## Final-state audit
 

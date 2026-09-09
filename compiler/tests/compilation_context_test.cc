@@ -47,20 +47,6 @@ int main() {
   first.declaration_symbols().function_blocks.insert("FirstBlock", nullptr);
   assert(first.declaration_symbols().function_blocks.count("FirstBlock") == 1);
   assert(second.declaration_symbols().function_blocks.count("FirstBlock") == 0);
-  {
-    matiec::ActiveDeclarationSymbolTablesScope first_symbols(
-        first.declaration_symbols());
-    assert(&matiec::active_declaration_symbol_tables() ==
-           &first.declaration_symbols());
-    {
-      matiec::ActiveDeclarationSymbolTablesScope second_symbols(
-          second.declaration_symbols());
-      assert(&matiec::active_declaration_symbol_tables() ==
-             &second.declaration_symbols());
-    }
-    assert(&matiec::active_declaration_symbol_tables() ==
-           &first.declaration_symbols());
-  }
   first.parser_state().options.pre_parsing = true;
   first.parser_state().goto_body = true;
   first.parser_state().symbols().library_elements.insert("FirstProgram", 1);
@@ -75,6 +61,8 @@ int main() {
   {
     matiec::ActiveParserStateScope first_scope(first.parser_state());
     assert(&matiec::active_parser_state() == &first.parser_state());
+    assert(&matiec::active_declaration_symbol_tables() ==
+           &first.declaration_symbols());
     integer_c *first_literal = new integer_c("1");
     char *first_token = matiec::retain_ast_string("first-token");
     assert(first.ast_arena().owns(first_literal));
@@ -82,12 +70,16 @@ int main() {
     {
       matiec::ActiveParserStateScope second_scope(second.parser_state());
       assert(&matiec::active_parser_state() == &second.parser_state());
+      assert(&matiec::active_declaration_symbol_tables() ==
+             &second.declaration_symbols());
       integer_c *second_literal = new integer_c("2");
       char *second_token = matiec::retain_ast_string("second-token");
       assert(second.ast_arena().owns(second_literal));
       assert(second.ast_arena().owns(second_token));
       assert(!first.ast_arena().owns(second_literal));
     }
+    assert(&matiec::active_declaration_symbol_tables() ==
+           &first.declaration_symbols());
     assert(&matiec::active_parser_state() == &first.parser_state());
     integer_c *restored_literal = new integer_c("3");
     assert(first.ast_arena().owns(restored_literal));
