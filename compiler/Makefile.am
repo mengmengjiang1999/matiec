@@ -8,6 +8,7 @@ libcompiler_a_SOURCES = \
 	access_variable_ast.cc \
 	analysis_store.cc \
 	ast_arena.cc \
+	c_api.cc \
 	compilation_abort.cc \
 	compilation_context.cc \
 	compiler.cc \
@@ -30,7 +31,7 @@ libcompiler_a_SOURCES = \
 	source_manager.cc \
 	utf8_validation.cc
 
-check_PROGRAMS = access_variable_normalizer_test analysis_store_test ast_arena_test compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test language_feature_catalog_test namespace_normalizer_test output_sink_test semantic_pass_test source_manager_test utf8_validation_test
+check_PROGRAMS = access_variable_normalizer_test analysis_store_test ast_arena_test c_api_version_test compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test language_feature_catalog_test namespace_normalizer_test output_sink_test semantic_pass_test source_manager_test utf8_validation_test
 TESTS = $(check_PROGRAMS)
 
 COMPILER_TEST_LDADD = libcompiler.a ../absyntax/libabsyntax.a libcompiler.a
@@ -43,6 +44,9 @@ analysis_store_test_LDADD = $(COMPILER_TEST_LDADD)
 
 ast_arena_test_SOURCES = tests/ast_arena_test.cc
 ast_arena_test_LDADD = $(COMPILER_TEST_LDADD)
+
+c_api_version_test_SOURCES = tests/c_api_version_test.c
+c_api_version_test_LDADD = $(COMPILER_TEST_LDADD)
 
 compilation_abort_test_SOURCES = tests/compilation_abort_test.cc
 compilation_abort_test_LDADD = $(COMPILER_TEST_LDADD)

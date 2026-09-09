@@ -344,9 +344,12 @@ same index; one failed compilation does not stop the other jobs.
 
 Filesystem include pragmas still resolve through `include_directory`.
 
-This is currently a source-level integration API, not a versioned binary ABI.
-AST pointers are context-owned and must not outlive their
-`CompilationContext`.
+This C++ interface remains a source-level integration API. The stable binary
+boundary begins with the C-compatible [`include/matiec/api.h`](include/matiec/api.h)
+version contract; compilation operations are being added incrementally without
+exposing C++ implementation layouts. See the
+[embedding API contract](docs/architecture/embedding-api.md). AST pointers are
+context-owned and must not outlive their `CompilationContext`.
 
 The profile is a typed per-compilation option; it does not introduce mutable
 process-global configuration. Embedders that omit it retain the legacy default.
@@ -404,6 +407,7 @@ openspec/changes/      Archived change records
 - [中文用户手册：支持的 IEC 61131-3 语法](docs/user-manual.zh-CN.md)
 - [IEC 61131-3 演进与实验性 2025 Profile 决策](docs/standards/iec61131-3-evolution.zh-CN.md)
 - [Compiler boundaries](docs/architecture/compiler-boundaries.md)
+- [Versioned embedding API](docs/architecture/embedding-api.md)
 - [Legacy global-state adapters](docs/architecture/legacy-global-state-adapters.md)
 - [AST ownership inventory](docs/architecture/ast-ownership-inventory.md)
 - [Architecture decisions](docs/decisions/)

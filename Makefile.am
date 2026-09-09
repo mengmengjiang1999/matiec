@@ -34,6 +34,7 @@ EXTRA_DIST = \
 	$(TESTS) \
 	tests/characterization/expected.sha256 \
 	tests/characterization/instruction_list.il \
+	include/matiec/api.h \
 	tests/cli/profile-fixtures/reference.st \
 	tests/cli/profile-fixtures/reference-null.st \
 	tests/cli/profile-fixtures/reference-incompatible.st \
