@@ -29,22 +29,20 @@ transformation whenever Flex or Bison sources are regenerated.
 
 ### Requirement: One compatibility session selects context state
 
-The legacy compatibility boundary SHALL use the selected context-owned parser
-session for parser state, AST allocation, and declaration lookup without a
-second independently nested binding or mutable fallback session. Required
-compatibility access without an active session SHALL fail explicitly.
+The generated frontend SHALL receive parser state explicitly at every parser,
+scanner, and handwritten helper boundary. No active-parser selector or implicit
+ParserState scope SHALL remain. Legacy bindings outside the frontend MAY expose
+only their specifically owned AST, declaration-table, or runtime-option resource.
 
-#### Scenario: A supported compilation enters legacy code
+#### Scenario: A parser helper executes
 
-- **WHEN** `Compiler::compile()` enters the legacy frontend and downstream
-  visitors
-- **THEN** all compatibility concerns resolve to the same compilation context
+- **WHEN** Bison or Flex calls a handwritten frontend helper
+- **THEN** the invocation's `ParserState` is supplied explicitly
 
-#### Scenario: Required compatibility access is out of scope
+#### Scenario: Source architecture is audited
 
-- **WHEN** a legacy helper requests required parser state without an active
-  parser session
-- **THEN** the request fails instead of reading or mutating fallback state
+- **WHEN** the maintained architecture regression scans frontend and compiler code
+- **THEN** active parser selectors and implicit ParserState scopes are rejected
 
 ### Requirement: Handwritten frontend entry points name their parser session
 

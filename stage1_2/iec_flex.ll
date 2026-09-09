@@ -81,12 +81,12 @@
  */
 %option stack
 
-/* The '%option stack' also requests the inclusion of 
+/* The '%option stack' also requests the inclusion of
  * the yy_top_state(), however this function is not
  * currently being used. This means that the compiler
  * is complaining about the existance of this function.
  * The following option removes the yy_top_state()
- * function from the resulting c code, so the compiler 
+ * function from the resulting c code, so the compiler
  * no longer complains.
  */
 %option noyy_top_state
@@ -158,6 +158,7 @@
  * apropriately whenever it comes across an (*#include <filename> *) directive...
  */
 thread_local const char *current_filename = NULL;
+thread_local matiec::ParserState *current_lexer_parser_state = NULL;
 
 
 
@@ -172,10 +173,12 @@ thread_local const char *current_filename = NULL;
  *extern YYLTYPE yylloc;
 b*/
 #define YY_INPUT(buf,result,max_size)  {\
-    result = GetNextChar(buf, max_size);\
+    result = GetNextChar(*current_lexer_parser_state, buf, max_size);\
     if (  result <= 0  )\
       result = YY_NULL;\
     }
+
+#define YY_USER_INIT current_lexer_parser_state = &parser_state;
 
 
 /* Macro that is executed for every action.
@@ -221,8 +224,8 @@ b*/
  * Searches first in the variables, and only if not found
  * does it continue searching in the library elements
  */
-//token_id_t get_identifier_token(const char *identifier_str);
-int get_identifier_token(const char *identifier_str);
+int get_identifier_token(matiec::ParserState &parser_state,
+                         const char *identifier_str);
 %}
 
 
@@ -236,8 +239,8 @@ void UpdateTracking(const char *text);
 void unput_char(const char c);
 /* return all the text in the current token back to the input stream. */
 void unput_text(int n);
-/* return all the text in the current token back to the input stream, 
- * but first return to the stream an additional character to mark the end of the token. 
+/* return all the text in the current token back to the input stream,
+ * but first return to the stream an additional character to mark the end of the token.
  */
 void unput_and_mark(const char mark_char);
 
@@ -255,7 +258,7 @@ int  isempty_bodystate_buffer(void);
 void     del_bodystate_buffer(void);
 
 
-int GetNextChar(char *b, int maxBuffer);
+int GetNextChar(matiec::ParserState &parser_state, char *b, int maxBuffer);
 %}
 
 
@@ -332,7 +335,7 @@ int GetNextChar(char *b, int maxBuffer);
  * syntax of the languages into the lexical parser. This is ugly, but it
  * works, and at least it is possible to keep all the state changes together
  * to make it easier to remove them later on if need be.
- * Once the language being parsed has been identified, 
+ * Once the language being parsed has been identified,
  * the body state returns any matched text back to the buffer with unput(),
  * to be later matched correctly by the apropriate language parser (st, il or sfc).
  *
@@ -340,7 +343,7 @@ int GetNextChar(char *b, int maxBuffer);
  * once again. This is because an sfc body may contain ACTIONS, which are then
  * written in one of the three languages (ST, IL or SFC), so once again we need
  * to figure out which language the ACTION in the SFC was written in. We already
- * ahve all that done in the body state, so we recursively transition to the body 
+ * ahve all that done in the body state, so we recursively transition to the body
  * state once again.
  * Note that in this case, when coming out of the st/il state (whichever language
  * the action was written in) the sfc state will become active again. This is done by
@@ -350,13 +353,13 @@ int GetNextChar(char *b, int maxBuffer);
  * sfc, we will be expecting action qualifiers (N, P, R, S, DS, SD, ...). In order
  * to bison to work correctly, these qualifiers must be returned as tokens. However,
  * these tokens are not reserved keywords, which means it should be possible to
- * define variables/functions/FBs with any of these names (including 
+ * define variables/functions/FBs with any of these names (including
  * S and R which are special because they are also IL operators). So, when we are not
  * expecting any action qualifiers, flex does not return these tokens, and is free
  * to interpret them as previously defined variables/functions/... as the case may be.
  *
- * The time_literal_state is required because TIME# literals are decomposed into 
- * portions, and wewant to send these portions one by one to bison. Each poertion will 
+ * The time_literal_state is required because TIME# literals are decomposed into
+ * portions, and wewant to send these portions one by one to bison. Each poertion will
  * represent the value in days/hours/minutes/seconds/ms.
  * Unfortunately, some of these portions may also be lexically analysed as an identifier. So,
  * we need to disable lexical identification of identifiers while parsing TIME# literals!
@@ -376,18 +379,18 @@ int GetNextChar(char *b, int maxBuffer);
  * to determine the list of POUs and datatypes that will be defined in that
  * code. Basically, the objective is to fill up the previously_declared_xxxxx
  * maps, without processing the code itself. Once these maps have been filled up,
- * bison will throw away the AST (abstract syntax tree) created up to that point, 
+ * bison will throw away the AST (abstract syntax tree) created up to that point,
  * and scan through the same source code again, but this time creating a correct AST.
  * This pre-scan allows the source code to reference POUs and datatypes that are
  * only declared after they are used!
- * 
+ *
  *
  * Here is a main state machine...
- *                                                                         --+  
+ *                                                                         --+
  *                                                                           |  these states are
- *              +------------> get_pou_name_state  ----> ignore_pou_state    |  only active 
- *              |                                            |               |  when bison is 
- *              |  ------------------------------------------+               |  doing the 
+ *              +------------> get_pou_name_state  ----> ignore_pou_state    |  only active
+ *              |                                            |               |  when bison is
+ *              |  ------------------------------------------+               |  doing the
  *              |  |                                                         |  pre-parsing!!
  *              |  v                                                       --+
  *       +---> INITIAL <-------> config
@@ -397,13 +400,13 @@ int GetNextChar(char *b, int maxBuffer);
  *       |        |
  *       |        V
  *     vardecl_list_state <------> var_decl
- *       ^        | 
+ *       ^        |
  *       |        | [using push()]
  *       |        |
  *       |        V
- *       |       body, 
+ *       |       body,
  *       |        |
- *       |        | 
+ *       |        |
  *       |   -------------------
  *       |   |       |         |
  *       |   v       v         v
@@ -412,34 +415,34 @@ int GetNextChar(char *b, int maxBuffer);
  *       |   |       |         |
  *       -----------------------
  *
- * NOTE:- When inside sfc, and an action or transition in ST/IL is found, then 
+ * NOTE:- When inside sfc, and an action or transition in ST/IL is found, then
  *        we also push() to the body state. This means that sometimes, when pop()ing
  *        from st and il, the state machine may return to the sfc state!
  *      - The transitions form sfc to body will be decided by bison, which will
  *        tell flex to do the transition by calling cmd_goto_body_state().
- *   
- * 
+ *
+ *
  * Possible state changes are:
  *   INITIAL -> goto(ignore_pou_state)
  *               (This transition state is only used when bison says it is doing the pre-parsing.)
  *               (This transition takes precedence over all other transitions!)
  *               (when a FUNCTION, FUNCTION_BLOCK, PROGRAM or CONFIGURATION is found)
- * 
+ *
  *   INITIAL -> goto(config_state)
  *                (when a CONFIGURATION is found)
- * 
+ *
  *   INITIAL -> goto(header_state)
  *               (when a FUNCTION, FUNCTION_BLOCK, or PROGRAM is found)
- * 
+ *
  *   header_state -> goto(vardecl_list_state)
  *               (When the first VAR token is found, i.e. at begining of first VAR .. END_VAR declaration)
- * 
- *  vardecl_list_state -> push current state (vardecl_list_state), and goto(vardecl_state) 
+ *
+ *  vardecl_list_state -> push current state (vardecl_list_state), and goto(vardecl_state)
  *                (when a VAR token is found)
- *   vardecl_state -> pop() to (vardecl_list_state) 
+ *   vardecl_state -> pop() to (vardecl_list_state)
  *                (when a END_VAR token is found)
- * 
- *   vardecl_list_state -> push current state (vardecl_list_state), and goto(body_state) 
+ *
+ *   vardecl_list_state -> push current state (vardecl_list_state), and goto(body_state)
  *                (when the last END_VAR is found!)
  *
  *   body_state    -> goto(sfc_state)
@@ -456,15 +459,15 @@ int GetNextChar(char *b, int maxBuffer);
  *                      END_ACTION or END_TRANSITION is found)
  *   sfc_state     -> pop() to vardecl_list_state
  *                     (when a END_FUNCTION, END_FUNCTION_BLOCK, or END_PROGRAM is found)
- * 
+ *
  *   ignore_pou_state   -> goto(INITIAL)
  *                         (when a END_FUNCTION, END_FUNCTION_BLOCK, END_PROGRAM or END_CONFIGURATION is found)
  *   vardecl_list_state -> goto(INITIAL)
  *                         (when a END_FUNCTION, END_FUNCTION_BLOCK, or END_PROGRAM is found)
  *   config_state       -> goto(INITIAL)
  *                         (when a END_CONFIGURATION is found)
- * 
- *  
+ *
+ *
  *   sfc_state     -> push current state(sfc_state); goto(body_state)
  *                     (when parsing an action. This transition is requested by bison)
  *   sfc_state     -> push current state(sfc_state); goto(sfc_qualifier_state)
@@ -477,8 +480,8 @@ int GetNextChar(char *b, int maxBuffer);
  *   task_init_state -> pop()
  *                     (when no longer parsing task initialisation parameters. This transition is requested by bison)
  *
- * 
- * There is another secondary state machine for parsing comments, another for file_includes, 
+ *
+ * There is another secondary state machine for parsing comments, another for file_includes,
  * and yet another for time literals.
  */
 
@@ -505,7 +508,7 @@ int GetNextChar(char *b, int maxBuffer);
 %s method_header_state
 
 /* we are parsing a function, program or function block sequence of VAR..END_VAR delcarations */
-%x vardecl_list_state 
+%x vardecl_list_state
 /* a substate of the vardecl_list_state: we are inside a specific VAR .. END_VAR */
 %s vardecl_state
 
@@ -568,7 +571,7 @@ file_include_pragma			{file_include_pragma_beg}{file_include_pragma_filename}{fi
  *       ordering of tokens...
  */
 static thread_local long int current_order = 0;
-  
+
 typedef struct {
     int eof;
     int lineNumber;
@@ -617,15 +620,15 @@ thread_local const char *INCLUDE_DIRECTORIES[] = {
 /* ======= */
 /* In order to allow the declaration of POU prototypes (Function, FB, Program, ...),
  * especially the prototypes of Functions and FBs defined in the standard
- * (i.e. standard functions and FBs), we extend the IEC 61131-3 standard syntax 
- * with two pragmas to indicate that the code is to be parsed (going through the 
+ * (i.e. standard functions and FBs), we extend the IEC 61131-3 standard syntax
+ * with two pragmas to indicate that the code is to be parsed (going through the
  * lexical, syntactical, and semantic analysers), but no code is to be generated.
- * 
+ *
  * The accepted syntax is:
  *  {no_code_generation begin}
  *    ... prototypes ...
  *  {no_code_generation end}
- * 
+ *
  * When parsing these prototypes the abstract syntax tree will be populated as usual,
  * allowing the semantic analyser to correctly analyse the semantics of calls to these
  * functions/FBs. However, stage4 will simply ignore all IEC61131-3 code
@@ -654,21 +657,21 @@ comment_beg  "(*"
 comment_end  "*)"
 
 /* However, bison has a shift/reduce conflict in bison, when parsing formal function/FB
- * invocations with the 'NOT <variable_name> =>' syntax (which needs two look ahead 
+ * invocations with the 'NOT <variable_name> =>' syntax (which needs two look ahead
  * tokens to be parsed correctly - and bison being LALR(1) only supports one).
  * The current work around requires flex to completely parse the '<variable_name> =>'
- * sequence. This sequence includes whitespace and/or comments between the 
+ * sequence. This sequence includes whitespace and/or comments between the
  * <variable_name> and the "=>" token.
- * 
+ *
  * This flex rule (sendto_identifier_token) uses the whitespace/comment as trailing context,
- * which means we can not use the comment_state method of specifying/finding and ignoring 
+ * which means we can not use the comment_state method of specifying/finding and ignoring
  * comments.
- * 
+ *
  * For this reason only, we must also define what a complete comment looks like, so
  * it may be used in this rule. Since the rule uses the whitespace_or_comment
  * construct as trailing context, this definition of comment must not use any
  * trailing context either.
- * 
+ *
  * Aditionally, it is not possible to define nested comments in flex without the use of
  * states, so for this particular location, we do NOT support nested comments.
  */
@@ -691,11 +694,11 @@ comment		"(*"({comment_text}*)({asterisk}+)")"
 /* ============== */
 /*
  * Whitespace is clearly defined (see IEC 61131-3 v2, section 2.1.4)
- * 
+ *
  * Whitespace definition includes the newline character.
- * 
- * However, the standard is inconsistent in that in IL the newline character 
- * is considered a token (EOL - end of line). 
+ *
+ * However, the standard is inconsistent in that in IL the newline character
+ * is considered a token (EOL - end of line).
  * In our implementation we therefore have two definitions of whitespace
  *   - one for ST, that includes the newline character
  *   - one for IL without the newline character.
@@ -719,7 +722,7 @@ comment		"(*"({comment_text}*)({asterisk}+)")"
  *       We use this alternative just to stop the flex utility from
  *       generating the invalid (in this case) warning...
  */
-/* NOTE: il_whitespace_char is not currenty used, be we include it for completeness */ 
+/* NOTE: il_whitespace_char is not currenty used, be we include it for completeness */
 st_whitespace_char		[ \f\n\r\t\v]
 il_whitespace_char		[ \f\r\t\v]
 
@@ -876,8 +879,8 @@ fixed_point		{integer}\.{integer}
  *       minutes      ::= fixed_point 'm' | integer 'm' ['_'] [ seconds ]
  *       seconds      ::= fixed_point 's' | integer 's' ['_'] [ milliseconds ]
  *       milliseconds ::= fixed_point 'ms'
- * 
- * 
+ *
+ *
  *  The original IEC 61131-3 v2 definition is:
  *       duration ::= ('T' | 'TIME') '#' ['-'] interval
  *       interval ::= days | hours | minutes | seconds | milliseconds
@@ -904,7 +907,7 @@ interval		{interval_ms}|{interval_s}|{interval_m}|{interval_h}|{interval_d}
 
 
 /* to help provide nice error messages, we also parse an incorrect but plausible interval... */
-/* NOTE that this erroneous interval will be parsed outside the time_literal_state, so must not 
+/* NOTE that this erroneous interval will be parsed outside the time_literal_state, so must not
  *      be able to parse any other legal lexcial construct (besides a legal interval, but that
  *      is OK as this rule will appear _after_ the rule to parse legal intervals!).
  */
@@ -971,29 +974,29 @@ incompl_location	%[IQM]\*
 	/***********************************************************/
 	/* Handle requests sent by bison for flex to change state. */
 	/***********************************************************/
-	if (get_goto_body_state()) {
+	if (get_goto_body_state(parser_state)) {
 	  yy_push_state(body_state);
-	  rst_goto_body_state();
+	  rst_goto_body_state(parser_state);
 	}
 
-	if (get_goto_sfc_qualifier_state()) {
+	if (get_goto_sfc_qualifier_state(parser_state)) {
 	  yy_push_state(sfc_qualifier_state);
-	  rst_goto_sfc_qualifier_state();
+	  rst_goto_sfc_qualifier_state(parser_state);
 	}
 
-	if (get_goto_sfc_priority_state()) {
+	if (get_goto_sfc_priority_state(parser_state)) {
 	  yy_push_state(sfc_priority_state);
-	  rst_goto_sfc_priority_state();
+	  rst_goto_sfc_priority_state(parser_state);
 	}
 
-	if (get_goto_task_init_state()) {
+	if (get_goto_task_init_state(parser_state)) {
 	  yy_push_state(task_init_state);
-	  rst_goto_task_init_state();
+	  rst_goto_task_init_state(parser_state);
 	}
 
-	if (get_pop_state()) {
+	if (get_pop_state(parser_state)) {
 	  yy_pop_state();
-	  rst_pop_state();
+	  rst_pop_state(parser_state);
 	}
 
 	/***************************/
@@ -1013,8 +1016,8 @@ incompl_location	%[IQM]\*
 	 */
 {disable_code_generation_pragma}				return disable_code_generation_pragma_token;
 {enable_code_generation_pragma}					return enable_code_generation_pragma_token;
-<vardecl_list_state>{disable_code_generation_pragma}/(VAR)	return disable_code_generation_pragma_token; 
-<vardecl_list_state>{enable_code_generation_pragma}/(VAR)	return enable_code_generation_pragma_token;  
+<vardecl_list_state>{disable_code_generation_pragma}/(VAR)	return disable_code_generation_pragma_token;
+<vardecl_list_state>{enable_code_generation_pragma}/(VAR)	return enable_code_generation_pragma_token;
 <body_state>{disable_code_generation_pragma}			append_bodystate_buffer(yytext); /* in body state we do not process any tokens, we simply store them for later processing! */
 <body_state>{enable_code_generation_pragma}			append_bodystate_buffer(yytext); /* in body state we do not process any tokens, we simply store them for later processing! */
 	/* Any other pragma we find, we just pass it up to the syntax parser...   */
@@ -1023,13 +1026,13 @@ incompl_location	%[IQM]\*
 {pragma}	{/* return the pragmma without the enclosing '{' and '}' */
 		 int cut = yytext[1]=='{'?2:1;
 		 yytext[strlen(yytext)-cut] = '\0';
-		 yylval.ID=matiec::retain_ast_string(yytext+cut);
+		 yylval.ID=matiec::retain_ast_string(parser_state, yytext+cut);
 		 return pragma_token;
 		}
 <vardecl_list_state>{pragma}/(VAR) {/* return the pragmma without the enclosing '{' and '}' */
 		 int cut = yytext[1]=='{'?2:1;
 		 yytext[strlen(yytext)-cut] = '\0';
-		 yylval.ID=matiec::retain_ast_string(yytext+cut);
+		 yylval.ID=matiec::retain_ast_string(parser_state, yytext+cut);
 		 return pragma_token;
 		}
 
@@ -1055,29 +1058,29 @@ incompl_location	%[IQM]\*
 			       *       In other owrds, we will be called to return more tokens, even after we have
 			       *       already returned an END_OF_INPUT token. In this case, we must carry on returning
 			       *       more END_OF_INPUT tokens.
-			       * 
-			       *       However, in the above case we will be asked to carry on reading more tokens 
+			       *
+			       *       However, in the above case we will be asked to carry on reading more tokens
 			       *       from the main input file, after we have reached the end. For this to work
 			       *       correctly, we cannot close the main input file!
-			       * 
+			       *
 			       *       This is why we WILL be called with include_stack_ptr == 0 multiple times,
 			       *       and why we must handle it as a special case
 			       *       that leaves the include_stack_ptr unchanged, and returns END_OF_INPUT once again.
-			       * 
+			       *
 			       *       As a corollory, flex can never safely close the main input file, and we must ask
 			       *       bison to close it!
 			       */
 			  if (include_stack_ptr == 0) {
 			      // fclose(yyin);           // Must not do this!!
 			      // FreeTracking(current_tracking); // Must not do this!!
-			      /* yyterminate() terminates the scanner and returns a 0 to the 
+			      /* yyterminate() terminates the scanner and returns a 0 to the
 			       * scanner's  caller, indicating "all done".
-			       *	
-			       * Our syntax parser (written with bison) has the token	
+			       *
+			       * Our syntax parser (written with bison) has the token
 			       * END_OF_INPUT associated to the value 0, so even though
 			       * we don't explicitly return the token END_OF_INPUT
-			       * calling yyterminate() is equivalent to doing that. 
-			       */ 	
+			       * calling yyterminate() is equivalent to doing that.
+			       */
 			    yyterminate();
 			  } else {
 			    if (current_tracking->in_file != NULL)
@@ -1093,7 +1096,7 @@ incompl_location	%[IQM]\*
 			       * the first one (i.e. the one that gets stored in include_stack[0],
 			       * which is never free'd!
 			       */
-			    /* NOTE: We do __NOT__ free the malloc()'d memory since 
+			    /* NOTE: We do __NOT__ free the malloc()'d memory since
 			     *       pointers to this filename will be kept by many objects
 			     *       in the abstract syntax tree.
 			     *       This will later be used to provide correct error
@@ -1107,7 +1110,7 @@ incompl_location	%[IQM]\*
 
 <include_end>{file_include_pragma_end}	yy_pop_state();
 	/* handle the artificial file includes created by include_string(), which do not end with a '}' */
-<include_end>.				unput_text(0); yy_pop_state(); 
+<include_end>.				unput_text(0); yy_pop_state();
 
 
 	/*********************************/
@@ -1116,14 +1119,14 @@ incompl_location	%[IQM]\*
 
 	/* INITIAL -> header_state */
 <INITIAL>{
-FUNCTION{st_whitespace} 		if (get_preparse_state()) BEGIN(get_pou_name_state); else {BEGIN(header_state);/* printf("\nChanging to header_state\n"); */} return FUNCTION;
-FUNCTION_BLOCK{st_whitespace}		if (get_preparse_state()) BEGIN(get_pou_name_state); else {BEGIN(header_state);/* printf("\nChanging to header_state\n"); */} return FUNCTION_BLOCK;
-PROGRAM{st_whitespace}			if (get_preparse_state()) BEGIN(get_pou_name_state); else {BEGIN(header_state);/* printf("\nChanging to header_state\n"); */} return PROGRAM;
-CONFIGURATION{st_whitespace}		if (get_preparse_state()) BEGIN(get_pou_name_state); else {BEGIN(config_state);/* printf("\nChanging to config_state\n"); */} return CONFIGURATION;
+FUNCTION{st_whitespace} 		if (get_preparse_state(parser_state)) BEGIN(get_pou_name_state); else {BEGIN(header_state);/* printf("\nChanging to header_state\n"); */} return FUNCTION;
+FUNCTION_BLOCK{st_whitespace}		if (get_preparse_state(parser_state)) BEGIN(get_pou_name_state); else {BEGIN(header_state);/* printf("\nChanging to header_state\n"); */} return FUNCTION_BLOCK;
+PROGRAM{st_whitespace}			if (get_preparse_state(parser_state)) BEGIN(get_pou_name_state); else {BEGIN(header_state);/* printf("\nChanging to header_state\n"); */} return PROGRAM;
+CONFIGURATION{st_whitespace}		if (get_preparse_state(parser_state)) BEGIN(get_pou_name_state); else {BEGIN(config_state);/* printf("\nChanging to config_state\n"); */} return CONFIGURATION;
 }
 
 <get_pou_name_state>{
-{identifier}			BEGIN(ignore_pou_state); yylval.ID=matiec::retain_ast_string(yytext); return identifier_token;
+{identifier}			BEGIN(ignore_pou_state); yylval.ID=matiec::retain_ast_string(parser_state, yytext); return identifier_token;
 .				BEGIN(ignore_pou_state); unput_text(0);
 }
 
@@ -1155,14 +1158,14 @@ END_CONFIGURATION		unput_text(0); BEGIN(INITIAL);
 	 *       If the code has an error, and no VAR_END before the body, we will simply
 	 *       continue in the <vardecl_state> state, until the end of the FUNCTION, FUNCTION_BLOCK
 	 *       or PROGAM.
-	 * 
+	 *
 	 * WARNING: From 2016-05 (May 2016) onwards, matiec supports a non-standard option in which a Function
-	 *          may be declared with no Input, Output or IN_OUT variables. This means that the above 
+	 *          may be declared with no Input, Output or IN_OUT variables. This means that the above
 	 *          assumption is no longer valid.
-	 * 
+	 *
 	 * NOTE: Some code being parsed may be erroneous and not contain any VAR END_VAR block.
 	 *       To generate error messages that make sense, the flex state machine should not get lost
-	 *       in these situations. We therefore consider the possibility of finding 
+	 *       in these situations. We therefore consider the possibility of finding
 	 *       END_FUNCTION, END_FUNCTION_BLOCK or END_PROGRAM when inside the header_state.
 	 */
 <header_state>{
@@ -1177,8 +1180,8 @@ VAR_CONFIG			|
 VAR_ACCESS			unput_text(0); BEGIN(vardecl_list_state);
 
 END_FUNCTION			| /* execute the next rule's action, i.e. fall-through! */
-END_FUNCTION_BLOCK		| 
-END_PROGRAM			unput_text(0); BEGIN(vardecl_list_state); 
+END_FUNCTION_BLOCK		|
+END_PROGRAM			unput_text(0); BEGIN(vardecl_list_state);
 				/* Notice that we do NOT go directly to body_state, as that requires a push().
 				 * If we were to puch to body_state here, then the corresponding pop() at the
 				 *end of body_state would return to header_state.
@@ -1193,12 +1196,12 @@ END_PROGRAM			unput_text(0); BEGIN(vardecl_list_state);
 				/* NOTE: vardecl_list_state is an exclusive state, i.e. when in this state
 				 *       default rules do not apply! This means that when in this state identifiers
 				 *       are not recognised!
-				 * NOTE: Notice that we only change to vardecl_state if the VAR*** is followed by 
+				 * NOTE: Notice that we only change to vardecl_state if the VAR*** is followed by
 				 *       at least one whitespace. This is to dintinguish the VAR declaration
 				 *       from identifiers starting with 'var' (e.g. a variable named 'varint')
 				 * NOTE: Notice that we cannot use st_whitespace here, as it can legally be empty.
 				 *       We therefore use st_whitespace_char instead.
-				 */  
+				 */
 VAR_INPUT{st_whitespace_char}		| /* execute the next rule's action, i.e. fall-through! */
 VAR_OUTPUT{st_whitespace_char}		|
 VAR_IN_OUT{st_whitespace_char}		|
@@ -1209,9 +1212,9 @@ VAR_CONFIG{st_whitespace_char}		|
 VAR_ACCESS{st_whitespace_char}		|
 VAR{st_whitespace_char}			unput_text(0); yy_push_state(vardecl_state); //printf("\nChanging to vardecl_state\n");
 
-METHOD{st_whitespace_char}		{if (runtime_options.iec2025_experimental) {BEGIN(method_header_state); return METHOD;} else {REJECT;}}
+METHOD{st_whitespace_char}		{if (parser_state.options.iec2025_experimental) {BEGIN(method_header_state); return METHOD;} else {REJECT;}}
 
-END_METHOD{st_whitespace}		{if (runtime_options.iec2025_experimental) return END_METHOD; else {REJECT;}}
+END_METHOD{st_whitespace}		{if (parser_state.options.iec2025_experimental) return END_METHOD; else {REJECT;}}
 
 END_FUNCTION{st_whitespace}		unput_text(0); BEGIN(INITIAL);
 END_FUNCTION_BLOCK{st_whitespace}	unput_text(0); BEGIN(INITIAL);
@@ -1219,10 +1222,10 @@ END_PROGRAM{st_whitespace}		unput_text(0); BEGIN(INITIAL);
 
 				/* NOTE: Handling of whitespace...
 				 *   - Must come __before__ the next rule for any single character '.'
-				 *   - If the rules were reversed, any whitespace with a single space (' ') 
+				 *   - If the rules were reversed, any whitespace with a single space (' ')
 				 *     would be handled by the '.' rule instead of the {whitespace} rule!
 				 */
-{st_whitespace}			/* Eat any whitespace */ 
+{st_whitespace}			/* Eat any whitespace */
 
 				/* anything else, just change to body_state! */
 .				unput_text(0); yy_push_state(body_state); //printf("\nChanging to body_state\n");
@@ -1245,26 +1248,26 @@ END_VAR				yy_pop_state(); return END_VAR; /* pop back to vardecl_list_state */
 				  * all comments and whitespace, so as not
 				  * to lose track of the line_number and column number
 				  * used when printing debugging messages.
-				  * NOTE: some of the following rules depend on the fact that 
+				  * NOTE: some of the following rules depend on the fact that
 				  * the body state buffer is either empty or only contains white space up to
 				  * that point. Since the vardecl_list_state will eat up all
 				  * whitespace before entering the body_state, the contents of the bodystate_buffer
-				  * will _never_ start with whitespace if the previous state was vardecl_list_state. 
-				  * However, it is possible to enter the body_state from other states (e.g. when 
+				  * will _never_ start with whitespace if the previous state was vardecl_list_state.
+				  * However, it is possible to enter the body_state from other states (e.g. when
 				  * parsing SFC code, that contains transitions or actions in other languages)
 				  */
-				 append_bodystate_buffer(yytext, 1 /* is whitespace */); 
+				 append_bodystate_buffer(yytext, 1 /* is whitespace */);
 				}
 	/* 'INITIAL_STEP' always used in beginning of SFCs !! */
 INITIAL_STEP			{ if (isempty_bodystate_buffer())	{unput_text(0); del_bodystate_buffer(); BEGIN(sfc_state);}
 				  else					{append_bodystate_buffer(yytext);}
 				}
- 
+
 	/* ':=', at the very beginning of a 'body', occurs only in transitions and not Function, FB, or Program bodies! */
 :=				{ if (isempty_bodystate_buffer())	{unput_text(0); del_bodystate_buffer(); BEGIN(st_state);} /* We do _not_ return a start_ST_body_token here, as bison does not expect it! */
 				  else				 	{append_bodystate_buffer(yytext);}
 				}
- 
+
 	/* check if ';' occurs before an END_FUNCTION, END_FUNCTION_BLOCK, END_PROGRAM, END_ACTION or END_TRANSITION. (If true => we are parsing ST; If false => parsing IL). */
 END_ACTION			| /* execute the next rule's action, i.e. fall-through! */
 END_FUNCTION			|
@@ -1294,8 +1297,8 @@ REPEAT				{ if (isempty_bodystate_buffer())	{unput_text(0); del_bodystate_buffer
 <il_state,st_state>{
 END_FUNCTION		yy_pop_state(); unput_text(0);
 END_FUNCTION_BLOCK	yy_pop_state(); unput_text(0);
-METHOD			{if (runtime_options.iec2025_experimental) {yy_pop_state(); unput_text(0);} else {REJECT;}}
-END_METHOD		{if (runtime_options.iec2025_experimental) {yy_pop_state(); unput_text(0);} else {REJECT;}}
+METHOD			{if (parser_state.options.iec2025_experimental) {yy_pop_state(); unput_text(0);} else {REJECT;}}
+END_METHOD		{if (parser_state.options.iec2025_experimental) {yy_pop_state(); unput_text(0);} else {REJECT;}}
 END_PROGRAM		yy_pop_state(); unput_text(0);
 END_TRANSITION		yy_pop_state(); unput_text(0);
 END_ACTION		yy_pop_state(); unput_text(0);
@@ -1330,7 +1333,7 @@ END_CONFIGURATION	BEGIN(INITIAL); return END_CONFIGURATION;
 <get_pou_name_state,ignore_pou_state,body_state,vardecl_list_state>{comment_beg}		yy_push_state(comment_state);
 {comment_beg}						yy_push_state(comment_state);
 <comment_state>{
-{comment_beg}						{if (get_opt_nested_comments()) yy_push_state(comment_state);}
+{comment_beg}						{if (get_opt_nested_comments(parser_state)) yy_push_state(comment_state);}
 {comment_end}						yy_pop_state();
 .							/* Ignore text inside comment! */
 \n							/* Ignore text inside comment! */
@@ -1356,7 +1359,7 @@ END_CONFIGURATION	BEGIN(INITIAL); return END_CONFIGURATION;
 	 *       prev_declared_derived_function_name_token?
 	 *       If we do, then the 'MOD' default library function (defined in
 	 *       the standard) will always be returned as a function name, and
-	 *       it will therefore not be possible to use it as an operator as 
+	 *       it will therefore not be possible to use it as an operator as
 	 *       in the following ST expression 'X := Y MOD Z;' !
 	 *       If we don't, then even it will not be possible to use 'MOD'
 	 *       as a funtion as in 'X := MOD(Y, Z);'
@@ -1364,7 +1367,7 @@ END_CONFIGURATION	BEGIN(INITIAL); return END_CONFIGURATION;
 	 *       handling this function and keyword clash in bison!
 	 */
 	/* NOTE: The following code has been commented out as most users do not want matiec
-	 *       to allow the use of 'R1', 'IN' ... IL operators as identifiers, 
+	 *       to allow the use of 'R1', 'IN' ... IL operators as identifiers,
 	 *       even though a literal reading of the standard allows this.
 	 *       We could add this as a commadnd line option, but it is not yet done.
 	 *       For now we just comment out the code, but leave it the commented code
@@ -1372,23 +1375,23 @@ END_CONFIGURATION	BEGIN(INITIAL); return END_CONFIGURATION;
 	 *       in the mercurial repository to figure out the missing code!
 	 */
  /*
-{identifier} 	{int token = get_identifier_token(yytext);
-		 // fprintf(stderr, "flex: analysing identifier '%s'...", yytext); 
+{identifier} 	{int token = get_identifier_token(parser_state, yytext);
+		 // fprintf(stderr, "flex: analysing identifier '%s'...", yytext);
 		 if ((token == prev_declared_variable_name_token) ||
 //		     (token == prev_declared_derived_function_name_token) || // DO NOT add this condition!
 		     (token == prev_declared_fb_name_token)) {
 		 // if (token != identifier_token)
 		 // * NOTE: if we replace the above uncommented conditions with
-                  *       the simple test of (token != identifier_token), then 
-                  *       'MOD' et al must be removed from the 
+                  *       the simple test of (token != identifier_token), then
+                  *       'MOD' et al must be removed from the
                   *       library_symbol_table as a default function name!
 		  * //
-		   yylval.ID=matiec::retain_ast_string(yytext);
-		   // fprintf(stderr, "returning token %d\n", token); 
+		   yylval.ID=matiec::retain_ast_string(parser_state, yytext);
+		   // fprintf(stderr, "returning token %d\n", token);
 		   return token;
 		 }
-		 // otherwise, leave it for the other lexical parser rules... 
-		 // fprintf(stderr, "rejecting\n"); 
+		 // otherwise, leave it for the other lexical parser rules...
+		 // fprintf(stderr, "rejecting\n");
 		 REJECT;
 		}
  */
@@ -1406,20 +1409,20 @@ END_CONFIGURATION	BEGIN(INITIAL); return END_CONFIGURATION;
 	/******************************************************/
 
 
-REF	{if (get_opt_ref_standard_extensions()) return REF;        else{REJECT;}}		/* Keyword in IEC 61131-3 v3 */
-DREF	{if (get_opt_ref_standard_extensions()) return DREF;       else{REJECT;}}		/* Keyword in IEC 61131-3 v3 */
-REF_TO	{if (get_opt_ref_standard_extensions()) return REF_TO;     else{REJECT;}}		/* Keyword in IEC 61131-3 v3 */
-NULL	{if (get_opt_ref_standard_extensions()) return NULL_token; else{REJECT;}}		/* Keyword in IEC 61131-3 v3 */
+REF	{if (get_opt_ref_standard_extensions(parser_state)) return REF;        else{REJECT;}}		/* Keyword in IEC 61131-3 v3 */
+DREF	{if (get_opt_ref_standard_extensions(parser_state)) return DREF;       else{REJECT;}}		/* Keyword in IEC 61131-3 v3 */
+REF_TO	{if (get_opt_ref_standard_extensions(parser_state)) return REF_TO;     else{REJECT;}}		/* Keyword in IEC 61131-3 v3 */
+NULL	{if (get_opt_ref_standard_extensions(parser_state)) return NULL_token; else{REJECT;}}		/* Keyword in IEC 61131-3 v3 */
 
-NAMESPACE	{if (runtime_options.iec2025_experimental) return NAMESPACE; else {REJECT;}}
-END_NAMESPACE	{if (runtime_options.iec2025_experimental) return END_NAMESPACE; else {REJECT;}}
-USING		{if (runtime_options.iec2025_experimental) return USING; else {REJECT;}}
-INTERNAL	{if (runtime_options.iec2025_experimental) return INTERNAL; else {REJECT;}}
-METHOD		{if (runtime_options.iec2025_experimental) return METHOD; else {REJECT;}}
-END_METHOD	{if (runtime_options.iec2025_experimental) return END_METHOD; else {REJECT;}}
-PUBLIC		{if (runtime_options.iec2025_experimental) return PUBLIC; else {REJECT;}}
-PRIVATE		{if (runtime_options.iec2025_experimental) return PRIVATE; else {REJECT;}}
-PROTECTED	{if (runtime_options.iec2025_experimental) return PROTECTED; else {REJECT;}}
+NAMESPACE	{if (parser_state.options.iec2025_experimental) return NAMESPACE; else {REJECT;}}
+END_NAMESPACE	{if (parser_state.options.iec2025_experimental) return END_NAMESPACE; else {REJECT;}}
+USING		{if (parser_state.options.iec2025_experimental) return USING; else {REJECT;}}
+INTERNAL	{if (parser_state.options.iec2025_experimental) return INTERNAL; else {REJECT;}}
+METHOD		{if (parser_state.options.iec2025_experimental) return METHOD; else {REJECT;}}
+END_METHOD	{if (parser_state.options.iec2025_experimental) return END_METHOD; else {REJECT;}}
+PUBLIC		{if (parser_state.options.iec2025_experimental) return PUBLIC; else {REJECT;}}
+PRIVATE		{if (parser_state.options.iec2025_experimental) return PRIVATE; else {REJECT;}}
+PROTECTED	{if (parser_state.options.iec2025_experimental) return PROTECTED; else {REJECT;}}
 
 EN	return EN;			/* Keyword */
 ENO	return ENO;			/* Keyword */
@@ -1431,14 +1434,14 @@ ENO	return ENO;			/* Keyword */
 TRUE		return TRUE;		/* Keyword */
 BOOL#1  	return boolean_true_literal_token;
 BOOL#TRUE	return boolean_true_literal_token;
-SAFEBOOL#1	{if (get_opt_safe_extensions()) {return safeboolean_true_literal_token;} else{REJECT;}} /* Keyword (Data Type) */ 
-SAFEBOOL#TRUE	{if (get_opt_safe_extensions()) {return safeboolean_true_literal_token;} else{REJECT;}} /* Keyword (Data Type) */
+SAFEBOOL#1	{if (get_opt_safe_extensions(parser_state)) {return safeboolean_true_literal_token;} else{REJECT;}} /* Keyword (Data Type) */
+SAFEBOOL#TRUE	{if (get_opt_safe_extensions(parser_state)) {return safeboolean_true_literal_token;} else{REJECT;}} /* Keyword (Data Type) */
 
 FALSE		return FALSE;		/* Keyword */
 BOOL#0  	return boolean_false_literal_token;
 BOOL#FALSE  	return boolean_false_literal_token;
-SAFEBOOL#0	{if (get_opt_safe_extensions()) {return safeboolean_false_literal_token;} else{REJECT;}} /* Keyword (Data Type) */ 
-SAFEBOOL#FALSE	{if (get_opt_safe_extensions()) {return safeboolean_false_literal_token;} else{REJECT;}} /* Keyword (Data Type) */
+SAFEBOOL#0	{if (get_opt_safe_extensions(parser_state)) {return safeboolean_false_literal_token;} else{REJECT;}} /* Keyword (Data Type) */
+SAFEBOOL#FALSE	{if (get_opt_safe_extensions(parser_state)) {return safeboolean_false_literal_token;} else{REJECT;}} /* Keyword (Data Type) */
 
 
 	/************************/
@@ -1495,55 +1498,55 @@ DATE_AND_TIME	return DATE_AND_TIME;	/* Keyword (Data Type) */
 TIME_OF_DAY	return TIME_OF_DAY;	/* Keyword (Data Type) */
 
 					/* A non-standard extension! */
-VOID		{if (runtime_options.allow_void_datatype) {return VOID;}          else {REJECT;}} 
+VOID		{if (parser_state.options.allow_void_datatype) {return VOID;}          else {REJECT;}}
 
 
 	/*****************************************************************/
 	/* Keywords defined in "Safety Software Technical Specification" */
 	/*****************************************************************/
-        /* 
-         * NOTE: The following keywords are define in 
+        /*
+         * NOTE: The following keywords are define in
          *       "Safety Software Technical Specification,
-         *        Part 1: Concepts and Function Blocks,  
+         *        Part 1: Concepts and Function Blocks,
          *        Version 1.0 – Official Release"
          *        written by PLCopen - Technical Committee 5
          *
          *        We only support these extensions and keywords
          *        if the apropriate command line option is given.
          */
-SAFEBOOL	     {if (get_opt_safe_extensions()) {return SAFEBOOL;}          else {REJECT;}} 
+SAFEBOOL	     {if (get_opt_safe_extensions(parser_state)) {return SAFEBOOL;}          else {REJECT;}}
 
-SAFEBYTE	     {if (get_opt_safe_extensions()) {return SAFEBYTE;}          else {REJECT;}} 
-SAFEWORD	     {if (get_opt_safe_extensions()) {return SAFEWORD;}          else {REJECT;}} 
-SAFEDWORD	     {if (get_opt_safe_extensions()) {return SAFEDWORD;}         else{REJECT;}}
-SAFELWORD	     {if (get_opt_safe_extensions()) {return SAFELWORD;}         else{REJECT;}}
-               
-SAFEREAL	     {if (get_opt_safe_extensions()) {return SAFESINT;}          else{REJECT;}}
-SAFELREAL    	     {if (get_opt_safe_extensions()) {return SAFELREAL;}         else{REJECT;}}
-                  
-SAFESINT	     {if (get_opt_safe_extensions()) {return SAFESINT;}          else{REJECT;}}
-SAFEINT	             {if (get_opt_safe_extensions()) {return SAFEINT;}           else{REJECT;}}
-SAFEDINT	     {if (get_opt_safe_extensions()) {return SAFEDINT;}          else{REJECT;}}
-SAFELINT             {if (get_opt_safe_extensions()) {return SAFELINT;}          else{REJECT;}}
+SAFEBYTE	     {if (get_opt_safe_extensions(parser_state)) {return SAFEBYTE;}          else {REJECT;}}
+SAFEWORD	     {if (get_opt_safe_extensions(parser_state)) {return SAFEWORD;}          else {REJECT;}}
+SAFEDWORD	     {if (get_opt_safe_extensions(parser_state)) {return SAFEDWORD;}         else{REJECT;}}
+SAFELWORD	     {if (get_opt_safe_extensions(parser_state)) {return SAFELWORD;}         else{REJECT;}}
 
-SAFEUSINT            {if (get_opt_safe_extensions()) {return SAFEUSINT;}         else{REJECT;}}
-SAFEUINT             {if (get_opt_safe_extensions()) {return SAFEUINT;}          else{REJECT;}}
-SAFEUDINT            {if (get_opt_safe_extensions()) {return SAFEUDINT;}         else{REJECT;}}
-SAFEULINT            {if (get_opt_safe_extensions()) {return SAFEULINT;}         else{REJECT;}}
+SAFEREAL	     {if (get_opt_safe_extensions(parser_state)) {return SAFESINT;}          else{REJECT;}}
+SAFELREAL    	     {if (get_opt_safe_extensions(parser_state)) {return SAFELREAL;}         else{REJECT;}}
+
+SAFESINT	     {if (get_opt_safe_extensions(parser_state)) {return SAFESINT;}          else{REJECT;}}
+SAFEINT	             {if (get_opt_safe_extensions(parser_state)) {return SAFEINT;}           else{REJECT;}}
+SAFEDINT	     {if (get_opt_safe_extensions(parser_state)) {return SAFEDINT;}          else{REJECT;}}
+SAFELINT             {if (get_opt_safe_extensions(parser_state)) {return SAFELINT;}          else{REJECT;}}
+
+SAFEUSINT            {if (get_opt_safe_extensions(parser_state)) {return SAFEUSINT;}         else{REJECT;}}
+SAFEUINT             {if (get_opt_safe_extensions(parser_state)) {return SAFEUINT;}          else{REJECT;}}
+SAFEUDINT            {if (get_opt_safe_extensions(parser_state)) {return SAFEUDINT;}         else{REJECT;}}
+SAFEULINT            {if (get_opt_safe_extensions(parser_state)) {return SAFEULINT;}         else{REJECT;}}
 
  /* SAFESTRING and SAFEWSTRING are not yet supported, i.e. checked correctly, in the semantic analyser (stage 3) */
  /*  so it is best not to support them at all... */
  /*
-SAFEWSTRING          {if (get_opt_safe_extensions()) {return SAFEWSTRING;}       else{REJECT;}}
-SAFESTRING           {if (get_opt_safe_extensions()) {return SAFESTRING;}        else{REJECT;}}
+SAFEWSTRING          {if (get_opt_safe_extensions(parser_state)) {return SAFEWSTRING;}       else{REJECT;}}
+SAFESTRING           {if (get_opt_safe_extensions(parser_state)) {return SAFESTRING;}        else{REJECT;}}
  */
 
-SAFETIME             {if (get_opt_safe_extensions()) {return SAFETIME;}          else{REJECT;}}
-SAFEDATE             {if (get_opt_safe_extensions()) {return SAFEDATE;}          else{REJECT;}}
-SAFEDT               {if (get_opt_safe_extensions()) {return SAFEDT;}            else{REJECT;}}
-SAFETOD              {if (get_opt_safe_extensions()) {return SAFETOD;}           else{REJECT;}}
-SAFEDATE_AND_TIME    {if (get_opt_safe_extensions()) {return SAFEDATE_AND_TIME;} else{REJECT;}}
-SAFETIME_OF_DAY      {if (get_opt_safe_extensions()) {return SAFETIME_OF_DAY;}   else{REJECT;}}
+SAFETIME             {if (get_opt_safe_extensions(parser_state)) {return SAFETIME;}          else{REJECT;}}
+SAFEDATE             {if (get_opt_safe_extensions(parser_state)) {return SAFEDATE;}          else{REJECT;}}
+SAFEDT               {if (get_opt_safe_extensions(parser_state)) {return SAFEDT;}            else{REJECT;}}
+SAFETOD              {if (get_opt_safe_extensions(parser_state)) {return SAFETOD;}           else{REJECT;}}
+SAFEDATE_AND_TIME    {if (get_opt_safe_extensions(parser_state)) {return SAFEDATE_AND_TIME;} else{REJECT;}}
+SAFETIME_OF_DAY      {if (get_opt_safe_extensions(parser_state)) {return SAFETIME_OF_DAY;}   else{REJECT;}}
 
 	/********************************/
 	/* B 1.3.2 - Generic data types */
@@ -1604,7 +1607,7 @@ AT		return AT;		/* Keyword */
 	 *       This is necessary in case the input program being parsed has syntax errors that force
 	 *       flex's main state machine to never change to the il_state or the st_state
 	 *       after changing to the body_state.
-	 *       Ths BEGIN(INITIAL) command forces the flex state machine to re-synchronise with 
+	 *       Ths BEGIN(INITIAL) command forces the flex state machine to re-synchronise with
 	 *       the input stream even in the presence of buggy code!
 	 */
 FUNCTION			return FUNCTION;			/* Keyword */
@@ -1620,7 +1623,7 @@ CONSTANT			return CONSTANT;			/* Keyword */
 	 *       This is necessary in case the input program being parsed has syntax errors that force
 	 *       flex's main state machine to never change to the il_state or the st_state
 	 *       after changing to the body_state.
-	 *       Ths BEGIN(INITIAL) command forces the flex state machine to re-synchronise with 
+	 *       Ths BEGIN(INITIAL) command forces the flex state machine to re-synchronise with
 	 *       the input stream even in the presence of buggy code!
 	 */
 FUNCTION_BLOCK				return FUNCTION_BLOCK;		/* Keyword */
@@ -1638,7 +1641,7 @@ END_VAR					return END_VAR;			/* Keyword */
 	 *       This is necessary in case the input program being parsed has syntax errors that force
 	 *       flex's main state machine to never change to the il_state or the st_state
 	 *       after changing to the body_state.
-	 *       Ths BEGIN(INITIAL) command forces the flex state machine to re-synchronise with 
+	 *       Ths BEGIN(INITIAL) command forces the flex state machine to re-synchronise with
 	 *       the input stream even in the presence of buggy code!
 	 */
 PROGRAM				return PROGRAM;				/* Keyword */
@@ -1653,7 +1656,7 @@ END_PROGRAM	BEGIN(INITIAL);	return END_PROGRAM;			/* Keyword */  /* see Note abo
 	 * They will have to be handled when we include parsing of SFC... For now, simply
 	 * ignore them!
 	 */
-	 
+
 ACTION		return ACTION;			/* Keyword */
 END_ACTION	return END_ACTION;		/* Keyword */
 
@@ -1666,7 +1669,7 @@ INITIAL_STEP	return INITIAL_STEP;		/* Keyword */
 STEP		return STEP;			/* Keyword */
 END_STEP	return END_STEP;		/* Keyword */
 
-	/* PRIORITY is not a keyword, so we only return it when 
+	/* PRIORITY is not a keyword, so we only return it when
 	 * it is explicitly required and we are not expecting any identifiers
 	 * that could also use the same letter sequence (i.e. an identifier: piority)
 	 */
@@ -1713,7 +1716,7 @@ NON_RETAIN				return NON_RETAIN;		/* Keyword */
 READ_WRITE				return READ_WRITE;		/* Keyword */
 READ_ONLY				return READ_ONLY;		/* Keyword */
 
-	/* PRIORITY, SINGLE and INTERVAL are not a keywords, so we only return them when 
+	/* PRIORITY, SINGLE and INTERVAL are not a keywords, so we only return them when
 	 * it is explicitly required and we are not expecting any identifiers
 	 * that could also use the same letter sequence (i.e. an identifier: piority, ...)
 	 */
@@ -1890,33 +1893,33 @@ CONTINUE    return CONTINUE;    /* Keyword */
 	/********************************************/
 	/* B.1.4.1   Directly Represented Variables */
 	/********************************************/
-{direct_variable}   {yylval.ID=matiec::retain_ast_string(yytext); return get_direct_variable_token(yytext);}
+{direct_variable}   {yylval.ID=matiec::retain_ast_string(parser_state, yytext); return get_direct_variable_token(parser_state, yytext);}
 
 
 	/******************************************/
 	/* B 1.4.3 - Declaration & Initialisation */
 	/******************************************/
-{incompl_location}	{yylval.ID=matiec::retain_ast_string(yytext); return incompl_location_token;}
+{incompl_location}	{yylval.ID=matiec::retain_ast_string(parser_state, yytext); return incompl_location_token;}
 
 
 	/************************/
 	/* B 1.2.3.1 - Duration */
 	/************************/
-{fixed_point}		{yylval.ID=matiec::retain_ast_string(yytext); return fixed_point_token;}
+{fixed_point}		{yylval.ID=matiec::retain_ast_string(parser_state, yytext); return fixed_point_token;}
 {interval}		{/*fprintf(stderr, "entering time_literal_state ##%s##\n", yytext);*/ unput_and_mark('#'); yy_push_state(time_literal_state);}
 {erroneous_interval}	{return erroneous_interval_token;}
 
 <time_literal_state>{
-{integer}d		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return integer_d_token;}
-{integer}h		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return integer_h_token;}
-{integer}m		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return integer_m_token;}
-{integer}s		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return integer_s_token;}
-{integer}ms		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-2] = '\0'; return integer_ms_token;}
-{fixed_point}d		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_d_token;}
-{fixed_point}h		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_h_token;}
-{fixed_point}m		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_m_token;}
-{fixed_point}s		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_s_token;}
-{fixed_point}ms		{yylval.ID=matiec::retain_ast_string(yytext); yylval.ID[yyleng-2] = '\0'; return fixed_point_ms_token;}
+{integer}d		{yylval.ID=matiec::retain_ast_string(parser_state, yytext); yylval.ID[yyleng-1] = '\0'; return integer_d_token;}
+{integer}h		{yylval.ID=matiec::retain_ast_string(parser_state, yytext); yylval.ID[yyleng-1] = '\0'; return integer_h_token;}
+{integer}m		{yylval.ID=matiec::retain_ast_string(parser_state, yytext); yylval.ID[yyleng-1] = '\0'; return integer_m_token;}
+{integer}s		{yylval.ID=matiec::retain_ast_string(parser_state, yytext); yylval.ID[yyleng-1] = '\0'; return integer_s_token;}
+{integer}ms		{yylval.ID=matiec::retain_ast_string(parser_state, yytext); yylval.ID[yyleng-2] = '\0'; return integer_ms_token;}
+{fixed_point}d		{yylval.ID=matiec::retain_ast_string(parser_state, yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_d_token;}
+{fixed_point}h		{yylval.ID=matiec::retain_ast_string(parser_state, yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_h_token;}
+{fixed_point}m		{yylval.ID=matiec::retain_ast_string(parser_state, yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_m_token;}
+{fixed_point}s		{yylval.ID=matiec::retain_ast_string(parser_state, yytext); yylval.ID[yyleng-1] = '\0'; return fixed_point_s_token;}
+{fixed_point}ms		{yylval.ID=matiec::retain_ast_string(parser_state, yytext); yylval.ID[yyleng-2] = '\0'; return fixed_point_ms_token;}
 
 _			/* do nothing - eat it up!*/
 \#			{/*fprintf(stderr, "popping from time_literal_state (###)\n");*/ yy_pop_state(); return end_interval_token;}
@@ -1927,68 +1930,68 @@ _			/* do nothing - eat it up!*/
 	/* B.1.2.2   Character Strings */
 	/*******************************/
 {utf8_bom} {
-  if (!runtime_options.utf8_source_and_strings ||
+  if (!parser_state.options.utf8_source_and_strings ||
       yylloc.first_line != 1 || yylloc.first_column != 1) {
     fprintf(stderr, "%s:%d:%d: error: UTF-8 BOM is only accepted at the start of experimental-profile source\n",
             current_filename, yylloc.first_line, yylloc.first_column);
     throw matiec::CompilationAbort("Misplaced or disabled UTF-8 BOM", true);
   }
 }
-{double_byte_character_string} {yylval.ID=matiec::retain_ast_string(yytext); return double_byte_character_string_token;}
-{single_byte_character_string} {yylval.ID=matiec::retain_ast_string(yytext); return single_byte_character_string_token;}
+{double_byte_character_string} {yylval.ID=matiec::retain_ast_string(parser_state, yytext); return double_byte_character_string_token;}
+{single_byte_character_string} {yylval.ID=matiec::retain_ast_string(parser_state, yytext); return single_byte_character_string_token;}
 {utf8_double_byte_character_string} {
-  if (!runtime_options.utf8_source_and_strings) {
+  if (!parser_state.options.utf8_source_and_strings) {
     fprintf(stderr, "%s:%d:%d: error: UTF-8 string literals require --std=iec61131-3:2025-experimental\n",
             current_filename, yylloc.first_line, yylloc.first_column);
     throw matiec::CompilationAbort("UTF-8 string literal is disabled", true);
   }
-  yylval.ID=matiec::retain_ast_string(yytext); return double_byte_character_string_token;
+  yylval.ID=matiec::retain_ast_string(parser_state, yytext); return double_byte_character_string_token;
 }
 {utf8_single_byte_character_string} {
-  if (!runtime_options.utf8_source_and_strings) {
+  if (!parser_state.options.utf8_source_and_strings) {
     fprintf(stderr, "%s:%d:%d: error: UTF-8 string literals require --std=iec61131-3:2025-experimental\n",
             current_filename, yylloc.first_line, yylloc.first_column);
     throw matiec::CompilationAbort("UTF-8 string literal is disabled", true);
   }
-  yylval.ID=matiec::retain_ast_string(yytext); return single_byte_character_string_token;
+  yylval.ID=matiec::retain_ast_string(parser_state, yytext); return single_byte_character_string_token;
 }
 
 
 	/******************************/
 	/* B.1.2.1   Numeric literals */
 	/******************************/
-{integer}		{yylval.ID=matiec::retain_ast_string(yytext); return integer_token;}
-{real}			{yylval.ID=matiec::retain_ast_string(yytext); return real_token;}
-{binary_integer}	{yylval.ID=matiec::retain_ast_string(yytext); return binary_integer_token;}
-{octal_integer} 	{yylval.ID=matiec::retain_ast_string(yytext); return octal_integer_token;}
-{hex_integer} 		{yylval.ID=matiec::retain_ast_string(yytext); return hex_integer_token;}
+{integer}		{yylval.ID=matiec::retain_ast_string(parser_state, yytext); return integer_token;}
+{real}			{yylval.ID=matiec::retain_ast_string(parser_state, yytext); return real_token;}
+{binary_integer}	{yylval.ID=matiec::retain_ast_string(parser_state, yytext); return binary_integer_token;}
+{octal_integer} 	{yylval.ID=matiec::retain_ast_string(parser_state, yytext); return octal_integer_token;}
+{hex_integer} 		{yylval.ID=matiec::retain_ast_string(parser_state, yytext); return hex_integer_token;}
 
 
 	/*****************************************/
 	/* B.1.1 Letters, digits and identifiers */
 	/*****************************************/
-<st_state>{identifier}/({st_whitespace_or_pragma_or_comment})"=>"	{yylval.ID=matiec::retain_ast_string(yytext); return sendto_identifier_token;}
-<il_state>{identifier}/({il_whitespace_or_pragma_or_comment})"=>"	{yylval.ID=matiec::retain_ast_string(yytext); return sendto_identifier_token;}
+<st_state>{identifier}/({st_whitespace_or_pragma_or_comment})"=>"	{yylval.ID=matiec::retain_ast_string(parser_state, yytext); return sendto_identifier_token;}
+<il_state>{identifier}/({il_whitespace_or_pragma_or_comment})"=>"	{yylval.ID=matiec::retain_ast_string(parser_state, yytext); return sendto_identifier_token;}
 <st_state>{identifier}[ \f\t\v]*\.[ \f\t\v]*{identifier}[ \f\t\v]*/"(" {
-  if (!runtime_options.iec2025_experimental) REJECT;
+  if (!parser_state.options.iec2025_experimental) REJECT;
   const int receiver_length = (int)strcspn(yytext, " \f\t\v.");
   yyless(receiver_length);
   BEGIN(method_invocation_state);
-  yylval.ID=matiec::retain_ast_string(yytext);
-  return get_identifier_token(yytext);
+  yylval.ID=matiec::retain_ast_string(parser_state, yytext);
+  return get_identifier_token(parser_state, yytext);
 }
 <method_invocation_state>[ \f\t\v]*\.[ \f\t\v]* {return METHOD_DOT;}
 <method_invocation_state>{identifier}[ \f\t\v]* {
   int length = yyleng;
   while (length > 0 && strchr(" \f\t\v", yytext[length - 1]) != NULL) --length;
-  yylval.ID=matiec::retain_ast_string(yytext);
+  yylval.ID=matiec::retain_ast_string(parser_state, yytext);
   yylval.ID[length] = '\0';
   return method_identifier_token;
 }
 <method_invocation_state>"(" {BEGIN(st_state); return '(';}
-{identifier} 				{yylval.ID=matiec::retain_ast_string(yytext);
-					 // printf("returning identifier...: %s, %d\n", yytext, get_identifier_token(yytext));
-					 return get_identifier_token(yytext);}
+{identifier} 				{yylval.ID=matiec::retain_ast_string(parser_state, yytext);
+					 // printf("returning identifier...: %s, %d\n", yytext, get_identifier_token(parser_state, yytext));
+					 return get_identifier_token(parser_state, yytext);}
 
 
 
@@ -2066,6 +2069,7 @@ void reset_lexer_state(void) {
   current_filename = NULL;
   yyin = NULL;
   current_order = 0;
+  current_lexer_parser_state = NULL;
 }
 
 
@@ -2081,9 +2085,9 @@ void UpdateTracking(const char *text) {
 
 
 /* GetNextChar: reads a character from input */
-int GetNextChar(char *b, int maxBuffer) {
+int GetNextChar(matiec::ParserState &parser_state, char *b, int maxBuffer) {
   (void)maxBuffer;
-  if (matiec::active_parser_state().cancellation_requested())
+  if (parser_state.cancellation_requested())
     throw matiec::CompilationAbort("Compilation cancelled");
   if (current_tracking->in_file == NULL) {
     if (current_tracking->memory_offset >= current_tracking->memory.size())
@@ -2092,7 +2096,7 @@ int GetNextChar(char *b, int maxBuffer) {
     return 1;
   }
   int res = fgetc(current_tracking->in_file);
-  if ( res == EOF ) 
+  if ( res == EOF )
     return 0;
   *b = (char)res;
   return 1;
@@ -2109,7 +2113,7 @@ void print_include_stack(void) {
   int i;
 
   if ((include_stack_ptr - 1) >= 0)
-    fprintf (stderr, "in file "); 
+    fprintf (stderr, "in file ");
   for (i = include_stack_ptr - 1; i >= 0; i--)
     fprintf (stderr, "included from file %s:%d\n", include_stack[i].filename, include_stack[i].env->lineNumber);
 }
@@ -2117,7 +2121,8 @@ void print_include_stack(void) {
 
 
 /* set the internal state variables of lexical analyser to process a new include file */
-void activate_include_(tracking_t *tracking, const char *filename) {
+void activate_include_(matiec::ParserState &parser_state,
+                       tracking_t *tracking, const char *filename) {
   if (include_stack_ptr >= MAX_INCLUDE_DEPTH) {
     if (tracking->in_file != NULL)
       fclose(tracking->in_file);
@@ -2125,7 +2130,7 @@ void activate_include_(tracking_t *tracking, const char *filename) {
     fprintf(stderr, "Includes nested too deeply\n");
     throw matiec::CompilationAbort("Includes nested too deeply", true);
   }
-  if (runtime_options.utf8_source_and_strings) {
+  if (parser_state.options.utf8_source_and_strings) {
     matiec::Utf8Error error;
     const bool valid = tracking->in_file != NULL
         ? matiec::validate_utf8_file(tracking->in_file, &error)
@@ -2139,14 +2144,14 @@ void activate_include_(tracking_t *tracking, const char *filename) {
       throw matiec::CompilationAbort("Malformed UTF-8 included source", true);
     }
   }
-  
+
   yyin = tracking->in_file;
-  
+
   include_stack[include_stack_ptr].buffer_state = YY_CURRENT_BUFFER;
   include_stack[include_stack_ptr].env = current_tracking;
   include_stack[include_stack_ptr].filename = current_filename;
-  
-  current_filename = matiec::retain_ast_string(filename);
+
+  current_filename = matiec::retain_ast_string(parser_state, filename);
   current_tracking = tracking;
   include_stack_ptr++;
 
@@ -2154,12 +2159,14 @@ void activate_include_(tracking_t *tracking, const char *filename) {
   yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
 }
 
-void handle_include_file_(FILE *filehandle, const char *filename) {
-  activate_include_(GetNewTracking(filehandle), filename);
+void handle_include_file_(matiec::ParserState &parser_state, FILE *filehandle,
+                          const char *filename) {
+  activate_include_(parser_state, GetNewTracking(filehandle), filename);
 }
 
-void handle_include_memory_(std::string bytes, const char *filename) {
-  activate_include_(GetNewMemoryTracking(std::move(bytes)), filename);
+void handle_include_memory_(matiec::ParserState &parser_state,
+                            std::string bytes, const char *filename) {
+  activate_include_(parser_state, GetNewMemoryTracking(std::move(bytes)), filename);
 }
 
 
@@ -2167,9 +2174,10 @@ void handle_include_memory_(std::string bytes, const char *filename) {
 /* insert the code (in <source_code>) into the source code we are parsing.
  * This is done by creating an artificial file with that new source code, and then 'including' the file
  */
-void include_string_(const char *source_code) {
+void include_string_(matiec::ParserState &parser_state,
+                     const char *source_code) {
   FILE *tmp_file = tmpfile();
-  
+
   if(tmp_file == NULL) {
     perror("Error creating temp file.");
     throw matiec::CompilationAbort("Error creating temporary include file", true);
@@ -2179,7 +2187,7 @@ void include_string_(const char *source_code) {
   rewind(tmp_file);
 
   /* now parse the tmp file, by asking flex to handle it as if it had been included with the (*#include ... *) pragma... */
-  handle_include_file_(tmp_file, "");
+  handle_include_file_(parser_state, tmp_file, "");
 //fclose(tmp_file);  /* do NOT close file. It must only be closed when we finish reading from it! */
 }
 
@@ -2194,7 +2202,8 @@ void include_file(const char *filename, matiec::ParserState &parser_state) {
     const matiec::IncludeResolveStatus status = parser_state.resolve_include(
         filename, &display_name, &contents, &error);
     if (status == matiec::IncludeResolveStatus::resolved) {
-      handle_include_memory_(std::move(contents), display_name.c_str());
+      handle_include_memory_(parser_state, std::move(contents),
+                             display_name.c_str());
       return;
     }
     if (status != matiec::IncludeResolveStatus::use_filesystem) {
@@ -2203,7 +2212,7 @@ void include_file(const char *filename, matiec::ParserState &parser_state) {
     }
   }
   FILE *filehandle = NULL;
-  
+
   for (int i = 0; (INCLUDE_DIRECTORIES[i] != NULL) && (filehandle == NULL); i++) {
     char *full_name;
     full_name = strdup3(INCLUDE_DIRECTORIES[i], "/", filename);
@@ -2221,7 +2230,7 @@ void include_file(const char *filename, matiec::ParserState &parser_state) {
   }
 
   /* now process the new file... */
-  handle_include_file_(filehandle, filename);
+  handle_include_file_(parser_state, filehandle, filename);
 }
 
 
@@ -2268,14 +2277,14 @@ void unput_text(int n) {
   *current_tracking = previous_tracking;
   yycopy[n] = '\0';
   UpdateTracking(yycopy);
-  
+
   free(yycopy);
 }
 
 
 
-/* return all the text in the current token back to the input stream, 
- * but first return to the stream an additional character to mark the end of the token. 
+/* return all the text in the current token back to the input stream,
+ * but first return to the stream an additional character to mark the end of the token.
  */
 void unput_and_mark(const char mark_char) {
   char *yycopy = strdup( yytext ); /* unput_char() destroys yytext, so we copy it first */
@@ -2322,13 +2331,13 @@ void  append_bodystate_buffer(const char *text, int is_whitespace) {
 void   unput_bodystate_buffer(void) {
   if (NULL == bodystate_buffer) ERROR;
   // printf("<<<unput_bodystate_buffer>>>\n%s\n", bodystate_buffer);
-  
+
   for (long int i = strlen(bodystate_buffer)-1; i >= 0; i--)
     unput_char(bodystate_buffer[i]);
-  
+
   free(bodystate_buffer);
   bodystate_buffer        = NULL;
-  bodystate_is_whitespace = 1;  
+  bodystate_is_whitespace = 1;
   *current_tracking = bodystate_init_tracking;
 }
 
@@ -2342,14 +2351,14 @@ int  isempty_bodystate_buffer(void) {
 
 
 /* Delete all data in bodystate. */
-/* Will be used to delete ST whitespace when not needed. If not deleted this whitespace 
+/* Will be used to delete ST whitespace when not needed. If not deleted this whitespace
  * will be prepended to the next text block of code being appended to bodystate_buffer,
  * which may cause trouble if it is IL code
  */
 void  del_bodystate_buffer(void) {
   free(bodystate_buffer);
   bodystate_buffer        = NULL;
-  bodystate_is_whitespace = 1;  
+  bodystate_is_whitespace = 1;
 }
 
 
@@ -2379,7 +2388,10 @@ int yywrap(void)
 
 /* The following functions will be called from inside bison code! */
 
-void include_string(const char *source_code) {include_string_(source_code);}
+void include_string(matiec::ParserState &parser_state,
+                    const char *source_code) {
+  include_string_(parser_state, source_code);
+}
 
 
 /* Tell flex which file to parse. This function will not imediately start parsing the file.
@@ -2388,22 +2400,24 @@ void include_string(const char *source_code) {include_string_(source_code);}
  * Returns NULL on error opening the file (and a valid errno), or 0 on success.
  * Caller must close the file!
  */
-FILE *parse_file(const char *filename) {
-  return parse_file_as(filename, filename);
+FILE *parse_file(matiec::ParserState &parser_state, const char *filename) {
+  return parse_file_as(parser_state, filename, filename);
 }
 
-FILE *parse_file_as(const char *filename, const char *display_filename) {
+FILE *parse_file_as(matiec::ParserState &parser_state, const char *filename,
+                    const char *display_filename) {
   FILE *filehandle = NULL;
 
   if((filehandle = fopen(filename, "r")) != NULL) {
     yyin = filehandle;
-    current_filename = matiec::retain_ast_string(display_filename);
+    current_filename = matiec::retain_ast_string(parser_state, display_filename);
     current_tracking = GetNewTracking(yyin);
   }
   return filehandle;
 }
 
-FILE *parse_source_as(const char *source, size_t size,
+FILE *parse_source_as(matiec::ParserState &parser_state, const char *source,
+                      size_t size,
                       const char *display_filename) {
   FILE *filehandle = tmpfile();
   if (filehandle == NULL) return NULL;
@@ -2413,7 +2427,7 @@ FILE *parse_source_as(const char *source, size_t size,
   }
   rewind(filehandle);
   yyin = filehandle;
-  current_filename = matiec::retain_ast_string(display_filename);
+  current_filename = matiec::retain_ast_string(parser_state, display_filename);
   current_tracking = GetNewTracking(yyin);
   return filehandle;
 }
@@ -2437,15 +2451,15 @@ thread_local YYLTYPE yylloc;
 
 
 
-int get_identifier_token(const char *identifier_str) {return 0;}
-int get_direct_variable_token(const char *direct_variable_str) {return 0;}
+int get_identifier_token(matiec::ParserState &, const char *) {return 0;}
+int get_direct_variable_token(matiec::ParserState &, const char *) {return 0;}
 
 
 int main(int argc, char **argv) {
 
   FILE *in_file;
   int res;
-	
+
   if (argc == 1) {
     /* Work as an interactive (command line) parser... */
     while((res=yylex()))
@@ -2467,7 +2481,7 @@ int main(int argc, char **argv) {
       fprintf(stderr, "(line %d)token: %d (%s)\n", yylineno, res, yylval.ID);
     }
   }
-	
+
 	return 0;
 
 }

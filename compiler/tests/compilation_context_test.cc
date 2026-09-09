@@ -9,13 +9,13 @@ int main() {
   matiec::CompilationContext first;
   matiec::CompilationContext second;
 
-  bool missing_session_rejected = false;
+  bool missing_runtime_rejected = false;
   try {
-    (void)matiec::active_parser_state();
+    (void)matiec::active_runtime_options();
   } catch (const std::logic_error &) {
-    missing_session_rejected = true;
+    missing_runtime_rejected = true;
   }
-  assert(missing_session_rejected);
+  assert(missing_runtime_rejected);
   integer_c standalone_literal("0");
   assert(!first.ast_arena().owns(&standalone_literal));
   assert(!second.ast_arena().owns(&standalone_literal));
@@ -73,19 +73,27 @@ int main() {
   assert(first.parser_state().symbols().library_elements.find("FirstProgram") ==
          first.parser_state().symbols().library_elements.end());
   {
-    matiec::ActiveParserStateScope first_scope(first.parser_state());
-    assert(&matiec::active_parser_state() == &first.parser_state());
+    matiec::ActiveAstArenaScope first_ast_scope(first.ast_arena());
+    matiec::ActiveDeclarationSymbolTablesScope first_declaration_scope(
+        first.declaration_symbols());
+    matiec::ActiveRuntimeOptionsScope first_runtime_scope(
+        first.parser_state().options);
     assert(&matiec::active_declaration_symbol_tables() ==
            &first.declaration_symbols());
+    assert(&matiec::active_runtime_options() == &first.parser_state().options);
     integer_c *first_literal = new integer_c("1");
     char *first_token = matiec::retain_ast_string("first-token");
     assert(first.ast_arena().owns(first_literal));
     assert(first.ast_arena().owns(first_token));
     {
-      matiec::ActiveParserStateScope second_scope(second.parser_state());
-      assert(&matiec::active_parser_state() == &second.parser_state());
+      matiec::ActiveAstArenaScope second_ast_scope(second.ast_arena());
+      matiec::ActiveDeclarationSymbolTablesScope second_declaration_scope(
+          second.declaration_symbols());
+      matiec::ActiveRuntimeOptionsScope second_runtime_scope(
+          second.parser_state().options);
       assert(&matiec::active_declaration_symbol_tables() ==
              &second.declaration_symbols());
+      assert(&matiec::active_runtime_options() == &second.parser_state().options);
       integer_c *second_literal = new integer_c("2");
       char *second_token = matiec::retain_ast_string("second-token");
       assert(second.ast_arena().owns(second_literal));
@@ -94,7 +102,7 @@ int main() {
     }
     assert(&matiec::active_declaration_symbol_tables() ==
            &first.declaration_symbols());
-    assert(&matiec::active_parser_state() == &first.parser_state());
+    assert(&matiec::active_runtime_options() == &first.parser_state().options);
     integer_c *restored_literal = new integer_c("3");
     assert(first.ast_arena().owns(restored_literal));
     assert(!second.ast_arena().owns(restored_literal));

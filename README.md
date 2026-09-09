@@ -528,7 +528,9 @@ results stay in `AnalysisStore`, and all semantic and generator result fields
 have been removed from the AST. Stage 3 and Stage 4 receive the owning context's
 store explicitly, without a compatibility result store or ambient binding.
 
-The supported cross-thread reentrancy architecture track is complete. Generated
+The supported cross-thread reentrancy architecture track is complete. Parser and
+scanner helpers receive `ParserState` explicitly and no active-parser selector
+remains. Generated
 Bison state is invocation-local, generated Flex state is isolated per thread,
 and parser classification plus
 declaration symbol tables are owned by each `CompilationContext` and selected by

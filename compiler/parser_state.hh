@@ -33,7 +33,6 @@ using IncludeResolver = std::function<IncludeResolveStatus(
 using CancellationChecker = std::function<bool()>;
 
 class AstArena;
-struct DeclarationSymbolTables;
 class ParserSymbolTables;
 
 struct ParserState {
@@ -55,8 +54,6 @@ struct ParserState {
   void reset_for_parse();
   void bind_ast_arena(AstArena &arena);
   AstArena *ast_arena() const;
-  void bind_declaration_symbols(DeclarationSymbolTables &tables);
-  DeclarationSymbolTables &declaration_symbols() const;
   ParserSymbolTables &symbols();
   const ParserSymbolTables &symbols() const;
   void set_include_resolver(IncludeResolver resolver);
@@ -70,26 +67,23 @@ struct ParserState {
 
  private:
   AstArena *ast_arena_ = nullptr;
-  DeclarationSymbolTables *declaration_symbols_ = nullptr;
   std::unique_ptr<ParserSymbolTables> symbols_;
   IncludeResolver include_resolver_;
   CancellationChecker cancellation_checker_;
 };
 
-class ActiveParserStateScope {
+class ActiveRuntimeOptionsScope {
  public:
-  explicit ActiveParserStateScope(ParserState &state);
-  ~ActiveParserStateScope();
+  explicit ActiveRuntimeOptionsScope(runtime_options_t &options);
+  ~ActiveRuntimeOptionsScope();
 
-  ActiveParserStateScope(const ActiveParserStateScope &) = delete;
-  ActiveParserStateScope &operator=(const ActiveParserStateScope &) = delete;
+  ActiveRuntimeOptionsScope(const ActiveRuntimeOptionsScope &) = delete;
+  ActiveRuntimeOptionsScope &operator=(const ActiveRuntimeOptionsScope &) = delete;
 
  private:
-  ParserState *previous_;
+  runtime_options_t *previous_;
 };
 
-ParserState &active_parser_state();
-ParserState *active_parser_state_or_null();
 runtime_options_t &active_runtime_options();
 
 }  // namespace matiec

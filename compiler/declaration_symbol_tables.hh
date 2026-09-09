@@ -15,6 +15,20 @@ struct DeclarationSymbolTables {
   void clear();
 };
 
+class ActiveDeclarationSymbolTablesScope {
+ public:
+  explicit ActiveDeclarationSymbolTablesScope(DeclarationSymbolTables &tables);
+  ~ActiveDeclarationSymbolTablesScope();
+
+  ActiveDeclarationSymbolTablesScope(
+      const ActiveDeclarationSymbolTablesScope &) = delete;
+  ActiveDeclarationSymbolTablesScope &operator=(
+      const ActiveDeclarationSymbolTablesScope &) = delete;
+
+ private:
+  DeclarationSymbolTables *previous_;
+};
+
 DeclarationSymbolTables &active_declaration_symbol_tables();
 
 }  // namespace matiec

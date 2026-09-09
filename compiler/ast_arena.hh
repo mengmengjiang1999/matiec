@@ -12,6 +12,8 @@ class symbol_c;
 
 namespace matiec {
 
+struct ParserState;
+
 class AstArena {
  public:
   AstArena() = default;
@@ -64,7 +66,21 @@ class AstArena {
   bool clearing_ = false;
 };
 
+class ActiveAstArenaScope {
+ public:
+  explicit ActiveAstArenaScope(AstArena &arena);
+  ~ActiveAstArenaScope();
+
+  ActiveAstArenaScope(const ActiveAstArenaScope &) = delete;
+  ActiveAstArenaScope &operator=(const ActiveAstArenaScope &) = delete;
+
+ private:
+  AstArena *previous_;
+};
+
+AstArena *active_ast_arena_or_null();
 char *retain_ast_string(const char *value);
+char *retain_ast_string(ParserState &state, const char *value);
 
 }  // namespace matiec
 

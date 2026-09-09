@@ -26,7 +26,7 @@ int main() {
   matiec::AstArena arena;
   matiec::ParserState parser_state;
   parser_state.bind_ast_arena(arena);
-  matiec::ActiveParserStateScope scope(parser_state);
+  matiec::ActiveAstArenaScope scope(arena);
 
   {
     library_c *library = new library_c;

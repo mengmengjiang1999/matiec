@@ -10,25 +10,26 @@ LegacyGlobalStateAdapter::LegacyGlobalStateAdapter(
     CompilationContext &context, const CompilerOptions &options)
     : context_(context) {
   context_.parser_state().reset_for_parse();
-  runtime_options.allow_void_datatype = options.allow_void_datatype;
-  runtime_options.allow_missing_var_in = options.allow_missing_var_in;
-  runtime_options.disable_implicit_en_eno = options.disable_implicit_en_eno;
-  runtime_options.pre_parsing = options.pre_parsing;
-  runtime_options.safe_extensions = options.safe_extensions;
-  runtime_options.full_token_loc = options.full_token_location;
-  runtime_options.conversion_functions = options.conversion_functions;
-  runtime_options.nested_comments = options.nested_comments;
-  runtime_options.ref_standard_extensions = options.reference_extensions;
-  runtime_options.ref_nonstand_extensions = options.nonstandard_reference_extensions;
-  runtime_options.nonliteral_in_array_size = options.nonliteral_array_size;
-  runtime_options.utf8_source_and_strings =
+  runtime_options_t &runtime = context_.parser_state().options;
+  runtime.allow_void_datatype = options.allow_void_datatype;
+  runtime.allow_missing_var_in = options.allow_missing_var_in;
+  runtime.disable_implicit_en_eno = options.disable_implicit_en_eno;
+  runtime.pre_parsing = options.pre_parsing;
+  runtime.safe_extensions = options.safe_extensions;
+  runtime.full_token_loc = options.full_token_location;
+  runtime.conversion_functions = options.conversion_functions;
+  runtime.nested_comments = options.nested_comments;
+  runtime.ref_standard_extensions = options.reference_extensions;
+  runtime.ref_nonstand_extensions = options.nonstandard_reference_extensions;
+  runtime.nonliteral_in_array_size = options.nonliteral_array_size;
+  runtime.utf8_source_and_strings =
       options.language_profile == LanguageProfile::iec61131_3_2025_experimental;
-  runtime_options.iec2025_experimental =
+  runtime.iec2025_experimental =
       options.language_profile == LanguageProfile::iec61131_3_2025_experimental;
-  runtime_options.register_experimental_assert =
+  runtime.register_experimental_assert =
       options.language_profile == LanguageProfile::iec61131_3_2025_experimental;
-  runtime_options.relaxed_datatype_model = options.relaxed_datatype_model;
-  runtime_options.includedir = options.include_directory.empty()
+  runtime.relaxed_datatype_model = options.relaxed_datatype_model;
+  runtime.includedir = options.include_directory.empty()
                                   ? NULL
                                   : options.include_directory.c_str();
 }

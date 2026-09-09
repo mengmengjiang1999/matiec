@@ -7,7 +7,6 @@ namespace matiec {
 CompilationContext::CompilationContext()
     : outputs_(diagnostics_), analysis_(ast_arena_) {
   parser_state_.bind_ast_arena(ast_arena_);
-  parser_state_.bind_declaration_symbols(declaration_symbols_);
   parser_state_.set_cancellation_checker(
       [this] { return cancel_requested(); });
 }
@@ -15,7 +14,6 @@ CompilationContext::CompilationContext()
 CompilationContext::CompilationContext(CompilerOptions options)
     : options_(std::move(options)), outputs_(diagnostics_), analysis_(ast_arena_) {
   parser_state_.bind_ast_arena(ast_arena_);
-  parser_state_.bind_declaration_symbols(declaration_symbols_);
   parser_state_.set_cancellation_checker(
       [this] { return cancel_requested(); });
 }

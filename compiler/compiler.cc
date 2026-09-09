@@ -109,7 +109,10 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     }
 
     context.diagnostics().set_phase(DiagnosticPhase::parser);
-    ActiveParserStateScope compilation_session(context.parser_state());
+    ActiveAstArenaScope ast_session(context.ast_arena());
+    ActiveDeclarationSymbolTablesScope declaration_session(
+        context.declaration_symbols());
+    ActiveRuntimeOptionsScope runtime_session(context.parser_state().options);
     LegacyGlobalStateAdapter legacy_state(context, options);
 
     symbol_c *tree_root = NULL;

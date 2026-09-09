@@ -1,5 +1,4 @@
 #include "compiler/parser_state.hh"
-#include "compiler/declaration_symbol_tables.hh"
 #include "compiler/parser_symbol_tables.hh"
 
 #include <stdexcept>
@@ -7,7 +6,7 @@
 
 namespace matiec {
 namespace {
-thread_local ParserState *current_parser_state = nullptr;
+thread_local runtime_options_t *current_runtime_options = nullptr;
 }  // namespace
 
 ParserState::ParserState() : symbols_(new ParserSymbolTables) {}
@@ -28,16 +27,6 @@ void ParserState::reset_for_parse() {
 void ParserState::bind_ast_arena(AstArena &arena) { ast_arena_ = &arena; }
 
 AstArena *ParserState::ast_arena() const { return ast_arena_; }
-
-void ParserState::bind_declaration_symbols(DeclarationSymbolTables &tables) {
-  declaration_symbols_ = &tables;
-}
-
-DeclarationSymbolTables &ParserState::declaration_symbols() const {
-  if (declaration_symbols_ == nullptr)
-    throw std::logic_error("ParserState has no declaration symbol tables");
-  return *declaration_symbols_;
-}
 
 ParserSymbolTables &ParserState::symbols() { return *symbols_; }
 
@@ -66,25 +55,19 @@ bool ParserState::cancellation_requested() const {
   return cancellation_checker_ && cancellation_checker_();
 }
 
-ActiveParserStateScope::ActiveParserStateScope(ParserState &state)
-    : previous_(current_parser_state) {
-  current_parser_state = &state;
+ActiveRuntimeOptionsScope::ActiveRuntimeOptionsScope(runtime_options_t &options)
+    : previous_(current_runtime_options) {
+  current_runtime_options = &options;
 }
 
-ActiveParserStateScope::~ActiveParserStateScope() {
-  current_parser_state = previous_;
+ActiveRuntimeOptionsScope::~ActiveRuntimeOptionsScope() {
+  current_runtime_options = previous_;
 }
-
-ParserState &active_parser_state() {
-  if (current_parser_state == nullptr)
-    throw std::logic_error("No active parser session");
-  return *current_parser_state;
-}
-
-ParserState *active_parser_state_or_null() { return current_parser_state; }
 
 runtime_options_t &active_runtime_options() {
-  return active_parser_state().options;
+  if (current_runtime_options == nullptr)
+    throw std::logic_error("No active runtime options");
+  return *current_runtime_options;
 }
 
 }  // namespace matiec

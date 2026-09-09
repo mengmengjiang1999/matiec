@@ -6,6 +6,9 @@
 #include <memory>
 
 namespace matiec {
+namespace {
+thread_local AstArena *current_ast_arena = nullptr;
+}
 
 AstArena::~AstArena() {
   clear();
@@ -78,8 +81,7 @@ void AstArena::destroy_string(void *address) {
 
 char *retain_ast_string(const char *value) {
   if (value == nullptr) return nullptr;
-  ParserState *parser_state = active_parser_state_or_null();
-  AstArena *arena = parser_state == nullptr ? nullptr : parser_state->ast_arena();
+  AstArena *arena = active_ast_arena_or_null();
   if (arena != nullptr) return arena->copy_string(value);
 
   const std::size_t length = std::strlen(value);
@@ -87,5 +89,21 @@ char *retain_ast_string(const char *value) {
   if (copy != nullptr) std::memcpy(copy, value, length + 1);
   return copy;
 }
+
+char *retain_ast_string(ParserState &state, const char *value) {
+  AstArena *arena = state.ast_arena();
+  return arena == nullptr ? retain_ast_string(value) : arena->copy_string(value);
+}
+
+ActiveAstArenaScope::ActiveAstArenaScope(AstArena &arena)
+    : previous_(current_ast_arena) {
+  current_ast_arena = &arena;
+}
+
+ActiveAstArenaScope::~ActiveAstArenaScope() {
+  current_ast_arena = previous_;
+}
+
+AstArena *active_ast_arena_or_null() { return current_ast_arena; }
 
 }  // namespace matiec

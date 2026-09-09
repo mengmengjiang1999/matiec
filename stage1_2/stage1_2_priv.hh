@@ -88,17 +88,17 @@
 /* Part 1: Concepts and Function Blocks,              */
 /* Version 1.0 – Official Release                     */
 /******************************************************/
-bool get_opt_safe_extensions();
+bool get_opt_safe_extensions(const matiec::ParserState &state);
 
 /************************************/
 /* whether to allow nested comments */
 /************************************/
-bool get_opt_nested_comments();
+bool get_opt_nested_comments(const matiec::ParserState &state);
 
 /**************************************************************************/
 /* whether to allow REF(), DREF(), REF_TO, NULL and ^ operators/keywords  */
 /**************************************************************************/
-bool get_opt_ref_standard_extensions();
+bool get_opt_ref_standard_extensions(const matiec::ParserState &state);
 
 
 
@@ -128,7 +128,7 @@ void print_include_stack(void);
  * between user defined (i.e. derived) enumerated datatypes, and some basic datatypes 
  * (e.g. INT, STRING, etc...)
  */
-void include_string(const char *source_code);
+void include_string(matiec::ParserState &state, const char *source_code);
 
 
 /**********************************/
@@ -141,9 +141,10 @@ void include_string(const char *source_code);
  * Returns NULL on error opening the file (and a valid errno), or 0 on success.
  * Caller must close the file!
  */
-FILE *parse_file(const char *filename);
-FILE *parse_file_as(const char *filename, const char *display_filename);
-FILE *parse_source_as(const char *source, size_t size,
+FILE *parse_file(matiec::ParserState &state, const char *filename);
+FILE *parse_file_as(matiec::ParserState &state, const char *filename,
+                    const char *display_filename);
+FILE *parse_source_as(matiec::ParserState &state, const char *source, size_t size,
                       const char *display_filename);
 void reset_lexer_state(void);
 
@@ -151,48 +152,48 @@ void reset_lexer_state(void);
 /**********************************************************************************************/
 /* whether bison is doing the pre-parsing, where POU bodies and var declarations are ignored! */
 /**********************************************************************************************/
-void set_preparse_state(void);
-void rst_preparse_state(void);
-bool get_preparse_state();  // returns true if bison is in preparse state
+void set_preparse_state(matiec::ParserState &state);
+void rst_preparse_state(matiec::ParserState &state);
+bool get_preparse_state(const matiec::ParserState &state);
 
 /****************************************************/
 /* Controlling the entry to the body_state in flex. */
 /****************************************************/
-void cmd_goto_body_state(void);
-int  get_goto_body_state(void);
-void rst_goto_body_state(void);
+void cmd_goto_body_state(matiec::ParserState &state);
+int  get_goto_body_state(const matiec::ParserState &state);
+void rst_goto_body_state(matiec::ParserState &state);
 
 
 /*************************************************************/
 /* Controlling the entry to the sfc_qualifier_state in flex. */
 /*************************************************************/
-void cmd_goto_sfc_qualifier_state(void);
-int  get_goto_sfc_qualifier_state(void);
-void rst_goto_sfc_qualifier_state(void);
+void cmd_goto_sfc_qualifier_state(matiec::ParserState &state);
+int  get_goto_sfc_qualifier_state(const matiec::ParserState &state);
+void rst_goto_sfc_qualifier_state(matiec::ParserState &state);
 
 
 /*************************************************************/
 /* Controlling the entry to the sfc_priority_state in flex.  */
 /*************************************************************/
-void cmd_goto_sfc_priority_state(void);
-int  get_goto_sfc_priority_state(void);
-void rst_goto_sfc_priority_state(void);
+void cmd_goto_sfc_priority_state(matiec::ParserState &state);
+int  get_goto_sfc_priority_state(const matiec::ParserState &state);
+void rst_goto_sfc_priority_state(matiec::ParserState &state);
 
 
 /*********************************************************/
 /* Controlling the entry to the task_init_state in flex. */
 /*********************************************************/
-void cmd_goto_task_init_state(void);
-int  get_goto_task_init_state(void);
-void rst_goto_task_init_state(void);
+void cmd_goto_task_init_state(matiec::ParserState &state);
+int  get_goto_task_init_state(const matiec::ParserState &state);
+void rst_goto_task_init_state(matiec::ParserState &state);
 
 
 /****************************************************************/
 /* Returning to state in flex previously pushed onto the stack. */
 /****************************************************************/
-void cmd_pop_state(void);
-int  get_pop_state(void);
-void rst_pop_state(void);
+void cmd_pop_state(matiec::ParserState &state);
+int  get_pop_state(const matiec::ParserState &state);
+void rst_pop_state(matiec::ParserState &state);
 
 
 
@@ -214,22 +215,19 @@ void rst_pop_state(void);
  *       <configuration_name , configuration_decl>
  */
 typedef symtable_c<int>             library_element_symtable_t;
-#define library_element_symtable \
-  (::matiec::active_parser_state().symbols().library_elements)
+#define library_element_symtable (parser_state.symbols().library_elements)
 
 /* A symbol table to store the declared variables of
  * the function currently being parsed...
  */
 typedef symtable_c<int>             variable_name_symtable_t;
-#define variable_name_symtable \
-  (::matiec::active_parser_state().symbols().variable_names)
+#define variable_name_symtable (parser_state.symbols().variable_names)
 
 /* A symbol table to store the declared direct variables of
  * the function currently being parsed...
  */
 typedef symtable_c<int>             direct_variable_symtable_t;
-#define direct_variable_symtable \
-  (::matiec::active_parser_state().symbols().direct_variables)
+#define direct_variable_symtable (parser_state.symbols().direct_variables)
 
 /* Function only called from within flex!
  *
@@ -239,7 +237,8 @@ typedef symtable_c<int>             direct_variable_symtable_t;
  * Searches first in the variables, and only if not found
  * does it continue searching in the library elements
  */
-int get_identifier_token(const char *identifier_str);
+int get_identifier_token(matiec::ParserState &state,
+                         const char *identifier_str);
 
 /* Function only called from within flex!
  *
@@ -247,7 +246,8 @@ int get_identifier_token(const char *identifier_str);
  * declared above, and return the token id of the first
  * symbol found.
  */
-int get_direct_variable_token(const char *direct_variable_str);
+int get_direct_variable_token(matiec::ParserState &state,
+                              const char *direct_variable_str);
 
 
 /*************************************************************/

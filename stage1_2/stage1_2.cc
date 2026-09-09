@@ -62,61 +62,61 @@
 /* Part 1: Concepts and Function Blocks,              */
 /* Version 1.0 – Official Release                   */
 /******************************************************/
-bool get_opt_safe_extensions() {return runtime_options.safe_extensions;}
+bool get_opt_safe_extensions(const matiec::ParserState &state) {return state.options.safe_extensions;}
 
 /************************************/
 /* whether to allow nested comments */
 /************************************/
-bool get_opt_nested_comments() {return runtime_options.nested_comments;}
+bool get_opt_nested_comments(const matiec::ParserState &state) {return state.options.nested_comments;}
 
 /**************************************************************************/
 /* whether to allow REF(), DREF(), REF_TO, NULL and ^ operators/keywords  */
 /**************************************************************************/
-bool get_opt_ref_standard_extensions() {return runtime_options.ref_standard_extensions;}
+bool get_opt_ref_standard_extensions(const matiec::ParserState &state) {return state.options.ref_standard_extensions;}
 
 
 /**********************************************************************************************/
 /* whether bison is doing the pre-parsing, where POU bodies and var declarations are ignored! */
 /**********************************************************************************************/
-void set_preparse_state(void) {matiec::active_parser_state().preparse = true; }
-void rst_preparse_state(void) {matiec::active_parser_state().preparse = false;}
-bool get_preparse_state(void) {return matiec::active_parser_state().preparse;}
+void set_preparse_state(matiec::ParserState &state) {state.preparse = true; }
+void rst_preparse_state(matiec::ParserState &state) {state.preparse = false;}
+bool get_preparse_state(const matiec::ParserState &state) {return state.preparse;}
 
 
 /****************************************************/
 /* Controlling the entry to the body_state in flex. */
 /****************************************************/
-void cmd_goto_body_state(void) {matiec::active_parser_state().goto_body = true;}
-int  get_goto_body_state(void) {return matiec::active_parser_state().goto_body;}
-void rst_goto_body_state(void) {matiec::active_parser_state().goto_body = false;}
+void cmd_goto_body_state(matiec::ParserState &state) {state.goto_body = true;}
+int  get_goto_body_state(const matiec::ParserState &state) {return state.goto_body;}
+void rst_goto_body_state(matiec::ParserState &state) {state.goto_body = false;}
 
 /*************************************************************/
 /* Controlling the entry to the sfc_qualifier_state in flex. */
 /*************************************************************/
-void cmd_goto_sfc_qualifier_state(void) {matiec::active_parser_state().goto_sfc_qualifier = true;}
-int  get_goto_sfc_qualifier_state(void) {return matiec::active_parser_state().goto_sfc_qualifier;}
-void rst_goto_sfc_qualifier_state(void) {matiec::active_parser_state().goto_sfc_qualifier = false;}
+void cmd_goto_sfc_qualifier_state(matiec::ParserState &state) {state.goto_sfc_qualifier = true;}
+int  get_goto_sfc_qualifier_state(const matiec::ParserState &state) {return state.goto_sfc_qualifier;}
+void rst_goto_sfc_qualifier_state(matiec::ParserState &state) {state.goto_sfc_qualifier = false;}
 
 /*************************************************************/
 /* Controlling the entry to the sfc_priority_state in flex.  */
 /*************************************************************/
-void cmd_goto_sfc_priority_state(void) {matiec::active_parser_state().goto_sfc_priority = true;}
-int  get_goto_sfc_priority_state(void) {return matiec::active_parser_state().goto_sfc_priority;}
-void rst_goto_sfc_priority_state(void) {matiec::active_parser_state().goto_sfc_priority = false;}
+void cmd_goto_sfc_priority_state(matiec::ParserState &state) {state.goto_sfc_priority = true;}
+int  get_goto_sfc_priority_state(const matiec::ParserState &state) {return state.goto_sfc_priority;}
+void rst_goto_sfc_priority_state(matiec::ParserState &state) {state.goto_sfc_priority = false;}
 
 /*************************************************************/
 /* Controlling the entry to the sfc_qualifier_state in flex. */
 /*************************************************************/
-void cmd_goto_task_init_state(void) {matiec::active_parser_state().goto_task_init = true;}
-int  get_goto_task_init_state(void) {return matiec::active_parser_state().goto_task_init;}
-void rst_goto_task_init_state(void) {matiec::active_parser_state().goto_task_init = false;}
+void cmd_goto_task_init_state(matiec::ParserState &state) {state.goto_task_init = true;}
+int  get_goto_task_init_state(const matiec::ParserState &state) {return state.goto_task_init;}
+void rst_goto_task_init_state(matiec::ParserState &state) {state.goto_task_init = false;}
 
 /****************************************************************/
 /* Returning to state in flex previously pushed onto the stack. */
 /****************************************************************/
-void cmd_pop_state(void) {matiec::active_parser_state().pop_state = true;}
-int  get_pop_state(void) {return matiec::active_parser_state().pop_state;}
-void rst_pop_state(void) {matiec::active_parser_state().pop_state = false;}
+void cmd_pop_state(matiec::ParserState &state) {state.pop_state = true;}
+int  get_pop_state(const matiec::ParserState &state) {return state.pop_state;}
+void rst_pop_state(matiec::ParserState &state) {state.pop_state = false;}
 
 
 /* Function only called from within flex!
@@ -127,7 +127,8 @@ void rst_pop_state(void) {matiec::active_parser_state().pop_state = false;}
  * Searches first in the variables, and only if not found
  * does it continue searching in the library elements
  */
-int get_identifier_token(const char *identifier_str) {
+int get_identifier_token(matiec::ParserState &parser_state,
+                         const char *identifier_str) {
 //  std::cout << "get_identifier_token(" << identifier_str << "): \n";
   variable_name_symtable_t  ::iterator iter1;
   library_element_symtable_t::iterator iter2;
@@ -147,7 +148,8 @@ int get_identifier_token(const char *identifier_str) {
  * declared above, and return the token id of the first
  * symbol found.
  */
-int get_direct_variable_token(const char *direct_variable_str) {
+int get_direct_variable_token(matiec::ParserState &parser_state,
+                              const char *direct_variable_str) {
   direct_variable_symtable_t::iterator iter;
 
   if ((iter = direct_variable_symtable.find(direct_variable_str)) != direct_variable_symtable.end())
@@ -230,7 +232,6 @@ int stage1_2(matiec::ParserState &state, const char *filename,
        *       We now set those variables...
        */
   prepare_parser_session(state);
-  matiec::ActiveParserStateScope scope(state);
   return stage2__(state, filename, display_filename, NULL, 0, tree_root_ref);
 }
 
@@ -239,7 +240,6 @@ int stage1_2_from_source(matiec::ParserState &state, const char *source,
                          const char *display_filename,
                          symbol_c **tree_root_ref) {
   prepare_parser_session(state);
-  matiec::ActiveParserStateScope scope(state);
   return stage2__(state, display_filename, display_filename, source, source_size,
                   tree_root_ref);
 }

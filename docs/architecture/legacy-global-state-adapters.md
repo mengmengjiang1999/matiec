@@ -87,10 +87,12 @@ active.
 
 No new mutable process-wide compiler state may be added to this adapter. New state
 belongs in `CompilationContext` or one of its services. As parser and symbol
-APIs gain explicit context parameters, their corresponding adapter methods,
-`current_parser_state`, and the `runtime_options` compatibility surface must be
-removed. AST ownership and declaration lookup no longer have separate
-compatibility bindings.
+APIs gain explicit context parameters, their corresponding adapter methods and
+the `runtime_options` compatibility surface must be removed. Parser and scanner
+helpers now receive `ParserState` explicitly; there is no `current_parser_state`
+selector. The remaining legacy bindings are narrow, independently nested scopes
+for AST ownership, declaration lookup, and runtime options, and none exposes the
+active parser invocation.
 
 ## Final-state audit
 
