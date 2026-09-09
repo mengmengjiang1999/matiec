@@ -29,10 +29,10 @@ Destroying the context releases all AST nodes and retained parser
 strings from that compilation. Do not retain AST pointers after the context is
 destroyed.
 
-Two compilations may run sequentially or concurrently in one process with
-separate contexts. The generated frontend parses independent contexts
-concurrently on separate threads: Bison invocation state is automatic, Flex
-scanner state is thread-local, and classification tables are context-owned.
+Two compilations may run sequentially, concurrently, or recursively on one
+thread with separate contexts. Bison invocation state is automatic, each Flex
+parse owns a reentrant scanner handle, and classification tables are
+context-owned.
 Parser sessions carry their
 context-owned AST arenas, so direct parser and synthetic-node construction also
 remains isolated without a separate active-arena binding.

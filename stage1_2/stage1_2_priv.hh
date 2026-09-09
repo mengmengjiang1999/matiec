@@ -115,7 +115,7 @@ bool get_opt_ref_standard_extensions(const matiec::ParserState &state);
 /* print the include file stack to stderr... */
 /*********************************************/
 /* This is a service that flex provides to bison... */
-void print_include_stack(void);
+void print_include_stack(const matiec::ParserState &state);
 
 /*****************************************************/
 /* Ask flex to include the source code in the string */
@@ -146,7 +146,7 @@ FILE *parse_file_as(matiec::ParserState &state, const char *filename,
                     const char *display_filename);
 FILE *parse_source_as(matiec::ParserState &state, const char *source, size_t size,
                       const char *display_filename);
-void reset_lexer_state(void);
+void reset_lexer_state(matiec::ParserState &state);
 
 
 /**********************************************************************************************/

@@ -16,16 +16,31 @@ SHALL NOT serialize those sessions through a process-wide lock.
 - **THEN** both parses succeed and each result contains only its own source's AST
   and parser classification entries
 
-### Requirement: Reproducible thread-local generation
+### Requirement: Reproducible reentrant generation
 
-The authoritative build SHALL apply and verify the frontend state-isolation
-transformation whenever Flex or Bison sources are regenerated.
+The authoritative build SHALL generate Flex with its reentrant skeleton and
+SHALL allocate all generated and handwritten mutable scanner state per parser
+session. Generated frontend checks SHALL reject process termination without
+rewriting generated storage duration.
 
 #### Scenario: Clean build regenerates the frontend
 
 - **WHEN** generated scanner and parser outputs do not exist before a build
-- **THEN** the build regenerates them and compiles only after all mutable session
-  declarations have been made thread-local
+- **THEN** the build creates a reentrant scanner whose mutable state belongs to
+  an explicit scanner handle
+
+#### Scenario: A compilation nests on the same thread
+
+- **WHEN** an include resolver synchronously runs another compilation before
+  returning the outer include source
+- **THEN** both scanner sessions retain their own input, location, include, and
+  start-condition state and both compilations complete correctly
+
+#### Scenario: Scanner setup aborts
+
+- **WHEN** cancellation, a resource error, or an include error unwinds parsing
+- **THEN** that session's buffers, tracking records, files, and scanner handle
+  are released without changing another active session
 
 ### Requirement: One compatibility session selects context state
 

@@ -173,7 +173,7 @@ EXTRA_DIST = \
 	tests/syntax/sfc/sfc.txt \
 	tests/sanitizers/runtests \
 	config/revision.sh \
-	config/thread_localize_generated_frontend.pl \
+	config/verify_generated_frontend.pl \
 	.git_archival.txt
 
 # Files consumed through generated-source includes or runtime test discovery

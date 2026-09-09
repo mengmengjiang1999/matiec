@@ -288,15 +288,13 @@ available at the generator-component boundary.
 
 Parser runtime options, transition controls, and classification tables are
 context-owned and supplied explicitly to stage 1/2 entry points. Bison parser
-invocation state is automatic and receives the owning `ParserState&` directly;
-the remaining mutable Flex scanner session variables are thread-local, and
-clean builds verify that transformation before compiling the generated sources.
-`LegacyGlobalStateAdapter` still supplies the active parser
-context; that parser session carries the context-owned arena and declaration
-tables used by legacy direct AST construction, retained strings, and lookup.
-Separate active arena and declaration-table bindings have been removed.
-Full-pipeline parallel compilation is supported for distinct contexts on
-separate worker threads.
+invocation state is automatic, and Flex allocates a reentrant scanner handle
+whose generated and handwritten mutable state belongs to that parse. Both
+receive the owning `ParserState&` directly. `LegacyGlobalStateAdapter` enters
+narrow AST-arena, declaration-table, and runtime-option scopes for older
+downstream code; it does not expose an active parser selector. Full-pipeline
+parallel compilation and same-thread nested compilation from include callbacks
+are supported for distinct contexts.
 
 ## Embed from C++
 
@@ -528,18 +526,14 @@ results stay in `AnalysisStore`, and all semantic and generator result fields
 have been removed from the AST. Stage 3 and Stage 4 receive the owning context's
 store explicitly, without a compatibility result store or ambient binding.
 
-The supported cross-thread reentrancy architecture track is complete. Parser and
-scanner helpers receive `ParserState` explicitly and no active-parser selector
-remains. Generated
-Bison state is invocation-local, generated Flex state is isolated per thread,
-and parser classification plus
-declaration symbol tables are owned by each `CompilationContext` and selected by
-the same parser session rather than a second TLS binding. Handwritten frontend
-entry points and the generated parser now name that session; scanner callbacks
-retain a narrowly scoped compatibility selector. Concurrent
-frontend regression coverage exercises distinct contexts without a global lock.
-Parser sessions now carry the context-owned AST arena, and the separate active
-arena binding has been removed. `Compiler::compile_parallel()` and its
+The frontend reentrancy architecture track is complete. Parser and scanner
+helpers receive `ParserState` explicitly and no active-parser selector remains.
+Generated Bison state is invocation-local; each Flex invocation has an explicit
+reentrant scanner handle containing its buffers, locations, include frames, and
+handwritten lookahead state. Parser classification and declaration symbol tables
+are owned by each `CompilationContext`. Regression coverage exercises both
+parallel contexts and a synchronous nested compilation from an include callback
+without a global lock or thread-local scanner state. `Compiler::compile_parallel()` and its
 full-pipeline regression now cover ordered results, mixed success/failure,
 independent parser/AST/diagnostic state, and isolated generated output.
 The normal regression suite audits these architecture invariants. Recursive

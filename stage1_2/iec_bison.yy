@@ -182,53 +182,6 @@ static bool is_profile_assert_invocation(
 
 
 
-/*************************/
-/* global variables...   */
-/*************************/
-/* NOTE: For some strange reason bison ver 2.3 is including these declarations
- *       in the iec_bison.hh file, which is in turn included by flex.
- *       We cannot therefore define any variables over here, but merely declare
- *       their existance (otherwise we get errors when linking the code, since we
- *       would get a new variable defined each time iec_bison.hh is included!).
- *       Even though the variables are declared 'extern' over here, they will in
- *       fact be defined towards the end of this same file (i.e. in the prologue)
- */
-
-
-/* NOTE: These variable are really parameters we would like the stage2__ function to pass
- *       to the yyparse() function. However, the yyparse() function is created automatically
- *       by bison, so we cannot add parameters to this function. The only other
- *       option is to use global variables! yuck!
- */
-
-/* A global flag used to tell the parser if overloaded funtions should be allowed.
- * The IEC 61131-3 standard allows overloaded funtions in the standard library,
- * but disallows them in user code...
- */
-extern thread_local bool allow_function_overloading;
-
-/* A flag to tell the compiler whether to allow the declaration
- * of extensible function (i.e. functions that may have a variable number of
- * input parameters, such as AND(word#33, word#44, word#55, word#66).
- * This is an extension to the standard syntax.
- * See comments below for details why we support this!
- */
-extern thread_local bool allow_extensible_function_parameters;
-
-/* A global flag used to tell the parser whether to allow use of DREF and '^' operators (defined in IEC 61131-3 v3) */
-extern thread_local bool allow_ref_dereferencing;
-
-/* A global flag used to tell the parser whether to allow use of REF_TO ANY datatypes (non-standard extension to IEC 61131-3 v3) */
-extern thread_local bool allow_ref_to_any;
-
-/* A global flag used to tell the parser whether to allow use of REF_TO as a struct or array element (non-standard extension) */
-extern thread_local bool allow_ref_to_in_derived_datatypes;
-
-/* A pointer to the root of the parsing tree that will be generated  by bison. */
-extern thread_local symbol_c *tree_root;
-
-
-
 /************************/
 /* forward declarations */
 /************************/
@@ -262,14 +215,16 @@ void print_err_msg(const matiec::ParserState &parser_state, int first_line,
 
 %define api.pure full
 %parse-param { matiec::ParserState &parser_state }
+%parse-param { void *scanner }
 %lex-param { matiec::ParserState &parser_state }
+%lex-param { void *scanner }
 %code requires {
 namespace matiec { struct ParserState; }
 }
 %code provides {
 int yylex(YYSTYPE *value, YYLTYPE *location,
-          matiec::ParserState &parser_state);
-void yyerror(YYLTYPE *location, matiec::ParserState &parser_state,
+          matiec::ParserState &parser_state, void *scanner);
+void yyerror(YYLTYPE *location, matiec::ParserState &parser_state, void *scanner,
              const char *error_msg);
 }
 
@@ -1727,9 +1682,9 @@ prev_declared_program_type_name:           prev_declared_program_type_name_token
 /***************************/
 library:
   /* empty */
-	{if (tree_root == NULL)
-	  tree_root = new library_c();
-	 $$ = (list_c *)tree_root;
+	{if (parser_state.tree_root == NULL)
+	  parser_state.tree_root = new library_c();
+	 $$ = (list_c *)parser_state.tree_root;
 	}
 | library library_element_declaration
 	{$$ = $1; $$->add_element($2);}
@@ -3126,7 +3081,7 @@ array_specification:
 	 *       which leads to the reduce/reduce conflict, as it is also included in ref_spec.
 	 */
 	{$$ = new array_specification_c($3, $6, locloc(@$));
-	 if (!allow_ref_to_in_derived_datatypes) {
+	 if (!parser_state.allow_ref_to_in_derived_datatypes) {
 	   print_err_msg(parser_state, locf(@$), locl(@$), "REF_TO may not be used in an ARRAY specification (use -R option to activate support for this non-standard syntax).");
 	   parser_state.syntax_errors++;
 	 }
@@ -3328,7 +3283,7 @@ structure_element_declaration:
 	{$$ = new structure_element_declaration_c($1, $3, locloc(@$)); $$->token = $1->token;}
 | structure_element_name ':' ref_spec_init                              /* non standard extension: Allow use of struct elements storing REF_TO datatypes (either using REF_TO or a previosuly declared ref type) */
 	{ $$ = new structure_element_declaration_c($1, $3, locloc(@$));
-	  if (!allow_ref_to_in_derived_datatypes) {
+	  if (!parser_state.allow_ref_to_in_derived_datatypes) {
 	    print_err_msg(parser_state, locf(@$), locl(@$), "REF_TO and reference datatypes may not be used in a STRUCT element (use -R option to activate support for this non-standard syntax).");
 	    parser_state.syntax_errors++;
 	  }
@@ -3502,7 +3457,7 @@ ref_spec_non_recursive: /* helper symbol, used to remove a reduce/reduce conflic
 	{$$ = new ref_spec_c($2, locloc(@$));}
 | REF_TO ANY
 	{$$ = new ref_spec_c(new generic_type_any_c(locloc(@2)), locloc(@$));
-	 if (!allow_ref_to_any) {
+	 if (!parser_state.allow_ref_to_any) {
 	   print_err_msg(parser_state, locf(@$), locl(@$), "REF_TO ANY datatypes are not allowed (use -R option to activate support for this non-standard syntax).");
 	   parser_state.syntax_errors++;
 	 }
@@ -3664,7 +3619,7 @@ symbolic_variable:
 | symbolic_variable '^'
 	/* Dereferencing operator defined in IEC 61131-3 v3. However, implemented here differently then how it is defined in the standard! See following note for explanation! */
 	{$$ = new deref_operator_c($1, locloc(@$));
-	 if (!allow_ref_dereferencing) {
+	 if (!parser_state.allow_ref_dereferencing) {
 	   print_err_msg(parser_state, locf(@$), locl(@$), "Derefencing REF_TO datatypes with '^' is not allowed (use -r option to activate support for this IEC 61131-3 v3 feature).");
 	   parser_state.syntax_errors++;
 	 }
@@ -4001,7 +3956,7 @@ var1_list:
 | variable_name integer DOTDOT
 	{$$ = new var1_list_c(locloc(@$)); $$->add_element(new extensible_input_parameter_c($1, $2, locloc(@$)));
 	 variable_name_symtable.insert($1, prev_declared_variable_name_token);
-	 if (!allow_extensible_function_parameters) print_err_msg(parser_state, locf(@1), locl(@2), "invalid syntax in variable name declaration.");
+	 if (!parser_state.allow_extensible_function_parameters) print_err_msg(parser_state, locf(@1), locl(@2), "invalid syntax in variable name declaration.");
 	}
  | var1_list ',' variable_name
 	{$$ = $1; $$->add_element($3);
@@ -4010,7 +3965,7 @@ var1_list:
  | var1_list ',' variable_name integer DOTDOT
 	{$$ = $1; $$->add_element(new extensible_input_parameter_c($3, $4, locloc(@$)));
 	 variable_name_symtable.insert($3, prev_declared_variable_name_token);
-	 if (!allow_extensible_function_parameters) print_err_msg(parser_state, locf(@1), locl(@2), "invalid syntax in variable name declaration.");
+	 if (!parser_state.allow_extensible_function_parameters) print_err_msg(parser_state, locf(@1), locl(@2), "invalid syntax in variable name declaration.");
 	}
 /* ERROR_CHECK_BEGIN */
 | var1_list variable_name
@@ -5095,27 +5050,27 @@ derived_function_name:
   identifier  /* will never occur during normal parsing, only needed for preparsing to change it to a prev_declared_derived_function_name! */
 | prev_declared_derived_function_name
 	{$$ = new identifier_c(((token_c *)$1)->value, locloc(@$)); // transform the poutype_identifier_c into an identifier_c
-	 if (get_preparse_state(parser_state) && !allow_function_overloading) {print_err_msg(parser_state, locloc(@$), "Function overloading not allowed. Invalid identifier.\n"); parser_state.syntax_errors++;}
+	 if (get_preparse_state(parser_state) && !parser_state.allow_function_overloading) {print_err_msg(parser_state, locloc(@$), "Function overloading not allowed. Invalid identifier.\n"); parser_state.syntax_errors++;}
 	}
 | AND
 	{$$ = new identifier_c("AND", locloc(@$));
-	 if (!allow_function_overloading) {print_err_msg(parser_state, locloc(@$), "Function overloading not allowed. Invalid identifier.\n"); parser_state.syntax_errors++;}
+	 if (!parser_state.allow_function_overloading) {print_err_msg(parser_state, locloc(@$), "Function overloading not allowed. Invalid identifier.\n"); parser_state.syntax_errors++;}
 	}
 | OR
 	{$$ = new identifier_c("OR", locloc(@$));
-	 if (!allow_function_overloading) {print_err_msg(parser_state, locloc(@$), "Function overloading not allowed. Invalid identifier.\n"); parser_state.syntax_errors++;}
+	 if (!parser_state.allow_function_overloading) {print_err_msg(parser_state, locloc(@$), "Function overloading not allowed. Invalid identifier.\n"); parser_state.syntax_errors++;}
 	}
 | XOR
 	{$$ = new identifier_c("XOR", locloc(@$));
-	 if (!allow_function_overloading) {print_err_msg(parser_state, locloc(@$), "Function overloading not allowed. Invalid identifier.\n"); parser_state.syntax_errors++;}
+	 if (!parser_state.allow_function_overloading) {print_err_msg(parser_state, locloc(@$), "Function overloading not allowed. Invalid identifier.\n"); parser_state.syntax_errors++;}
 	}
 | NOT
 	{$$ = new identifier_c("NOT", locloc(@$));
-	 if (!allow_function_overloading) {print_err_msg(parser_state, locloc(@$), "Function overloading not allowed. Invalid identifier.\n"); parser_state.syntax_errors++;}
+	 if (!parser_state.allow_function_overloading) {print_err_msg(parser_state, locloc(@$), "Function overloading not allowed. Invalid identifier.\n"); parser_state.syntax_errors++;}
 	}
 | MOD
 	{$$ = new identifier_c("MOD", locloc(@$));
-	 if (!allow_function_overloading) {print_err_msg(parser_state, locloc(@$), "Function overloading not allowed. Invalid identifier.\n"); parser_state.syntax_errors++;}
+	 if (!parser_state.allow_function_overloading) {print_err_msg(parser_state, locloc(@$), "Function overloading not allowed. Invalid identifier.\n"); parser_state.syntax_errors++;}
 	}
 ;
 
@@ -8640,56 +8595,6 @@ continue_statement:
 
 
 
-/*************************************************************************************************/
-/* NOTE: These variables are really parameters we would like the stage2__ function to pass       */
-/*       to the yyparse() function. However, the yyparse() function is created automatically     */
-/*       by bison, so we cannot add parameters to this function. The only other                  */
-/*       option is to use global variables! yuck!                                                */
-/*************************************************************************************************/
-
-/* A global flag used to tell the parser if overloaded funtions should be allowed.
- * The IEC 61131-3 standard allows overloaded funtions in the standard library,
- * but disallows them in user code...
- *
- * In essence, a parameter we would like to pass to the yyparse() function but
- * have to do it using a global variable, as the yyparse() prototype is fixed by bison.
- */
-thread_local bool allow_function_overloading = false;
-
-/* | [var1_list ','] variable_name '..' */
-/* NOTE: This is an extension to the standard!!! */
-/* In order to be able to handle extensible standard functions
- * (i.e. standard functions that may have a variable number of
- * input parameters, such as AND(word#33, word#44, word#55, word#66),
- * we have extended the acceptable syntax to allow var_name '..'
- * in an input variable declaration.
- *
- * This allows us to parse the declaration of standard
- * extensible functions and load their interface definition
- * into the abstract syntax tree just like we do to other
- * user defined functions.
- * This has the advantage that we can later do semantic
- * checking of calls to functions (be it a standard or user defined
- * function) in (almost) exactly the same way.
- *
- * Of course, we have a flag that disables this syntax when parsing user
- * written code, so we only allow this extra syntax while parsing the
- * 'header' file that declares all the standard IEC 61131-3 functions.
- */
-thread_local bool allow_extensible_function_parameters = false;
-
-/* A global flag used to tell the parser whether to allow use of DREF and '^' operators (defined in IEC 61131-3 v3) */
-thread_local bool allow_ref_dereferencing;
-/* A global flag used to tell the parser whether to allow use of REF_TO ANY datatypes (non-standard extension) */
-thread_local bool allow_ref_to_any = false;
-/* A global flag used to tell the parser whether to allow use of REF_TO as a struct or array element (non-standard extension) */
-thread_local bool allow_ref_to_in_derived_datatypes = false;
-
-/* A pointer to the root of the parsing tree that will be generated by bison. */
-thread_local symbol_c *tree_root;
-
-
-
 /* The following function is called automatically by bison whenever it comes across
  * an error. Unfortunately it calls this function before executing the code that handles
  * the error itself, so we cannot print out the correct line numbers of the error location
@@ -8698,11 +8603,10 @@ thread_local symbol_c *tree_root;
  * error action handlers call the function print_err_msg(parser_state, ) after setting the location
  * (line number) variable correctly.
  */
-thread_local const char *current_error_msg;
-void yyerror(YYLTYPE *, matiec::ParserState &parser_state,
+void yyerror(YYLTYPE *, matiec::ParserState &parser_state, void *,
              const char *error_msg) {
   ++parser_state.syntax_errors;
-  current_error_msg = error_msg;
+  parser_state.current_error_msg = error_msg;
 /* fprintf(stderr, "error %d: %s\n", yynerrs // global variable //, error_msg); */
 /*  print_include_stack(); */
 }
@@ -8764,7 +8668,7 @@ void print_err_msg(const matiec::ParserState &parser_state, int first_line,
       fprintf(stderr, "%s:%d: error: %s\n", first_filename, first_line, additional_error_msg);
   }
   //fprintf(stderr, "error %d: %s\n", yynerrs /* a global variable */, additional_error_msg);
-  print_include_stack();
+  print_include_stack(parser_state);
 }
 
 
@@ -8777,7 +8681,7 @@ void print_err_msg(const matiec::ParserState &parser_state, int first_line,
 /*
 identifier_c *token_2_identifier_c(char *value, ) {
   identifier_c tmp = new identifier_c(value, locloc(@$));
-	 if (!allow_function_overloading) {
+	 if (!parser_state.allow_function_overloading) {
 	   fprintf(stderr, "Function overloading not allowed. Invalid identifier %s\n", ((token_c *)($$))->value);
 	   ERROR;
 	 }
@@ -8922,9 +8826,6 @@ NULL
 #define LIBFILE "ieclib.txt"
 #define DEF_LIBFILENAME LIBDIRECTORY "/" LIBFILE
 
-extern thread_local const char *INCLUDE_DIRECTORIES[];
-
-
 static int parse_files(matiec::ParserState &parser_state,
                        const char *libfilename, const char *filename,
                        const char *display_filename, const char *source,
@@ -8944,21 +8845,21 @@ static int parse_files(matiec::ParserState &parser_state,
     return -1;
   }
 
-  allow_function_overloading           = true;
-  allow_extensible_function_parameters = true;
-  allow_ref_dereferencing              = parser_state.options.ref_standard_extensions;
-  allow_ref_to_any                     = parser_state.options.ref_nonstand_extensions;
-  allow_ref_to_in_derived_datatypes    = parser_state.options.ref_nonstand_extensions;
+  parser_state.allow_function_overloading           = true;
+  parser_state.allow_extensible_function_parameters = true;
+  parser_state.allow_ref_dereferencing              = parser_state.options.ref_standard_extensions;
+  parser_state.allow_ref_to_any                     = parser_state.options.ref_nonstand_extensions;
+  parser_state.allow_ref_to_in_derived_datatypes    = parser_state.options.ref_nonstand_extensions;
   parser_state.syntax_errors = 0;
   int library_parse_status = 0;
   try {
-    library_parse_status = yyparse(parser_state);
+    library_parse_status = yyparse(parser_state, parser_state.lexer_scanner());
   } catch (...) {
-    reset_lexer_state();
+    reset_lexer_state(parser_state);
     fclose(libfile);
     throw;
   }
-  reset_lexer_state();
+  reset_lexer_state(parser_state);
   if (library_parse_status != 0) {
     fprintf (stderr, "\nParsing failed because of too many consecutive syntax errors in standard library. Bailing out!\n");
     fclose(libfile);
@@ -8993,23 +8894,23 @@ static int parse_files(matiec::ParserState &parser_state,
     return -3;
   }
 
-  allow_function_overloading           = false;
-  allow_extensible_function_parameters = false;
-  allow_ref_dereferencing              = parser_state.options.ref_standard_extensions;
-  allow_ref_to_any                     = parser_state.options.ref_nonstand_extensions;
-  allow_ref_to_in_derived_datatypes    = parser_state.options.ref_nonstand_extensions;
+  parser_state.allow_function_overloading           = false;
+  parser_state.allow_extensible_function_parameters = false;
+  parser_state.allow_ref_dereferencing              = parser_state.options.ref_standard_extensions;
+  parser_state.allow_ref_to_any                     = parser_state.options.ref_nonstand_extensions;
+  parser_state.allow_ref_to_in_derived_datatypes    = parser_state.options.ref_nonstand_extensions;
   parser_state.syntax_errors = 0;
-  //allow_ref_to_any = false;    /* we only allow REF_TO ANY in library functions/FBs, no matter what the user asks for in the command line */
+  //parser_state.allow_ref_to_any = false;    /* we only allow REF_TO ANY in library functions/FBs, no matter what the user asks for in the command line */
 
   int main_parse_status = 0;
   try {
-    main_parse_status = yyparse(parser_state);
+    main_parse_status = yyparse(parser_state, parser_state.lexer_scanner());
   } catch (...) {
-    reset_lexer_state();
+    reset_lexer_state(parser_state);
     fclose(mainfile);
     throw;
   }
-  reset_lexer_state();
+  reset_lexer_state(parser_state);
   if (main_parse_status != 0) {
     fprintf (stderr, "\nParsing failed because of too many consecutive syntax errors. Bailing out!\n");
     fclose(mainfile);
@@ -9041,7 +8942,7 @@ static int parse_files(matiec::ParserState &parser_state,
  *  however are parsed normally!
  *
  *  At the end of the pre-parsing, the AST will contain only the derived datatype declarations,
- *  and this tree will be trown away (by simply resetting tree_root = NULL).
+ *  and this tree will be trown away (by simply resetting parser_state.tree_root = NULL).
  *  More importantly, the library_element_symtable will contain the names of all the POUs and
  *  derived datatypes.
  *
@@ -9067,10 +8968,10 @@ int stage2__(matiec::ParserState &parser_state, const char *filename,
   std::unique_ptr<char, decltype(&free)> libfilename(NULL, &free);
 
   /* Determine the full path name of the standard library file... */
-  if (parser_state.options.includedir != NULL)
-    INCLUDE_DIRECTORIES[0] = parser_state.options.includedir;
-
-  libfilename.reset(strdup3(INCLUDE_DIRECTORIES[0], "/", LIBFILE));
+  const char *include_directory = parser_state.options.includedir != NULL
+      ? parser_state.options.includedir
+      : DEFAULT_LIBDIR;
+  libfilename.reset(strdup3(include_directory, "/", LIBFILE));
   if (libfilename == NULL) {
     fprintf (stderr, "Out of memory. Bailing out!\n");
     return -1;
@@ -9081,7 +8982,7 @@ int stage2__(matiec::ParserState &parser_state, const char *filename,
   /*******************************/
   if (parser_state.options.pre_parsing) {
     // fprintf (stderr, "----> Starting pre-parsing!\n");
-    tree_root = NULL;
+    parser_state.tree_root = NULL;
     set_preparse_state(parser_state);
     if (parse_files(parser_state, libfilename.get(), filename, display_filename, source,
                     source_size) < 0) {
@@ -9093,7 +8994,7 @@ int stage2__(matiec::ParserState &parser_state, const char *filename,
   /* Do the main parsing run...! */
   /*******************************/
   // fprintf (stderr, "----> Starting normal parsing!\n");
-  tree_root = NULL;
+  parser_state.tree_root = NULL;
   rst_preparse_state(parser_state);
   if (parse_files(parser_state, libfilename.get(), filename, display_filename, source,
                   source_size) < 0) {
@@ -9103,7 +9004,7 @@ int stage2__(matiec::ParserState &parser_state, const char *filename,
 
   /* Final clean-up... */
   if (tree_root_ref != NULL)
-    *tree_root_ref = tree_root;
+    *tree_root_ref = parser_state.tree_root;
 
   return 0;
 }

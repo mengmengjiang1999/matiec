@@ -22,6 +22,13 @@ void ParserState::reset_for_parse() {
   goto_task_init = false;
   pop_state = false;
   syntax_errors = 0;
+  allow_function_overloading = false;
+  allow_extensible_function_parameters = false;
+  allow_ref_dereferencing = false;
+  allow_ref_to_any = false;
+  allow_ref_to_in_derived_datatypes = false;
+  tree_root = nullptr;
+  current_error_msg = nullptr;
 }
 
 void ParserState::bind_ast_arena(AstArena &arena) { ast_arena_ = &arena; }
@@ -54,6 +61,12 @@ void ParserState::set_cancellation_checker(CancellationChecker checker) {
 bool ParserState::cancellation_requested() const {
   return cancellation_checker_ && cancellation_checker_();
 }
+
+void ParserState::bind_lexer_scanner(void *scanner) {
+  lexer_scanner_ = scanner;
+}
+
+void *ParserState::lexer_scanner() const { return lexer_scanner_; }
 
 ActiveRuntimeOptionsScope::ActiveRuntimeOptionsScope(runtime_options_t &options)
     : previous_(current_runtime_options) {

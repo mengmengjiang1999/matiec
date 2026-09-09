@@ -25,6 +25,8 @@ struct runtime_options_t {
   bool relaxed_datatype_model = false;
 };
 
+class symbol_c;
+
 namespace matiec {
 
 enum class IncludeResolveStatus { resolved, use_filesystem, not_found, error };
@@ -50,6 +52,13 @@ struct ParserState {
   bool goto_task_init = false;
   bool pop_state = false;
   int syntax_errors = 0;
+  bool allow_function_overloading = false;
+  bool allow_extensible_function_parameters = false;
+  bool allow_ref_dereferencing = false;
+  bool allow_ref_to_any = false;
+  bool allow_ref_to_in_derived_datatypes = false;
+  ::symbol_c *tree_root = nullptr;
+  const char *current_error_msg = nullptr;
 
   void reset_for_parse();
   void bind_ast_arena(AstArena &arena);
@@ -64,12 +73,15 @@ struct ParserState {
                                        std::string *error) const;
   void set_cancellation_checker(CancellationChecker checker);
   bool cancellation_requested() const;
+  void bind_lexer_scanner(void *scanner);
+  void *lexer_scanner() const;
 
  private:
   AstArena *ast_arena_ = nullptr;
   std::unique_ptr<ParserSymbolTables> symbols_;
   IncludeResolver include_resolver_;
   CancellationChecker cancellation_checker_;
+  void *lexer_scanner_ = nullptr;
 };
 
 class ActiveRuntimeOptionsScope {

@@ -76,10 +76,11 @@
  */
 %option yylineno
 
-/* required for the use of the yy_pop_state() and
+/* required for the use of the yy_pop_state(yyscanner) and
  * yy_push_state() functions
  */
 %option stack
+%option reentrant
 
 /* The '%option stack' also requests the inclusion of
  * the yy_top_state(), however this function is not
@@ -149,7 +150,7 @@
 
 
 #define YY_DECL int yylex(YYSTYPE *yylval_param, YYLTYPE *yylloc_param, \
-                          matiec::ParserState &parser_state)
+                          matiec::ParserState &parser_state, yyscan_t yyscanner)
 #define yylval (*yylval_param)
 #define yylloc (*yylloc_param)
 
@@ -157,11 +158,6 @@
  * Note that flex accesses and updates this global variable
  * apropriately whenever it comes across an (*#include <filename> *) directive...
  */
-thread_local const char *current_filename = NULL;
-thread_local matiec::ParserState *current_lexer_parser_state = NULL;
-
-
-
 /* Variable defined by the bison parser.
  * It must be initialised with the location
  * of the token being parsed.
@@ -173,13 +169,11 @@ thread_local matiec::ParserState *current_lexer_parser_state = NULL;
  *extern YYLTYPE yylloc;
 b*/
 #define YY_INPUT(buf,result,max_size)  {\
-    result = GetNextChar(*current_lexer_parser_state, buf, max_size);\
+    result = GetNextChar(*lexer_state(yyscanner).parser_state, buf, max_size,\
+                         yyscanner);\
     if (  result <= 0  )\
       result = YY_NULL;\
     }
-
-#define YY_USER_INIT current_lexer_parser_state = &parser_state;
-
 
 /* Macro that is executed for every action.
  * We use it to pass the location of the token
@@ -192,7 +186,7 @@ b*/
 	yylloc.first_file   = current_filename;					\
 	yylloc.first_order  = current_order;					\
 	\
-	UpdateTracking(yytext);							\
+	UpdateTracking(yytext, yyscanner);					\
 	\
 	yylloc.last_line    = current_tracking->lineNumber;			\
 	yylloc.last_column  = current_tracking->currentChar - 1;		\
@@ -234,17 +228,18 @@ int get_identifier_token(matiec::ParserState &parser_state,
 /***************************************************/
 
 %{
-void UpdateTracking(const char *text);
+void UpdateTracking(const char *text, yyscan_t yyscanner);
 /* return the character back to the input stream. */
-void unput_char(const char c);
+void unput_char(const char c, yyscan_t yyscanner);
 /* return all the text in the current token back to the input stream. */
-void unput_text(int n);
+void unput_text(int n, yyscan_t yyscanner);
 /* return all the text in the current token back to the input stream,
  * but first return to the stream an additional character to mark the end of the token.
  */
-void unput_and_mark(const char mark_char);
+void unput_and_mark(const char mark_char, yyscan_t yyscanner);
 
-void include_file(const char *include_filename, matiec::ParserState &parser_state);
+void include_file(const char *include_filename, matiec::ParserState &parser_state,
+                  yyscan_t yyscanner);
 
 /* The body_state tries to find a ';' before a END_PROGRAM, END_FUNCTION or END_FUNCTION_BLOCK or END_ACTION
  * and ignores ';' inside comments and pragmas. This means that we cannot do this in a signle lex rule.
@@ -252,13 +247,15 @@ void include_file(const char *include_filename, matiec::ParserState &parser_stat
  * once we have decided if we are parsing ST or IL code. The following functions manage that buffer used by
  * the body_state.
  */
-void  append_bodystate_buffer(const char *text, int is_whitespace = 0);
-void   unput_bodystate_buffer(void);
-int  isempty_bodystate_buffer(void);
-void     del_bodystate_buffer(void);
+void append_bodystate_buffer(const char *text, yyscan_t yyscanner,
+                             int is_whitespace = 0);
+void unput_bodystate_buffer(yyscan_t yyscanner);
+int isempty_bodystate_buffer(yyscan_t yyscanner);
+void del_bodystate_buffer(yyscan_t yyscanner);
 
 
-int GetNextChar(matiec::ParserState &parser_state, char *b, int maxBuffer);
+int GetNextChar(matiec::ParserState &parser_state, char *b, int maxBuffer,
+                yyscan_t yyscanner);
 %}
 
 
@@ -570,8 +567,6 @@ file_include_pragma			{file_include_pragma_beg}{file_include_pragma_filename}{fi
  *       Nevertheless this is still OK, as we are only interested in the relative
  *       ordering of tokens...
  */
-static thread_local long int current_order = 0;
-
 typedef struct {
     int eof;
     int lineNumber;
@@ -595,19 +590,39 @@ typedef struct {
 	  const char *filename;
 	} include_stack_t;
 
-thread_local tracking_t * current_tracking = NULL;
-thread_local tracking_t  previous_tracking;
-thread_local include_stack_t include_stack[MAX_INCLUDE_DEPTH];
-thread_local int include_stack_ptr = 0;
+struct lexer_state_t {
+  explicit lexer_state_t(matiec::ParserState &owner)
+      : parser_state(&owner), current_filename(NULL), current_order(0),
+        current_tracking(NULL), include_stack_ptr(0), bodystate_buffer(NULL),
+        bodystate_is_whitespace(true) {}
 
-thread_local const char *INCLUDE_DIRECTORIES[] = {
-	DEFAULT_LIBDIR,
-	".",
-	"/lib",
-	"/usr/lib",
-	"/usr/lib/iec",
-	NULL /* must end with NULL!! */
-	};
+  matiec::ParserState *parser_state;
+  const char *current_filename;
+  long int current_order;
+  tracking_t *current_tracking;
+  tracking_t previous_tracking;
+  include_stack_t include_stack[MAX_INCLUDE_DEPTH];
+  int include_stack_ptr;
+  char *bodystate_buffer;
+  bool bodystate_is_whitespace;
+  tracking_t bodystate_init_tracking;
+};
+
+static lexer_state_t &lexer_state(yyscan_t yyscanner) {
+  extern void *yyget_extra(yyscan_t yyscanner);
+  return *static_cast<lexer_state_t *>(yyget_extra(yyscanner));
+}
+
+#define current_filename (lexer_state(yyscanner).current_filename)
+#define current_order (lexer_state(yyscanner).current_order)
+#define current_tracking (lexer_state(yyscanner).current_tracking)
+#define previous_tracking (lexer_state(yyscanner).previous_tracking)
+#define include_stack (lexer_state(yyscanner).include_stack)
+#define include_stack_ptr (lexer_state(yyscanner).include_stack_ptr)
+#define bodystate_buffer (lexer_state(yyscanner).bodystate_buffer)
+#define bodystate_is_whitespace (lexer_state(yyscanner).bodystate_is_whitespace)
+#define bodystate_init_tracking (lexer_state(yyscanner).bodystate_init_tracking)
+
 %}
 
 
@@ -975,27 +990,27 @@ incompl_location	%[IQM]\*
 	/* Handle requests sent by bison for flex to change state. */
 	/***********************************************************/
 	if (get_goto_body_state(parser_state)) {
-	  yy_push_state(body_state);
+	  yy_push_state(body_state, yyscanner);
 	  rst_goto_body_state(parser_state);
 	}
 
 	if (get_goto_sfc_qualifier_state(parser_state)) {
-	  yy_push_state(sfc_qualifier_state);
+	  yy_push_state(sfc_qualifier_state, yyscanner);
 	  rst_goto_sfc_qualifier_state(parser_state);
 	}
 
 	if (get_goto_sfc_priority_state(parser_state)) {
-	  yy_push_state(sfc_priority_state);
+	  yy_push_state(sfc_priority_state, yyscanner);
 	  rst_goto_sfc_priority_state(parser_state);
 	}
 
 	if (get_goto_task_init_state(parser_state)) {
-	  yy_push_state(task_init_state);
+	  yy_push_state(task_init_state, yyscanner);
 	  rst_goto_task_init_state(parser_state);
 	}
 
 	if (get_pop_state(parser_state)) {
-	  yy_pop_state();
+	  yy_pop_state(yyscanner);
 	  rst_pop_state(parser_state);
 	}
 
@@ -1004,7 +1019,7 @@ incompl_location	%[IQM]\*
 	/***************************/
 
 	/* We start off by searching for the pragmas we handle in the lexical parser. */
-<INITIAL>{file_include_pragma}	unput_text(0); yy_push_state(include_beg);
+<INITIAL>{file_include_pragma}	unput_text(0, yyscanner); yy_push_state(include_beg, yyscanner);
 
 	/* Pragmas sent to syntax analyser (bison) */
 	/* NOTE: In the vardecl_list_state we only process the pragmas between two consecutive VAR .. END_VAR blocks.
@@ -1018,11 +1033,11 @@ incompl_location	%[IQM]\*
 {enable_code_generation_pragma}					return enable_code_generation_pragma_token;
 <vardecl_list_state>{disable_code_generation_pragma}/(VAR)	return disable_code_generation_pragma_token;
 <vardecl_list_state>{enable_code_generation_pragma}/(VAR)	return enable_code_generation_pragma_token;
-<body_state>{disable_code_generation_pragma}			append_bodystate_buffer(yytext); /* in body state we do not process any tokens, we simply store them for later processing! */
-<body_state>{enable_code_generation_pragma}			append_bodystate_buffer(yytext); /* in body state we do not process any tokens, we simply store them for later processing! */
+<body_state>{disable_code_generation_pragma}			append_bodystate_buffer(yytext, yyscanner); /* in body state we do not process any tokens, we simply store them for later processing! */
+<body_state>{enable_code_generation_pragma}			append_bodystate_buffer(yytext, yyscanner); /* in body state we do not process any tokens, we simply store them for later processing! */
 	/* Any other pragma we find, we just pass it up to the syntax parser...   */
 	/* Note that the <body_state> state is exclusive, so we have to include it here too. */
-<body_state>{pragma}					append_bodystate_buffer(yytext); /* in body state we do not process any tokens, we simply store them for later processing! */
+<body_state>{pragma}					append_bodystate_buffer(yytext, yyscanner); /* in body state we do not process any tokens, we simply store them for later processing! */
 {pragma}	{/* return the pragmma without the enclosing '{' and '}' */
 		 int cut = yytext[1]=='{'?2:1;
 		 yytext[strlen(yytext)-cut] = '\0';
@@ -1044,9 +1059,9 @@ incompl_location	%[IQM]\*
 
 <include_filename>{file_include_pragma_filename}	{
 			  /* set the internal state variables of lexical analyser to process a new include file */
-			  include_file(yytext, parser_state);
+			  include_file(yytext, parser_state, yyscanner);
 			  /* switch to whatever state was active before the include file */
-			  yy_pop_state();
+			  yy_pop_state(yyscanner);
 			  /* now process the new file... */
 			}
 
@@ -1087,8 +1102,9 @@ incompl_location	%[IQM]\*
 			      fclose(current_tracking->in_file);
 			    FreeTracking(current_tracking);
 			    --include_stack_ptr;
-			    yy_delete_buffer(YY_CURRENT_BUFFER);
-			    yy_switch_to_buffer((include_stack[include_stack_ptr]).buffer_state);
+			    yy_delete_buffer(YY_CURRENT_BUFFER, yyscanner);
+			    yy_switch_to_buffer((include_stack[include_stack_ptr]).buffer_state,
+			                        yyscanner);
 			    current_tracking = include_stack[include_stack_ptr].env;
 			    yyin = current_tracking->in_file;
 			      /* removing constness of char *. This is safe actually,
@@ -1104,13 +1120,13 @@ incompl_location	%[IQM]\*
 			     */
 			    /* free((char *)current_filename); */
 			    current_filename = include_stack[include_stack_ptr].filename;
-			    yy_push_state(include_end);
+			    yy_push_state(include_end, yyscanner);
 			  }
 			}
 
-<include_end>{file_include_pragma_end}	yy_pop_state();
+<include_end>{file_include_pragma_end}	yy_pop_state(yyscanner);
 	/* handle the artificial file includes created by include_string(), which do not end with a '}' */
-<include_end>.				unput_text(0); yy_pop_state();
+<include_end>.				unput_text(0, yyscanner); yy_pop_state(yyscanner);
 
 
 	/*********************************/
@@ -1127,14 +1143,14 @@ CONFIGURATION{st_whitespace}		if (get_preparse_state(parser_state)) BEGIN(get_po
 
 <get_pou_name_state>{
 {identifier}			BEGIN(ignore_pou_state); yylval.ID=matiec::retain_ast_string(parser_state, yytext); return identifier_token;
-.				BEGIN(ignore_pou_state); unput_text(0);
+.				BEGIN(ignore_pou_state); unput_text(0, yyscanner);
 }
 
 <ignore_pou_state>{
-END_FUNCTION			unput_text(0); BEGIN(INITIAL);
-END_FUNCTION_BLOCK		unput_text(0); BEGIN(INITIAL);
-END_PROGRAM			unput_text(0); BEGIN(INITIAL);
-END_CONFIGURATION		unput_text(0); BEGIN(INITIAL);
+END_FUNCTION			unput_text(0, yyscanner); BEGIN(INITIAL);
+END_FUNCTION_BLOCK		unput_text(0, yyscanner); BEGIN(INITIAL);
+END_PROGRAM			unput_text(0, yyscanner); BEGIN(INITIAL);
+END_CONFIGURATION		unput_text(0, yyscanner); BEGIN(INITIAL);
 .|\n				{}/* Ignore text inside POU! (including the '\n' character!)) */
 }
 
@@ -1177,11 +1193,11 @@ VAR_EXTERNAL			|
 VAR_GLOBAL			|
 VAR_TEMP			|
 VAR_CONFIG			|
-VAR_ACCESS			unput_text(0); BEGIN(vardecl_list_state);
+VAR_ACCESS			unput_text(0, yyscanner); BEGIN(vardecl_list_state);
 
 END_FUNCTION			| /* execute the next rule's action, i.e. fall-through! */
 END_FUNCTION_BLOCK		|
-END_PROGRAM			unput_text(0); BEGIN(vardecl_list_state);
+END_PROGRAM			unput_text(0, yyscanner); BEGIN(vardecl_list_state);
 				/* Notice that we do NOT go directly to body_state, as that requires a push().
 				 * If we were to puch to body_state here, then the corresponding pop() at the
 				 *end of body_state would return to header_state.
@@ -1210,15 +1226,15 @@ VAR_GLOBAL{st_whitespace_char}		|
 VAR_TEMP{st_whitespace_char}		|
 VAR_CONFIG{st_whitespace_char}		|
 VAR_ACCESS{st_whitespace_char}		|
-VAR{st_whitespace_char}			unput_text(0); yy_push_state(vardecl_state); //printf("\nChanging to vardecl_state\n");
+VAR{st_whitespace_char}			unput_text(0, yyscanner); yy_push_state(vardecl_state, yyscanner); //printf("\nChanging to vardecl_state\n");
 
 METHOD{st_whitespace_char}		{if (parser_state.options.iec2025_experimental) {BEGIN(method_header_state); return METHOD;} else {REJECT;}}
 
 END_METHOD{st_whitespace}		{if (parser_state.options.iec2025_experimental) return END_METHOD; else {REJECT;}}
 
-END_FUNCTION{st_whitespace}		unput_text(0); BEGIN(INITIAL);
-END_FUNCTION_BLOCK{st_whitespace}	unput_text(0); BEGIN(INITIAL);
-END_PROGRAM{st_whitespace}		unput_text(0); BEGIN(INITIAL);
+END_FUNCTION{st_whitespace}		unput_text(0, yyscanner); BEGIN(INITIAL);
+END_FUNCTION_BLOCK{st_whitespace}	unput_text(0, yyscanner); BEGIN(INITIAL);
+END_PROGRAM{st_whitespace}		unput_text(0, yyscanner); BEGIN(INITIAL);
 
 				/* NOTE: Handling of whitespace...
 				 *   - Must come __before__ the next rule for any single character '.'
@@ -1228,7 +1244,7 @@ END_PROGRAM{st_whitespace}		unput_text(0); BEGIN(INITIAL);
 {st_whitespace}			/* Eat any whitespace */
 
 				/* anything else, just change to body_state! */
-.				unput_text(0); yy_push_state(body_state); //printf("\nChanging to body_state\n");
+.				unput_text(0, yyscanner); yy_push_state(body_state, yyscanner); //printf("\nChanging to body_state\n");
 }
 
 <method_header_state>[ \f\t\v]*\r?\n[ \f\t\v]*	BEGIN(vardecl_list_state);
@@ -1236,7 +1252,7 @@ END_PROGRAM{st_whitespace}		unput_text(0); BEGIN(INITIAL);
 
 	/* vardecl_list_state -> pop to $previous_state (vardecl_list_state) */
 <vardecl_state>{
-END_VAR				yy_pop_state(); return END_VAR; /* pop back to vardecl_list_state */
+END_VAR				yy_pop_state(yyscanner); return END_VAR; /* pop back to vardecl_list_state */
 }
 
 
@@ -1256,16 +1272,16 @@ END_VAR				yy_pop_state(); return END_VAR; /* pop back to vardecl_list_state */
 				  * However, it is possible to enter the body_state from other states (e.g. when
 				  * parsing SFC code, that contains transitions or actions in other languages)
 				  */
-				 append_bodystate_buffer(yytext, 1 /* is whitespace */);
+				 append_bodystate_buffer(yytext, yyscanner, 1 /* is whitespace */);
 				}
 	/* 'INITIAL_STEP' always used in beginning of SFCs !! */
-INITIAL_STEP			{ if (isempty_bodystate_buffer())	{unput_text(0); del_bodystate_buffer(); BEGIN(sfc_state);}
-				  else					{append_bodystate_buffer(yytext);}
+INITIAL_STEP			{ if (isempty_bodystate_buffer(yyscanner))	{unput_text(0, yyscanner); del_bodystate_buffer(yyscanner); BEGIN(sfc_state);}
+				  else					{append_bodystate_buffer(yytext, yyscanner);}
 				}
 
 	/* ':=', at the very beginning of a 'body', occurs only in transitions and not Function, FB, or Program bodies! */
-:=				{ if (isempty_bodystate_buffer())	{unput_text(0); del_bodystate_buffer(); BEGIN(st_state);} /* We do _not_ return a start_ST_body_token here, as bison does not expect it! */
-				  else				 	{append_bodystate_buffer(yytext);}
+:=				{ if (isempty_bodystate_buffer(yyscanner))	{unput_text(0, yyscanner); del_bodystate_buffer(yyscanner); BEGIN(st_state);} /* We do _not_ return a start_ST_body_token here, as bison does not expect it! */
+				  else				 	{append_bodystate_buffer(yytext, yyscanner);}
 				}
 
 	/* check if ';' occurs before an END_FUNCTION, END_FUNCTION_BLOCK, END_PROGRAM, END_ACTION or END_TRANSITION. (If true => we are parsing ST; If false => parsing IL). */
@@ -1274,10 +1290,10 @@ END_FUNCTION			|
 END_FUNCTION_BLOCK		|
 END_METHOD			|
 END_TRANSITION   		|
-END_PROGRAM			{ append_bodystate_buffer(yytext); unput_bodystate_buffer(); BEGIN(il_state); /*printf("returning start_IL_body_token\n");*/ return start_IL_body_token;}
-.|\n				{ append_bodystate_buffer(yytext);
+END_PROGRAM			{ append_bodystate_buffer(yytext, yyscanner); unput_bodystate_buffer(yyscanner); BEGIN(il_state); /*printf("returning start_IL_body_token\n");*/ return start_IL_body_token;}
+.|\n				{ append_bodystate_buffer(yytext, yyscanner);
 				  if (strcmp(yytext, ";") == 0)
-				    {unput_bodystate_buffer(); BEGIN(st_state); /*printf("returning start_ST_body_token\n");*/ return start_ST_body_token;}
+				    {unput_bodystate_buffer(yyscanner); BEGIN(st_state); /*printf("returning start_ST_body_token\n");*/ return start_ST_body_token;}
 				}
 	/* The following rules are not really necessary. They just make compilation faster in case the ST Statement List starts with one fot he following... */
 RETURN				| /* execute the next rule's action, i.e. fall-through! */
@@ -1286,8 +1302,8 @@ CASE				|
 FOR				|
 WHILE				|
 EXIT				|
-REPEAT				{ if (isempty_bodystate_buffer())	{unput_text(0); del_bodystate_buffer(); BEGIN(st_state); return start_ST_body_token;}
-				  else				 	{append_bodystate_buffer(yytext);}
+REPEAT				{ if (isempty_bodystate_buffer(yyscanner))	{unput_text(0, yyscanner); del_bodystate_buffer(yyscanner); BEGIN(st_state); return start_ST_body_token;}
+				  else				 	{append_bodystate_buffer(yytext, yyscanner);}
 				}
 
 }	/* end of body_state lexical parser */
@@ -1295,20 +1311,20 @@ REPEAT				{ if (isempty_bodystate_buffer())	{unput_text(0); del_bodystate_buffer
 
 	/* (il_state | st_state) -> pop to $previous_state (vardecl_list_state or sfc_state) */
 <il_state,st_state>{
-END_FUNCTION		yy_pop_state(); unput_text(0);
-END_FUNCTION_BLOCK	yy_pop_state(); unput_text(0);
-METHOD			{if (parser_state.options.iec2025_experimental) {yy_pop_state(); unput_text(0);} else {REJECT;}}
-END_METHOD		{if (parser_state.options.iec2025_experimental) {yy_pop_state(); unput_text(0);} else {REJECT;}}
-END_PROGRAM		yy_pop_state(); unput_text(0);
-END_TRANSITION		yy_pop_state(); unput_text(0);
-END_ACTION		yy_pop_state(); unput_text(0);
+END_FUNCTION		yy_pop_state(yyscanner); unput_text(0, yyscanner);
+END_FUNCTION_BLOCK	yy_pop_state(yyscanner); unput_text(0, yyscanner);
+METHOD			{if (parser_state.options.iec2025_experimental) {yy_pop_state(yyscanner); unput_text(0, yyscanner);} else {REJECT;}}
+END_METHOD		{if (parser_state.options.iec2025_experimental) {yy_pop_state(yyscanner); unput_text(0, yyscanner);} else {REJECT;}}
+END_PROGRAM		yy_pop_state(yyscanner); unput_text(0, yyscanner);
+END_TRANSITION		yy_pop_state(yyscanner); unput_text(0, yyscanner);
+END_ACTION		yy_pop_state(yyscanner); unput_text(0, yyscanner);
 }
 
 	/* sfc_state -> pop to $previous_state (vardecl_list_state or sfc_state) */
 <sfc_state>{
-END_FUNCTION		yy_pop_state(); unput_text(0);
-END_FUNCTION_BLOCK	yy_pop_state(); unput_text(0);
-END_PROGRAM		yy_pop_state(); unput_text(0);
+END_FUNCTION		yy_pop_state(yyscanner); unput_text(0, yyscanner);
+END_FUNCTION_BLOCK	yy_pop_state(yyscanner); unput_text(0, yyscanner);
+END_PROGRAM		yy_pop_state(yyscanner); unput_text(0, yyscanner);
 }
 
 	/* config -> INITIAL */
@@ -1330,11 +1346,11 @@ END_CONFIGURATION	BEGIN(INITIAL); return END_CONFIGURATION;
  */
 
 	/* The comments */
-<get_pou_name_state,ignore_pou_state,body_state,vardecl_list_state>{comment_beg}		yy_push_state(comment_state);
-{comment_beg}						yy_push_state(comment_state);
+<get_pou_name_state,ignore_pou_state,body_state,vardecl_list_state>{comment_beg}		yy_push_state(comment_state, yyscanner);
+{comment_beg}						yy_push_state(comment_state, yyscanner);
 <comment_state>{
-{comment_beg}						{if (get_opt_nested_comments(parser_state)) yy_push_state(comment_state);}
-{comment_end}						yy_pop_state();
+{comment_beg}						{if (get_opt_nested_comments(parser_state)) yy_push_state(comment_state, yyscanner);}
+{comment_end}						yy_pop_state(yyscanner);
 .							/* Ignore text inside comment! */
 \n							/* Ignore text inside comment! */
 }
@@ -1906,7 +1922,7 @@ CONTINUE    return CONTINUE;    /* Keyword */
 	/* B 1.2.3.1 - Duration */
 	/************************/
 {fixed_point}		{yylval.ID=matiec::retain_ast_string(parser_state, yytext); return fixed_point_token;}
-{interval}		{/*fprintf(stderr, "entering time_literal_state ##%s##\n", yytext);*/ unput_and_mark('#'); yy_push_state(time_literal_state);}
+{interval}		{/*fprintf(stderr, "entering time_literal_state ##%s##\n", yytext);*/ unput_and_mark('#', yyscanner); yy_push_state(time_literal_state, yyscanner);}
 {erroneous_interval}	{return erroneous_interval_token;}
 
 <time_literal_state>{
@@ -1922,7 +1938,7 @@ CONTINUE    return CONTINUE;    /* Keyword */
 {fixed_point}ms		{yylval.ID=matiec::retain_ast_string(parser_state, yytext); yylval.ID[yyleng-2] = '\0'; return fixed_point_ms_token;}
 
 _			/* do nothing - eat it up!*/
-\#			{/*fprintf(stderr, "popping from time_literal_state (###)\n");*/ yy_pop_state(); return end_interval_token;}
+\#			{/*fprintf(stderr, "popping from time_literal_state (###)\n");*/ yy_pop_state(yyscanner); return end_interval_token;}
 .			{/*fprintf(stderr, "time_literal_state: found invalid character '%s'. Aborting!\n", yytext);*/ ERROR;}
 \n			{ERROR;}
 }
@@ -2051,29 +2067,36 @@ void FreeTracking(tracking_t *tracking) {
 }
 
 
-void reset_lexer_state(void) {
+void reset_lexer_state(matiec::ParserState &parser_state) {
+  yyscan_t yyscanner = static_cast<yyscan_t>(parser_state.lexer_scanner());
+  if (yyscanner == NULL) return;
+  struct yyguts_t *yyg = static_cast<struct yyguts_t *>(yyscanner);
   while (include_stack_ptr > 0) {
     if (current_tracking->in_file != NULL)
       fclose(current_tracking->in_file);
     FreeTracking(current_tracking);
-    yy_delete_buffer(YY_CURRENT_BUFFER);
+    yy_delete_buffer(YY_CURRENT_BUFFER, yyscanner);
     --include_stack_ptr;
-    yy_switch_to_buffer(include_stack[include_stack_ptr].buffer_state);
+    yy_switch_to_buffer(include_stack[include_stack_ptr].buffer_state,
+                        yyscanner);
     current_tracking = include_stack[include_stack_ptr].env;
     current_filename = include_stack[include_stack_ptr].filename;
   }
 
-  yylex_destroy();
+  free(bodystate_buffer);
+  bodystate_buffer = NULL;
   FreeTracking(current_tracking);
   current_tracking = NULL;
   current_filename = NULL;
-  yyin = NULL;
   current_order = 0;
-  current_lexer_parser_state = NULL;
+  lexer_state_t *state = static_cast<lexer_state_t *>(yyget_extra(yyscanner));
+  yylex_destroy(yyscanner);
+  delete state;
+  parser_state.bind_lexer_scanner(NULL);
 }
 
 
-void UpdateTracking(const char *text) {
+void UpdateTracking(const char *text, yyscan_t yyscanner) {
   const char *newline, *token = text;
   while ((newline = strchr(token, '\n')) != NULL) {
     token = newline + 1;
@@ -2085,7 +2108,8 @@ void UpdateTracking(const char *text) {
 
 
 /* GetNextChar: reads a character from input */
-int GetNextChar(matiec::ParserState &parser_state, char *b, int maxBuffer) {
+int GetNextChar(matiec::ParserState &parser_state, char *b, int maxBuffer,
+                yyscan_t yyscanner) {
   (void)maxBuffer;
   if (parser_state.cancellation_requested())
     throw matiec::CompilationAbort("Compilation cancelled");
@@ -2109,7 +2133,9 @@ int GetNextChar(matiec::ParserState &parser_state, char *b, int maxBuffer) {
 /***********************************/
 
 /* print the include file stack to stderr... */
-void print_include_stack(void) {
+void print_include_stack(const matiec::ParserState &parser_state) {
+  yyscan_t yyscanner = static_cast<yyscan_t>(parser_state.lexer_scanner());
+  if (yyscanner == NULL) return;
   int i;
 
   if ((include_stack_ptr - 1) >= 0)
@@ -2122,7 +2148,9 @@ void print_include_stack(void) {
 
 /* set the internal state variables of lexical analyser to process a new include file */
 void activate_include_(matiec::ParserState &parser_state,
-                       tracking_t *tracking, const char *filename) {
+                       tracking_t *tracking, const char *filename,
+                       yyscan_t yyscanner) {
+  struct yyguts_t *yyg = static_cast<struct yyguts_t *>(yyscanner);
   if (include_stack_ptr >= MAX_INCLUDE_DEPTH) {
     if (tracking->in_file != NULL)
       fclose(tracking->in_file);
@@ -2141,11 +2169,14 @@ void activate_include_(matiec::ParserState &parser_state,
       fprintf(stderr, "%s:%lu:%lu: error: malformed UTF-8 source: %s\n",
               filename, (unsigned long)error.line, (unsigned long)error.column,
               error.reason.c_str());
+      if (tracking->in_file != NULL)
+        fclose(tracking->in_file);
+      FreeTracking(tracking);
       throw matiec::CompilationAbort("Malformed UTF-8 included source", true);
     }
   }
 
-  yyin = tracking->in_file;
+  yyset_in(tracking->in_file, yyscanner);
 
   include_stack[include_stack_ptr].buffer_state = YY_CURRENT_BUFFER;
   include_stack[include_stack_ptr].env = current_tracking;
@@ -2156,17 +2187,21 @@ void activate_include_(matiec::ParserState &parser_state,
   include_stack_ptr++;
 
   /* switch input buffer to new file... */
-  yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
+  yy_switch_to_buffer(yy_create_buffer(tracking->in_file, YY_BUF_SIZE,
+                                       yyscanner), yyscanner);
 }
 
 void handle_include_file_(matiec::ParserState &parser_state, FILE *filehandle,
-                          const char *filename) {
-  activate_include_(parser_state, GetNewTracking(filehandle), filename);
+                          const char *filename, yyscan_t yyscanner) {
+  activate_include_(parser_state, GetNewTracking(filehandle), filename,
+                    yyscanner);
 }
 
 void handle_include_memory_(matiec::ParserState &parser_state,
-                            std::string bytes, const char *filename) {
-  activate_include_(parser_state, GetNewMemoryTracking(std::move(bytes)), filename);
+                            std::string bytes, const char *filename,
+                            yyscan_t yyscanner) {
+  activate_include_(parser_state, GetNewMemoryTracking(std::move(bytes)),
+                    filename, yyscanner);
 }
 
 
@@ -2175,7 +2210,7 @@ void handle_include_memory_(matiec::ParserState &parser_state,
  * This is done by creating an artificial file with that new source code, and then 'including' the file
  */
 void include_string_(matiec::ParserState &parser_state,
-                     const char *source_code) {
+                     const char *source_code, yyscan_t yyscanner) {
   FILE *tmp_file = tmpfile();
 
   if(tmp_file == NULL) {
@@ -2187,14 +2222,15 @@ void include_string_(matiec::ParserState &parser_state,
   rewind(tmp_file);
 
   /* now parse the tmp file, by asking flex to handle it as if it had been included with the (*#include ... *) pragma... */
-  handle_include_file_(parser_state, tmp_file, "");
+  handle_include_file_(parser_state, tmp_file, "", yyscanner);
 //fclose(tmp_file);  /* do NOT close file. It must only be closed when we finish reading from it! */
 }
 
 
 
 /* Open an include file, and set the internal state variables of lexical analyser to process a new include file */
-void include_file(const char *filename, matiec::ParserState &parser_state) {
+void include_file(const char *filename, matiec::ParserState &parser_state,
+                  yyscan_t yyscanner) {
   if (parser_state.has_include_resolver()) {
     std::string display_name;
     std::string contents;
@@ -2203,7 +2239,7 @@ void include_file(const char *filename, matiec::ParserState &parser_state) {
         filename, &display_name, &contents, &error);
     if (status == matiec::IncludeResolveStatus::resolved) {
       handle_include_memory_(parser_state, std::move(contents),
-                             display_name.c_str());
+                             display_name.c_str(), yyscanner);
       return;
     }
     if (status != matiec::IncludeResolveStatus::use_filesystem) {
@@ -2213,9 +2249,15 @@ void include_file(const char *filename, matiec::ParserState &parser_state) {
   }
   FILE *filehandle = NULL;
 
-  for (int i = 0; (INCLUDE_DIRECTORIES[i] != NULL) && (filehandle == NULL); i++) {
+  const char *include_directories[] = {
+      parser_state.options.includedir != NULL
+          ? parser_state.options.includedir
+          : DEFAULT_LIBDIR,
+      ".", "/lib", "/usr/lib", "/usr/lib/iec", NULL};
+  for (int i = 0;
+       include_directories[i] != NULL && filehandle == NULL; ++i) {
     char *full_name;
-    full_name = strdup3(INCLUDE_DIRECTORIES[i], "/", filename);
+    full_name = strdup3(include_directories[i], "/", filename);
     if (full_name == NULL) {
       fprintf(stderr, "Out of memory!\n");
       throw matiec::CompilationAbort("Out of memory while resolving include", true);
@@ -2230,14 +2272,15 @@ void include_file(const char *filename, matiec::ParserState &parser_state) {
   }
 
   /* now process the new file... */
-  handle_include_file_(parser_state, filehandle, filename);
+  handle_include_file_(parser_state, filehandle, filename, yyscanner);
 }
 
 
 
 /* return the specified character to the input stream */
 /* WARNING: this function destroys the contents of yytext */
-void unput_char(const char c) {
+void unput_char(const char c, yyscan_t yyscanner) {
+  struct yyguts_t *yyg = static_cast<struct yyguts_t *>(yyscanner);
   /* NOTE: The following uncomented code is not necessary as we currently use a different algorithm:
    *          - make a backup/snapshot of the current tracking data (in previous_tracking variable)
    *             (done in YY_USER_ACTION)
@@ -2266,17 +2309,18 @@ void unput_char(const char c) {
 
 
 /* return all the text in the current token back to the input stream, except the first n chars. */
-void unput_text(int n) {
+void unput_text(int n, yyscan_t yyscanner) {
+  struct yyguts_t *yyg = static_cast<struct yyguts_t *>(yyscanner);
   if (n < 0) ERROR;
   signed int i; // must be signed! The iterartion may end with -1 when this function is called with n=0 !!
 
   char *yycopy = strdup( yytext ); /* unput_char() destroys yytext, so we copy it first */
   for (int i = yyleng-1; i >= n; i--)
-    unput_char(yycopy[i]);
+    unput_char(yycopy[i], yyscanner);
 
   *current_tracking = previous_tracking;
   yycopy[n] = '\0';
-  UpdateTracking(yycopy);
+  UpdateTracking(yycopy, yyscanner);
 
   free(yycopy);
 }
@@ -2286,11 +2330,12 @@ void unput_text(int n) {
 /* return all the text in the current token back to the input stream,
  * but first return to the stream an additional character to mark the end of the token.
  */
-void unput_and_mark(const char mark_char) {
+void unput_and_mark(const char mark_char, yyscan_t yyscanner) {
+  struct yyguts_t *yyg = static_cast<struct yyguts_t *>(yyscanner);
   char *yycopy = strdup( yytext ); /* unput_char() destroys yytext, so we copy it first */
-  unput_char(mark_char);
+  unput_char(mark_char, yyscanner);
   for (int i = yyleng-1; i >= 0; i--)
-    unput_char(yycopy[i]);
+    unput_char(yycopy[i], yyscanner);
 
   free(yycopy);
   *current_tracking = previous_tracking;
@@ -2304,13 +2349,9 @@ void unput_and_mark(const char mark_char) {
  * once we have decided if we are parsing ST or IL code. The following functions manage that buffer used by
  * the body_state.
  */
-/* The buffer used by the body_state state */
-thread_local char *bodystate_buffer        = NULL;
-thread_local bool  bodystate_is_whitespace = 1; // TRUE (1) if buffer is empty, or only contains whitespace.
-thread_local tracking_t bodystate_init_tracking;
-
 /* append text to bodystate_buffer */
-void  append_bodystate_buffer(const char *text, int is_whitespace) {
+void append_bodystate_buffer(const char *text, yyscan_t yyscanner,
+                             int is_whitespace) {
   // printf("<<<append_bodystate_buffer>>> %d <%s><%s>\n", bodystate_buffer, text, (NULL != bodystate_buffer)?bodystate_buffer:"NULL");
   long int old_len = 0;
   // make backup of tracking if we are starting off a new body_state_buffer
@@ -2328,12 +2369,12 @@ void  append_bodystate_buffer(const char *text, int is_whitespace) {
 }
 
 /* Return all data in bodystate_buffer back to flex, and empty bodystate_buffer. */
-void   unput_bodystate_buffer(void) {
+void unput_bodystate_buffer(yyscan_t yyscanner) {
   if (NULL == bodystate_buffer) ERROR;
   // printf("<<<unput_bodystate_buffer>>>\n%s\n", bodystate_buffer);
 
   for (long int i = strlen(bodystate_buffer)-1; i >= 0; i--)
-    unput_char(bodystate_buffer[i]);
+    unput_char(bodystate_buffer[i], yyscanner);
 
   free(bodystate_buffer);
   bodystate_buffer        = NULL;
@@ -2343,7 +2384,7 @@ void   unput_bodystate_buffer(void) {
 
 
 /* Return true if bodystate_buffer is empty or ony contains whitespace!! */
-int  isempty_bodystate_buffer(void) {
+int isempty_bodystate_buffer(yyscan_t yyscanner) {
   if (NULL == bodystate_buffer) return 1;
   if (bodystate_is_whitespace)  return 1;
   return 0;
@@ -2355,7 +2396,7 @@ int  isempty_bodystate_buffer(void) {
  * will be prepended to the next text block of code being appended to bodystate_buffer,
  * which may cause trouble if it is IL code
  */
-void  del_bodystate_buffer(void) {
+void del_bodystate_buffer(yyscan_t yyscanner) {
   free(bodystate_buffer);
   bodystate_buffer        = NULL;
   bodystate_is_whitespace = 1;
@@ -2363,7 +2404,7 @@ void  del_bodystate_buffer(void) {
 
 
 /* Called by flex when it reaches the end-of-file */
-int yywrap(void)
+int yywrap(yyscan_t)
 {
   /* We reached the end of the input file... */
 
@@ -2390,7 +2431,24 @@ int yywrap(void)
 
 void include_string(matiec::ParserState &parser_state,
                     const char *source_code) {
-  include_string_(parser_state, source_code);
+  yyscan_t yyscanner = static_cast<yyscan_t>(parser_state.lexer_scanner());
+  if (yyscanner == NULL)
+    throw matiec::CompilationAbort("No active scanner for generated include", true);
+  include_string_(parser_state, source_code, yyscanner);
+}
+
+static yyscan_t create_scanner(matiec::ParserState &parser_state) {
+  if (parser_state.lexer_scanner() != NULL)
+    throw matiec::CompilationAbort("ParserState already has an active scanner",
+                                   true);
+  lexer_state_t *state = new lexer_state_t(parser_state);
+  yyscan_t yyscanner = NULL;
+  if (yylex_init_extra(state, &yyscanner) != 0) {
+    delete state;
+    throw matiec::CompilationAbort("Unable to initialize scanner", true);
+  }
+  parser_state.bind_lexer_scanner(yyscanner);
+  return yyscanner;
 }
 
 
@@ -2406,12 +2464,15 @@ FILE *parse_file(matiec::ParserState &parser_state, const char *filename) {
 
 FILE *parse_file_as(matiec::ParserState &parser_state, const char *filename,
                     const char *display_filename) {
+  yyscan_t yyscanner = create_scanner(parser_state);
   FILE *filehandle = NULL;
 
   if((filehandle = fopen(filename, "r")) != NULL) {
-    yyin = filehandle;
+    yyset_in(filehandle, yyscanner);
     current_filename = matiec::retain_ast_string(parser_state, display_filename);
-    current_tracking = GetNewTracking(yyin);
+    current_tracking = GetNewTracking(filehandle);
+  } else {
+    reset_lexer_state(parser_state);
   }
   return filehandle;
 }
@@ -2419,16 +2480,21 @@ FILE *parse_file_as(matiec::ParserState &parser_state, const char *filename,
 FILE *parse_source_as(matiec::ParserState &parser_state, const char *source,
                       size_t size,
                       const char *display_filename) {
+  yyscan_t yyscanner = create_scanner(parser_state);
   FILE *filehandle = tmpfile();
-  if (filehandle == NULL) return NULL;
+  if (filehandle == NULL) {
+    reset_lexer_state(parser_state);
+    return NULL;
+  }
   if (size > 0 && fwrite(source, 1, size, filehandle) != size) {
     fclose(filehandle);
+    reset_lexer_state(parser_state);
     return NULL;
   }
   rewind(filehandle);
-  yyin = filehandle;
+  yyset_in(filehandle, yyscanner);
   current_filename = matiec::retain_ast_string(parser_state, display_filename);
-  current_tracking = GetNewTracking(yyin);
+  current_tracking = GetNewTracking(filehandle);
   return filehandle;
 }
 
@@ -2446,7 +2512,7 @@ FILE *parse_source_as(matiec::ParserState &parser_state, const char *source,
 #include "../util/symtable.hh"
 
 yystype yylval;
-thread_local YYLTYPE yylloc;
+YYLTYPE yylloc;
 
 
 
