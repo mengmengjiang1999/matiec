@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #define MATIEC_API_VERSION_MAJOR 1u
-#define MATIEC_API_VERSION_MINOR 2u
+#define MATIEC_API_VERSION_MINOR 3u
 #define MATIEC_API_VERSION_PATCH 0u
 
 #define MATIEC_API_VERSION_ENCODE(major, minor, patch) \
@@ -120,6 +120,9 @@ MATIEC_API matiec_status_t matiec_context_set_diagnostic_callback(
 MATIEC_API matiec_status_t matiec_context_set_output_callback(
     matiec_context_t *context, matiec_output_callback_t callback,
     void *user_data);
+MATIEC_API matiec_status_t matiec_compile_batch(
+    matiec_context_t *const *contexts, size_t context_count,
+    size_t max_concurrency, matiec_result_t *results);
 MATIEC_API const char *matiec_context_last_error(
     const matiec_context_t *context);
 

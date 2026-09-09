@@ -44,6 +44,19 @@ Callbacks run on the thread calling `matiec_context_compile`. They must not
 re-enter the same context, and all user-data storage must remain valid until the
 callback is cleared or the context is destroyed.
 
+Version 1.3 adds `matiec_compile_batch`. It accepts parallel arrays of opaque
+contexts and initialized results, compiles independent entries with a bounded
+worker count, and preserves input order in the result array. A concurrency value
+of zero selects a positive implementation-defined bound. A zero-length batch is
+a successful no-op.
+
+Every context in a non-empty batch must be non-null and every result must carry
+the expected `struct_size`; the entire batch is validated before workers start.
+The same context cannot appear twice: duplicate positions receive failed
+results and a context diagnostic while independent entries may still succeed.
+Callbacks configured on batch contexts execute on worker threads, so callers
+must synchronize user data shared by more than one context.
+
 Compatibility follows these rules:
 
 - a major increment may remove symbols, change signatures, or change ownership;

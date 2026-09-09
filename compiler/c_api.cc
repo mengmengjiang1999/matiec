@@ -5,6 +5,7 @@
 #include "compiler/output_sink.hh"
 
 #include <exception>
+#include <functional>
 #include <memory>
 #include <new>
 #include <string>
@@ -92,6 +93,16 @@ void fill_diagnostic(const matiec::Diagnostic &source,
     destination->column = 0;
     destination->end_line = 0;
     destination->end_column = 0;
+  }
+}
+
+void deliver_diagnostics(matiec_context_t *context) {
+  if (context->diagnostic_callback == nullptr) return;
+  for (const matiec::Diagnostic &item :
+       context->value.diagnostics().diagnostics()) {
+    matiec_diagnostic_t view = MATIEC_DIAGNOSTIC_INIT;
+    fill_diagnostic(item, &view);
+    context->diagnostic_callback(context->diagnostic_user_data, &view);
   }
 }
 
@@ -227,14 +238,7 @@ matiec_status_t matiec_context_compile(matiec_context_t *context,
     result->succeeded = compiled.succeeded() ? 1u : 0u;
     result->error_count = compiled.error_count;
     result->warning_count = compiled.warning_count;
-    if (context->diagnostic_callback != nullptr) {
-      for (const matiec::Diagnostic &item :
-           context->value.diagnostics().diagnostics()) {
-        matiec_diagnostic_t view = MATIEC_DIAGNOSTIC_INIT;
-        fill_diagnostic(item, &view);
-        context->diagnostic_callback(context->diagnostic_user_data, &view);
-      }
-    }
+    deliver_diagnostics(context);
   });
 }
 
@@ -282,6 +286,52 @@ matiec_status_t matiec_context_set_output_callback(
               context->output_user_data);
         });
   });
+}
+
+matiec_status_t matiec_compile_batch(
+    matiec_context_t *const *contexts, size_t context_count,
+    size_t max_concurrency, matiec_result_t *results) {
+  if (context_count == 0) return MATIEC_STATUS_OK;
+  if (contexts == nullptr || results == nullptr)
+    return MATIEC_STATUS_INVALID_ARGUMENT;
+  for (size_t index = 0; index < context_count; ++index) {
+    if (contexts[index] == nullptr) return MATIEC_STATUS_INVALID_ARGUMENT;
+    if (results[index].struct_size < sizeof(matiec_result_t)) {
+      contexts[index]->last_error = "Result structure is too small";
+      return MATIEC_STATUS_INVALID_ARGUMENT;
+    }
+  }
+
+  try {
+    std::vector<std::reference_wrapper<matiec::CompilationContext>> jobs;
+    jobs.reserve(context_count);
+    for (size_t index = 0; index < context_count; ++index) {
+      contexts[index]->last_error.clear();
+      contexts[index]->value.diagnostics().clear();
+      jobs.push_back(std::ref(contexts[index]->value));
+    }
+    const std::vector<matiec::CompilationResult> compiled =
+        matiec::Compiler().compile_parallel(jobs, max_concurrency);
+    for (size_t index = 0; index < context_count; ++index) {
+      results[index].succeeded = compiled[index].succeeded() ? 1u : 0u;
+      results[index].error_count = compiled[index].error_count;
+      results[index].warning_count = compiled[index].warning_count;
+      deliver_diagnostics(contexts[index]);
+    }
+    return MATIEC_STATUS_OK;
+  } catch (const std::bad_alloc &) {
+    for (size_t index = 0; index < context_count; ++index)
+      contexts[index]->last_error = "Out of memory";
+    return MATIEC_STATUS_OUT_OF_MEMORY;
+  } catch (const std::exception &error) {
+    for (size_t index = 0; index < context_count; ++index)
+      contexts[index]->last_error = error.what();
+    return MATIEC_STATUS_INTERNAL_ERROR;
+  } catch (...) {
+    for (size_t index = 0; index < context_count; ++index)
+      contexts[index]->last_error = "Unknown internal error";
+    return MATIEC_STATUS_INTERNAL_ERROR;
+  }
 }
 
 const char *matiec_context_last_error(const matiec_context_t *context) {
