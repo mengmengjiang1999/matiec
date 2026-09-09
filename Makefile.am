@@ -43,6 +43,7 @@ TESTS = \
 	c_api_callbacks_test \
 	c_api_parallel_test \
 	c_api_virtual_include_test \
+	c_api_limits_test \
 	tests/generated_c/runtests \
 	tests/initialization/runtests \
 	tests/cli/runtests \
@@ -207,7 +208,7 @@ iec2c_SOURCES = main.cc
 
 iec2iec_SOURCES = main.cc
 
-check_PROGRAMS = modern_library_registry_test flow_analysis_store_test constant_analysis_store_test datatype_analysis_store_test resolution_analysis_store_test enumeration_analysis_store_test generator_analysis_store_test sequential_compilation_test concurrent_frontend_test parallel_compilation_test in_memory_generator_test c_api_single_compilation_test c_api_callbacks_test c_api_parallel_test c_api_virtual_include_test
+check_PROGRAMS = modern_library_registry_test flow_analysis_store_test constant_analysis_store_test datatype_analysis_store_test resolution_analysis_store_test enumeration_analysis_store_test generator_analysis_store_test sequential_compilation_test concurrent_frontend_test parallel_compilation_test in_memory_generator_test c_api_single_compilation_test c_api_callbacks_test c_api_parallel_test c_api_virtual_include_test c_api_limits_test
 
 modern_library_registry_test_SOURCES = \
 	tests/compiler/modern_library_registry_test.cc
@@ -270,3 +271,7 @@ c_api_virtual_include_test_SOURCES = \
 	tests/compiler/c_api_virtual_include_test.c
 c_api_virtual_include_test_LINK = $(CXXLINK)
 c_api_virtual_include_test_LDADD = $(iec2c_LDADD)
+
+c_api_limits_test_SOURCES = tests/compiler/c_api_limits_test.c
+c_api_limits_test_LINK = $(CXXLINK)
+c_api_limits_test_LDADD = $(iec2c_LDADD)

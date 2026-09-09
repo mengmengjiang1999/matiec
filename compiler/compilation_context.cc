@@ -8,12 +8,16 @@ CompilationContext::CompilationContext()
     : outputs_(diagnostics_), analysis_(ast_arena_) {
   parser_state_.bind_ast_arena(ast_arena_);
   parser_state_.bind_declaration_symbols(declaration_symbols_);
+  parser_state_.set_cancellation_checker(
+      [this] { return cancel_requested(); });
 }
 
 CompilationContext::CompilationContext(CompilerOptions options)
     : options_(std::move(options)), outputs_(diagnostics_), analysis_(ast_arena_) {
   parser_state_.bind_ast_arena(ast_arena_);
   parser_state_.bind_declaration_symbols(declaration_symbols_);
+  parser_state_.set_cancellation_checker(
+      [this] { return cancel_requested(); });
 }
 
 CompilerOptions &CompilationContext::options() {
@@ -89,6 +93,26 @@ ExperimentalSyntaxModel &CompilationContext::experimental_syntax() {
 
 const ExperimentalSyntaxModel &CompilationContext::experimental_syntax() const {
   return experimental_syntax_;
+}
+
+void CompilationContext::set_limits(CompilationLimits limits) {
+  limits_ = limits;
+  diagnostics_.set_limit(limits.max_diagnostics);
+  outputs_.set_byte_limit(limits.max_output_bytes);
+}
+
+const CompilationLimits &CompilationContext::limits() const { return limits_; }
+
+void CompilationContext::request_cancel() {
+  cancel_requested_.store(true, std::memory_order_release);
+}
+
+void CompilationContext::reset_cancel() {
+  cancel_requested_.store(false, std::memory_order_release);
+}
+
+bool CompilationContext::cancel_requested() const {
+  return cancel_requested_.load(std::memory_order_acquire);
 }
 
 }  // namespace matiec

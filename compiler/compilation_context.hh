@@ -11,9 +11,17 @@
 #include "parser_state.hh"
 #include "source_manager.hh"
 
+#include <atomic>
+#include <cstddef>
 #include <string>
 
 namespace matiec {
+
+struct CompilationLimits {
+  std::size_t max_source_bytes = 0;
+  std::size_t max_diagnostics = 0;
+  std::size_t max_output_bytes = 0;
+};
 
 class CompilationContext {
  public:
@@ -50,6 +58,12 @@ class CompilationContext {
   ExperimentalSyntaxModel &experimental_syntax();
   const ExperimentalSyntaxModel &experimental_syntax() const;
 
+  void set_limits(CompilationLimits limits);
+  const CompilationLimits &limits() const;
+  void request_cancel();
+  void reset_cancel();
+  bool cancel_requested() const;
+
  private:
   CompilerOptions options_;
   DiagnosticEngine diagnostics_;
@@ -60,6 +74,8 @@ class CompilationContext {
   ParserState parser_state_;
   SourceManager sources_;
   ExperimentalSyntaxModel experimental_syntax_;
+  CompilationLimits limits_;
+  std::atomic<bool> cancel_requested_{false};
 };
 
 }  // namespace matiec

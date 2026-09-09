@@ -58,6 +58,14 @@ IncludeResolveStatus ParserState::resolve_include(
   return include_resolver_(requested, display_name, contents, error);
 }
 
+void ParserState::set_cancellation_checker(CancellationChecker checker) {
+  cancellation_checker_ = std::move(checker);
+}
+
+bool ParserState::cancellation_requested() const {
+  return cancellation_checker_ && cancellation_checker_();
+}
+
 ActiveParserStateScope::ActiveParserStateScope(ParserState &state)
     : previous_(current_parser_state) {
   current_parser_state = &state;

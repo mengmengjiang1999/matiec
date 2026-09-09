@@ -29,16 +29,36 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
   context.analysis().clear();
   context.declaration_symbols().clear();
   context.experimental_syntax().clear();
+  context.outputs().begin_compilation();
   if (context.source_path().empty()) {
     context.diagnostics().error("No source path was provided");
     return context.diagnostics().result();
   }
 
   try {
+    const auto cancellation_checkpoint = [&context] {
+      if (context.cancel_requested())
+        throw CompilationAbort("Compilation cancelled");
+    };
+    cancellation_checkpoint();
     std::string source;
+    bool source_loaded = false;
+    if (context.limits().max_source_bytes != 0) {
+      std::string error;
+      if (!context.sources().load(&source, &error)) {
+        context.diagnostics().error("Cannot load source " +
+                                    context.source_path() + ": " + error);
+        return context.diagnostics().result();
+      }
+      source_loaded = true;
+      if (source.size() > context.limits().max_source_bytes) {
+        context.diagnostics().fatal("Source byte limit exceeded");
+        return context.diagnostics().result();
+      }
+    }
     const bool needs_source_bytes = context.sources().is_memory_backed() ||
         language_profile_is_experimental(context.options().language_profile);
-    if (needs_source_bytes) {
+    if (needs_source_bytes && !source_loaded) {
       std::string error;
       if (!context.sources().load(&source, &error)) {
         context.diagnostics().error("Cannot load source " +
@@ -46,6 +66,7 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
         return context.diagnostics().result();
       }
     }
+    cancellation_checkpoint();
     if (!language_profile_is_experimental(context.options().language_profile)) {
       const bool accepted = context.sources().is_memory_backed()
           ? reject_legacy_access_variables(source, context.source_path(),
@@ -90,6 +111,7 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
         : legacy_state.parse(&tree_root);
     if (parse_status < 0)
       return CompilationResult::failure();
+    cancellation_checkpoint();
 
     if (language_profile_is_experimental(options.language_profile)) {
       if (!register_experimental_modern_library_from_ast(
@@ -119,15 +141,18 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     if (options.syntax_only)
       return CompilationResult::success();
 
+    cancellation_checkpoint();
     legacy_state.initialize_symbol_tables(tree_root);
 
     symbol_c *ordered_tree_root = NULL;
     if (stage3(tree_root, &ordered_tree_root, context) < 0)
       return context.diagnostics().result();
 
+    cancellation_checkpoint();
     if (stage4(ordered_tree_root, context) < 0)
       return context.diagnostics().result();
 
+    cancellation_checkpoint();
     if (!write_access_variable_metadata(access_result, options.output_directory,
                                         context.outputs()))
       return context.diagnostics().result();

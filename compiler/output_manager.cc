@@ -36,6 +36,17 @@ void OutputManager::set_file_sink_factory(FileSinkFactory factory) {
   file_sink_factory_ = std::move(factory);
 }
 
+void OutputManager::set_byte_limit(std::size_t maximum) {
+  byte_limit_ = maximum;
+}
+
+void OutputManager::begin_compilation() {
+  owned_sinks_.clear();
+  reported_sinks_.clear();
+  has_errors_ = false;
+  bytes_written_ = 0;
+}
+
 MemoryOutputSink &OutputManager::create_memory() {
   auto sink = std::make_unique<MemoryOutputSink>();
   MemoryOutputSink &result = *sink;
@@ -44,7 +55,15 @@ MemoryOutputSink &OutputManager::create_memory() {
 }
 
 OutputResult OutputManager::write(OutputSink &sink, std::string_view text) {
+  if (byte_limit_ != 0 &&
+      (text.size() > byte_limit_ || bytes_written_ > byte_limit_ - text.size())) {
+    const OutputResult result =
+        OutputResult::failure("Generated output byte limit exceeded");
+    record_failure(sink, result);
+    return result;
+  }
   const OutputResult result = sink.write(text);
+  if (result.ok) bytes_written_ += text.size();
   if (!result.ok) record_failure(sink, result);
   return result;
 }

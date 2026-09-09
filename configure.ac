@@ -69,13 +69,13 @@ AC_CHECK_FUNCS([clock_gettime memset pow strcasecmp strdup strtoul strtoull])
 
 case "$host_os" in
   darwin*)
-    MATIEC_SHARED_REAL=libmatiec.1.4.0.dylib
+    MATIEC_SHARED_REAL=libmatiec.1.5.0.dylib
     MATIEC_SHARED_ABI=libmatiec.1.dylib
     MATIEC_SHARED_LINK=libmatiec.dylib
     MATIEC_SHARED_MODE=darwin
     ;;
   *)
-    MATIEC_SHARED_REAL=libmatiec.so.1.4.0
+    MATIEC_SHARED_REAL=libmatiec.so.1.5.0
     MATIEC_SHARED_ABI=libmatiec.so.1
     MATIEC_SHARED_LINK=libmatiec.so
     MATIEC_SHARED_MODE=elf

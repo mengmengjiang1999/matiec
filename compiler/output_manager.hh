@@ -24,6 +24,8 @@ class OutputManager {
   OutputSink &create_file(std::string path);
   MemoryOutputSink &create_memory();
   void set_file_sink_factory(FileSinkFactory factory);
+  void set_byte_limit(std::size_t maximum);
+  void begin_compilation();
 
   OutputResult write(OutputSink &sink, std::string_view text);
   OutputResult flush(OutputSink &sink);
@@ -39,6 +41,8 @@ class OutputManager {
   FileSinkFactory file_sink_factory_;
   std::unordered_set<const OutputSink *> reported_sinks_;
   bool has_errors_ = false;
+  std::size_t byte_limit_ = 0;
+  std::size_t bytes_written_ = 0;
 };
 
 }  // namespace matiec

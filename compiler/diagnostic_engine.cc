@@ -8,6 +8,12 @@ namespace matiec {
 
 void DiagnosticEngine::report(DiagnosticSeverity severity, std::string message,
                               SourceRange range) {
+  if (limit_ != 0 && diagnostics_.size() >= limit_) {
+    limit_exceeded_ = true;
+    diagnostics_.back() = {DiagnosticSeverity::fatal,
+                           "Diagnostic limit exceeded", {}};
+    return;
+  }
   diagnostics_.push_back({severity, std::move(message), std::move(range)});
 }
 
@@ -69,6 +75,11 @@ void DiagnosticEngine::render(std::ostream &output) const {
 
 void DiagnosticEngine::clear() {
   diagnostics_.clear();
+  limit_exceeded_ = false;
 }
+
+void DiagnosticEngine::set_limit(std::size_t maximum) { limit_ = maximum; }
+
+bool DiagnosticEngine::limit_exceeded() const { return limit_exceeded_; }
 
 }  // namespace matiec

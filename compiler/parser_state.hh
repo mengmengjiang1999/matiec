@@ -30,6 +30,7 @@ namespace matiec {
 enum class IncludeResolveStatus { resolved, use_filesystem, not_found, error };
 using IncludeResolver = std::function<IncludeResolveStatus(
     std::string_view, std::string *, std::string *, std::string *)>;
+using CancellationChecker = std::function<bool()>;
 
 class AstArena;
 struct DeclarationSymbolTables;
@@ -64,12 +65,15 @@ struct ParserState {
                                        std::string *display_name,
                                        std::string *contents,
                                        std::string *error) const;
+  void set_cancellation_checker(CancellationChecker checker);
+  bool cancellation_requested() const;
 
  private:
   AstArena *ast_arena_ = nullptr;
   DeclarationSymbolTables *declaration_symbols_ = nullptr;
   std::unique_ptr<ParserSymbolTables> symbols_;
   IncludeResolver include_resolver_;
+  CancellationChecker cancellation_checker_;
 };
 
 class ActiveParserStateScope {

@@ -2083,6 +2083,8 @@ void UpdateTracking(const char *text) {
 /* GetNextChar: reads a character from input */
 int GetNextChar(char *b, int maxBuffer) {
   (void)maxBuffer;
+  if (matiec::active_parser_state().cancellation_requested())
+    throw matiec::CompilationAbort("Compilation cancelled");
   if (current_tracking->in_file == NULL) {
     if (current_tracking->memory_offset >= current_tracking->memory.size())
       return 0;

@@ -346,7 +346,7 @@ Filesystem include pragmas still resolve through `include_directory`.
 
 This C++ interface remains a source-level integration API. The stable binary
 boundary begins with the C-compatible [`include/matiec/api.h`](include/matiec/api.h)
-version contract. API version 1.4 provides opaque context lifecycle, copied
+version contract. API version 1.5 provides opaque context lifecycle, copied
 memory and file inputs, essential per-compilation options, and structured
 success/error counts without exposing C++ implementation layouts. It also
 supports ordered diagnostic delivery and generated-output callbacks, allowing
@@ -382,6 +382,15 @@ and diagnostic display names for nested `{#include "..."}` pragmas, allowing a
 complete compile without temporary source files. While installed it is
 authoritative unless it explicitly returns `MATIEC_INCLUDE_USE_FILESYSTEM`;
 clear it to restore unconditional filesystem include lookup.
+
+Untrusted compilations can be bounded with `matiec_context_set_limits`.
+`MATIEC_LIMITS_INIT` defaults source bytes, retained diagnostics, and aggregate
+generated-output bytes to unlimited; set any field to a nonzero budget to opt
+in. `matiec_context_cancel` is safe to call from another thread while the
+context compiles. Cancellation remains sticky until
+`matiec_context_reset_cancel`, making context reuse explicit and predictable.
+Cancellation and exhausted budgets return a normal API status with
+`result.succeeded == 0` and an explanatory diagnostic.
 
 ## Install the embedding library
 

@@ -8,6 +8,7 @@
 #include <functional>
 #include <memory>
 #include <new>
+#include <limits>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -337,6 +338,13 @@ matiec_status_t matiec_context_set_include_resolver(
             *error = "Virtual include bytes are required for non-empty source";
             return matiec::IncludeResolveStatus::error;
           }
+          const std::size_t source_limit =
+              context->value.limits().max_source_bytes;
+          if (source_limit != 0 && source.size > source_limit) {
+            *error = "Source byte limit exceeded for virtual include: " +
+                     std::string(requested);
+            return matiec::IncludeResolveStatus::error;
+          }
           *display_name = source.display_name;
           const char *bytes = static_cast<const char *>(source.data);
           contents->assign(bytes == nullptr ? "" : bytes, source.size);
@@ -344,6 +352,36 @@ matiec_status_t matiec_context_set_include_resolver(
           return matiec::IncludeResolveStatus::resolved;
         });
   });
+}
+
+matiec_status_t matiec_context_set_limits(
+    matiec_context_t *context, const matiec_limits_t *limits) {
+  if (context == nullptr) return MATIEC_STATUS_INVALID_ARGUMENT;
+  if (limits == nullptr) return invalid(context, "Limits are required");
+  if (limits->struct_size < sizeof(matiec_limits_t))
+    return invalid(context, "Limits structure is too small");
+  const uint64_t size_max =
+      static_cast<uint64_t>(std::numeric_limits<std::size_t>::max());
+  if (limits->max_source_bytes > size_max ||
+      limits->max_diagnostics > size_max ||
+      limits->max_output_bytes > size_max)
+    return invalid(context, "A resource limit exceeds the platform size");
+  return guarded(context, [&] {
+    context->value.set_limits(
+        {static_cast<std::size_t>(limits->max_source_bytes),
+         static_cast<std::size_t>(limits->max_diagnostics),
+         static_cast<std::size_t>(limits->max_output_bytes)});
+  });
+}
+
+matiec_status_t matiec_context_cancel(matiec_context_t *context) {
+  if (context == nullptr) return MATIEC_STATUS_INVALID_ARGUMENT;
+  context->value.request_cancel();
+  return MATIEC_STATUS_OK;
+}
+
+matiec_status_t matiec_context_reset_cancel(matiec_context_t *context) {
+  return guarded(context, [&] { context->value.reset_cancel(); });
 }
 
 matiec_status_t matiec_compile_batch(

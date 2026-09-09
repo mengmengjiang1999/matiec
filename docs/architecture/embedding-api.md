@@ -71,6 +71,20 @@ other approved paths. Clearing the callback restores the include-directory searc
 run on the compiling thread (worker threads for batch compilation), must not
 re-enter their context, and must synchronize shared user data.
 
+Version 1.5 adds cooperative cancellation and resource budgets.
+`matiec_context_set_limits` copies a size-tagged `matiec_limits_t`; zero fields
+are unlimited, while nonzero fields cap each primary or virtual-include source,
+the number of retained diagnostics, and aggregate generated-output bytes for a
+compilation. Exceeding a budget is a compilation failure reported through the
+normal result and diagnostic stream.
+
+`matiec_context_cancel` atomically sets a sticky request and is the only context
+operation permitted from another thread during compilation. The scanner polls
+the request while consuming input and the compiler checks it between major
+stages. Hosts must call `matiec_context_reset_cancel` before deliberately
+reusing a cancelled context; reset and all other configuration operations must
+not race with compilation.
+
 ## Installed package
 
 `make install` provides the public header as `<matiec/api.h>`, a self-contained

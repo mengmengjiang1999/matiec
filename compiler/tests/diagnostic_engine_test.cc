@@ -31,5 +31,16 @@ int main() {
   diagnostics.clear();
   assert(diagnostics.diagnostics().empty());
   assert(diagnostics.result().succeeded());
+
+  diagnostics.set_limit(2);
+  diagnostics.warning("first");
+  diagnostics.error("second");
+  diagnostics.error("third");
+  assert(diagnostics.limit_exceeded());
+  assert(diagnostics.diagnostics().size() == 2);
+  assert(diagnostics.diagnostics().back().severity ==
+         matiec::DiagnosticSeverity::fatal);
+  assert(diagnostics.diagnostics().back().message ==
+         "Diagnostic limit exceeded");
   return 0;
 }

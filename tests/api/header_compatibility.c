@@ -41,6 +41,13 @@ static matiec_status_t (*set_output_callback_fn)(
 static matiec_status_t (*set_include_resolver_fn)(
     matiec_context_t *, matiec_include_resolver_callback_t, void *) =
     &matiec_context_set_include_resolver;
+static matiec_status_t (*set_limits_fn)(matiec_context_t *,
+                                        const matiec_limits_t *) =
+    &matiec_context_set_limits;
+static matiec_status_t (*cancel_fn)(matiec_context_t *) =
+    &matiec_context_cancel;
+static matiec_status_t (*reset_cancel_fn)(matiec_context_t *) =
+    &matiec_context_reset_cancel;
 static matiec_status_t (*compile_batch_fn)(matiec_context_t *const *, size_t,
                                            size_t, matiec_result_t *) =
     &matiec_compile_batch;
@@ -51,6 +58,7 @@ int main(void) {
   matiec_result_t result = MATIEC_RESULT_INIT;
   matiec_diagnostic_t diagnostic = MATIEC_DIAGNOSTIC_INIT;
   matiec_source_view_t source = MATIEC_SOURCE_VIEW_INIT;
+  matiec_limits_t limits = MATIEC_LIMITS_INIT;
   (void)api_version_fn;
   (void)api_version_string_fn;
   (void)context_create_fn;
@@ -68,11 +76,15 @@ int main(void) {
   (void)set_diagnostic_callback_fn;
   (void)set_output_callback_fn;
   (void)set_include_resolver_fn;
+  (void)set_limits_fn;
+  (void)cancel_fn;
+  (void)reset_cancel_fn;
   (void)compile_batch_fn;
   (void)last_error_fn;
   return result.struct_size == sizeof(result) &&
                  diagnostic.struct_size == sizeof(diagnostic) &&
-                 source.struct_size == sizeof(source)
+                 source.struct_size == sizeof(source) &&
+                 limits.struct_size == sizeof(limits)
              ? 0
              : 1;
 }

@@ -26,9 +26,13 @@ class DiagnosticEngine {
 
   void render(std::ostream &output) const;
   void clear();
+  void set_limit(std::size_t maximum);
+  bool limit_exceeded() const;
 
  private:
   std::vector<Diagnostic> diagnostics_;
+  std::size_t limit_ = 0;
+  bool limit_exceeded_ = false;
 };
 
 }  // namespace matiec

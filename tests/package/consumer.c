@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
 
   assert(argc == 2);
   assert(matiec_api_version() == MATIEC_API_VERSION);
-  assert(strcmp(matiec_api_version_string(), "1.4.0") == 0);
+  assert(strcmp(matiec_api_version_string(), "1.5.0") == 0);
   assert(matiec_context_create(&context) == MATIEC_STATUS_OK);
   assert(matiec_context_set_source(context, "memory://installed.st", source,
                                    strlen(source)) == MATIEC_STATUS_OK);
