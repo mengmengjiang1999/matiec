@@ -99,6 +99,7 @@
 #include "../compiler/parser_state.hh"
 
 #include <cctype>
+#include <memory>
 
 #include "../absyntax_utils/add_en_eno_param_decl.hh"	/* required for  add_en_eno_param_decl_c */
 
@@ -9058,13 +9059,14 @@ int stage2__(matiec::ParserState &parser_state, const char *filename,
              const char *source, size_t source_size,
              symbol_c **tree_root_ref
             ) {             
-  char *libfilename = NULL;
+  std::unique_ptr<char, decltype(&free)> libfilename(NULL, &free);
 
   /* Determine the full path name of the standard library file... */
   if (runtime_options.includedir != NULL)
     INCLUDE_DIRECTORIES[0] = runtime_options.includedir;
 
-  if ((libfilename = strdup3(INCLUDE_DIRECTORIES[0], "/", LIBFILE)) == NULL) {
+  libfilename.reset(strdup3(INCLUDE_DIRECTORIES[0], "/", LIBFILE));
+  if (libfilename == NULL) {
     fprintf (stderr, "Out of memory. Bailing out!\n");
     return -1;
   }
@@ -9076,9 +9078,8 @@ int stage2__(matiec::ParserState &parser_state, const char *filename,
     // fprintf (stderr, "----> Starting pre-parsing!\n");
     tree_root = NULL;
     set_preparse_state();
-    if (parse_files(parser_state, libfilename, filename, display_filename, source,
+    if (parse_files(parser_state, libfilename.get(), filename, display_filename, source,
                     source_size) < 0) {
-      free(libfilename);
       return -1;
     }
     // TODO: delete the current AST. For the moment, we leave all the objects in memory (not much of an issue in a program that always runs to completion).
@@ -9089,15 +9090,13 @@ int stage2__(matiec::ParserState &parser_state, const char *filename,
   // fprintf (stderr, "----> Starting normal parsing!\n");
   tree_root = NULL;
   rst_preparse_state();
-  if (parse_files(parser_state, libfilename, filename, display_filename, source,
+  if (parse_files(parser_state, libfilename.get(), filename, display_filename, source,
                   source_size) < 0) {
-    free(libfilename);
     return -1;
   }
   
 
   /* Final clean-up... */
-  free(libfilename);
   if (tree_root_ref != NULL)
     *tree_root_ref = tree_root;
 

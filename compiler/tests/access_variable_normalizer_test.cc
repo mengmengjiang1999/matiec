@@ -17,6 +17,19 @@ int main() {
   }
   {
     matiec::DiagnosticEngine diagnostics;
+    assert(!matiec::reject_legacy_access_variables(
+        "\tvar_access (* mixed case *)\n", "mixed.st", diagnostics));
+    assert(diagnostics.diagnostics().size() == 1);
+  }
+  {
+    matiec::DiagnosticEngine diagnostics;
+    assert(matiec::reject_legacy_access_variables(
+        "VAR_ACCESSIBLE : BOOL;\nXVAR_ACCESS : BOOL;\n", "near.st",
+        diagnostics));
+    assert(!diagnostics.has_errors());
+  }
+  {
+    matiec::DiagnosticEngine diagnostics;
     assert(matiec::reject_legacy_access_variables(
         "PROGRAM Main\nVAR value : INT; END_VAR\nEND_PROGRAM\n",
         "main.st", diagnostics));

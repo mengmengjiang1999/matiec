@@ -4,7 +4,6 @@
 #include "compiler/output_manager.hh"
 
 #include <fstream>
-#include <regex>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -41,14 +40,36 @@ SourceRange line_range(const Line &line, const std::string &path) {
           {path, line.number, line.text.size() + 1, line.end}};
 }
 
+bool starts_with_access_keyword(std::string_view line) {
+  static constexpr std::string_view keyword = "VAR_ACCESS";
+  std::size_t offset = 0;
+  while (offset < line.size() &&
+         (line[offset] == ' ' || line[offset] == '\t'))
+    ++offset;
+  if (line.size() - offset < keyword.size()) return false;
+  for (std::size_t index = 0; index < keyword.size(); ++index) {
+    const char source = line[offset + index];
+    const char folded = source >= 'a' && source <= 'z'
+                            ? static_cast<char>(source - 'a' + 'A')
+                            : source;
+    if (folded != keyword[index]) return false;
+  }
+  const std::size_t end = offset + keyword.size();
+  if (end == line.size()) return true;
+  const char next = line[end];
+  const bool identifier_character =
+      (next >= 'A' && next <= 'Z') || (next >= 'a' && next <= 'z') ||
+      (next >= '0' && next <= '9') || next == '_';
+  return !identifier_character;
+}
+
 }  // namespace
 
 bool reject_legacy_access_variables(std::string_view source,
                                     const std::string &source_path,
                                     DiagnosticEngine &diagnostics) {
-  const std::regex access_start("^[ \\t]*VAR_ACCESS\\b.*$", std::regex::icase);
   for (const Line &line : split_lines(source)) {
-    if (!std::regex_match(line.text, access_start)) continue;
+    if (!starts_with_access_keyword(line.text)) continue;
     diagnostics.error(
         "VAR_ACCESS requires --std=iec61131-3:2025-experimental",
         line_range(line, source_path));
