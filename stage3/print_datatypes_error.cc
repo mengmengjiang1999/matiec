@@ -190,7 +190,7 @@ void print_datatypes_error_c::handle_function_invocation(symbol_c *fcall, generi
 	if (NULL != fcall_data.nonformal_operand_list) {
 		if (f_decl)
 			for (int i = 1; (param_value = fcp_iterator.next_nf()) != NULL; i++) {
-		  		/* TODO: verify if it is lvalue when INOUT or OUTPUT parameters! */
+				/* OUT and IN_OUT writability is checked uniformly by lvalue_check_c. */
 
 				/* This handle_function_invocation() will be called to handle IL function calls, where the first parameter comes from the previous IL instruction.
 				 * In this case, the previous IL instruction will be artifically (and temporarily) added to the begining ot the parameter list
@@ -278,8 +278,8 @@ void *print_datatypes_error_c::handle_implicit_il_fb_invocation(const char *para
 
 	/* Find the corresponding parameter in function declaration */
 	function_param_iterator_c fp_iterator(called_fb_declaration);
-	if (NULL == fp_iterator.search(param_name)) {
-		/* TODO: must also check whther it is an IN parameter!! */
+	if ((NULL == fp_iterator.search(param_name)) ||
+	    (function_param_iterator_c::direction_in != fp_iterator.param_direction())) {
 		/* NOTE: although all standard FBs have the implicit FB calls defined as input parameters
 		*        (i.e., for all standard FBs, CLK, PT, IN, CU, CD, S1, R1, etc... is always an input parameter)
 		*        if a non-standard (i.e. a FB not defined in the standard library) FB is being called, then

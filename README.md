@@ -460,6 +460,8 @@ The regression suite covers:
 - compiler services, diagnostics, AST ownership, and pass metadata;
 - pass ordering, prerequisites, and failure short-circuiting;
 - invalid-then-valid sequential compilation;
+- aggregate/member lookup plus IN, OUT, and IN_OUT call-direction regressions,
+  including rejected literal IN_OUT arguments and duplicate declarations;
 - repeated bounded parallel batches with context reuse, mixed failures,
   callback fault injection, and output isolation;
 - CLI behavior and syntax/initialization regressions;

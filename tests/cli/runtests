@@ -357,6 +357,23 @@ fi
 expect_failure legacy-object-method "error" \
   "$IEC2C" --std=legacy -y -f -l -p -I "$MATIEC_LIBDIR" "$METHOD_INPUT"
 
+if "$IEC2C" -f -l -p -I "$MATIEC_LIBDIR" -T "$TMP_ROOT" \
+     "$SCRIPT_DIR/profile-fixtures/semantic-lookup-matrix.st" \
+     >"$TMP_ROOT/semantic-lookup.stdout" \
+     2>"$TMP_ROOT/semantic-lookup.stderr"; then
+  echo "[ O K ]    semantic-lookup-matrix"
+else
+  echo "[ERROR]    semantic-lookup-matrix -> aggregate or parameter lookup failed"
+  sed -n '1,20p' "$TMP_ROOT/semantic-lookup.stderr"
+  error=1
+fi
+expect_failure semantic-inout-literal "Assignment to an expression or a literal value is not allowed" \
+  "$IEC2C" -f -l -p -I "$MATIEC_LIBDIR" \
+  "$SCRIPT_DIR/profile-fixtures/semantic-inout-literal.st"
+expect_failure semantic-duplicate-declaration "invalid variable(s) declaration" \
+  "$IEC2C" -y -f -l -p -I "$MATIEC_LIBDIR" \
+  "$SCRIPT_DIR/profile-fixtures/semantic-duplicate-declaration.st"
+
 ACCESS_INPUT="$SCRIPT_DIR/profile-fixtures/var-access.st"
 ACCESS_GENERATED="$TMP_ROOT/access-generated"
 mkdir -p "$ACCESS_GENERATED"

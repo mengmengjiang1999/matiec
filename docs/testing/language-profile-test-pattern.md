@@ -19,3 +19,9 @@ After a feature is assigned only to the experimental profile, its tests must sho
 The shared CLI regression helper in `tests/cli/runtests` is the starting point for
 profile-neutral fixtures. A feature-specific suite should replace equality with
 explicit expected results when the two profiles intentionally diverge.
+
+Semantic lookup changes additionally use a compact matrix containing structure
+fields, arrays of structures, function-block members, and IN/OUT/IN_OUT calls.
+Negative companions must lock down non-writable output arguments and duplicate
+declarations. The matrix is compiled after unrelated queries in the full suite so
+stale visitor state cannot be mistaken for a valid declaration result.

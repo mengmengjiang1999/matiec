@@ -104,20 +104,24 @@ search_var_instance_decl_c::search_var_instance_decl_c(symbol_c *search_scope) {
 symbol_c *search_var_instance_decl_c::get_decl(symbol_c *variable) {
   this->current_vartype = none_vt;
   this->current_option  = none_opt;
+  this->current_type_decl = NULL;
   this->search_name = get_var_name_c::get_name(variable);
-  if (NULL == search_scope) return NULL; // NOTE: This is not an ERROR! declaration_check_c, for e.g., relies on this returning NULL!
+  if ((NULL == search_scope) || (NULL == search_name)) return NULL; // NOTE: This is not an ERROR! declaration_check_c, for e.g., relies on this returning NULL!
   return (symbol_c *)search_scope->accept(*this);
 }
 
 symbol_c *search_var_instance_decl_c::get_basetype_decl(symbol_c *variable) {
-  return search_base_type_c::get_basetype_decl(get_decl(variable));
+  symbol_c *declaration = get_decl(variable);
+  return declaration == NULL ? NULL
+                             : search_base_type_c::get_basetype_decl(declaration);
 }
 
 search_var_instance_decl_c::vt_t search_var_instance_decl_c::get_vartype(symbol_c *variable) {
   this->current_vartype = none_vt;
   this->current_option  = none_opt;
+  this->current_type_decl = NULL;
   this->search_name = get_var_name_c::get_name(variable);
-  if (NULL == search_scope) ERROR;
+  if ((NULL == search_scope) || (NULL == search_name)) return none_vt;
   search_scope->accept(*this);
   return this->current_vartype;
 }
@@ -125,8 +129,9 @@ search_var_instance_decl_c::vt_t search_var_instance_decl_c::get_vartype(symbol_
 search_var_instance_decl_c::opt_t search_var_instance_decl_c::get_option(symbol_c *variable) {
   this->current_vartype = none_vt;
   this->current_option  = none_opt;
+  this->current_type_decl = NULL;
   this->search_name = get_var_name_c::get_name(variable);
-  if (NULL == search_scope) ERROR;
+  if ((NULL == search_scope) || (NULL == search_name)) return none_opt;
   search_scope->accept(*this);
   return this->current_option;
 }
@@ -323,11 +328,7 @@ void *search_var_instance_decl_c::visit(var1_list_c *symbol) {
 /* name_list ':' function_block_type_name ASSIGN structure_initialization */
 /* structure_initialization -> may be NULL ! */
 void *search_var_instance_decl_c::visit(fb_name_decl_c *symbol) {
-  // TODO: The following line is wrong! It should be
-  // current_type_decl = symbol->fb_spec_init;
-  //  However, this change will require a check of all callers, to see if they would handle this correctly.
-  //  For now, just keep what we have had historically, and seems to be working.
-  current_type_decl = spec_init_sperator_c::get_spec(symbol->fb_spec_init);
+  current_type_decl = symbol->fb_spec_init;
   return symbol->fb_name_list->accept(*this);
 }
 

@@ -93,6 +93,14 @@ The result-store and explicit-dependency migrations are complete. All
 semantic/generator result fields have left the AST, and analysis state is reached
 only through the store supplied by the current compilation context.
 
+Scoped variable-declaration lookup is query-local even when a visitor instance is
+reused: declaration, variable-kind, option, and type results are reset before
+every query. Function-block variables retain their complete specification node;
+base-type resolution remains the responsibility of the shared datatype helper.
+Implicit function-block calls accept only declared input parameters, while the
+lvalue pass applies the same writable-argument rule to formal and positional
+OUT/IN_OUT arguments.
+
 ## Generated output
 
 `OutputSink` is the write/flush error boundary. Production generation uses

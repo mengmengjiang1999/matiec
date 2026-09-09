@@ -122,12 +122,8 @@ class check_extern_c: public iterator_visitor_c {
           if ((glo_opt == search_var_instance_decl_c::constant_opt) && (ext_opt != search_var_instance_decl_c::constant_opt))
             STAGE3_ERROR(0, glo_decl, glo_decl, "Declaration error. The external variable must be declared as constant, as it maps to a constant global variable.");
     
-          /* TODO: Check redefinition data type.
-           *       We need a new class (like search_base_type class) to get type id by variable declaration.
-           *  symbol_c *glo_type = ????;
-           *  symbol_c *ext_type = fpi.param_type();
-           */
-          /* For the moment, we will just use search_base_type_c instead... */
+          /* Compare the resolved base declarations so aliases on either side do
+           * not hide an incompatible external/global declaration pair. */
           symbol_c *glo_type = search_base_type_c::get_basetype_decl(glo_decl);
           symbol_c *ext_type = search_base_type_c::get_basetype_decl(ext_decl);
           if (! get_datatype_info_c::is_type_equal(analysis_, glo_type, ext_type))

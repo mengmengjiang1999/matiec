@@ -166,6 +166,9 @@ EXTRA_DIST = \
 	tests/cli/profile-fixtures/object-method-nested.st \
 	tests/cli/profile-fixtures/object-method-private.st \
 	tests/cli/profile-fixtures/object-method-unknown.st \
+	tests/cli/profile-fixtures/semantic-lookup-matrix.st \
+	tests/cli/profile-fixtures/semantic-inout-literal.st \
+	tests/cli/profile-fixtures/semantic-duplicate-declaration.st \
 	compiler/experimental_syntax_model.hh \
 	compiler/parser_symbol_tables.hh \
 	tests/generated_c/runtests \
