@@ -439,9 +439,12 @@ make check-asan
 
 # Isolated UndefinedBehaviorSanitizer checks
 make check-ubsan
+
+# ThreadSanitizer (on supported compiler runtimes)
+make check-tsan
 ```
 
-GitHub Actions runs both sanitizer suites as independent Linux jobs for every
+GitHub Actions runs all three sanitizer suites as independent Linux jobs for every
 push and pull request. The workflow is also available through manual dispatch.
 Linux ASan jobs include leak detection; Apple Clang runs address checks without
 the unsupported LeakSanitizer mode.
@@ -451,7 +454,8 @@ The regression suite covers:
 - compiler services, diagnostics, AST ownership, and pass metadata;
 - pass ordering, prerequisites, and failure short-circuiting;
 - invalid-then-valid sequential compilation;
-- bounded full-pipeline parallel compilation with failure and output isolation;
+- repeated bounded parallel batches with context reuse, mixed failures,
+  callback fault injection, and output isolation;
 - CLI behavior and syntax/initialization regressions;
 - in-memory and byte-characterized generator output;
 - generated-C compilation, ABI symbols, linking, and representative runtime
@@ -502,7 +506,7 @@ boundaries:
 - changes to `configure.ac` or `Makefile.am` include refreshed Autotools files.
 
 Run `make check` before publishing. Use the sanitizer targets for parser-state,
-ownership, or memory-lifetime changes.
+ownership, memory-lifetime, or concurrency changes.
 
 ## Roadmap boundaries
 

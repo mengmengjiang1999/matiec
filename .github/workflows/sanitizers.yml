@@ -21,6 +21,8 @@ jobs:
             sanitizer: address
           - name: UndefinedBehaviorSanitizer
             sanitizer: undefined
+          - name: ThreadSanitizer
+            sanitizer: thread
     steps:
       - name: Check out source
         uses: actions/checkout@v6

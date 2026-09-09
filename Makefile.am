@@ -45,6 +45,7 @@ TESTS = \
 	c_api_virtual_include_test \
 	c_api_limits_test \
 	c_api_diagnostic_metadata_test \
+	c_api_concurrency_stress_test \
 	tests/generated_c/runtests \
 	tests/initialization/runtests \
 	tests/cli/runtests \
@@ -90,7 +91,7 @@ EXTRA_DIST = \
 	config/thread_localize_generated_frontend.pl \
 	.git_archival.txt
 
-.PHONY: check-api check-asan check-ubsan
+.PHONY: check-api check-asan check-ubsan check-tsan
 
 check-api: all
 	$(TESTS_ENVIRONMENT) $(SHELL) $(top_srcdir)/tests/api/runtests
@@ -101,6 +102,9 @@ check-asan:
 
 check-ubsan:
 	tests/sanitizers/runtests undefined
+
+check-tsan:
+	tests/sanitizers/runtests thread
 
 ACLOCAL_AMFLAGS=-I config
 
@@ -209,7 +213,7 @@ iec2c_SOURCES = main.cc
 
 iec2iec_SOURCES = main.cc
 
-check_PROGRAMS = modern_library_registry_test flow_analysis_store_test constant_analysis_store_test datatype_analysis_store_test resolution_analysis_store_test enumeration_analysis_store_test generator_analysis_store_test sequential_compilation_test concurrent_frontend_test parallel_compilation_test in_memory_generator_test c_api_single_compilation_test c_api_callbacks_test c_api_parallel_test c_api_virtual_include_test c_api_limits_test c_api_diagnostic_metadata_test
+check_PROGRAMS = modern_library_registry_test flow_analysis_store_test constant_analysis_store_test datatype_analysis_store_test resolution_analysis_store_test enumeration_analysis_store_test generator_analysis_store_test sequential_compilation_test concurrent_frontend_test parallel_compilation_test in_memory_generator_test c_api_single_compilation_test c_api_callbacks_test c_api_parallel_test c_api_virtual_include_test c_api_limits_test c_api_diagnostic_metadata_test c_api_concurrency_stress_test
 
 modern_library_registry_test_SOURCES = \
 	tests/compiler/modern_library_registry_test.cc
@@ -281,3 +285,7 @@ c_api_diagnostic_metadata_test_SOURCES = \
 	tests/compiler/c_api_diagnostic_metadata_test.c
 c_api_diagnostic_metadata_test_LINK = $(CXXLINK)
 c_api_diagnostic_metadata_test_LDADD = $(iec2c_LDADD)
+
+c_api_concurrency_stress_test_SOURCES = \
+	tests/compiler/c_api_concurrency_stress_test.cc
+c_api_concurrency_stress_test_LDADD = $(iec2c_LDADD)

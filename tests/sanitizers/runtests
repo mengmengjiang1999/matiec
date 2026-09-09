@@ -20,9 +20,9 @@ fi
 export PATH
 
 case "$SANITIZER" in
-  address|undefined) ;;
+  address|undefined|thread) ;;
   *)
-    echo "usage: $0 {address|undefined}" >&2
+    echo "usage: $0 {address|undefined|thread}" >&2
     exit 2
     ;;
 esac

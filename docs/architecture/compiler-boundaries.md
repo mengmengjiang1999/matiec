@@ -131,6 +131,7 @@ Run the isolated sanitizer suites with:
 ```sh
 make check-asan
 make check-ubsan
+make check-tsan
 ```
 
 AddressSanitizer includes leak detection where the compiler runtime supports it.
@@ -139,8 +140,11 @@ leak detection while retaining address checks; Linux keeps leak detection on.
 The scripts copy the source to a temporary directory, regenerate parser sources,
 build, and execute the same regression suite without modifying the developer's
 configured tree. On failure they print both top-level and compiler-unit logs.
-GitHub Actions runs ASan/LSan and UBSan as separate Linux jobs on pushes and pull
-requests; both jobs can also be started manually.
+GitHub Actions runs ASan/LSan, UBSan, and TSan as separate Linux jobs on pushes
+and pull requests; all jobs can also be started manually. The concurrency stress
+case repeatedly reuses eight C API contexts in mixed batches and injects
+resolver/output callback failures so result and callback isolation are checked
+under the race detector.
 
 ## Experimental syntax model
 

@@ -39,7 +39,9 @@ checked post-generation build step. The generated Bison parser is pure and
 receives `ParserState&` explicitly. Independent contexts can therefore execute
 the frontend concurrently on separate threads without a process-wide lock. The
 scanner is not recursively reentrant on one thread. `Compiler::compile_parallel()` exposes
-the supported bounded full-pipeline API for distinct contexts.
+the supported bounded full-pipeline API for distinct contexts. Linux CI runs the
+same regression suite under ThreadSanitizer, including repeated opaque-context
+reuse, mixed success/failure batches, and callback exception injection.
 
 All handwritten file-backed and memory-backed stage 1/2 entry points receive a
 `ParserState&`. They reset classifications and inspect options through that
