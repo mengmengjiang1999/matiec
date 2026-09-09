@@ -158,6 +158,51 @@ int get_direct_variable_token(matiec::ParserState &parser_state,
   return direct_variable_token;
 }
 
+namespace {
+std::string namespace_spelling(symbol_c *name) {
+  namespace_name_c *parts = dynamic_cast<namespace_name_c *>(name);
+  if (parts == NULL) return "";
+  std::string spelling;
+  for (int index = 0; index < parts->n; ++index) {
+    token_c *part = dynamic_cast<token_c *>(parts->get_element(index));
+    if (part == NULL || part->value == NULL) continue;
+    if (!spelling.empty()) spelling += ".";
+    spelling += part->value;
+  }
+  return spelling;
+}
+}  // namespace
+
+void begin_namespace_name(matiec::ParserState &state) {
+  state.begin_namespace_name();
+}
+
+void enter_namespace(matiec::ParserState &state, symbol_c *name,
+                     symbol_c *visibility) {
+  state.enter_namespace(namespace_spelling(name),
+                        dynamic_cast<namespace_internal_c *>(visibility) != NULL);
+}
+
+void leave_namespace(matiec::ParserState &state) { state.leave_namespace(); }
+
+void add_namespace_import(matiec::ParserState &state, symbol_c *name) {
+  state.add_namespace_import(namespace_spelling(name));
+}
+
+void insert_library_element(matiec::ParserState &state, const char *name,
+                            int token) {
+  state.symbols().library_elements.insert(name, token);
+  if (state.preparse) state.register_namespace_symbol(name, token);
+}
+
+void insert_library_element(matiec::ParserState &state, symbol_c *name,
+                            int token) {
+  state.symbols().library_elements.insert(name, token);
+  token_c *identifier = dynamic_cast<token_c *>(name);
+  if (state.preparse && identifier != NULL && identifier->value != NULL)
+    state.register_namespace_symbol(identifier->value, token);
+}
+
 /************************/
 /* Utility Functions... */
 /************************/

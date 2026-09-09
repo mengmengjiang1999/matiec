@@ -90,7 +90,9 @@ END_PROGRAM
 ```
 
 See the [namespace semantics](docs/standards/namespace-semantics.md) for supported
-syntax, visibility, lookup, and known limits.
+syntax, visibility, lookup, cross-include behavior, and known limits. Namespace
+source is handled directly by the reentrant lexer/parser; it is not rewritten by a
+compatibility normalizer.
 
 Access-variable quick example:
 

@@ -20,7 +20,6 @@ libcompiler_a_SOURCES = \
 	language_feature_catalog.cc \
 	modern_library_registry.cc \
 	namespace_ast_analysis.cc \
-	namespace_normalizer.cc \
 	object_method_ast_analysis.cc \
 	object_method_call_lowering.cc \
 	object_method_compatibility_ast.cc \
@@ -32,7 +31,7 @@ libcompiler_a_SOURCES = \
 	source_manager.cc \
 	utf8_validation.cc
 
-check_PROGRAMS = access_variable_normalizer_test analysis_store_test ast_arena_test c_api_version_test compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test language_feature_catalog_test namespace_normalizer_test output_sink_test semantic_pass_test source_manager_test utf8_validation_test
+check_PROGRAMS = access_variable_normalizer_test analysis_store_test ast_arena_test c_api_version_test compilation_abort_test compilation_context_test compiler_types_test diagnostic_engine_test language_feature_catalog_test output_sink_test semantic_pass_test source_manager_test utf8_validation_test
 TESTS = $(check_PROGRAMS)
 
 COMPILER_TEST_LDADD = libcompiler.a ../absyntax/libabsyntax.a libcompiler.a
@@ -63,9 +62,6 @@ diagnostic_engine_test_LDADD = $(COMPILER_TEST_LDADD)
 
 language_feature_catalog_test_SOURCES = tests/language_feature_catalog_test.cc
 language_feature_catalog_test_LDADD = $(COMPILER_TEST_LDADD)
-
-namespace_normalizer_test_SOURCES = tests/namespace_normalizer_test.cc
-namespace_normalizer_test_LDADD = $(COMPILER_TEST_LDADD)
 
 output_sink_test_SOURCES = tests/output_sink_test.cc
 output_sink_test_LDADD = $(COMPILER_TEST_LDADD)

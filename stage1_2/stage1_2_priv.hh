@@ -249,6 +249,16 @@ int get_identifier_token(matiec::ParserState &state,
 int get_direct_variable_token(matiec::ParserState &state,
                               const char *direct_variable_str);
 
+void begin_namespace_name(matiec::ParserState &state);
+void enter_namespace(matiec::ParserState &state, symbol_c *name,
+                     symbol_c *visibility);
+void leave_namespace(matiec::ParserState &state);
+void add_namespace_import(matiec::ParserState &state, symbol_c *name);
+void insert_library_element(matiec::ParserState &state, const char *name,
+                            int token);
+void insert_library_element(matiec::ParserState &state, symbol_c *name,
+                            int token);
+
 
 /*************************************************************/
 /*************************************************************/

@@ -14,7 +14,8 @@ LegacyGlobalStateAdapter::LegacyGlobalStateAdapter(
   runtime.allow_void_datatype = options.allow_void_datatype;
   runtime.allow_missing_var_in = options.allow_missing_var_in;
   runtime.disable_implicit_en_eno = options.disable_implicit_en_eno;
-  runtime.pre_parsing = options.pre_parsing;
+  runtime.pre_parsing = options.pre_parsing ||
+      options.language_profile == LanguageProfile::iec61131_3_2025_experimental;
   runtime.safe_extensions = options.safe_extensions;
   runtime.full_token_loc = options.full_token_location;
   runtime.conversion_functions = options.conversion_functions;

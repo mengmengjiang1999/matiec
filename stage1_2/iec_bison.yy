@@ -1732,15 +1732,16 @@ namespace_visibility:
 ;
 
 namespace_using_declaration:
-  USING namespace_name ';'
-	{$$ = new namespace_using_declaration_c($2, locloc(@$));}
+  USING {begin_namespace_name(parser_state);} namespace_name ';'
+	{add_namespace_import(parser_state, $3);
+	 $$ = new namespace_using_declaration_c($3, locloc(@$));}
 ;
 
 namespace_element_list:
   /* empty */
 	{$$ = new namespace_element_list_c(locloc(@$));}
 | namespace_element_list namespace_member_declaration
-	{$$ = $1; $$->add_element($2);}
+	{$$ = $1; if ($2 != NULL) $$->add_element($2);}
 | namespace_element_list namespace_using_declaration
 	{$$ = $1; $$->add_element($2);}
 | namespace_element_list any_pragma
@@ -1748,8 +1749,11 @@ namespace_element_list:
 ;
 
 namespace_declaration:
-  NAMESPACE namespace_visibility namespace_name namespace_element_list END_NAMESPACE
-	{$$ = new namespace_declaration_c($3, $2, $4, locloc(@$));}
+  NAMESPACE {begin_namespace_name(parser_state);} namespace_visibility namespace_name
+	{enter_namespace(parser_state, $4, $3);}
+  namespace_element_list END_NAMESPACE
+	{leave_namespace(parser_state);
+	 $$ = new namespace_declaration_c($4, $3, $6, locloc(@$));}
 ;
 
 
@@ -2710,16 +2714,17 @@ simple_type_declaration:
  *      - the pre_parsing phase of two phase parsing (when preparsing command line option is chosen).
  *      - the standard single phase parser (when preparsing command line option is not chosen).
  */
-  identifier ':' simple_specification           {library_element_symtable.insert($1, prev_declared_simple_type_name_token);}
+  identifier ':' simple_specification           {insert_library_element(parser_state, $1, prev_declared_simple_type_name_token);}
 	{if (!get_preparse_state(parser_state)) $$ = new simple_type_declaration_c($1, $3, locloc(@$));}
-| identifier ':' elementary_type_name           {library_element_symtable.insert($1, prev_declared_simple_type_name_token);} ASSIGN constant
+| identifier ':' elementary_type_name           {insert_library_element(parser_state, $1, prev_declared_simple_type_name_token);} ASSIGN constant
 	{if (!get_preparse_state(parser_state)) $$ = new simple_type_declaration_c($1, new simple_spec_init_c($3, $6, locf(@3), locl(@5)), locloc(@$));}
-| identifier ':' prev_declared_simple_type_name {library_element_symtable.insert($1, prev_declared_simple_type_name_token);} ASSIGN constant
+| identifier ':' prev_declared_simple_type_name {insert_library_element(parser_state, $1, prev_declared_simple_type_name_token);} ASSIGN constant
 	{if (!get_preparse_state(parser_state)) $$ = new simple_type_declaration_c($1, new simple_spec_init_c($3, $6, locf(@3), locl(@5)), locloc(@$));}
 /* POST_PARSING */
 /*  These rules will be run after the preparser phase of two phase parsing has finished (only gets to execute if preparsing command line option is chosen). */
 | prev_declared_simple_type_name ':' simple_spec_init
-	{$$ = new simple_type_declaration_c(new identifier_c(((token_c *)$1)->value, locloc(@1)), $3, locloc(@$));} // change the derived_datatype_identifier_c into an identifier_c, as it will be taking the place of an identifier!
+	{insert_library_element(parser_state, $1, prev_declared_simple_type_name_token);
+	 $$ = new simple_type_declaration_c(new identifier_c(((token_c *)$1)->value, locloc(@1)), $3, locloc(@$));} // change the derived_datatype_identifier_c into an identifier_c, as it will be taking the place of an identifier!
 /* These three rules can now be safely replaced by the original rule abvoe!! */
 /*
 | prev_declared_simple_type_name ':' simple_specification
@@ -2806,12 +2811,13 @@ subrange_type_declaration:
  *      - the pre_parsing phase of two phase parsing (when preparsing command line option is chosen).
  *      - the standard single phase parser (when preparsing command line option is not chosen).
  */
-  identifier ':' subrange_spec_init	{library_element_symtable.insert($1, prev_declared_subrange_type_name_token);}
+  identifier ':' subrange_spec_init	{insert_library_element(parser_state, $1, prev_declared_subrange_type_name_token);}
 	{if (!get_preparse_state(parser_state)) $$ = new subrange_type_declaration_c($1, $3, locloc(@$));}
 /* POST_PARSING */
 /*  These rules will be run after the preparser phase of two phase parsing has finished (only gets to execute if preparsing command line option is chosen). */
 | prev_declared_subrange_type_name ':' subrange_spec_init
-	{$$ = new subrange_type_declaration_c(new identifier_c(((token_c *)$1)->value, locloc(@1)), $3, locloc(@$));} // change the derived_datatype_identifier_c into an identifier_c, as it will be taking the place of an identifier!
+	{insert_library_element(parser_state, $1, prev_declared_subrange_type_name_token);
+	 $$ = new subrange_type_declaration_c(new identifier_c(((token_c *)$1)->value, locloc(@1)), $3, locloc(@$));} // change the derived_datatype_identifier_c into an identifier_c, as it will be taking the place of an identifier!
 /* ERROR_CHECK_BEGIN */
 | error ':' subrange_spec_init
 	{$$ = NULL; print_err_msg(parser_state, locf(@1), locl(@1), "invalid name defined for subrange type declaration."); yyerrok;}
@@ -2920,27 +2926,28 @@ enumerated_type_declaration:
  *
  *       If it were not for the above, we could use the rule
  *           identifier ':' enumerated_spec_init
- *       and include the library_element_symtable.insert(...) code in the rule actions!
+ *       and include the insert_library_element(parser_state, ...) code in the rule actions!
  */
 /* PRE_PARSING or SINGLE_PHASE_PARSING */
 /*  The following rules will be run either by:
  *      - the pre_parsing phase of two phase parsing (when preparsing command line option is chosen).
  *      - the standard single phase parser (when preparsing command line option is not chosen).
  */
-  identifier ':' enumerated_specification {library_element_symtable.insert($1, prev_declared_enumerated_type_name_token);}
+  identifier ':' enumerated_specification {insert_library_element(parser_state, $1, prev_declared_enumerated_type_name_token);}
 	{if (!get_preparse_state(parser_state)) $$ = new enumerated_type_declaration_c($1, new enumerated_spec_init_c($3, NULL, locloc(@3)), locloc(@$));}
-| identifier ':' enumerated_specification {library_element_symtable.insert($1, prev_declared_enumerated_type_name_token);} ASSIGN enumerated_value
+| identifier ':' enumerated_specification {insert_library_element(parser_state, $1, prev_declared_enumerated_type_name_token);} ASSIGN enumerated_value
 	{if (!get_preparse_state(parser_state)) $$ = new enumerated_type_declaration_c($1, new enumerated_spec_init_c($3, $6, locf(@3), locl(@6)), locloc(@$));}
 /* POST_PARSING */
 /*  These rules will be run after the preparser phase of two phase parsing has finished (only gets to execute if preparsing command line option is chosen). */
 /* Since the enumerated type name is placed in the library_element_symtable during preparsing, we can now safely use the single rule: */
 | prev_declared_enumerated_type_name ':' enumerated_spec_init
-	{$$ = new enumerated_type_declaration_c(new identifier_c(((token_c *)$1)->value, locloc(@1)), $3, locloc(@$));} // change the derived_datatype_identifier_c into an identifier_c, as it will be taking the place of an identifier!
+	{insert_library_element(parser_state, $1, prev_declared_enumerated_type_name_token);
+	 $$ = new enumerated_type_declaration_c(new identifier_c(((token_c *)$1)->value, locloc(@1)), $3, locloc(@$));} // change the derived_datatype_identifier_c into an identifier_c, as it will be taking the place of an identifier!
   /* These two rules are equivalent to the above rule */
 /*
-| prev_declared_enumerated_type_name ':' enumerated_specification {library_element_symtable.insert($1, prev_declared_enumerated_type_name_token);}
+| prev_declared_enumerated_type_name ':' enumerated_specification {insert_library_element(parser_state, $1, prev_declared_enumerated_type_name_token);}
 	{$$ = new enumerated_type_declaration_c($1, new enumerated_spec_init_c($3, NULL, locloc(@3)), locloc(@$));}
-| prev_declared_enumerated_type_name ':' enumerated_specification {library_element_symtable.insert($1, prev_declared_enumerated_type_name_token);} ASSIGN enumerated_value
+| prev_declared_enumerated_type_name ':' enumerated_specification {insert_library_element(parser_state, $1, prev_declared_enumerated_type_name_token);} ASSIGN enumerated_value
 	{$$ = new enumerated_type_declaration_c($1, new enumerated_spec_init_c($3, $6, locf(@3), locl(@6)), locloc(@$));}
 */
 /* ERROR_CHECK_BEGIN */
@@ -3035,12 +3042,13 @@ array_type_declaration:
  *      - the pre_parsing phase of two phase parsing (when preparsing command line option is chosen).
  *      - the standard single phase parser (when preparsing command line option is not chosen).
  */
-  identifier ':' array_spec_init   {library_element_symtable.insert($1, prev_declared_array_type_name_token);}
+  identifier ':' array_spec_init   {insert_library_element(parser_state, $1, prev_declared_array_type_name_token);}
 	{if (!get_preparse_state(parser_state)) $$ = new array_type_declaration_c($1, $3, locloc(@$));}
 /* POST_PARSING */
 /*  These rules will be run after the preparser phase of two phase parsing has finished (only gets to execute if preparsing command line option is chosen). */
 | prev_declared_array_type_name ':' array_spec_init
-	{$$ = new array_type_declaration_c(new identifier_c(((token_c *)$1)->value, locloc(@1)), $3, locloc(@$));} // change the derived_datatype_identifier_c into an identifier_c, as it will be taking the place of an identifier!
+	{insert_library_element(parser_state, $1, prev_declared_array_type_name_token);
+	 $$ = new array_type_declaration_c(new identifier_c(((token_c *)$1)->value, locloc(@1)), $3, locloc(@$));} // change the derived_datatype_identifier_c into an identifier_c, as it will be taking the place of an identifier!
 /* ERROR_CHECK_BEGIN */
 | identifier array_spec_init
 	{$$ = NULL; print_err_msg(parser_state, locl(@1), locf(@2), "':' missing between data type name and specification in array type declaration."); parser_state.syntax_errors++;}
@@ -3197,12 +3205,13 @@ structure_type_declaration:
  *      - the pre_parsing phase of two phase parsing (when preparsing command line option is chosen).
  *      - the standard single phase parser (when preparsing command line option is not chosen).
  */
-  identifier ':' structure_specification  {library_element_symtable.insert($1, prev_declared_structure_type_name_token);}
+  identifier ':' structure_specification  {insert_library_element(parser_state, $1, prev_declared_structure_type_name_token);}
 	{if (!get_preparse_state(parser_state)) $$ = new structure_type_declaration_c($1, $3, locloc(@$));}
 /* POST_PARSING */
 /*  These rules will be run after the preparser phase of two phase parsing has finished (only gets to execute if preparsing command line option is chosen). */
 | prev_declared_structure_type_name ':' structure_specification
-	{$$ = new structure_type_declaration_c(new identifier_c(((token_c *)$1)->value, locloc(@1)), $3, locloc(@$));} // change the derived_datatype_identifier_c into an identifier_c, as it will be taking the place of an identifier!
+	{insert_library_element(parser_state, $1, prev_declared_structure_type_name_token);
+	 $$ = new structure_type_declaration_c(new identifier_c(((token_c *)$1)->value, locloc(@1)), $3, locloc(@$));} // change the derived_datatype_identifier_c into an identifier_c, as it will be taking the place of an identifier!
 /* ERROR_CHECK_BEGIN */
 | identifier structure_specification
 	{$$ = NULL; print_err_msg(parser_state, locl(@1), locf(@2), "':' missing between data type name and specification in structure type declaration."); parser_state.syntax_errors++;}
@@ -3389,12 +3398,13 @@ string_type_declaration:
  *      - the pre_parsing phase of two phase parsing (when preparsing command line option is chosen).
  *      - the standard single phase parser (when preparsing command line option is not chosen).
  */
-  identifier ':' elementary_string_type_name string_type_declaration_size string_type_declaration_init	{library_element_symtable.insert($1, prev_declared_string_type_name_token);}
+  identifier ':' elementary_string_type_name string_type_declaration_size string_type_declaration_init	{insert_library_element(parser_state, $1, prev_declared_string_type_name_token);}
 	{if (!get_preparse_state(parser_state)) $$ = new string_type_declaration_c($1, $3, $4, $5, locloc(@$));}
 /* POST_PARSING */
 /*  These rules will be run after the preparser phase of two phase parsing has finished (only gets to execute if preparsing command line option is chosen). */
 | prev_declared_string_type_name ':' elementary_string_type_name string_type_declaration_size string_type_declaration_init
-	{$$ = new string_type_declaration_c(new identifier_c(((token_c *)$1)->value, locloc(@1)), $3, $4, $5, locloc(@$));} // change the derived_datatype_identifier_c into an identifier_c, as it will be taking the place of an identifier!
+	{insert_library_element(parser_state, $1, prev_declared_string_type_name_token);
+	 $$ = new string_type_declaration_c(new identifier_c(((token_c *)$1)->value, locloc(@1)), $3, $4, $5, locloc(@$));} // change the derived_datatype_identifier_c into an identifier_c, as it will be taking the place of an identifier!
 ;
 
 
@@ -3527,12 +3537,13 @@ ref_type_decl:  /* defined in IEC 61131-3 v3 */
  *      - the pre_parsing phase of two phase parsing (when preparsing command line option is chosen).
  *      - the standard single phase parser (when preparsing command line option is not chosen).
  */
-  identifier ':' ref_spec_init  {library_element_symtable.insert($1, prev_declared_ref_type_name_token);}
+  identifier ':' ref_spec_init  {insert_library_element(parser_state, $1, prev_declared_ref_type_name_token);}
 	{if (!get_preparse_state(parser_state)) $$ = new ref_type_decl_c($1, $3, locloc(@$));}
 /* POST_PARSING */
 /*  These rules will be run after the preparser phase of two phase parsing has finished (only gets to execute if preparsing command line option is chosen). */
 | prev_declared_ref_type_name ':' ref_spec_init
-	{$$ = new ref_type_decl_c(new identifier_c(((token_c *)$1)->value, locloc(@1)), $3, locloc(@$));}  // change the derived_datatype_identifier_c into an identifier_c, as it will be taking the place of an identifier!
+	{insert_library_element(parser_state, $1, prev_declared_ref_type_name_token);
+	 $$ = new ref_type_decl_c(new identifier_c(((token_c *)$1)->value, locloc(@1)), $3, locloc(@$));}  // change the derived_datatype_identifier_c into an identifier_c, as it will be taking the place of an identifier!
 ;
 
 
@@ -5080,7 +5091,7 @@ function_declaration:
 /* PRE_PARSING: The rules expected to be applied by the preparser. */
   FUNCTION derived_function_name END_FUNCTION   /* rule that is only expected to be used during preparse state => MUST print an error if used outside preparse() state!! */
 	{$$ = NULL;
-	 if (get_preparse_state(parser_state))    {library_element_symtable.insert($2, prev_declared_derived_function_name_token);}
+	 if (get_preparse_state(parser_state))    {insert_library_element(parser_state, $2, prev_declared_derived_function_name_token);}
 	 else                         {print_err_msg(parser_state, locl(@1), locf(@3), "FUNCTION with no variable declarations and no body."); parser_state.syntax_errors++;}
 	 }
 /* POST_PARSING and STANDARD_PARSING: The rules expected to be applied after the preparser has finished. */
@@ -5089,7 +5100,7 @@ function_declaration:
 	 if (!parser_state.options.disable_implicit_en_eno) add_en_eno_param_decl_c::add_to($$); /* add EN and ENO declarations, if not already there */
 	 variable_name_symtable.pop();
 	 direct_variable_symtable.pop();
-	 library_element_symtable.insert($1, prev_declared_derived_function_name_token);
+	 insert_library_element(parser_state, $1, prev_declared_derived_function_name_token);
 	}
 /* | FUNCTION derived_function_name ':' derived_type_name io_OR_function_var_declarations_list function_body END_FUNCTION */
 | function_name_declaration ':' derived_type_name io_OR_function_var_declarations_list function_body END_FUNCTION
@@ -5097,7 +5108,7 @@ function_declaration:
 	 if (!parser_state.options.disable_implicit_en_eno) add_en_eno_param_decl_c::add_to($$); /* add EN and ENO declarations, if not already there */
 	 variable_name_symtable.pop();
 	 direct_variable_symtable.pop();
-	 library_element_symtable.insert($1, prev_declared_derived_function_name_token);
+	 insert_library_element(parser_state, $1, prev_declared_derived_function_name_token);
 	}
 /* | FUNCTION derived_function_name ':' VOID io_OR_function_var_declarations_list function_body END_FUNCTION */
 | function_name_declaration ':' VOID io_OR_function_var_declarations_list function_body END_FUNCTION
@@ -5105,7 +5116,7 @@ function_declaration:
 	 if (!parser_state.options.disable_implicit_en_eno) add_en_eno_param_decl_c::add_to($$); /* add EN and ENO declarations, if not already there */
 	 variable_name_symtable.pop();
 	 direct_variable_symtable.pop();
-	 library_element_symtable.insert($1, prev_declared_derived_function_name_token);
+	 insert_library_element(parser_state, $1, prev_declared_derived_function_name_token);
 	}
 /* ERROR_CHECK_BEGIN */
 | function_name_declaration elementary_type_name io_OR_function_var_declarations_list function_body END_FUNCTION
@@ -5307,7 +5318,7 @@ function_block_declaration:
 /* PRE_PARSING: The rules expected to be applied by the preparser. Will only run if pre-parsing command line option is ON. */
   FUNCTION_BLOCK derived_function_block_name END_FUNCTION_BLOCK   /* rule that is only expected to be used during preparse state => MUST print an error if used outside preparse() state!! */
 	{$$ = NULL;
-	 if (get_preparse_state(parser_state))    {library_element_symtable.insert($2, prev_declared_derived_function_block_name_token);}
+	 if (get_preparse_state(parser_state))    {insert_library_element(parser_state, $2, prev_declared_derived_function_block_name_token);}
 	 else                         {print_err_msg(parser_state, locl(@1), locf(@3), "FUNCTION_BLOCK with no variable declarations and no body."); parser_state.syntax_errors++;}
 	 }
 /* POST_PARSING: The rules expected to be applied after the preparser runs. Will only run if pre-parsing command line option is ON. */
@@ -5323,7 +5334,7 @@ function_block_declaration:
 /* STANDARD_PARSING: The rules expected to be applied in single-phase parsing. Will only run if pre-parsing command line option is OFF. */
 | FUNCTION_BLOCK derived_function_block_name io_OR_other_var_declarations_list function_block_body object_method_declaration_list END_FUNCTION_BLOCK
 	{$$ = new function_block_declaration_c($2, $3, $4, $5, locloc(@$));
-	 library_element_symtable.insert($2, prev_declared_derived_function_block_name_token);
+	 insert_library_element(parser_state, $2, prev_declared_derived_function_block_name_token);
 	 if (!parser_state.options.disable_implicit_en_eno) add_en_eno_param_decl_c::add_to($$); /* add EN and ENO declarations, if not already there */
 	 /* Clear the variable_name_symtable. Since we have finished parsing the function block,
 	  * the variable names are now out of scope, so are no longer valid!
@@ -5532,7 +5543,7 @@ program_declaration:
 /* PRE_PARSING: The rules expected to be applied by the preparser. Will only run if pre-parsing command line option is ON. */
   PROGRAM program_type_name END_PROGRAM   /* rule that is only expected to be used during preparse state => MUST print an error if used outside preparse() state!! */
 	{$$ = NULL;
-	 if (get_preparse_state(parser_state))    {library_element_symtable.insert($2, prev_declared_program_type_name_token);}
+	 if (get_preparse_state(parser_state))    {insert_library_element(parser_state, $2, prev_declared_program_type_name_token);}
 	 else                         {print_err_msg(parser_state, locl(@1), locf(@3), "PROGRAM with no variable declarations and no body."); parser_state.syntax_errors++;}
 	 }
 /* POST_PARSING: The rules expected to be applied after the preparser runs. Will only run if pre-parsing command line option is ON. */
@@ -5545,7 +5556,7 @@ program_declaration:
 	 direct_variable_symtable.pop();
 	}
 /* STANDARD_PARSING: The rules expected to be applied in single-phase parsing. Will only run if pre-parsing command line option is OFF. */
-| PROGRAM program_type_name {library_element_symtable.insert($2, prev_declared_program_type_name_token);} program_var_declarations_list function_block_body END_PROGRAM
+| PROGRAM program_type_name {insert_library_element(parser_state, $2, prev_declared_program_type_name_token);} program_var_declarations_list function_block_body END_PROGRAM
 	{$$ = new program_declaration_c($2, $4, $5, locloc(@$));
 	 /* Clear the variable_name_symtable. Since we have finished parsing the program declaration,
 	  * the variable names are now out of scope, so are no longer valid!
@@ -6076,7 +6087,7 @@ configuration_declaration:
 /* PRE_PARSING: The rules expected to be applied by the preparser. Will only run if pre-parsing command line option is ON. */
   CONFIGURATION configuration_name END_CONFIGURATION   /* rule that is only expected to be used during preparse state */
 	{$$ = NULL;
-	 if (get_preparse_state(parser_state))    {library_element_symtable.insert($2, prev_declared_configuration_name_token);}
+	 if (get_preparse_state(parser_state))    {insert_library_element(parser_state, $2, prev_declared_configuration_name_token);}
 	 else                         {print_err_msg(parser_state, locl(@1), locf(@3), "no resource(s) nor program(s) defined in configuration declaration."); parser_state.syntax_errors++;}
 	 }
 /* POST_PARSING: The rules expected to be applied after the preparser runs. Will only run if pre-parsing command line option is ON. */
@@ -6114,7 +6125,7 @@ configuration_declaration:
 	{$$ = new configuration_declaration_c($2, $3, $4, $6, $7, locloc(@$));
 	 variable_name_symtable.pop();
 	 direct_variable_symtable.pop();
-	 library_element_symtable.insert($2, prev_declared_configuration_name_token);
+	 insert_library_element(parser_state, $2, prev_declared_configuration_name_token);
 	}
 | CONFIGURATION configuration_name
    global_var_declarations_list
@@ -6125,7 +6136,7 @@ configuration_declaration:
 	{$$ = new configuration_declaration_c($2, $3, $4, $5, $6, locloc(@$));
 	 variable_name_symtable.pop();
 	 direct_variable_symtable.pop();
-	 library_element_symtable.insert($2, prev_declared_configuration_name_token);
+	 insert_library_element(parser_state, $2, prev_declared_configuration_name_token);
 }
 /* ERROR_CHECK_BEGIN */
 | CONFIGURATION
@@ -8878,7 +8889,7 @@ static int parse_files(matiec::ParserState &parser_state,
   for(int i = 0; standard_function_block_names[i] != NULL; i++)
     if (library_element_symtable.find(standard_function_block_names[i]) ==
         library_element_symtable.end())
-      library_element_symtable.insert(standard_function_block_names[i], standard_function_block_name_token);
+      insert_library_element(parser_state, standard_function_block_names[i], standard_function_block_name_token);
 
   /* now parse the input file... */
   #if YYDEBUG

@@ -2,9 +2,11 @@
 #define MATIEC_COMPILER_PARSER_STATE_HH
 
 #include <functional>
+#include <map>
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 struct runtime_options_t {
   bool allow_void_datatype = false;
@@ -33,6 +35,20 @@ enum class IncludeResolveStatus { resolved, use_filesystem, not_found, error };
 using IncludeResolver = std::function<IncludeResolveStatus(
     std::string_view, std::string *, std::string *, std::string *)>;
 using CancellationChecker = std::function<bool()>;
+
+enum class NamespaceLookupStatus {
+  unchanged,
+  resolved,
+  unknown_qualified,
+  ambiguous,
+  inaccessible
+};
+
+struct NamespaceLookup {
+  NamespaceLookupStatus status = NamespaceLookupStatus::unchanged;
+  std::string spelling;
+  int token = 0;
+};
 
 class AstArena;
 class ParserSymbolTables;
@@ -75,6 +91,13 @@ struct ParserState {
   bool cancellation_requested() const;
   void bind_lexer_scanner(void *scanner);
   void *lexer_scanner() const;
+  void begin_namespace_name();
+  void enter_namespace(std::string_view name, bool internal_visibility);
+  void leave_namespace();
+  void add_namespace_import(std::string_view name);
+  void register_namespace_symbol(std::string_view name, int token);
+  bool parsing_namespace_name() const;
+  NamespaceLookup resolve_namespace_name(std::string_view name) const;
 
  private:
   AstArena *ast_arena_ = nullptr;
@@ -82,6 +105,17 @@ struct ParserState {
   IncludeResolver include_resolver_;
   CancellationChecker cancellation_checker_;
   void *lexer_scanner_ = nullptr;
+  struct NamespaceSymbol {
+    std::string owner;
+    std::string lowered;
+    int token = 0;
+    bool internal_visibility = false;
+  };
+  std::map<std::string, bool> namespaces_;
+  std::map<std::string, std::vector<std::string> > namespace_imports_;
+  std::map<std::string, NamespaceSymbol> namespace_symbols_;
+  std::string namespace_scope_;
+  bool parsing_namespace_name_ = false;
 };
 
 class ActiveRuntimeOptionsScope {

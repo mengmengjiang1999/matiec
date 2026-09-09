@@ -220,6 +220,11 @@ b*/
  */
 int get_identifier_token(matiec::ParserState &parser_state,
                          const char *identifier_str);
+
+bool resolve_namespace_identifier(matiec::ParserState &parser_state,
+                                  const char *identifier_str,
+                                  char **resolved_spelling,
+                                  int *resolved_token);
 %}
 
 
@@ -2005,7 +2010,26 @@ _			/* do nothing - eat it up!*/
   return method_identifier_token;
 }
 <method_invocation_state>"(" {BEGIN(st_state); return '(';}
-{identifier} 				{yylval.ID=matiec::retain_ast_string(parser_state, yytext);
+
+{qualified_identifier} {
+  if (!parser_state.options.iec2025_experimental) REJECT;
+  char *resolved = NULL;
+  int token = identifier_token;
+  if (!resolve_namespace_identifier(parser_state, yytext, &resolved, &token))
+    REJECT;
+  yylval.ID = resolved;
+  return token;
+}
+
+{identifier} 				{char *resolved = NULL;
+					 int token = identifier_token;
+					 if (parser_state.options.iec2025_experimental &&
+					     resolve_namespace_identifier(parser_state, yytext,
+					                                  &resolved, &token)) {
+					   yylval.ID=resolved;
+					   return token;
+					 }
+					 yylval.ID=matiec::retain_ast_string(parser_state, yytext);
 					 // printf("returning identifier...: %s, %d\n", yytext, get_identifier_token(parser_state, yytext));
 					 return get_identifier_token(parser_state, yytext);}
 
@@ -2039,6 +2063,35 @@ _			/* do nothing - eat it up!*/
 /*************************/
 /* Tracking Functions... */
 /*************************/
+
+bool resolve_namespace_identifier(matiec::ParserState &parser_state,
+                                  const char *identifier_str,
+                                  char **resolved_spelling,
+                                  int *resolved_token) {
+  const matiec::NamespaceLookup lookup =
+      parser_state.resolve_namespace_name(identifier_str);
+  if (lookup.status == matiec::NamespaceLookupStatus::unchanged) return false;
+  if (lookup.status == matiec::NamespaceLookupStatus::resolved) {
+    *resolved_spelling = matiec::retain_ast_string(parser_state,
+                                                    lookup.spelling.c_str());
+    const int active_token =
+        get_identifier_token(parser_state, lookup.spelling.c_str());
+    *resolved_token = active_token == identifier_token ? lookup.token
+                                                        : active_token;
+    return true;
+  }
+  const char *prefix =
+      lookup.status == matiec::NamespaceLookupStatus::ambiguous
+          ? "Ambiguous namespace lookup for: "
+          : lookup.status == matiec::NamespaceLookupStatus::inaccessible
+                ? "Namespace declaration is inaccessible: "
+                : "Unknown qualified namespace declaration: ";
+  fprintf(stderr, "%s%s\n", prefix, lookup.spelling.c_str());
+  ++parser_state.syntax_errors;
+  *resolved_spelling = matiec::retain_ast_string(parser_state, identifier_str);
+  *resolved_token = identifier_token;
+  return true;
+}
 
 #define MAX_LINE_LENGTH 1024
 

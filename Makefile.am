@@ -39,7 +39,6 @@ noinst_HEADERS = \
 	compiler/legacy_global_state_adapter.hh \
 	compiler/modern_library_registry.hh \
 	compiler/namespace_ast_analysis.hh \
-	compiler/namespace_normalizer.hh \
 	compiler/object_method_ast_analysis.hh \
 	compiler/object_method_call_lowering.hh \
 	compiler/object_method_compatibility_ast.hh \

@@ -16,9 +16,11 @@ public evidence; provisional behavior MUST be labeled accordingly.
 
 ### Requirement: Deterministic qualified lookup
 
-Enabled namespace lookup SHALL resolve qualified names deterministically, diagnose
-missing, ambiguous, or inaccessible declarations, and preserve validated namespace
-structure in the primary compiler AST.
+Enabled namespace lookup SHALL resolve qualified names deterministically,
+diagnose missing, ambiguous, or inaccessible declarations, and preserve
+validated namespace structure in the primary compiler AST. Namespace discovery
+and lookup SHALL operate on the native parser/scanner stream without rewriting
+source bytes before parsing.
 
 #### Scenario: A qualified name is ambiguous
 
@@ -39,6 +41,11 @@ structure in the primary compiler AST.
 
 - **WHEN** `iec2iec` processes a valid experimental namespace and `USING` directive
 - **THEN** the output structurally contains the namespace boundaries and directive
+
+#### Scenario: A declaration is supplied by an include
+
+- **WHEN** a filesystem or virtual include declares a namespace used by the main source
+- **THEN** the native prepass registers it and the definitive parser resolves the reference while preserving the included namespace AST node
 
 ### Requirement: Profile isolation
 

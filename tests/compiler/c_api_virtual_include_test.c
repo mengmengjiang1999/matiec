@@ -46,6 +46,12 @@ static matiec_include_result_t resolve_include(
                                ? "TYPE Broken : ; END_TYPE\n"
                                : "(* virtual leaf *)\n");
     source->display_name = "memory://b.st";
+  } else if (strcmp(requested, "namespace.st") == 0) {
+    strcpy(state->storage,
+           "NAMESPACE Included.Space\n"
+           "TYPE IncludedValue : INT; END_TYPE\n"
+           "END_NAMESPACE\n");
+    source->display_name = "memory://namespace.st";
   } else {
     return strcmp(requested, "missing.st") == 0
                ? MATIEC_INCLUDE_NOT_FOUND
@@ -82,6 +88,11 @@ int main(void) {
   const char plain_source[] =
       "PROGRAM Plain\n"
       "VAR value : INT; END_VAR\nvalue := 1;\nEND_PROGRAM\n";
+  const char namespace_source[] =
+      "{#include \"namespace.st\"}\n"
+      "PROGRAM Namespaced\n"
+      "VAR value : Included.Space.IncludedValue; END_VAR\n"
+      "value := 1;\nEND_PROGRAM\n";
   struct resolver_state ok = {{0}, 0, 0, library, 1, 0};
   struct resolver_state bad = {{0}, 0, 1, library, 0, 0};
   matiec_context_t *contexts[2];
@@ -115,6 +126,17 @@ int main(void) {
   assert(matiec_context_compile(context, &results[0]) == MATIEC_STATUS_OK);
   assert(results[0].succeeded == 1u);
   assert(ok.calls == 0u);
+  matiec_context_destroy(context);
+
+  ok = (struct resolver_state){{0}, 0, 0, library, 0, 0};
+  context = new_context(library, &ok, namespace_source);
+  assert(matiec_context_set_language_profile(
+             context, MATIEC_PROFILE_IEC61131_3_2025_EXPERIMENTAL) ==
+         MATIEC_STATUS_OK);
+  results[0] = (matiec_result_t)MATIEC_RESULT_INIT;
+  assert(matiec_context_compile(context, &results[0]) == MATIEC_STATUS_OK);
+  assert(results[0].succeeded == 1u);
+  assert(ok.calls >= 2u);
   matiec_context_destroy(context);
 
   return 0;

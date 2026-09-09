@@ -5,7 +5,6 @@
 #include "compiler/legacy_global_state_adapter.hh"
 #include "compiler/modern_library_registry.hh"
 #include "compiler/namespace_ast_analysis.hh"
-#include "compiler/namespace_normalizer.hh"
 #include "compiler/object_method_ast_analysis.hh"
 #include "compiler/object_method_call_lowering.hh"
 #include "compiler/object_method_compatibility_ast.hh"
@@ -95,19 +94,10 @@ CompilationResult Compiler::compile(CompilationContext &context) const {
     }
     CompilerOptions &options = context.options();
 
-    NamespaceNormalizeResult namespace_result;
     NamespaceAnalysisResult namespace_analysis;
     ObjectMethodAnalysisResult method_result;
     AccessVariableNormalizeResult access_result;
     ModernLibraryRegistrationResult modern_library_result;
-    if (language_profile_is_experimental(options.language_profile)) {
-      if (!normalize_experimental_namespaces(
-              source, context.source_path(), context.diagnostics(),
-              &namespace_result))
-        return context.diagnostics().result();
-      source = std::move(namespace_result.source);
-    }
-
     context.diagnostics().set_phase(DiagnosticPhase::parser);
     ActiveAstArenaScope ast_session(context.ast_arena());
     ActiveDeclarationSymbolTablesScope declaration_session(
