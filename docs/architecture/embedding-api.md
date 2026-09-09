@@ -8,15 +8,33 @@ API version 1 starts with compile-time and runtime version discovery. The packed
 numeric form stores major, minor, and patch components so a caller can compare
 the header used at build time with the loaded library.
 
+Version 1.1 adds a single-compilation workflow. A caller creates an opaque
+`matiec_context_t`, supplies either copied memory source or a source path, sets
+the include directory and desired compilation options, then calls
+`matiec_context_compile`. The context owns all compiler state and may be reused
+for later compilations; destroy it with `matiec_context_destroy`.
+
+`matiec_context_compile` returning `MATIEC_STATUS_OK` means the API call itself
+completed. Language errors are reported by `matiec_result_t.succeeded` and its
+error and warning counts. This keeps an invalid IEC program distinct from API
+misuse, allocation failure, or an internal exception. No C++ exception crosses
+the C boundary.
+
+The memory-source setter copies exactly `source_size` bytes, so its input need
+not be NUL-terminated and may be released after the call. Configuration strings
+are also copied into the context. `matiec_context_last_error` is a borrowed,
+context-owned string describing the most recent API failure; it remains valid
+only until the next operation on that context or its destruction.
+
 Compatibility follows these rules:
 
 - a major increment may remove symbols, change signatures, or change ownership;
 - a minor increment adds backward-compatible functions or enum values;
 - a patch increment fixes behavior without intentionally changing the ABI.
 
-Opaque objects added by subsequent changes will be created and destroyed by
-matching API functions. Memory remains owned by the side that allocated it
-unless a function explicitly documents a borrowed view or transfer.
+Opaque objects are created and destroyed by matching API functions. Memory
+remains owned by the side that allocated it unless a function explicitly
+documents a borrowed view or transfer.
 
 The existing `matiec::Compiler` and `matiec::CompilationContext` classes
 remain supported source-integration interfaces, but their C++ layouts and STL

@@ -9,6 +9,7 @@ libcompiler_a_SOURCES = \
 	analysis_store.cc \
 	ast_arena.cc \
 	c_api.cc \
+	c_api_version.cc \
 	compilation_abort.cc \
 	compilation_context.cc \
 	compiler.cc \

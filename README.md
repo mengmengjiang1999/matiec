@@ -346,8 +346,24 @@ Filesystem include pragmas still resolve through `include_directory`.
 
 This C++ interface remains a source-level integration API. The stable binary
 boundary begins with the C-compatible [`include/matiec/api.h`](include/matiec/api.h)
-version contract; compilation operations are being added incrementally without
-exposing C++ implementation layouts. See the
+version contract. API version 1.1 provides opaque context lifecycle, copied
+memory and file inputs, essential per-compilation options, and structured
+success/error counts without exposing C++ implementation layouts:
+
+```c
+matiec_context_t *context = NULL;
+matiec_result_t result = MATIEC_RESULT_INIT;
+
+if (matiec_context_create(&context) == MATIEC_STATUS_OK) {
+  matiec_context_set_source_path(context, "counter.st");
+  matiec_context_set_include_directory(context, "lib");
+  matiec_context_set_syntax_only(context, 1);
+  matiec_context_compile(context, &result);
+  matiec_context_destroy(context);
+}
+```
+
+See the
 [embedding API contract](docs/architecture/embedding-api.md). AST pointers are
 context-owned and must not outlive their `CompilationContext`.
 
