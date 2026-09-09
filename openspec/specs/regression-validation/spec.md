@@ -105,7 +105,7 @@ resource limits through the public compilation API.
 
 #### Scenario: A corpus input selects an embedding boundary
 
-- **WHEN** a fuzzer supplies a mode byte and arbitrary payload
+- **WHEN** a fuzzer supplies a mode byte and arbitrary input bytes
 - **THEN** the harness invokes the selected production API path in an isolated context and releases all resources
 
 ### Requirement: Maintained seed corpus
@@ -126,9 +126,9 @@ requests and a longer time-bounded campaign on a schedule.
 #### Scenario: A push changes parser behavior
 
 - **WHEN** hosted validation runs for the push
-- **THEN** the smoke campaign terminates within its configured bound and fails on crashes, sanitizer findings, or hangs
+- **THEN** the smoke campaign terminates within its configured bound and fails on unexpected termination, sanitizer findings, or hangs
 
-#### Scenario: A scheduled campaign finds a crash
+#### Scenario: A scheduled campaign finds a failing input
 
-- **WHEN** periodic fuzzing produces a reproducer
-- **THEN** the job fails and preserves the reproducer as a workflow artifact
+- **WHEN** periodic fuzzing produces a minimized failure sample
+- **THEN** the job fails and preserves the sample as a workflow artifact

@@ -12,7 +12,7 @@ therefore cannot compile a fully virtual source graph.
    compiler copies before returning. This supports IDE and remote stores without
    allocator coupling.
 3. Materialize callback data into temporary files. This preserves scanner code
-   but violates hermetic operation and adds cleanup/security concerns.
+   but violates hermetic operation and adds cleanup/isolation concerns.
 
 ## Conclusion
 

@@ -36,8 +36,8 @@ cleanup() {
   if test "$status" != 0; then
     echo "Fuzz artifacts: $ARTIFACTS" >&2
     if test -n "${GITHUB_WORKSPACE:-}"; then
-      mkdir -p "$GITHUB_WORKSPACE/fuzz-artifacts"
-      cp -R "$ARTIFACTS/." "$GITHUB_WORKSPACE/fuzz-artifacts/"
+      mkdir -p "$GITHUB_WORKSPACE/fuzz-failure-samples"
+      cp -R "$ARTIFACTS/." "$GITHUB_WORKSPACE/fuzz-failure-samples/"
     fi
   fi
   rm -rf "$TMP_ROOT"

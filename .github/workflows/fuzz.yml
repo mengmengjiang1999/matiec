@@ -31,10 +31,10 @@ jobs:
             tests/fuzz/runtests smoke
           fi
 
-      - name: Preserve crash reproducers
+      - name: Preserve failure samples
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: parser-fuzz-reproducers
-          path: fuzz-artifacts
+          name: parser-fuzz-failure-samples
+          path: fuzz-failure-samples
           if-no-files-found: ignore

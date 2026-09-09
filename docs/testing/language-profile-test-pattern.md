@@ -28,5 +28,5 @@ stale visitor state cannot be mistaken for a valid declaration result.
 
 Parser changes also flow through the bounded production-API harness described in
 [`parser-fuzzing.md`](parser-fuzzing.md). Deterministic fixtures remain the source
-of semantic assertions; fuzzing adds crash, sanitizer, and hang detection across
+of semantic assertions; fuzzing adds unexpected-termination, sanitizer, and hang detection across
 input and embedding boundaries.

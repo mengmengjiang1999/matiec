@@ -1,8 +1,8 @@
 ## Why
 
-Parser and embedding boundaries accept attacker-shaped or simply malformed text,
+Parser and embedding boundaries accept highly varied or simply malformed text,
 but deterministic regressions cannot explore their combinatorial state space.
-Bounded fuzz gates provide repeatable crash detection without turning ordinary CI
+Bounded fuzz gates provide repeatable unexpected-termination detection without turning ordinary CI
 into an unbounded job.
 
 ## What Changes
@@ -12,7 +12,7 @@ into an unbounded job.
 - Support both libFuzzer and AFL-style file/stdin execution from that harness.
 - Add maintained seed corpora and isolated build/run scripts.
 - Run a short libFuzzer smoke gate on pushes and pull requests and a longer
-  scheduled campaign with retained crash artifacts.
+  scheduled campaign with retained failure samples.
 - Document local workflows and corpus hygiene.
 
 ## Capabilities

@@ -1,6 +1,6 @@
 # Exploration: parser fuzzing and corpus gates
 
-The public C API already exposes every boundary that needs adversarial parser
+The public C API already exposes every boundary that needs broad malformed-input
 coverage: filesystem paths, in-memory sources, virtual includes, cancellation,
 and source/diagnostic/output limits. A harness can therefore exercise production
 compiler entry points without linking to generated lexer internals.

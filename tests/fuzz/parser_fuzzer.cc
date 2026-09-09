@@ -17,7 +17,7 @@
 namespace {
 
 constexpr std::size_t kModeCount = 5;
-constexpr std::size_t kMaxPayload = 1u << 20;
+constexpr std::size_t kMaxInputBytes = 1u << 20;
 
 struct IncludeState {
   const std::uint8_t *data;
@@ -145,7 +145,7 @@ extern "C" int LLVMFuzzerTestOneInput(const std::uint8_t *data,
   if (size == 0) return 0;
   const std::size_t mode = data[0] % kModeCount;
   ++data;
-  size = std::min(size - 1, kMaxPayload);
+  size = std::min(size - 1, kMaxInputBytes);
   switch (mode) {
     case 0: fuzz_memory(data, size); break;
     case 1: fuzz_file(data, size); break;

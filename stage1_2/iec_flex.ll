@@ -275,7 +275,7 @@ int GetNextChar(matiec::ParserState &parser_state, char *b, int maxBuffer,
  *       ST, and the declaration parts of IL do not use this token!
  *       If the lexical analyser were to issue this token during ST
  *       language parsing, or during the declaration of data types,
- *       function headers, etc. in IL, the syntax parser would crash.
+ *       function headers, etc. in IL, the syntax parser would terminate unexpectedly.
  *
  *       We can solve this issue using one of three methods:
  *        (1) Augment all the syntax that does not accept the EOL

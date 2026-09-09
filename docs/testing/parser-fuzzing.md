@@ -36,6 +36,6 @@ afl-fuzz -i tests/fuzz/corpus/parser -o /tmp/matiec-afl-findings -- \
 ```
 
 Seeds must stay small, deterministic, and attributable to the project. Minimize
-new crash reproducers before promoting them to regression fixtures. Do not store
-the fuzzer's queue, statistics, or crash directory under
-`tests/fuzz/corpus/parser`; CI uploads failure reproducers separately.
+new failure samples before promoting them to regression fixtures. Do not store
+the fuzzer's queue, statistics, or findings directory under
+`tests/fuzz/corpus/parser`; CI uploads failure samples separately.

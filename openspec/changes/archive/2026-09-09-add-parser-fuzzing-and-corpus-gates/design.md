@@ -1,7 +1,7 @@
 # Design
 
 `tests/fuzz/parser_fuzzer.cc` consumes the first byte as a mode and bounds the
-remaining payload before passing it through `libmatiec`'s C API. Each invocation
+remaining input before passing it through `libmatiec`'s C API. Each invocation
 owns and destroys its context. File mode uses a temporary file; memory mode uses
 the byte buffer directly; include mode returns the buffer from a resolver;
 cancel mode requests cancellation before compilation; limit mode varies source,
