@@ -346,9 +346,11 @@ Filesystem include pragmas still resolve through `include_directory`.
 
 This C++ interface remains a source-level integration API. The stable binary
 boundary begins with the C-compatible [`include/matiec/api.h`](include/matiec/api.h)
-version contract. API version 1.1 provides opaque context lifecycle, copied
+version contract. API version 1.2 provides opaque context lifecycle, copied
 memory and file inputs, essential per-compilation options, and structured
-success/error counts without exposing C++ implementation layouts:
+success/error counts without exposing C++ implementation layouts. It also
+supports ordered diagnostic delivery and generated-output callbacks, allowing
+an embedding host to capture artifacts without filesystem writes:
 
 ```c
 matiec_context_t *context = NULL;
@@ -359,6 +361,11 @@ if (matiec_context_create(&context) == MATIEC_STATUS_OK) {
   matiec_context_set_include_directory(context, "lib");
   matiec_context_set_syntax_only(context, 1);
   matiec_context_compile(context, &result);
+  for (size_t i = 0; i < matiec_context_diagnostic_count(context); ++i) {
+    matiec_diagnostic_t diagnostic = MATIEC_DIAGNOSTIC_INIT;
+    matiec_context_get_diagnostic(context, i, &diagnostic);
+    /* consume diagnostic.message and its optional source range */
+  }
   matiec_context_destroy(context);
 }
 ```

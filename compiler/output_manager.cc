@@ -20,14 +20,20 @@ OutputSink &OutputManager::standard_output() {
   return *standard_output_;
 }
 
-FileOutputSink &OutputManager::create_file(std::string path) {
-  auto sink = std::make_unique<FileOutputSink>(std::move(path));
-  FileOutputSink &result = *sink;
+OutputSink &OutputManager::create_file(std::string path) {
+  std::unique_ptr<OutputSink> sink = file_sink_factory_
+      ? file_sink_factory_(std::move(path))
+      : std::unique_ptr<OutputSink>(new FileOutputSink(std::move(path)));
+  OutputSink &result = *sink;
   owned_sinks_.push_back(std::move(sink));
   if (!result.good()) {
     record_failure(result, OutputResult::failure(result.error_message()));
   }
   return result;
+}
+
+void OutputManager::set_file_sink_factory(FileSinkFactory factory) {
+  file_sink_factory_ = std::move(factory);
 }
 
 MemoryOutputSink &OutputManager::create_memory() {

@@ -26,6 +26,24 @@ are also copied into the context. `matiec_context_last_error` is a borrowed,
 context-owned string describing the most recent API failure; it remains valid
 only until the next operation on that context or its destruction.
 
+Version 1.2 exposes every context diagnostic as a size-tagged
+`matiec_diagnostic_t`. Callers may enumerate diagnostics after compilation or
+install a diagnostic callback; callback delivery happens synchronously, in
+stored order, after compilation completes. Message and file pointers are
+borrowed from the context and remain valid until its next compilation or
+destruction. The callback's view itself is valid only for that invocation.
+
+An output callback can replace generated filesystem artifacts. The callback
+receives the intended path and one or more ordered byte chunks for that path;
+the host is responsible for grouping and appending chunks. A zero-length chunk
+represents an empty artifact. Returning zero rejects output, records a compiler
+diagnostic, and makes the compilation result unsuccessful. Clearing the
+callback restores ordinary file output.
+
+Callbacks run on the thread calling `matiec_context_compile`. They must not
+re-enter the same context, and all user-data storage must remain valid until the
+callback is cleared or the context is destroyed.
+
 Compatibility follows these rules:
 
 - a major increment may remove symbols, change signatures, or change ownership;

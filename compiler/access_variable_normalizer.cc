@@ -73,7 +73,7 @@ bool write_access_variable_metadata(
   const std::string path = output_directory.empty()
                                ? "ACCESS.csv"
                                : output_directory + "/ACCESS.csv";
-  FileOutputSink &sink = outputs.create_file(path);
+  OutputSink &sink = outputs.create_file(path);
   if (!sink.good()) return false;
   if (!outputs.write(sink, "configuration,name,path,type,direction\n").ok)
     return false;
