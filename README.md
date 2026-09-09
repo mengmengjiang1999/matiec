@@ -392,6 +392,12 @@ the final static-library link with `c++`; `pkg-config --cflags --libs matiec`
 provides the installed include and library paths. Configure each embedding
 context's include directory to the installed `share/matiec/lib` path.
 
+Run `make check-api` to validate the exported `matiec_*` symbol allowlist,
+complete C11/C++17 header signatures, and a staged external consumer. The same
+contract runs in the dedicated GitHub Actions `api-compatibility` job. Additive
+public functions require a minor embedding API version increment and allowlist
+update; incompatible signatures or removals require a new major version.
+
 See the
 [embedding API contract](docs/architecture/embedding-api.md). AST pointers are
 context-owned and must not outlive their `CompilationContext`.

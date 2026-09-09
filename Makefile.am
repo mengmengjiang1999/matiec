@@ -17,6 +17,10 @@ TESTS_ENVIRONMENT = \
 	PACKAGE_LIBDIR='$(libdir)' \
 	PACKAGE_DATADIR='$(datadir)' \
 	PACKAGE_CONSUMER='$(abs_top_srcdir)/tests/package/consumer.c' \
+	MATIEC_API_ARCHIVE='$(abs_top_builddir)/libmatiec.a' \
+	MATIEC_API_SYMBOLS='$(abs_top_srcdir)/tests/api/public-symbols.txt' \
+	MATIEC_API_HEADER_TEST='$(abs_top_srcdir)/tests/api/header_compatibility.c' \
+	MATIEC_API_INCLUDE='$(abs_top_srcdir)/include' \
 	SEQUENTIAL_VALID_INPUT='$(abs_top_srcdir)/tests/initialization/ok_array_scalar.st'
 
 TESTS = \
@@ -40,6 +44,7 @@ TESTS = \
 	tests/architecture/runtests \
 	tests/syntax/identifier/runtests \
 	tests/characterization/runtests \
+	tests/api/runtests \
 	tests/package/runtests
 
 EXTRA_DIST = \
@@ -51,6 +56,9 @@ EXTRA_DIST = \
 	config/merge-static-libraries.sh \
 	tests/package/consumer.c \
 	tests/package/runtests \
+	tests/api/header_compatibility.c \
+	tests/api/public-symbols.txt \
+	tests/api/runtests \
 	tests/cli/profile-fixtures/reference.st \
 	tests/cli/profile-fixtures/reference-null.st \
 	tests/cli/profile-fixtures/reference-incompatible.st \
@@ -75,7 +83,11 @@ EXTRA_DIST = \
 	config/thread_localize_generated_frontend.pl \
 	.git_archival.txt
 
-.PHONY: check-asan check-ubsan
+.PHONY: check-api check-asan check-ubsan
+
+check-api: all
+	$(TESTS_ENVIRONMENT) $(SHELL) $(top_srcdir)/tests/api/runtests
+	$(TESTS_ENVIRONMENT) $(SHELL) $(top_srcdir)/tests/package/runtests
 
 check-asan:
 	tests/sanitizers/runtests address

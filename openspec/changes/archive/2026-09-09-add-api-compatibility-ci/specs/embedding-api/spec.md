@@ -1,0 +1,30 @@
+## ADDED Requirements
+
+### Requirement: Public API compatibility contract
+
+The project SHALL maintain a reviewed allowlist of defined public `matiec_*`
+symbols and compile the complete published function signatures as both C11 and
+C++17. Intentional additive changes SHALL update the allowlist and minor API
+version; incompatible changes SHALL require a major API version change.
+
+#### Scenario: A public symbol disappears
+
+- **WHEN** the built library no longer defines an allowlisted symbol
+- **THEN** the API compatibility check fails with a symbol-list difference
+
+#### Scenario: An undeclared public symbol appears
+
+- **WHEN** the built library defines a new `matiec_*` symbol without updating the
+  reviewed contract
+- **THEN** the API compatibility check fails
+
+#### Scenario: A header signature changes
+
+- **WHEN** a published function is incompatible with its C11 signature fixture
+- **THEN** compilation of the API contract fails
+
+#### Scenario: A C++ host includes the header
+
+- **WHEN** a C++17 translation unit includes the installed public header
+- **THEN** it compiles with C linkage declarations and no C++ implementation
+  types exposed

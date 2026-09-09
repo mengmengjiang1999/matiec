@@ -76,6 +76,20 @@ the `C` child directory. The initial package is static-only; the public C ABI is
 stable, but a shared-library release and its platform versioning policy remain a
 separate concern.
 
+## Compatibility maintenance
+
+`make check-api` is the focused public-boundary gate. It compares globally
+defined `matiec_*` names in `libmatiec.a` with
+`tests/api/public-symbols.txt`, compiles every published function signature as
+both C11 and C++17, and runs the staged-install consumer smoke test. GitHub
+Actions exposes this as the separately named `api-compatibility` job.
+
+An intentional backward-compatible function addition must update the symbol
+allowlist and increment `MATIEC_API_VERSION_MINOR`. Removing a function,
+changing a published signature, ownership rule, enum value, or structure prefix
+requires a major-version design review. Behavior-only compatible fixes increment
+the patch version when callers need to distinguish them.
+
 Compatibility follows these rules:
 
 - a major increment may remove symbols, change signatures, or change ownership;

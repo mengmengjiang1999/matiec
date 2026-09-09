@@ -8,6 +8,25 @@ permissions:
   contents: read
 
 jobs:
+  api-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes autoconf automake bison flex g++ libfl-dev make pkg-config
+
+      - name: Bootstrap and configure
+        run: |
+          autoreconf --install
+          CC=gcc CXX=g++ ./configure
+
+      - name: Run public API compatibility contract
+        run: make --jobs=2 check-api
+
   gcc-linux:
     runs-on: ubuntu-latest
     steps:
